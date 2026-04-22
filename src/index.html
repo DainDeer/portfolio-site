@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Josh — Data & Backend Engineer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #fce8f0;
+      --warm-white: #fef4f8;
+      --sand: #f5d6e8;
+      --clay: #c97aaa;
+      --rust: #a84f8a;
+      --forest: #5a7a5e;
+      --bark: #4a3a52;
+      --ink: #1e1428;
+      --muted: #7a5e72;
+      --highlight: #e8b4d4;
+      --glow: rgba(201, 122, 170, 0.15);
+      --sage: #7aaa82;
+      --sage-light: #c8e8cc;
+      --lavender: #b49acc;
+      --lavender-light: #e8daf5;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: var(--warm-white);
+      color: var(--ink);
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE TEXTURE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1000;
+      opacity: 0.5;
+    }
+
+    /* ── SCROLL PROGRESS ── */
+    #progress {
+      position: fixed;
+      top: 0; left: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--clay), var(--lavender));
+      width: 0%;
+      z-index: 999;
+      transition: width 0.1s linear;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 1.2rem 3rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(12px);
+      background: rgba(254, 244, 248, 0.88);
+      border-bottom: 1px solid rgba(201, 122, 170, 0.15);
+    }
+
+    .nav-logo {
+      font-family: 'Lora', serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--ink);
+      text-decoration: none;
+      letter-spacing: -0.01em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--rust); }
+
+    /* ── HERO ── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 8rem 3rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 80% 40%, rgba(201, 122, 170, 0.13) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 50% at 10% 80%, rgba(90, 122, 94, 0.09) 0%, transparent 60%),
+        var(--warm-white);
+    }
+
+    /* decorative organic blobs */
+    .hero-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      pointer-events: none;
+    }
+    .blob-1 {
+      width: 500px; height: 500px;
+      background: rgba(201, 122, 170, 0.12);
+      top: -100px; right: -100px;
+    }
+    .blob-2 {
+      width: 300px; height: 300px;
+      background: rgba(90, 122, 94, 0.09);
+      bottom: 50px; left: -50px;
+    }
+
+    .hero-content {
+      position: relative;
+      max-width: 700px;
+    }
+
+    .hero-tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--clay);
+      background: rgba(196, 149, 106, 0.12);
+      border: 1px solid rgba(196, 149, 106, 0.3);
+      border-radius: 100px;
+      padding: 0.35rem 1rem;
+      margin-bottom: 1.8rem;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.1s forwards;
+    }
+
+    h1 {
+      font-family: 'Lora', serif;
+      font-size: clamp(2.8rem, 6vw, 5rem);
+      line-height: 1.1;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      opacity: 0;
+      animation: fadeUp 0.7s 0.25s forwards;
+    }
+
+    h1 em {
+      font-style: italic;
+      color: var(--rust);
+    }
+
+    .hero-sub {
+      margin-top: 1.6rem;
+      font-size: 1.1rem;
+      line-height: 1.7;
+      color: var(--muted);
+      font-weight: 300;
+      max-width: 520px;
+      opacity: 0;
+      animation: fadeUp 0.7s 0.4s forwards;
+    }
+
+    .hero-cta {
+      margin-top: 2.8rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeUp 0.7s 0.55s forwards;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.6rem;
+      border-radius: 100px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.25s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--ink);
+      color: var(--cream);
+    }
+    .btn-primary:hover {
+      background: var(--bark);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(74, 58, 82, 0.25);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--ink);
+      border: 1.5px solid rgba(30,26,20,0.25);
+    }
+    .btn-outline:hover {
+      border-color: var(--clay);
+      color: var(--rust);
+      transform: translateY(-2px);
+    }
+
+    /* ── SECTIONS COMMON ── */
+    section {
+      padding: 6rem 3rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--clay);
+      margin-bottom: 0.8rem;
+    }
+
+    .section-title {
+      font-family: 'Lora', serif;
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      margin-bottom: 3rem;
+      line-height: 1.2;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--sand), transparent);
+      margin: 0 auto;
+    }
+
+    /* ── ABOUT ── */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.6fr;
+      gap: 4rem;
+      align-items: start;
+    }
+
+    .about-aside {
+      position: sticky;
+      top: 6rem;
+    }
+
+    .avatar-ring {
+      width: 140px; height: 140px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--clay), var(--sage));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 0 0 6px var(--warm-white), 0 0 0 8px var(--sand);
+    }
+
+    .about-name {
+      font-family: 'Lora', serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .about-title-sm {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 1.2rem;
+    }
+
+    .about-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .about-links a {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: color 0.2s;
+    }
+    .about-links a:hover { color: var(--rust); }
+
+    .about-body p {
+      font-size: 1rem;
+      line-height: 1.85;
+      color: var(--bark);
+      margin-bottom: 1.4rem;
+      font-weight: 300;
+    }
+
+    .about-body p strong {
+      color: var(--ink);
+      font-weight: 500;
+    }
+
+    /* ── EXPERIENCE ── */
+    .exp-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .exp-item {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 2rem;
+      padding: 2.5rem 0;
+      border-bottom: 1px solid var(--sand);
+      position: relative;
+    }
+
+    .exp-item:last-child { border-bottom: none; }
+
+    .exp-year {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--clay);
+      padding-top: 0.25rem;
+      white-space: nowrap;
+    }
+
+    .exp-company {
+      font-family: 'Lora', serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 0.2rem;
+    }
+
+    .exp-role {
+      font-size: 0.82rem;
+      color: var(--clay);
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.9rem;
+    }
+
+    .exp-desc {
+      font-size: 0.9rem;
+      line-height: 1.75;
+      color: var(--muted);
+      font-weight: 300;
+    }
+
+    .exp-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 1rem;
+    }
+
+    .tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 4px;
+      background: var(--sand);
+      color: var(--bark);
+    }
+
+    /* ── PROJECTS ── */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .project-card {
+      background: var(--cream);
+      border: 1px solid var(--sand);
+      border-radius: 16px;
+      padding: 1.8rem;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .project-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(201,122,170,0.07), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .project-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(168, 79, 138, 0.12);
+      border-color: rgba(196, 149, 106, 0.5);
+    }
+    .project-card:hover::before { opacity: 1; }
+
+    .project-icon {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .project-name {
+      font-family: 'Lora', serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 0.5rem;
+    }
+
+    .project-desc {
+      font-size: 0.85rem;
+      line-height: 1.7;
+      color: var(--muted);
+      font-weight: 300;
+      margin-bottom: 1.2rem;
+    }
+
+    .project-arrow {
+      font-size: 0.8rem;
+      color: var(--clay);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    /* ── SKILLS ── */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    .skill-group {
+      background: var(--cream);
+      border: 1px solid var(--sand);
+      border-radius: 14px;
+      padding: 1.5rem;
+    }
+
+    .skill-group-title {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--clay);
+      margin-bottom: 1rem;
+    }
+
+    .skill-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .skill-pill {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 6px;
+      background: var(--warm-white);
+      border: 1px solid var(--sand);
+      color: var(--bark);
+      transition: all 0.2s;
+    }
+
+    .skill-pill:hover {
+      background: var(--ink);
+      color: var(--cream);
+      border-color: var(--ink);
+    }
+
+    .skill-group:nth-child(2) { border-color: var(--sage-light); }
+    .skill-group:nth-child(4) { border-color: var(--lavender-light); }
+    .skill-group:nth-child(6) { border-color: var(--sand); }
+
+    .skill-group:nth-child(2) .skill-group-title { color: var(--sage); }
+    .skill-group:nth-child(4) .skill-group-title { color: var(--lavender); }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 4rem 3rem;
+      text-align: center;
+      border-top: 1px solid var(--sand);
+      background: var(--cream);
+    }
+
+    .footer-name {
+      font-family: 'Lora', serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-tagline {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--rust); }
+
+    .footer-copy {
+      margin-top: 2.5rem;
+      font-size: 0.72rem;
+      color: rgba(122,110,94,0.5);
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.65s ease, transform 0.65s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 700px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      #hero { padding: 7rem 1.5rem 3rem; }
+      section { padding: 4rem 1.5rem; }
+      .about-grid { grid-template-columns: 1fr; }
+      .about-aside { position: static; }
+      .exp-item { grid-template-columns: 1fr; gap: 0.5rem; }
+      .projects-grid { grid-template-columns: 1fr; }
+      .skills-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#hero">Josh</a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#experience">Experience</a></li>
+    <li><a href="#projects">Projects</a></li>
+    <li><a href="#skills">Skills</a></li>
+    <li><a href="mailto:jalarison@gmail.com">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-blob blob-1"></div>
+  <div class="hero-blob blob-2"></div>
+  <div class="hero-content">
+    <span class="hero-tag">Data &amp; Backend Engineer</span>
+    <h1>Hi, I'm <em>Josh.</em></h1>
+    <p class="hero-sub">
+      I design and engineer scalable data infrastructure — ETL pipelines,
+      distributed systems, and the platforms that power real-world healthcare
+      and product decisions.
+    </p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="#experience">View my work ↓</a>
+      <a class="btn btn-outline" href="mailto:jalarison@gmail.com">Get in touch</a>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="section-label reveal">About me</div>
+  <div class="about-grid reveal">
+    <div class="about-aside">
+      <div class="avatar-ring">🦌</div>
+      <div class="about-name">Josh</div>
+      <div class="about-title-sm">Data &amp; Backend Engineer · San Mateo, CA</div>
+      <div class="about-links">
+        <a href="https://github.com/DainDeer" target="_blank">⌥ github.com/DainDeer</a>
+        <a href="https://www.linkedin.com/in/joshua-larison-2g6d8gr5/" target="_blank">⌥ linkedin.com/in/joshua-larison</a>
+        <a href="mailto:jalarison@gmail.com">⌥ jalarison@gmail.com</a>
+      </div>
+    </div>
+    <div class="about-body">
+      <p>
+        I'm a data and backend infrastructure engineer with a deep love for <strong>making messy data into something meaningful</strong>. I most recently worked at Aledade on healthcare data pipelines — transforming clinical data at scale into insights that help independent primary care practices thrive. I'm currently exploring new opportunities where I can bring that experience to the next interesting problem.
+      </p>
+      <p>
+        Before that, I spent time at <strong>Google</strong>, working across YouTube comment infrastructure, advertising platforms, and ML/robotics systems. I've shipped things that touched millions of people, and I've debugged things at 2am that nobody should have to debug.
+      </p>
+      <p>
+        When I'm not writing PySpark or arguing with Spark SQL, I'm <strong>drawing on my iPad</strong>, working on a sci-fi novel, cooking things that require more patience than I have, and keeping my houseplants from dying. I care a lot about the people side of engineering — thoughtful systems design, inclusive teams, and building things that actually matter.
+      </p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- EXPERIENCE -->
+<section id="experience">
+  <div class="section-label reveal">Experience</div>
+  <h2 class="section-title reveal">Where I've done the work.</h2>
+
+  <div class="exp-list">
+    <div class="exp-item reveal">
+      <div class="exp-year">2022 –<br/>Present</div>
+      <div>
+        <div class="exp-company">Aledade</div>
+        <div class="exp-role">Data / Backend Infrastructure Engineer</div>
+        <p class="exp-desc">
+          Building and maintaining large-scale healthcare data ETL pipelines processing millions of clinical records. Designing robust data models and Databricks/Spark infrastructure that powers analytics and care delivery decisions for independent primary care practices across the US.
+        </p>
+        <div class="exp-tags">
+          <span class="tag">Python</span>
+          <span class="tag">PySpark</span>
+          <span class="tag">Spark SQL</span>
+          <span class="tag">Databricks</span>
+          <span class="tag">SQL</span>
+          <span class="tag">ETL</span>
+          <span class="tag">Healthcare Data</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="exp-item reveal">
+      <div class="exp-year">2018 –<br/>2022</div>
+      <div>
+        <div class="exp-company">Google</div>
+        <div class="exp-role">Software Engineer</div>
+        <p class="exp-desc">
+          Worked across several teams including YouTube comment infrastructure (serving comment systems at global scale), advertising platforms, and ML/robotics systems. Built distributed backend services and data pipelines impacting millions of users daily.
+        </p>
+        <div class="exp-tags">
+          <span class="tag">Distributed Systems</span>
+          <span class="tag">Python</span>
+          <span class="tag">Data Pipelines</span>
+          <span class="tag">ML Infrastructure</span>
+          <span class="tag">Advertising Tech</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <div class="section-label reveal">Projects</div>
+  <h2 class="section-title reveal">Things I've built for fun<br/><em>(or out of necessity).</em></h2>
+
+  <div class="projects-grid">
+    <div class="project-card reveal">
+      <div class="project-icon">🤖</div>
+      <div class="project-name">Chordial</div>
+      <p class="project-desc">
+        A personal AI assistant app with intelligent scheduling, conversation memory, and a clean architecture built around a custom <code>SchedulingAgent</code>. Built because existing tools didn't quite fit the way I think.
+      </p>
+      <div class="project-tags exp-tags">
+        <span class="tag">Python</span><span class="tag">GPT API</span><span class="tag">Scheduling</span>
+      </div>
+      <div class="project-arrow" style="margin-top:1rem;">View on GitHub →</div>
+    </div>
+
+    <div class="project-card reveal">
+      <div class="project-icon">📊</div>
+      <div class="project-name">Add Your Project</div>
+      <p class="project-desc">
+        Got a side project, open-source contribution, or interesting experiment? Drop it here. Even small things count — a script you found useful, a dataset you explored, anything that shows how you think.
+      </p>
+      <div class="project-arrow" style="margin-top:1rem;">Learn more →</div>
+    </div>
+
+    <div class="project-card reveal">
+      <div class="project-icon">✍️</div>
+      <div class="project-name">Add Your Project</div>
+      <p class="project-desc">
+        Another slot for something you've made. Could be a creative-technical crossover — a tool you built to manage your art commissions, a generative art script, a game jam prototype. All of it is you.
+      </p>
+      <div class="project-arrow" style="margin-top:1rem;">Learn more →</div>
+    </div>
+
+    <div class="project-card reveal">
+      <div class="project-icon">🎮</div>
+      <div class="project-name">Add Your Project</div>
+      <p class="project-desc">
+        Have a game jam project, Unity prototype, or arcade experiment? Even unfinished passion projects show initiative and creativity that professional work often can't.
+      </p>
+      <div class="project-arrow" style="margin-top:1rem;">Learn more →</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="section-label reveal">Skills</div>
+  <h2 class="section-title reveal">The toolkit.</h2>
+
+  <div class="skills-grid">
+    <div class="skill-group reveal">
+      <div class="skill-group-title">Languages</div>
+      <div class="skill-pills">
+        <span class="skill-pill">Python</span>
+        <span class="skill-pill">SQL</span>
+        <span class="skill-pill">Spark SQL</span>
+        <span class="skill-pill">Bash</span>
+      </div>
+    </div>
+
+    <div class="skill-group reveal">
+      <div class="skill-group-title">Data & Processing</div>
+      <div class="skill-pills">
+        <span class="skill-pill">PySpark</span>
+        <span class="skill-pill">Databricks</span>
+        <span class="skill-pill">ETL Design</span>
+        <span class="skill-pill">Data Modeling</span>
+        <span class="skill-pill">Pipeline Orchestration</span>
+      </div>
+    </div>
+
+    <div class="skill-group reveal">
+      <div class="skill-group-title">Infrastructure</div>
+      <div class="skill-pills">
+        <span class="skill-pill">Distributed Systems</span>
+        <span class="skill-pill">Cloud (GCP/AWS)</span>
+        <span class="skill-pill">Kafka</span>
+        <span class="skill-pill">Git</span>
+      </div>
+    </div>
+
+    <div class="skill-group reveal">
+      <div class="skill-group-title">Domains</div>
+      <div class="skill-pills">
+        <span class="skill-pill">Healthcare Data</span>
+        <span class="skill-pill">AdTech</span>
+        <span class="skill-pill">ML Infrastructure</span>
+        <span class="skill-pill">Comment Systems</span>
+      </div>
+    </div>
+
+    <div class="skill-group reveal">
+      <div class="skill-group-title">Practices</div>
+      <div class="skill-pills">
+        <span class="skill-pill">System Design</span>
+        <span class="skill-pill">Code Review</span>
+        <span class="skill-pill">Technical Writing</span>
+        <span class="skill-pill">Agile</span>
+      </div>
+    </div>
+
+    <div class="skill-group reveal">
+      <div class="skill-group-title">Outside of work</div>
+      <div class="skill-pills">
+        <span class="skill-pill">Digital Art</span>
+        <span class="skill-pill">Creative Writing</span>
+        <span class="skill-pill">Content Creation</span>
+        <span class="skill-pill">Music Production</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-name">Josh</div>
+  <div class="footer-tagline">Data Engineer · Builder · Occasional Artist</div>
+  <ul class="footer-links">
+    <li><a href="https://github.com/DainDeer" target="_blank">GitHub</a></li>
+    <li><a href="https://www.linkedin.com/in/joshua-larison-2g6d8gr5/" target="_blank">LinkedIn</a></li>
+    <li><a href="mailto:jalarison@gmail.com">Email</a></li>
+  </ul>
+  <p class="footer-copy">Made with curiosity &amp; too many tabs open.</p>
+</footer>
+
+<script>
+  // scroll progress bar
+  window.addEventListener('scroll', () => {
+    const scrolled = window.scrollY;
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    document.getElementById('progress').style.width = (scrolled / total * 100) + '%';
+  });
+
+  // intersection observer for reveal animations
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 60);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+  reveals.forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
