@@ -6,7 +6,7 @@
 <title>internetcreature OS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -155,6 +155,91 @@
   .placeholder p { color: var(--muted); font-size: 14px; line-height: 1.55; }
   .placeholder p.sub { color: var(--dim); font-size: 12.5px; margin-top: 6px; }
 
+  /* ── resume program ── */
+  .resume { background: #ece7f0; min-height: 100%; }
+  .resume-page {
+    background: #fff; color: #26212e;
+    max-width: 780px; margin: 0 auto; padding: 36px 46px 52px;
+    font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 13.5px; line-height: 1.5;
+  }
+  .r-head { display: flex; gap: 18px; align-items: flex-start; }
+  .r-headtext { flex: 1; min-width: 0; }
+  .r-name { font-family: 'Lora', Georgia, serif; font-size: 30px; font-weight: 600; color: #1e1a26; letter-spacing: -0.01em; }
+  .r-role { font-size: 14px; font-weight: 600; color: #6a5c78; margin-top: 2px; }
+  .r-contact { font-size: 12px; color: #5a5263; margin-top: 9px; line-height: 1.7; }
+  .r-contact a { color: inherit; text-decoration: none; }       /* plain ink in default */
+  .r-sec { margin-top: 22px; }
+  .r-sec h2 {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase;
+    color: #7a4a6e; border-bottom: 1.5px solid #e7dcee; padding-bottom: 4px; margin-bottom: 11px;
+  }
+  .r-summary { color: #3a3344; }
+  .r-skills { display: grid; gap: 6px; }
+  .r-skills .row b { color: #26212e; }
+
+  .r-exp { margin-bottom: 17px; }
+  .r-exp::after { content: ''; display: table; clear: both; }
+  .r-exp .l1 { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+  .r-exp .co { font-weight: 700; color: #1e1a26; font-size: 14px; }
+  .r-exp .dates { color: #6a5c78; font-size: 11.5px; white-space: nowrap; }
+  .r-exp .l2 { display: flex; justify-content: space-between; gap: 12px; color: #6a5c78; font-size: 12px; font-style: italic; margin: 1px 0 7px; }
+  .r-exp ul { margin: 0 0 0 17px; }
+  .r-exp li { margin: 5px 0; color: #3a3344; }
+  .r-edu { display: flex; justify-content: space-between; gap: 12px; }
+  .r-edu b { color: #1e1a26; }
+
+  /* per-job polaroid photos — interactive only */
+  .r-polaroid { display: none; }
+  .resume.interactive .r-polaroid {
+    display: block; float: right; width: 150px; margin: 2px 0 10px 18px;
+    background: #fff; padding: 8px 8px 0; border-radius: 3px; border: 1px solid #efe6f0;
+    box-shadow: 0 7px 20px -7px rgba(60,40,70,0.45);
+    transform: rotate(2deg); transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .resume.interactive .r-polaroid.tilt-l { transform: rotate(-2.5deg); }
+  .resume.interactive .r-polaroid:hover { transform: rotate(0) translateY(-3px); box-shadow: 0 14px 30px -8px rgba(60,40,70,0.5); }
+  .r-polaroid img, .r-polaroid-ph {
+    width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; border-radius: 2px;
+    background: linear-gradient(135deg, #f6e9f3, #eee3f7);
+  }
+  .r-polaroid-ph { display: flex; align-items: center; justify-content: center; font-size: 30px; color: #b9a6c4; }
+  .r-polaroid figcaption { font-size: 11px; color: #7a6c86; text-align: center; padding: 7px 2px 9px; font-weight: 600; }
+  @media (max-width: 520px) {
+    .resume.interactive .r-polaroid { float: none; width: 150px; margin: 6px auto 12px; }
+  }
+
+  .resume.interactive .r-contact a {
+    color: #b8568f; border-bottom: 1px solid rgba(184,86,143,0.3);
+  }
+  .resume.interactive .r-contact a:hover { color: #8a3c6e; }
+
+  /* sticky toggle footer */
+  .resume-toggle {
+    position: sticky; bottom: 0; z-index: 2;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 8px 14px; background: rgba(253,246,251,0.94); backdrop-filter: blur(6px);
+    border-top: 1px solid #e7dcee;
+  }
+  .r-print {
+    font: inherit; font-size: 12px; font-weight: 700; color: #6a5c78;
+    background: none; border: 1px solid #d8c8e2; border-radius: 7px; padding: 5px 11px; cursor: pointer;
+  }
+  .r-print:hover { background: #f3ebf7; color: #3a2a40; }
+  .seg { display: flex; align-items: center; position: relative; background: #ece2f2; border-radius: 999px; padding: 3px; }
+  .seg button {
+    font: inherit; font-size: 12px; font-weight: 700; color: #7a6c86;
+    background: none; border: none; cursor: pointer; padding: 5px 15px; border-radius: 999px;
+    position: relative; z-index: 1; transition: color .18s ease;
+  }
+  .seg button.on { color: #fff; }
+  .seg .knob {
+    position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px);
+    background: linear-gradient(180deg, #f4a6cb, #e98fbb); border-radius: 999px; z-index: 0;
+    transition: transform .22s cubic-bezier(.4,1.2,.4,1), background .22s ease;
+  }
+  .resume.interactive .seg .knob { transform: translateX(100%); background: linear-gradient(180deg, #b9e6c2, #8fd49f); }
+
   /* ───────── taskbar ───────── */
   #taskbar {
     position: fixed; left: 0; right: 0; bottom: 0; height: var(--taskbar-h);
@@ -240,6 +325,14 @@
     .icon { width: 72px; }
     .window { width: calc(100% - 16px); }
   }
+
+  /* print only the resume page, no OS chrome */
+  @media print {
+    body * { visibility: hidden !important; }
+    .resume-page, .resume-page * { visibility: visible !important; }
+    .resume-page { position: absolute; left: 0; top: 0; width: 100%; max-width: none; margin: 0; padding: 0.4in 0.5in; }
+    .r-polaroid, .resume-toggle { display: none !important; }
+  }
 </style>
 </head>
 <body>
@@ -295,25 +388,22 @@
     return wrap;
   }
 
-  /* ── image viewer program (the first fully-bespoke window) ───── */
-  const ART = {
-    src:    'dain.jpg',          // ← commit this file in the repo root
-    credit: 'Pricklepants',
-    url:    'https://bsky.app/profile/pricklepants.bsky.social',
-  };
-
-  function makeImageViewer() {
+  /* ── image viewer program (serves any photo via config) ──────── */
+  function makeImageViewer(cfg) {
     const root = document.createElement('div');
     root.className = 'imgview';
 
     const img = document.createElement('img');
     img.className = 'imgview-img';
-    img.alt = 'dain — character art';
-    img.src = ART.src;
+    img.alt = cfg.alt || '';
+    img.src = cfg.src;
 
-    const credit = document.createElement('div');
-    credit.className = 'imgview-credit';
-    credit.innerHTML = 'art by <a href="' + ART.url + '" target="_blank" rel="noopener">' + ART.credit + '</a>';
+    let credit = null;
+    if (cfg.credit) {
+      credit = document.createElement('div');
+      credit.className = 'imgview-credit';
+      credit.innerHTML = 'art by <a href="' + cfg.url + '" target="_blank" rel="noopener">' + cfg.credit + '</a>';
+    }
 
     img.onerror = () => {
       root.replaceChildren();
@@ -321,26 +411,136 @@
       empty.className = 'imgview-empty';
       empty.innerHTML =
         '<span class="big">🦌</span>' +
-        '<p>drop your art in the repo as <code>dain.jpg</code> ' +
+        '<p>drop your image in the repo as <code>' + cfg.src + '</code> ' +
         '(next to <code>index.html</code>) and it\'ll fill this window.</p>';
       root.appendChild(empty);
     };
 
     root.appendChild(img);
-    root.appendChild(credit);
+    if (credit) root.appendChild(credit);
+    return root;
+  }
+
+  /* ── resume program: paper document + interactive toggle ─────── */
+  function makeResume() {
+    const root = document.createElement('div');
+    root.className = 'resume';
+    root.innerHTML = `
+      <article class="resume-page">
+        <header class="r-head">
+          <div class="r-headtext">
+            <h1 class="r-name">Josh Larison</h1>
+            <div class="r-role">Data Infrastructure Engineer</div>
+            <div class="r-contact">
+              <a href="mailto:jalarison@gmail.com">jalarison@gmail.com</a> &nbsp;·&nbsp;
+              <a href="tel:+17202314281">(720) 231-4281</a> &nbsp;·&nbsp;
+              <a href="https://linkedin.com/in/joshua-larison" target="_blank" rel="noopener">linkedin.com/in/joshua-larison</a> &nbsp;·&nbsp;
+              Daly City, CA
+            </div>
+          </div>
+        </header>
+
+        <section class="r-sec">
+          <h2>Summary</h2>
+          <p class="r-summary">Data infrastructure engineer who takes end-to-end ownership of mission-critical production data platforms in high-stakes, regulated environments. Track record of architecting and operating clinical data pipelines at terabyte scale, independently driving observability and cost-optimization initiatives, and setting the engineering standards teams build on. Comfortable as the primary technical authority on data — from cohort logic and vendor integration to incident response across upstream dependencies.</p>
+        </section>
+
+        <section class="r-sec">
+          <h2>Skills</h2>
+          <div class="r-skills">
+            <div class="row"><b>Languages:</b> Python, SQL, C++, Java</div>
+            <div class="row"><b>Data &amp; Cloud:</b> Databricks, Apache Spark (PySpark / Spark SQL), Airflow, PostgreSQL, AWS, Docker, Kubernetes</div>
+            <div class="row"><b>Practices:</b> Data modeling, pipeline architecture, ingestion &amp; transformation, data quality &amp; observability, monitoring (Datadog), cost optimization, code review standards</div>
+          </div>
+        </section>
+
+        <section class="r-sec">
+          <h2>Experience</h2>
+
+          <div class="r-exp">
+            <div class="l1"><span class="co">Aledade Inc — Software Engineer II</span><span class="dates">June 2021 – April 2026</span></div>
+            <div class="l2"><span>Mission-critical clinical data platform</span><span>Full Remote</span></div>
+            <figure class="r-polaroid tilt-l"><img src="aledade.jpg" alt="Aledade"><figcaption>Aledade</figcaption></figure>
+            <ul>
+              <li>Owned the design, build, and operation of a high-priority clinical data pipeline generating patient lab panels for external vendors — authoring complex cohort-selection logic and delta computation across multiple conformed data sources to deliver only validated changes downstream.</li>
+              <li>Served as primary technical owner and on-call responder for the lab-panel system, diagnosing high-severity production incidents by tracing failures through upstream dependencies outside the team's control and building safeguards to account for them.</li>
+              <li>Independently identified a critical observability gap and led the design and rollout of monitoring infrastructure in Datadog and Databricks, tracking pipeline health and data-quality SLAs to surface silent failures before they reached clinical consumers.</li>
+              <li>Led a cost-optimization initiative across the Databricks platform, building monitoring around company-wide spend and establishing analysis frameworks to surface and reduce wasteful spend — cutting data storage costs by an estimated $100K+ and improving job performance.</li>
+              <li>Established documentation and code-review standards adopted across the team, raising the bar for data-engineering quality, reliability, and maintainability.</li>
+              <li>Partnered cross-functionally with external vendors on file specifications and integration, acting as the interface between internal clinical data and external systems.</li>
+            </ul>
+          </div>
+
+          <div class="r-exp">
+            <div class="l1"><span class="co">Google — L3 Software Engineer</span><span class="dates">July 2017 – February 2019</span></div>
+            <div class="l2"><span>Advertising platform &amp; Google Drive</span><span>Mountain View, CA / Boulder, CO</span></div>
+            <figure class="r-polaroid"><img src="google.jpg" alt="me with the Android figure"><figcaption>the Android figure 🤖</figcaption></figure>
+            <ul>
+              <li>Designed and launched low-latency C++ server infrastructure for ad product recommendations, integrating with core advertising systems processing millions of requests per second.</li>
+              <li>Built backend Java services for Google Drive, designing and implementing the Approvals feature while contributing to large-scale codebase migration efforts.</li>
+            </ul>
+          </div>
+
+          <div class="r-exp">
+            <div class="l1"><span class="co">Google — Engineering Resident</span><span class="dates">July 2016 – July 2017</span></div>
+            <div class="l2"><span>YouTube comments &amp; ML/robotics infrastructure</span><span>Mountain View, CA</span></div>
+            <ul>
+              <li>Optimized Java backend infrastructure for YouTube's comment system handling 10K+ queries per second, refactoring critical RPC services to improve performance and reliability at billion-user scale.</li>
+              <li>Built end-to-end ML and robotics data infrastructure including Python pipelines for TensorFlow models, serving infrastructure, and sensor integration (Python/C++ ROS) for LiDAR and IoT devices.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="r-sec">
+          <h2>Education</h2>
+          <div class="r-edu"><b>Colorado State University — B.S. Computer Science</b><span class="dates">May 2016</span></div>
+        </section>
+      </article>
+
+      <div class="resume-toggle">
+        <button class="r-print" type="button">🖨 print</button>
+        <div class="seg">
+          <span class="knob"></span>
+          <button class="mode-resume on" type="button">résumé</button>
+          <button class="mode-interactive" type="button">interactive</button>
+        </div>
+      </div>`;
+
+    const segR = root.querySelector('.mode-resume');
+    const segI = root.querySelector('.mode-interactive');
+    const setMode = on => {
+      root.classList.toggle('interactive', on);
+      segI.classList.toggle('on', on);
+      segR.classList.toggle('on', !on);
+    };
+    segR.addEventListener('click', () => setMode(false));
+    segI.addEventListener('click', () => setMode(true));
+    root.querySelector('.r-print').addEventListener('click', () => window.print());
+
+    // graceful fallback for any missing job photo
+    root.querySelectorAll('.r-polaroid img').forEach(img => {
+      img.addEventListener('error', () => {
+        const ph = document.createElement('div');
+        ph.className = 'r-polaroid-ph';
+        ph.textContent = '📷';
+        img.replaceWith(ph);
+      });
+    });
+
     return root;
   }
 
   const PROGRAMS = {
-    resume:      { icon: '📄', title: 'resume.doc',           render(t){ return makePlaceholder(t); } },
-    'dain-img':  { icon: '🖼️', title: 'dain.jpg',             render( ){ return makeImageViewer(); } },
+    resume:      { icon: '📄', title: 'resume.doc',           render( ){ return makeResume(); } },
+    'dain-img':  { icon: '🖼️', title: 'dain.jpg',             render( ){ return makeImageViewer({ src: 'dain.jpg', alt: 'dain — character art', credit: 'Pricklepants', url: 'https://bsky.app/profile/pricklepants.bsky.social' }); } },
+    'josh-img':  { icon: '📸', title: 'Josh.jpg',             render( ){ return makeImageViewer({ src: 'Josh.jpg', alt: 'Josh' }); } },
     chordial:    { icon: '💬', title: 'chordial',             render(t){ return makePlaceholder(t); } },
     'chaos-cube':{ icon: '🎴', title: 'chaos-commander-cube', render(t){ return makePlaceholder(t); } },
     'llm-weave': { icon: '🧶', title: 'llm-weave',            render(t){ return makePlaceholder(t); } },
     dormant:     { icon: '📖', title: 'DORMANT.txt',          render(t){ return makePlaceholder(t); } },
     contact:     { icon: '✉️', title: 'contact',              render(t){ return makePlaceholder(t); } },
   };
-  const DESKTOP_ICONS = ['dain-img', 'resume', 'chordial', 'chaos-cube', 'dormant', 'contact'];
+  const DESKTOP_ICONS = ['dain-img', 'josh-img', 'resume', 'chordial', 'chaos-cube', 'dormant', 'contact'];
 
   const desk    = document.getElementById('desktop');
   const tasksEl = document.getElementById('tasks');
@@ -388,12 +588,13 @@
 
       // already open? restore + focus it.
       const existing = this.windows.find(w => w.key === key);
-      if (existing) { this.restore(existing); this.focus(existing); return; }
+      if (existing) { this.restore(existing); this.focus(existing); history.replaceState(null, '', '#' + key); return; }
 
       // at cap? reuse the most recent window (this is the single-window swap).
       if (this.windows.length >= this.config.maxWindows && this.config.reuseWhenCapped) {
         const w = this.windows[this.windows.length - 1];
         this.bind(w, key); this.restore(w); this.focus(w);
+        history.replaceState(null, '', '#' + key);
         return;
       }
 
@@ -404,6 +605,7 @@
       this.bind(w, key);
       this.center(w);
       this.focus(w);
+      history.replaceState(null, '', '#' + key);
     },
 
     // attach a program's content to a window frame (the decoupling point)
@@ -551,8 +753,23 @@
   }
   tick(); setInterval(tick, 20000);
 
-  /* boot with one window open, exactly like before */
-  WM.open('resume');
+  /* ── deep-link router ────────────────────────────────────────
+     internetcreature.dev/#resume  → opens that program, maximized.
+     works for any program key (#chordial, #dain-img, …).            */
+  function maximizeKey(key) {
+    const w = WM.windows.find(x => x.key === key);
+    if (w && !w.maximized) WM.toggleMax(w);
+  }
+  function routeFromHash() {
+    const key = (location.hash || '').replace('#', '');
+    if (PROGRAMS[key]) { WM.open(key); maximizeKey(key); }
+  }
+  window.addEventListener('hashchange', routeFromHash);
+
+  /* boot: honor a deep link if present, else open the resume normally */
+  const startKey = (location.hash || '').replace('#', '');
+  if (PROGRAMS[startKey]) { WM.open(startKey); maximizeKey(startKey); }
+  else { WM.open('resume'); }
 })();
 </script>
 </body>
