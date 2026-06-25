@@ -383,7 +383,7 @@
       '<div class="placeholder">' +
         '<span class="mark">✎</span>' +
         '<p>this window is empty on purpose.</p>' +
-        '<p class="sub">we\'ll write what goes here together — your words, no robot filler.</p>' +
+        '<p class="sub">under construction 🚧</p>' +
       '</div>';
     return wrap;
   }
@@ -769,7 +769,7 @@
   /* boot: honor a deep link if present, else open the resume normally */
   const startKey = (location.hash || '').replace('#', '');
   if (PROGRAMS[startKey]) { WM.open(startKey); maximizeKey(startKey); }
-  else { WM.open('resume'); }
+  else { WM.open('resume'); maximizeKey('resume'); }
 })();
 </script>
 </body>
