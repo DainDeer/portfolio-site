@@ -37,7 +37,8 @@
   #desktop {
     position: fixed;
     inset: 0 0 var(--taskbar-h) 0;
-    background: var(--desktop);
+    background: var(--desktop) url("site_background.png") center bottom / cover no-repeat;
+    image-rendering: pixelated;   /* keep pixel art crisp when upscaled */
     overflow: hidden;
   }
 
