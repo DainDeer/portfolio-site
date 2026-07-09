@@ -25,7 +25,7 @@
     --taskbar-h: 46px;
   }
 
-  html, body { height: 100%; }
+  html, body { height: 100%; overflow: hidden; }
   body {
     font-family: 'Nunito', system-ui, sans-serif;
     color: var(--text);
@@ -110,7 +110,17 @@
   .window-body {
     padding: 0; overflow: auto;
     max-height: 60vh; min-height: 200px;
+    background: var(--body-bg, transparent);
     -webkit-user-select: text; user-select: text;
+  }
+
+  /* maximized: fill the whole desktop and center sparse content (resume opts out — it's its own long-form page) */
+  .window.maximized .window-body:not(:has(> .resume)) {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .window.maximized .window-body:has(> .doc) > .doc {
+    width: 100%; max-width: 640px;
   }
   /* padded text-document programs opt into this; bare programs (image viewer) don't */
   .doc { padding: 22px 22px 26px; }
@@ -459,11 +469,10 @@
     wrap.innerHTML =
       '<div class="doc-eyebrow">internetcreature os · say hi</div>' +
       '<div class="doc-title">contact</div>' +
-      '<p>want to reach the creature? drop a line anytime — i\'d love to hear from you. ♡</p>' +
       '<div class="contact-list">' +
         '<div class="contact-row"><span class="ic">✉️</span><div>' +
           '<a href="mailto:theinternetcreature@gmail.com">theinternetcreature@gmail.com</a>' +
-          '<small>the creature\'s inbox</small></div></div>' +
+          '<small>content creation inbox</small></div></div>' +
         '<div class="contact-row"><span class="ic">📬</span><div>' +
           '<a href="mailto:jalarison@gmail.com">jalarison@gmail.com</a>' +
           '<small>josh, directly</small></div></div>' +
@@ -614,10 +623,10 @@
   }
 
   const PROGRAMS = {
-    resume:      { icon: '📄', title: 'resume.doc',           render( ){ return makeResume(); } },
-    'dain-img':  { icon: '🖼️', title: 'dain.jpg',             render( ){ return makeImageViewer({ src: 'dain.jpg', alt: 'dain — character art', credit: 'Pricklepants', url: 'https://bsky.app/profile/pricklepants.bsky.social' }); } },
-    'josh-img':  { icon: '📸', title: 'Josh.jpg',             render( ){ return makeImageViewer({ src: 'Josh.jpg', alt: 'Josh' }); } },
-    chordial:    { icon: '💬', title: 'chordial',             render( ){ return makeProjectDoc({
+    resume:      { icon: '📄', title: 'resume.doc',           bg: '#ece7f0', render( ){ return makeResume(); } },
+    'dain-img':  { icon: '🖼️', title: 'dain.jpg',             bg: '#fdeee0', render( ){ return makeImageViewer({ src: 'dain.jpg', alt: 'dain — character art', credit: 'Pricklepants', url: 'https://bsky.app/profile/pricklepants.bsky.social' }); } },
+    'josh-img':  { icon: '📸', title: 'Josh.jpg',             bg: '#e3eefc', render( ){ return makeImageViewer({ src: 'Josh.jpg', alt: 'Josh' }); } },
+    chordial:    { icon: '💬', title: 'chordial',             bg: '#fdeaf3', render( ){ return makeProjectDoc({
       title: 'chordial', brandTitle: true,
       repo: 'https://github.com/DainDeer/chordial-mvp',
       body:
@@ -627,27 +636,27 @@
         'with the bot, but in the full version, the bot will be able to be chatted with across multiple ' +
         'platforms: Discord, Telegram, WhatsApp, in addition to customization of the AI service and model used.</p>',
     }); } },
-    'chaos-cube':{ icon: '🎴', title: 'chaos-commander-cube', render( ){ return makeProjectDoc({
+    'chaos-cube':{ icon: '🎴', title: 'chaos-commander-cube', bg: '#fdf6df', render( ){ return makeProjectDoc({
       title: 'chaos-commander-cube',
       repo: 'https://github.com/DainDeer/chaos-commander-cube',
       body:
         '<p>A Tabletop Simulator experience, which generates a truly unique Cube Draft format each time.</p>',
     }); } },
-    'llm-weave': { icon: '🧶', title: 'llm-weave',            render( ){ return makeProjectDoc({
+    'llm-weave': { icon: '🧶', title: 'llm-weave',            bg: '#e3f7ec', render( ){ return makeProjectDoc({
       title: 'llm-weave',
       repo: 'https://github.com/DainDeer/llm-weave',
       body:
         '<p>An early-stages project, exploring the synthesis of exports of a user\'s chat logs ' +
         'from multiple AI services.</p>',
     }); } },
-    dormant:     { icon: '📖', title: 'DORMANT.txt',          render( ){ return makeProjectDoc({
+    dormant:     { icon: '📖', title: 'DORMANT.txt',          bg: '#eee3f7', render( ){ return makeProjectDoc({
       title: 'DORMANT.txt', eyebrow: 'writing',
       body:
         '<p>An era-spanning sci-fi epic, dealing with themes of AI, self, ' +
         'and the current state of the world.</p>',
       note: 'writing in progress',
     }); } },
-    contact:     { icon: '✉️', title: 'contact',              render( ){ return makeContact(); } },
+    contact:     { icon: '✉️', title: 'contact',              bg: '#fbeaf0', render( ){ return makeContact(); } },
   };
   const DESKTOP_ICONS = ['dain-img', 'josh-img', 'resume', 'chordial', 'chaos-cube', 'dormant', 'contact'];
 
@@ -723,6 +732,7 @@
       w.key = key;
       w.iconEl.textContent = spec.icon;
       w.titleEl.textContent = spec.title;
+      w.el.style.setProperty('--body-bg', spec.bg || '');
       w.bodyEl.replaceChildren(spec.render(spec.title));
       w.bodyEl.scrollTop = 0;
       this.syncTask(w);
@@ -747,14 +757,20 @@
         w.prev = { x: w.x, y: w.y, width: w.el.style.width };
         w.x = 0; w.y = 0; place(w);
         w.el.style.width = desk.clientWidth + 'px';
+        w.el.style.height = desk.clientHeight + 'px';
         w.el.style.borderRadius = '0';
-        w.bodyEl.style.maxHeight = (desk.clientHeight - 34) + 'px';
+        w.bodyEl.style.maxHeight = 'none';
+        w.bodyEl.style.height = (desk.clientHeight - 34) + 'px';
+        w.el.classList.add('maximized');
         w.maximized = true;
       } else {
         w.x = w.prev.x; w.y = w.prev.y; place(w);
         w.el.style.width = w.prev.width || 'min(460px, calc(100% - 24px))';
+        w.el.style.height = '';
         w.el.style.borderRadius = '10px 10px 7px 7px';
         w.bodyEl.style.maxHeight = '60vh';
+        w.bodyEl.style.height = '';
+        w.el.classList.remove('maximized');
         w.maximized = false;
       }
     },
