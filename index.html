@@ -4,6 +4,16 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>internetcreature OS</title>
+<link rel="icon" type="image/png" href="favicon.png" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<meta name="description" content="dain's corner of the internet — a lil pastel desktop OS holding my resume, projects, and other creature things 🦌" />
+<meta name="theme-color" content="#b9b8e8" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://internetcreature.dev/" />
+<meta property="og:title" content="internetcreature OS" />
+<meta property="og:description" content="dain's corner of the internet — a lil pastel desktop OS holding my resume, projects, and other creature things." />
+<meta property="og:image" content="https://internetcreature.dev/dain.jpg" />
+<meta name="twitter:card" content="summary" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
@@ -23,6 +33,7 @@
     --sage: #9fe0ad;
     --sage-deep: #79c78d;
     --taskbar-h: 46px;
+    --titlebar-h: 34px;
   }
 
   html, body { height: 100%; overflow: hidden; }
@@ -43,8 +54,18 @@
   }
 
   #icons {
-    position: absolute; top: 14px; left: 14px;
-    display: flex; flex-direction: column; gap: 6px;
+    position: absolute; top: 14px; left: 14px; bottom: 8px;
+    display: flex; flex-direction: column; flex-wrap: wrap;
+    align-content: flex-start; gap: 6px;
+  }
+
+  /* the xp-style corner watermark, but it's a promise instead of a version number */
+  #tagline {
+    position: absolute; right: 18px; bottom: 14px;
+    font-size: 15px; font-weight: 700; font-style: italic;
+    color: rgba(255,255,255,0.92);
+    text-shadow: 0 1px 3px rgba(60,40,70,0.75);
+    text-align: right; pointer-events: none; z-index: 5;
   }
   .icon {
     width: 84px;
@@ -76,7 +97,7 @@
   .window.hidden { display: none; }
 
   .titlebar {
-    height: 34px; display: flex; align-items: center;
+    height: var(--titlebar-h); display: flex; align-items: center;
     padding: 0 6px 0 10px; gap: 8px; cursor: grab; position: relative;
     background: linear-gradient(180deg, #f9c8e0 0%, #f4a6cb 9%, #ee98c2 48%, #e98fbb 90%, #f3aacd 100%);
     border-radius: 9px 9px 0 0;
@@ -223,6 +244,12 @@
   .r-role { font-size: 14px; font-weight: 600; color: #6a5c78; margin-top: 2px; }
   .r-contact { font-size: 12px; color: #5a5263; margin-top: 9px; line-height: 1.7; }
   .r-contact a { color: inherit; text-decoration: none; }       /* plain ink in default */
+  /* phone number is an image so scrapers can't harvest it.
+     source PNG is square with the text in the top band; object-fit crops to just the text */
+  .r-phone {
+    width: 82px; height: 16px; vertical-align: -3px;
+    object-fit: cover; object-position: top left;
+  }
   .r-sec { margin-top: 22px; }
   .r-sec h2 {
     font-size: 12px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase;
@@ -336,6 +363,16 @@
     border-left: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.08);
   }
 
+  /* tagline lives in the tray too — the taskbar is the only thing a maximized window can't cover */
+  #tray-tagline {
+    height: 100%; display: flex; align-items: center; gap: 6px; padding: 0 14px;
+    color: rgba(255,255,255,0.9); font-weight: 700; font-style: italic; font-size: 12.5px;
+    text-shadow: 0 1px 1px rgba(80,50,90,0.5);
+    border-left: 1px solid rgba(255,255,255,0.3);
+    white-space: nowrap;
+  }
+  @media (max-width: 760px) { #tray-tagline { display: none; } }
+
   /* ───────── start menu ───────── */
   #startmenu {
     position: fixed; left: 6px; bottom: calc(var(--taskbar-h) + 6px); width: 240px;
@@ -380,9 +417,9 @@
     .window { width: calc(100% - 16px); }
   }
 
-  /* print only the resume page, no OS chrome */
+  /* print only the resume page, no OS chrome (falls back to a normal print when no resume is open) */
   @media print {
-    body * { visibility: hidden !important; }
+    body:has(.resume-page) * { visibility: hidden !important; }
     .resume-page, .resume-page * { visibility: visible !important; }
     .resume-page { position: absolute; left: 0; top: 0; width: 100%; max-width: none; margin: 0; padding: 0.4in 0.5in; }
     .r-polaroid, .resume-toggle { display: none !important; }
@@ -392,6 +429,7 @@
 <body>
   <div id="desktop">
     <div id="icons"></div>
+    <div id="tagline">leave the world better<br/>than you found it 🌱</div>
     <!-- windows are created here by the manager -->
   </div>
 
@@ -409,6 +447,7 @@
   <div id="taskbar">
     <button id="start" aria-haspopup="true"><span class="deer">🦌</span> start</button>
     <div class="tasks" id="tasks"></div>
+    <div id="tray-tagline">🌱 leave the world better than you found it</div>
     <div id="clock">--:--</div>
   </div>
 
@@ -426,6 +465,9 @@
    reuseWhenCapped:false — nothing else needs to change.
    ===================================================================== */
 (function () {
+
+  // single source of truth for titlebar height lives in the CSS var
+  const TITLEBAR_H = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--titlebar-h'), 10) || 34;
 
   /* ── content registry (decoupled from windows) ───────────────── */
   function makePlaceholder(title) {
@@ -525,7 +567,7 @@
             <div class="r-role">Data Infrastructure Engineer</div>
             <div class="r-contact">
               <a href="mailto:jalarison@gmail.com">jalarison@gmail.com</a> &nbsp;·&nbsp;
-              <a href="tel:+17202314281">(720) 231-4281</a> &nbsp;·&nbsp;
+              <img class="r-phone" src="phone.png" alt="phone number (in the printed copy)" /> &nbsp;·&nbsp;
               <a href="https://linkedin.com/in/joshua-larison" target="_blank" rel="noopener">linkedin.com/in/joshua-larison</a> &nbsp;·&nbsp;
               Daly City, CA
             </div>
@@ -667,6 +709,7 @@
   function makeWindow() {
     const el = document.createElement('div');
     el.className = 'window';
+    el.setAttribute('role', 'dialog');
     el.innerHTML =
       '<div class="titlebar">' +
         '<span class="t-icon"></span>' +
@@ -732,6 +775,7 @@
       w.key = key;
       w.iconEl.textContent = spec.icon;
       w.titleEl.textContent = spec.title;
+      w.el.setAttribute('aria-label', spec.title);
       w.el.style.setProperty('--body-bg', spec.bg || '');
       w.bodyEl.replaceChildren(spec.render(spec.title));
       w.bodyEl.scrollTop = 0;
@@ -756,11 +800,13 @@
       if (!w.maximized) {
         w.prev = { x: w.x, y: w.y, width: w.el.style.width };
         w.x = 0; w.y = 0; place(w);
-        w.el.style.width = desk.clientWidth + 'px';
-        w.el.style.height = desk.clientHeight + 'px';
+        /* percentages, not pixel snapshots — desk can be 0-sized at boot (embedded
+           views) and the window should track later resizes anyway */
+        w.el.style.width = '100%';
+        w.el.style.height = '100%';
         w.el.style.borderRadius = '0';
         w.bodyEl.style.maxHeight = 'none';
-        w.bodyEl.style.height = (desk.clientHeight - 34) + 'px';
+        w.bodyEl.style.height = 'calc(100% - var(--titlebar-h))';
         w.el.classList.add('maximized');
         w.maximized = true;
       } else {
@@ -779,6 +825,8 @@
       if (w.taskBtn) w.taskBtn.remove();
       w.el.remove();
       this.windows = this.windows.filter(x => x !== w);
+      // drop the deep-link hash so a refresh doesn't resurrect the closed window
+      if (location.hash === '#' + w.key) history.replaceState(null, '', location.pathname + location.search);
     },
 
     // one taskbar button per window
@@ -811,7 +859,7 @@
         if (!dragging) return;
         const dw = desk.clientWidth, dh = desk.clientHeight, ww = w.el.offsetWidth;
         w.x = Math.max(80 - ww, Math.min(e.clientX - sx, dw - 80));
-        w.y = Math.max(0, Math.min(e.clientY - sy, dh - 34));
+        w.y = Math.max(0, Math.min(e.clientY - sy, dh - TITLEBAR_H));
         place(w);
       });
       const end = () => { dragging = false; };
@@ -820,16 +868,29 @@
     },
   };
 
+  /* keep restored windows reachable when the browser shrinks */
+  window.addEventListener('resize', () => {
+    WM.windows.forEach(w => {
+      if (w.maximized || w.minimized) return;
+      const dw = desk.clientWidth, dh = desk.clientHeight, ww = w.el.offsetWidth;
+      w.x = Math.max(80 - ww, Math.min(w.x, dw - 80));
+      w.y = Math.max(0, Math.min(w.y, dh - TITLEBAR_H));
+      place(w);
+    });
+  });
+
   /* ── desktop icons ───────────────────────────────────────────── */
   const iconsEl = document.getElementById('icons');
   DESKTOP_ICONS.forEach(key => {
     const spec = PROGRAMS[key];
     const el = document.createElement('div');
     el.className = 'icon'; el.tabIndex = 0;
+    el.setAttribute('role', 'button');
+    el.setAttribute('aria-label', 'open ' + spec.title);
     el.innerHTML = '<span class="glyph">' + spec.icon + '</span><span class="label">' + spec.title + '</span>';
     el.addEventListener('click', e => { e.stopPropagation(); clearSelection(); el.classList.add('selected'); });
     el.addEventListener('dblclick', () => WM.open(key));
-    el.addEventListener('keydown', e => { if (e.key === 'Enter') WM.open(key); });
+    el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); WM.open(key); } });
     let lastTap = 0;
     el.addEventListener('pointerup', e => {
       if (e.pointerType === 'touch') {
@@ -859,6 +920,7 @@
   function closeStart() { startMenu.classList.remove('open'); startBtn.classList.remove('active'); }
   startBtn.addEventListener('click', e => { e.stopPropagation(); startMenu.classList.contains('open') ? closeStart() : openStart(); });
   startMenu.addEventListener('click', e => e.stopPropagation());
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeStart(); });
 
   /* ── shutdown gag ────────────────────────────────────────────── */
   const toast = document.getElementById('toast');
@@ -876,7 +938,10 @@
     const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
     document.getElementById('clock').textContent = h + ':' + m + ' ' + ap;
   }
-  tick(); setInterval(tick, 20000);
+  (function scheduleTick() {
+    tick();
+    setTimeout(scheduleTick, 60000 - (Date.now() % 60000) + 250); // re-tick just past each minute mark
+  })();
 
   /* ── deep-link router ────────────────────────────────────────
      internetcreature.dev/#resume  → opens that program, maximized.
