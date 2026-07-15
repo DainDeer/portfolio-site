@@ -137,8 +137,8 @@
     -webkit-user-select: text; user-select: text;
   }
 
-  /* maximized: fill the whole desktop and center sparse content (resume opts out — it's its own long-form page) */
-  .window.maximized .window-body:not(:has(> .resume)) {
+  /* maximized: fill the whole desktop and center sparse content (resume + welcome opt out — they manage their own layout) */
+  .window.maximized .window-body:not(:has(> .resume)):not(:has(> .welcome-shell)) {
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
   }
@@ -242,13 +242,18 @@
     background: rgba(159,224,173,0.26); border: 1px solid rgba(121,199,141,0.45);
   }
   .mission-note p { font-weight: 800; font-style: italic; color: #43714f; }
-  /* pinned to the window bottom no matter the scroll, like a lil dock */
+  /* welcome.txt splits into its own scroll region + a fixed dock below it,
+     so the action bar can never overlap the body text at any size */
+  .window-body:has(> .welcome-shell) { overflow: hidden; display: flex; flex-direction: column; }
+  .welcome-shell { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+  .welcome-scroll { flex: 1; min-height: 0; overflow: auto; }
+  .window.maximized .welcome-scroll > .doc { max-width: 640px; margin: 0 auto; }
   .welcome-actions {
     display: flex; flex-wrap: wrap; gap: 8px;
-    position: sticky; bottom: 0; z-index: 2;
-    margin: 18px -22px -26px; padding: 12px 22px 14px;
-    background: linear-gradient(180deg, rgba(243,249,238,0) 0%, rgba(243,249,238,0.95) 26%, #f3f9ee 60%);
-    border-top: 1px solid rgba(121,199,141,0.25);
+    padding: 12px 22px 14px;
+    background: #f3f9ee;
+    border-top: 1px solid rgba(121,199,141,0.35);
+    box-shadow: 0 -6px 12px -9px rgba(60,40,70,0.25);
   }
   .wa-btn {
     font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
@@ -592,6 +597,10 @@
 
   /* ── welcome.txt: the mission statement as a native document ──── */
   function makeWelcome() {
+    const shell = document.createElement('div');
+    shell.className = 'welcome-shell';
+    const scroll = document.createElement('div');
+    scroll.className = 'welcome-scroll';
     const wrap = document.createElement('div');
     wrap.className = 'doc';
     wrap.innerHTML =
@@ -611,20 +620,26 @@
       '<p>i am also a creator at heart. it took me a long time to understand that.</p>' +
       '<p>the signs were always there in my childhood, but i buried them beneath years of masking and trying to become the person i believed society expected me to be. now, i want to spend the rest of my life creating openly and intentionally.</p>' +
       '<p>i want to create software that helps people. i want to write stories and ideas that make others feel less separate. i want to build communities where curiosity is valued, collaboration matters more than ego, and warmth is treated as a strength. i want to explore what humans and ai can make together, while staying thoughtful about the risks, responsibilities, and lives affected along the way.</p>' +
-      '<div class="mission-note"><p>most of all, i want to leave the planet better than i found it \ud83c\udf31</p></div>' +
-      '<div class="welcome-actions">' +
-        '<button class="wa-btn" data-open="resume" title="recruiters go here!">\ud83d\udcc4 view r\u00e9sum\u00e9</button>' +
-        '<button class="wa-btn sage" data-open="chordial" title="an AI companion that reaches out to you first">\ud83d\udcac explore chordial</button>' +
-        '<button class="wa-btn" data-open="contact" title="contact me!">\u2709\ufe0f say hi</button>' +
-      '</div>';
-    wrap.querySelectorAll('.wa-btn').forEach(b => {
+      '<div class="mission-note"><p>most of all, i want to leave the planet better than i found it \ud83c\udf31</p></div>';
+    scroll.appendChild(wrap);
+
+    const actions = document.createElement('div');
+    actions.className = 'welcome-actions';
+    actions.innerHTML =
+      '<button class="wa-btn" data-open="resume" title="recruiters go here!">\ud83d\udcc4 view r\u00e9sum\u00e9</button>' +
+      '<button class="wa-btn sage" data-open="chordial" title="an AI companion that reaches out to you first">\ud83d\udcac explore chordial</button>' +
+      '<button class="wa-btn" data-open="contact" title="contact me!">\u2709\ufe0f say hi</button>';
+    actions.querySelectorAll('.wa-btn').forEach(b => {
       const key = b.dataset.open;
       b.addEventListener('click', () => {
         WM.open(key);
         if (key === 'resume') maximizeKey(key);
       });
     });
-    return wrap;
+
+    shell.appendChild(scroll);
+    shell.appendChild(actions);
+    return shell;
   }
 
   /* ── resume program: paper document + interactive toggle ─────── */
