@@ -339,9 +339,9 @@
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 2px 0 6px rgba(60,40,70,0.25);
   }
   #start .deer {
-    width: 21px; height: 21px; image-rendering: pixelated;
+    width: 32px; height: 32px; image-rendering: pixelated;
     filter: drop-shadow(0 1px 1px rgba(0,0,0,0.25));
-    transform: translateY(1px);   /* art sits in the top 14 of 16 pixel rows */
+    transform: translateY(2px);   /* art sits in the top 28 of 32 pixel rows */
   }
   #start:hover { background: linear-gradient(180deg, #c4f0cd 0%, #a4e2b2 46%, #8bd49b 56%, #80cf93 100%); }
   #start.active { box-shadow: inset 0 2px 5px rgba(40,80,50,0.45); }
@@ -447,7 +447,7 @@
   </div>
 
   <div id="taskbar">
-    <button id="start" aria-haspopup="true"><img class="deer" src="favicon.png" alt="" /> start</button>
+    <button id="start" aria-haspopup="true"><img class="deer" src="start-deer.png" alt="" /> start</button>
     <div class="tasks" id="tasks"></div>
     <div id="clock">--:--</div>
   </div>
