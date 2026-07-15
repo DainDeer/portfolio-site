@@ -1,5 +1,2 @@
 # local claude code settings / launch config
 .claude/
-
-# abandoned pre-OS design, kept around locally for nostalgia
-src/
