@@ -439,32 +439,6 @@
   }
   .sm-shutdown:hover { background: #f6ecf3; color: var(--text); }
 
-  /* ───────── deery, the resident assistant 📎🦌 ───────── */
-  #deery {
-    position: absolute; right: 12px; bottom: 44px; width: 112px; z-index: 140;
-    pointer-events: none;
-    filter: drop-shadow(0 6px 14px rgba(60,40,70,0.35));
-  }
-  #deery-bubble {
-    position: absolute; right: 116px; bottom: 138px; z-index: 141;
-    max-width: 250px; padding: 11px 14px; pointer-events: none;
-    background: #fffbd8; border: 1.5px solid #4a4a3a; border-radius: 12px;
-    box-shadow: 0 8px 22px -8px rgba(60,40,70,0.4);
-    opacity: 0; transform: translateY(6px) scale(0.97);
-    transition: opacity .16s ease, transform .16s ease;
-  }
-  #deery-bubble.show { opacity: 1; transform: none; }
-  #deery-bubble p { font-size: 13px; line-height: 1.5; color: #3c3a2c; font-weight: 600; }
-  #deery-bubble::before {
-    content: ''; position: absolute; bottom: -13px; right: 22px;
-    border: 13px solid transparent; border-top-color: #4a4a3a; border-bottom: 0; border-right: 0;
-  }
-  #deery-bubble::after {
-    content: ''; position: absolute; bottom: -10.5px; right: 24px;
-    border: 11px solid transparent; border-top-color: #fffbd8; border-bottom: 0; border-right: 0;
-  }
-  @media (max-width: 700px) { #deery, #deery-bubble { display: none; } }
-
   #toast {
     position: fixed; left: 50%; top: 40%; transform: translate(-50%,-50%) scale(0.96);
     background: rgba(58,42,64,0.92); color: #fff; font-weight: 700; font-size: 15px;
@@ -491,8 +465,6 @@
   <div id="desktop">
     <div id="icons"></div>
     <div id="tagline">leave the world better<br/>than you found it 🌱</div>
-    <img id="deery" src="concepts/deery-clippy-mockup-v2.png" alt="deery, the resident paperclip-deer assistant" />
-    <div id="deery-bubble" role="status"><p id="deery-text"></p></div>
     <!-- windows are created here by the manager -->
   </div>
 
@@ -641,38 +613,18 @@
       '<p>i want to create software that helps people. i want to write stories and ideas that make others feel less separate. i want to build communities where curiosity is valued, collaboration matters more than ego, and warmth is treated as a strength. i want to explore what humans and ai can make together, while staying thoughtful about the risks, responsibilities, and lives affected along the way.</p>' +
       '<div class="mission-note"><p>most of all, i want to leave the planet better than i found it \ud83c\udf31</p></div>' +
       '<div class="welcome-actions">' +
-        '<button class="wa-btn" data-open="resume">\ud83d\udcc4 view r\u00e9sum\u00e9</button>' +
-        '<button class="wa-btn sage" data-open="chordial">\ud83d\udcac explore chordial</button>' +
-        '<button class="wa-btn" data-open="contact">\u2709\ufe0f say hi</button>' +
+        '<button class="wa-btn" data-open="resume" title="recruiters go here!">\ud83d\udcc4 view r\u00e9sum\u00e9</button>' +
+        '<button class="wa-btn sage" data-open="chordial" title="an AI companion that reaches out to you first">\ud83d\udcac explore chordial</button>' +
+        '<button class="wa-btn" data-open="contact" title="contact me!">\u2709\ufe0f say hi</button>' +
       '</div>';
-    const BLURBS = {
-      resume: 'recruiters go here!! 📄 (everyone else can peek too, i don\'t gatekeep)',
-      chordial: 'chordial is an AI companion that reaches out to *you* first 💬 it remembers what matters, respects quiet hours, and knows what friday afternoon feels like.',
-      contact: 'it looks like you\'re trying to say hi! ✉️ dain loves hearing from fellow creatures. i\'d answer myself, but i\'m a paperclip 📎',
-    };
     wrap.querySelectorAll('.wa-btn').forEach(b => {
       const key = b.dataset.open;
       b.addEventListener('click', () => {
         WM.open(key);
         if (key === 'resume') maximizeKey(key);
       });
-      b.addEventListener('mouseenter', () => deerySay(BLURBS[key]));
-      b.addEventListener('mouseleave', () => deeryHush());
-      b.addEventListener('focus', () => deerySay(BLURBS[key]));
-      b.addEventListener('blur', () => deeryHush());
     });
     return wrap;
-  }
-
-  /* ── deery's voice (bubble helpers, hoisted for any program to use) ── */
-  function deerySay(msg) {
-    clearTimeout(deerySay._t);
-    document.getElementById('deery-text').textContent = msg;
-    document.getElementById('deery-bubble').classList.add('show');
-  }
-  function deeryHush(delay = 280) {
-    clearTimeout(deerySay._t);
-    deerySay._t = setTimeout(() => document.getElementById('deery-bubble').classList.remove('show'), delay);
   }
 
   /* ── resume program: paper document + interactive toggle ─────── */
