@@ -338,7 +338,11 @@
     background: linear-gradient(180deg, #b6ecc0 0%, #97dca6 46%, #7fce90 56%, #74c688 100%);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 2px 0 6px rgba(60,40,70,0.25);
   }
-  #start .deer { font-size: 18px; font-style: normal; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.25)); }
+  #start .deer {
+    width: 21px; height: 21px; image-rendering: pixelated;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.25));
+    transform: translateY(1px);   /* art sits in the top 14 of 16 pixel rows */
+  }
   #start:hover { background: linear-gradient(180deg, #c4f0cd 0%, #a4e2b2 46%, #8bd49b 56%, #80cf93 100%); }
   #start.active { box-shadow: inset 0 2px 5px rgba(40,80,50,0.45); }
 
@@ -363,15 +367,6 @@
     border-left: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.08);
   }
 
-  /* tagline lives in the tray too — the taskbar is the only thing a maximized window can't cover */
-  #tray-tagline {
-    height: 100%; display: flex; align-items: center; gap: 6px; padding: 0 14px;
-    color: rgba(255,255,255,0.9); font-weight: 700; font-style: italic; font-size: 12.5px;
-    text-shadow: 0 1px 1px rgba(80,50,90,0.5);
-    border-left: 1px solid rgba(255,255,255,0.3);
-    white-space: nowrap;
-  }
-  @media (max-width: 760px) { #tray-tagline { display: none; } }
 
   /* ───────── start menu ───────── */
   #startmenu {
@@ -388,6 +383,12 @@
   .sm-header .av { font-size: 26px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25)); }
   .sm-header .who { font-weight: 800; font-size: 15px; text-shadow: 0 1px 2px rgba(120,50,90,0.6); }
   .sm-header .who small { display: block; font-weight: 600; font-size: 11px; opacity: 0.9; }
+  .sm-tagline {
+    padding: 8px 14px;
+    font-size: 11.5px; font-weight: 700; font-style: italic;
+    color: var(--muted); text-align: center; text-wrap: balance;
+    background: #f9eef6; border-bottom: 1px solid #f0e4ee;
+  }
   .sm-list { padding: 6px; }
   .sm-item {
     display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px;
@@ -438,6 +439,7 @@
       <span class="av">🦌</span>
       <span class="who">dain<small>internet creature</small></span>
     </div>
+    <div class="sm-tagline">🌱 leave the world better than you found it</div>
     <div class="sm-list" id="smList"></div>
     <div class="sm-foot">
       <button class="sm-shutdown" id="shutdown"><span>🌙</span> shut down…</button>
@@ -445,9 +447,8 @@
   </div>
 
   <div id="taskbar">
-    <button id="start" aria-haspopup="true"><span class="deer">🦌</span> start</button>
+    <button id="start" aria-haspopup="true"><img class="deer" src="favicon.png" alt="" /> start</button>
     <div class="tasks" id="tasks"></div>
-    <div id="tray-tagline">🌱 leave the world better than you found it</div>
     <div id="clock">--:--</div>
   </div>
 
