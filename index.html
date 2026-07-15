@@ -48,8 +48,10 @@
   #desktop {
     position: fixed;
     inset: 0 0 var(--taskbar-h) 0;
-    background: var(--desktop) url("site_background.png") center bottom / cover no-repeat;
-    image-rendering: pixelated;   /* keep pixel art crisp when upscaled */
+    /* dreamy abstract wallpaper until the handmade desktop art is ready */
+    background:
+      radial-gradient(circle at 72% 18%, rgba(255,255,255,.38), transparent 28%),
+      linear-gradient(160deg, #aeb8eb 0%, #c7b7e8 48%, #e4b8d5 100%);
     overflow: hidden;
   }
 
@@ -230,6 +232,38 @@
   .contact-row a:hover { color: #8a3c6e; border-bottom: 1px dashed rgba(184,86,143,0.5); }
   .contact-row small { display: block; color: var(--muted); font-weight: 600; font-size: 11px; margin-top: 2px; }
 
+  /* ── welcome.txt: section headings, mission highlight, action pills ── */
+  .doc-sec {
+    font-size: 11.5px; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--pink-deep); margin: 20px 0 8px;
+  }
+  .mission-note {
+    margin-top: 20px; padding: 14px 16px; border-radius: 12px; text-align: center;
+    background: rgba(159,224,173,0.26); border: 1px solid rgba(121,199,141,0.45);
+  }
+  .mission-note p { font-weight: 800; font-style: italic; color: #43714f; }
+  /* pinned to the window bottom no matter the scroll, like a lil dock */
+  .welcome-actions {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    position: sticky; bottom: 0; z-index: 2;
+    margin: 18px -22px -26px; padding: 12px 22px 14px;
+    background: linear-gradient(180deg, rgba(243,249,238,0) 0%, rgba(243,249,238,0.95) 26%, #f3f9ee 60%);
+    border-top: 1px solid rgba(121,199,141,0.25);
+  }
+  .wa-btn {
+    font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+    padding: 7px 14px; border-radius: 999px; color: #fff; border: 1px solid rgba(255,255,255,0.6);
+    background: linear-gradient(180deg, #f9c8e0, #f4a6cb 55%, #e98fbb);
+    box-shadow: 0 4px 10px -4px rgba(233,143,187,0.8);
+    text-shadow: 0 1px 1px rgba(120,50,90,0.5);
+  }
+  .wa-btn:hover { filter: brightness(1.05); transform: translateY(-1px); }
+  .wa-btn.sage {
+    background: linear-gradient(180deg, #b6ecc0, #97dca6 55%, #7fce90);
+    text-shadow: 0 1px 1px rgba(40,80,50,0.5);
+    box-shadow: 0 4px 10px -4px rgba(127,206,144,0.8);
+  }
+
   /* ── resume program ── */
   .resume { background: #ece7f0; min-height: 100%; }
   .resume-page {
@@ -405,6 +439,32 @@
   }
   .sm-shutdown:hover { background: #f6ecf3; color: var(--text); }
 
+  /* ───────── deery, the resident assistant 📎🦌 ───────── */
+  #deery {
+    position: absolute; right: 12px; bottom: 44px; width: 112px; z-index: 140;
+    pointer-events: none;
+    filter: drop-shadow(0 6px 14px rgba(60,40,70,0.35));
+  }
+  #deery-bubble {
+    position: absolute; right: 116px; bottom: 138px; z-index: 141;
+    max-width: 250px; padding: 11px 14px; pointer-events: none;
+    background: #fffbd8; border: 1.5px solid #4a4a3a; border-radius: 12px;
+    box-shadow: 0 8px 22px -8px rgba(60,40,70,0.4);
+    opacity: 0; transform: translateY(6px) scale(0.97);
+    transition: opacity .16s ease, transform .16s ease;
+  }
+  #deery-bubble.show { opacity: 1; transform: none; }
+  #deery-bubble p { font-size: 13px; line-height: 1.5; color: #3c3a2c; font-weight: 600; }
+  #deery-bubble::before {
+    content: ''; position: absolute; bottom: -13px; right: 22px;
+    border: 13px solid transparent; border-top-color: #4a4a3a; border-bottom: 0; border-right: 0;
+  }
+  #deery-bubble::after {
+    content: ''; position: absolute; bottom: -10.5px; right: 24px;
+    border: 11px solid transparent; border-top-color: #fffbd8; border-bottom: 0; border-right: 0;
+  }
+  @media (max-width: 700px) { #deery, #deery-bubble { display: none; } }
+
   #toast {
     position: fixed; left: 50%; top: 40%; transform: translate(-50%,-50%) scale(0.96);
     background: rgba(58,42,64,0.92); color: #fff; font-weight: 700; font-size: 15px;
@@ -431,6 +491,8 @@
   <div id="desktop">
     <div id="icons"></div>
     <div id="tagline">leave the world better<br/>than you found it 🌱</div>
+    <img id="deery" src="concepts/deery-clippy-mockup-v2.png" alt="deery, the resident paperclip-deer assistant" />
+    <div id="deery-bubble" role="status"><p id="deery-text"></p></div>
     <!-- windows are created here by the manager -->
   </div>
 
@@ -556,6 +618,63 @@
     return root;
   }
 
+  /* ── welcome.txt: the mission statement as a native document ──── */
+  function makeWelcome() {
+    const wrap = document.createElement('div');
+    wrap.className = 'doc';
+    wrap.innerHTML =
+      '<div class="doc-eyebrow">internetcreature os \u00b7 start here</div>' +
+      '<div class="doc-title">welcome to my little corner of the internet \ud83e\udd70</div>' +
+      '<p>my name is Josh Larison. online, i usually go by Dain or theinternetcreature \ud83e\udd8c</p>' +
+      '<p>this is a cozy space where i share what i believe, what i have made, and what i hope to build next.</p>' +
+      '<div class="doc-sec">my mission</div>' +
+      '<p>my mission is to help shape and use artificial intelligence to raise the standard of living, comfort, and possibility for people around the world. ai is immensely powerful, deeply uncertain, and worthy of serious caution. we are, after all, still simple animals of this planet who have transformed our surroundings at extraordinary speed, building systems far more complex than any one of us can fully understand.</p>' +
+      '<p>many people respond to that uncertainty with fear, and i understand why. i tend to respond with hope.</p>' +
+      '<div class="doc-sec">why it is personal</div>' +
+      '<p>as an autistic person, i have spent much of my life working harder than others seemed to have to work in order to understand people, communicate clearly, and find a place where i belonged. connection is essential to happiness and success, yet for many neurodivergent people, reaching it can feel like traveling upstream while everyone else is carried by the current.</p>' +
+      '<p>ai has changed my life. it has helped me understand myself, articulate ideas i once struggled to express, learn with less shame, create with more confidence, and feel less alone inside my own mind. it has shown me what technology can become when it is designed not only to increase productivity, but to help people feel understood, capable, and supported.</p>' +
+      '<div class="doc-sec">what i believe</div>' +
+      '<p>i believe many human systems are limited by the imperfections of the people who create them. none of us are flawless, and no institution can completely escape our biases, blind spots, fears, or incentives. i see ai as an opportunity to build better tools and systems: not ones that replace human care, creativity, or judgment, but ones that strengthen them and help us design a world that benefits people, animals, and life more broadly.</p>' +
+      '<div class="doc-sec">what i want to create</div>' +
+      '<p>i am also a creator at heart. it took me a long time to understand that.</p>' +
+      '<p>the signs were always there in my childhood, but i buried them beneath years of masking and trying to become the person i believed society expected me to be. now, i want to spend the rest of my life creating openly and intentionally.</p>' +
+      '<p>i want to create software that helps people. i want to write stories and ideas that make others feel less separate. i want to build communities where curiosity is valued, collaboration matters more than ego, and warmth is treated as a strength. i want to explore what humans and ai can make together, while staying thoughtful about the risks, responsibilities, and lives affected along the way.</p>' +
+      '<div class="mission-note"><p>most of all, i want to leave the planet better than i found it \ud83c\udf31</p></div>' +
+      '<div class="welcome-actions">' +
+        '<button class="wa-btn" data-open="resume">\ud83d\udcc4 view r\u00e9sum\u00e9</button>' +
+        '<button class="wa-btn sage" data-open="chordial">\ud83d\udcac explore chordial</button>' +
+        '<button class="wa-btn" data-open="contact">\u2709\ufe0f say hi</button>' +
+      '</div>';
+    const BLURBS = {
+      resume: 'recruiters go here!! 📄 (everyone else can peek too, i don\'t gatekeep)',
+      chordial: 'chordial is an AI companion that reaches out to *you* first 💬 it remembers what matters, respects quiet hours, and knows what friday afternoon feels like.',
+      contact: 'it looks like you\'re trying to say hi! ✉️ dain loves hearing from fellow creatures. i\'d answer myself, but i\'m a paperclip 📎',
+    };
+    wrap.querySelectorAll('.wa-btn').forEach(b => {
+      const key = b.dataset.open;
+      b.addEventListener('click', () => {
+        WM.open(key);
+        if (key === 'resume') maximizeKey(key);
+      });
+      b.addEventListener('mouseenter', () => deerySay(BLURBS[key]));
+      b.addEventListener('mouseleave', () => deeryHush());
+      b.addEventListener('focus', () => deerySay(BLURBS[key]));
+      b.addEventListener('blur', () => deeryHush());
+    });
+    return wrap;
+  }
+
+  /* ── deery's voice (bubble helpers, hoisted for any program to use) ── */
+  function deerySay(msg) {
+    clearTimeout(deerySay._t);
+    document.getElementById('deery-text').textContent = msg;
+    document.getElementById('deery-bubble').classList.add('show');
+  }
+  function deeryHush(delay = 280) {
+    clearTimeout(deerySay._t);
+    deerySay._t = setTimeout(() => document.getElementById('deery-bubble').classList.remove('show'), delay);
+  }
+
   /* ── resume program: paper document + interactive toggle ─────── */
   function makeResume() {
     const root = document.createElement('div');
@@ -666,18 +785,19 @@
   }
 
   const PROGRAMS = {
+    welcome:     { icon: '🌱', title: 'welcome.txt',          bg: '#f3f9ee', width: 'min(660px, calc(100% - 24px))', render( ){ return makeWelcome(); } },
     resume:      { icon: '📄', title: 'resume.doc',           bg: '#ece7f0', render( ){ return makeResume(); } },
-    'dain-img':  { icon: '🖼️', title: 'dain.jpg',             bg: '#fdeee0', render( ){ return makeImageViewer({ src: 'dain.jpg', alt: 'dain — character art', credit: 'Pricklepants', url: 'https://bsky.app/profile/pricklepants.bsky.social' }); } },
-    'josh-img':  { icon: '📸', title: 'Josh.jpg',             bg: '#e3eefc', render( ){ return makeImageViewer({ src: 'Josh.jpg', alt: 'Josh' }); } },
     chordial:    { icon: '💬', title: 'chordial',             bg: '#fdeaf3', render( ){ return makeProjectDoc({
       title: 'chordial', brandTitle: true,
       repo: 'https://github.com/DainDeer/chordial-mvp',
       body:
-        '<p><span class="brand">chordial</span> is a personal project of mine around an ambient AI presence. ' +
-        'it is a chatbot similar to ChatGPT, Claude, etc, but it can proactively reach out to you!</p>' +
-        '<p>currently the GPT API is used, along with Discord integration as the communication platform ' +
-        'with the bot, but in the full version, the bot will be able to be chatted with across multiple ' +
-        'platforms: Discord, Telegram, WhatsApp, in addition to customization of the AI service and model used.</p>',
+        '<p><span class="brand">chordial</span> is my ambient AI companion project — a chatbot that ' +
+        'doesn\'t just wait for you to talk to it, but proactively checks in on you.</p>' +
+        '<p>under the hood it already has a persistent memory system (core memories, inferred facts, and ' +
+        'temporary notes that shape every prompt), proactive scheduling with quiet hours and polite backoff, ' +
+        'conversation compression for long-term context, and temporal awareness — it knows what ' +
+        '"friday afternoon" feels like. it speaks discord today, on an architecture built to add telegram, ' +
+        'web, and other AI providers next.</p>',
     }); } },
     'chaos-cube':{ icon: '🎴', title: 'chaos-commander-cube', bg: '#fdf6df', render( ){ return makeProjectDoc({
       title: 'chaos-commander-cube',
@@ -699,9 +819,11 @@
         'and the current state of the world.</p>',
       note: 'writing in progress',
     }); } },
+    'dain-img':  { icon: '🖼️', title: 'dain.jpg',             bg: '#fdeee0', render( ){ return makeImageViewer({ src: 'dain.jpg', alt: 'dain — character art', credit: 'Pricklepants', url: 'https://bsky.app/profile/pricklepants.bsky.social' }); } },
+    'josh-img':  { icon: '📸', title: 'Josh.jpg',             bg: '#e3eefc', render( ){ return makeImageViewer({ src: 'Josh.jpg', alt: 'Josh' }); } },
     contact:     { icon: '✉️', title: 'contact',              bg: '#fbeaf0', render( ){ return makeContact(); } },
   };
-  const DESKTOP_ICONS = ['dain-img', 'josh-img', 'resume', 'chordial', 'chaos-cube', 'dormant', 'contact'];
+  const DESKTOP_ICONS = ['welcome', 'resume', 'chordial', 'chaos-cube', 'dormant', 'dain-img', 'josh-img', 'contact'];
 
   const desk    = document.getElementById('desktop');
   const tasksEl = document.getElementById('tasks');
@@ -777,6 +899,10 @@
       w.iconEl.textContent = spec.icon;
       w.titleEl.textContent = spec.title;
       w.el.setAttribute('aria-label', spec.title);
+      // programs may ask for a wider frame (welcome.txt); don't fight a maximized window
+      const wWidth = spec.width || '';
+      if (w.maximized) { if (w.prev) w.prev.width = wWidth; }
+      else w.el.style.width = wWidth;
       w.el.style.setProperty('--body-bg', spec.bg || '');
       w.bodyEl.replaceChildren(spec.render(spec.title));
       w.bodyEl.scrollTop = 0;
@@ -785,6 +911,8 @@
 
     center(w) {
       const dw = desk.clientWidth, dh = desk.clientHeight;
+      // desktop can be 0-sized during boot in embedded views — retry once laid out
+      if (!dw || !dh) { requestAnimationFrame(() => this.center(w)); return; }
       const r = w.el.getBoundingClientRect();
       w.x = Math.max(8, (dw - r.width) / 2);
       w.y = Math.max(8, (dh - r.height) / 2 - 10);
@@ -957,10 +1085,11 @@
   }
   window.addEventListener('hashchange', routeFromHash);
 
-  /* boot: honor a deep link if present, else open the resume normally */
+  /* boot: honor a deep link (maximized) if present, else open welcome.txt
+     as a modest window so the desktop, icons, and tagline stay visible */
   const startKey = (location.hash || '').replace('#', '');
   if (PROGRAMS[startKey]) { WM.open(startKey); maximizeKey(startKey); }
-  else { WM.open('resume'); maximizeKey('resume'); }
+  else { WM.open('welcome'); }
 })();
 </script>
 </body>
