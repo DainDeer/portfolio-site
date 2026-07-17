@@ -317,7 +317,7 @@
   .col .art {
     height: 52px; display: flex; align-items: center; justify-content: center;
     filter: drop-shadow(0 3px 4px rgba(10,5,15,0.5));
-    transition: transform .3s ease;
+    transition: transform .3s ease, filter .2s ease, opacity .2s ease;
   }
   .col .label {
     font-size: 15.5px; font-weight: 300; font-style: normal;
@@ -326,11 +326,29 @@
     white-space: nowrap;
   }
   .col .desc {
-    max-height: 0; overflow: hidden;
-    font-size: 11.5px; font-weight: 400; line-height: 1.5; letter-spacing: 0.01em;
+    width: min(190px, 100%); max-height: 0; overflow: hidden; text-align: left;
+    font-size: 10.5px; font-weight: 400; line-height: 1.35; letter-spacing: 0.01em;
     color: rgba(255,255,255,0.95); text-shadow: 0 1px 2px rgba(30,15,35,0.5);
     opacity: 0; transform: translateY(6px);
     transition: max-height .32s ease, opacity .26s ease .08s, transform .26s ease .08s;
+  }
+  .desc-head {
+    display: block; margin-bottom: 7px;
+    font-size: 10px; font-weight: 500; letter-spacing: 0.04em;
+    color: #fff;
+  }
+  .desc-tree {
+    position: relative; display: grid; gap: 4px;
+    padding-left: 13px;
+  }
+  .desc-tree::before {
+    content: ''; position: absolute; left: 2px; top: 4px; bottom: 4px;
+    width: 1px; background: rgba(255,255,255,0.48);
+  }
+  .desc-tree > span { position: relative; display: block; }
+  .desc-tree > span::before {
+    content: ''; position: absolute; left: -11px; top: 0.68em;
+    width: 7px; height: 1px; background: rgba(255,255,255,0.48);
   }
   .col .arrow {
     font-size: 17px; font-weight: 400; color: rgba(255,255,255,0.9);
@@ -338,10 +356,16 @@
     opacity: 0; transition: opacity .25s ease;
   }
   .col:hover, .col:focus-visible { flex-grow: 2.3; filter: brightness(1.06); z-index: 2; }
-  .col:hover .desc, .col:focus-visible .desc { max-height: 150px; opacity: 1; transform: none; }
+  .col:hover .desc, .col:focus-visible .desc { max-height: 220px; opacity: 1; transform: none; }
   .col:hover .arrow, .col:focus-visible .arrow { opacity: 1; animation: wx-nudge 1s ease infinite .3s; }
   @keyframes wx-nudge { 50% { transform: translateY(4px); } }
   .col:hover .art { animation: wx-bounce .55s cubic-bezier(.4,1.6,.4,1); }
+  .col.wr:hover .art { animation: none; }
+  .cols:has(.col:not(.wr):hover) .col.wr:not(:hover):not(:focus-visible) .art,
+  .cols:has(.col:not(.wr):focus-visible) .col.wr:not(:hover):not(:focus-visible) .art {
+    filter: blur(1.1px) drop-shadow(0 3px 4px rgba(10,5,15,0.5));
+    opacity: 0.72;
+  }
   @keyframes wx-bounce { 35% { transform: translateY(-7px) rotate(-8deg); } 70% { transform: translateY(0) rotate(4deg); } }
 
   .col.yt { background: linear-gradient(190deg, #ff9d9d, #ef7288); }
@@ -804,7 +828,16 @@
               '</svg>' +
             '</span>' +
             '<span class="label">youtube</span>' +
-            '<span class="desc">videos on life, the internet, ai, nature, and whatever chaos my mind conjures up</span>' +
+            '<span class="desc">' +
+              '<span class="desc-head">videos on:</span>' +
+              '<span class="desc-tree">' +
+                '<span>life</span>' +
+                '<span>the internet</span>' +
+                '<span>ai</span>' +
+                '<span>nature</span>' +
+                '<span>miscellaneous chaos</span>' +
+              '</span>' +
+            '</span>' +
             '<span class="arrow">↓</span>' +
           '</span>' +
         '</button>' +
@@ -827,7 +860,14 @@
               '</svg>' +
             '</span>' +
             '<span class="label">chordial</span>' +
-            '<span class="desc">an AI companion that checks in on you first<br/>• discord / telegram integration<br/>• become your best self without doing it alone</span>' +
+            '<span class="desc">' +
+              '<span class="desc-head">an ambient ai companion</span>' +
+              '<span class="desc-tree">' +
+                '<span>reaches out when you need it</span>' +
+                '<span>productivity / focus / emotional support</span>' +
+                '<span>discord / telegram integration</span>' +
+              '</span>' +
+            '</span>' +
             '<span class="arrow">↓</span>' +
           '</span>' +
         '</button>' +
@@ -840,7 +880,13 @@
               '</span>' +
             '</span>' +
             '<span class="label">writing</span>' +
-            '<span class="desc">DORMANT — an era-spanning sci-fi epic about AI &amp; self</span>' +
+            '<span class="desc">' +
+              '<span class="desc-head">DORMANT</span>' +
+              '<span class="desc-tree">' +
+                '<span>an era-spanning sci-fi epic</span>' +
+                '<span>ai &amp; self</span>' +
+              '</span>' +
+            '</span>' +
             '<span class="arrow">↓</span>' +
           '</span>' +
         '</button>' +
@@ -848,12 +894,19 @@
           '<span class="inner">' +
             '<span class="art"><img class="deer-art" alt="" src="start-deer.png"/></span>' +
             '<span class="label">about me</span>' +
-            '<span class="desc">who i am, what i believe, and my mission</span>' +
+            '<span class="desc">' +
+              '<span class="desc-head">hello!</span>' +
+              '<span class="desc-tree">' +
+                '<span>who i am</span>' +
+                '<span>what i believe</span>' +
+                '<span>my mission</span>' +
+              '</span>' +
+            '</span>' +
             '<span class="arrow">↓</span>' +
           '</span>' +
         '</button>' +
       '</div>' +
-      '<div class="wx-foot">pick a door 🚪 — or poke around the desktop behind me</div>';
+      '<div class="wx-foot">click around and explore!</div>';
 
     shell.querySelectorAll('.col').forEach(btn => {
       btn.addEventListener('click', () => {
