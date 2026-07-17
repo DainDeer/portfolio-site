@@ -97,6 +97,7 @@
     will-change: transform;            /* GPU-composited dragging */
   }
   .window.hidden { display: none; }
+  .window:focus-visible { outline: 2px solid rgba(255,255,255,0.95); outline-offset: 2px; }
 
   .titlebar {
     height: var(--titlebar-h); display: flex; align-items: center;
@@ -398,6 +399,18 @@
     .col .art { transform: scale(0.82); }
   }
 
+  @media (max-height: 420px) {
+    .wx-hello { padding: 10px 18px 8px; }
+    .cols { height: auto; flex: 1; margin-top: 0; }
+    .col .inner { gap: 6px; }
+    .col .desc, .wx-foot { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wx-hello .cursor, .col .arrow, .col .art, .doc-caret { animation: none !important; }
+    .col, .col .desc, .col .arrow, .col .art { transition: none !important; }
+  }
+
   /* ── resume program ── */
   .resume { background: #ece7f0; min-height: 100%; }
   .resume-page {
@@ -629,8 +642,8 @@
      • CONTENT REGISTRY  — each program is { icon, title, render() }.
        render() returns a DOM node; it knows nothing about windows.
      • WINDOW FACTORY    — makeWindow() builds a generic glossy frame.
-     • WINDOW MANAGER    — owns windows + taskbar; capped to 1 for now.
-   to allow multiple windows later: set WM.config.maxWindows higher and
+     • WINDOW MANAGER    — owns windows + taskbar; capped to 2 for now.
+   to allow more windows later: set WM.config.maxWindows higher and
    reuseWhenCapped:false — nothing else needs to change.
    ===================================================================== */
 (function () {
@@ -844,7 +857,7 @@
     shell.querySelectorAll('.col').forEach(btn => {
       btn.addEventListener('click', () => {
         const launcherWin = WM.windows.find(w => w.bodyEl.contains(shell));
-        WM.open(btn.dataset.open, { origin: launcherWin });
+        WM.open(btn.dataset.open, { origin: launcherWin, returnFocus: btn });
       });
     });
 
@@ -853,16 +866,20 @@
     const KEYS = 'ajkdsnfeioml';
     const EMO = ['🦌', '✨', '💖', '🌱', '😭', '🍓'];
     let t = '';
-    (function type() {
-      if (!line.isConnected) return;   // window closed or content swapped — stop typing
-      if (t.length > 12) t = '';
-      t += Math.random() < 0.16 ? EMO[Math.random() * EMO.length | 0]
-                                : KEYS[Math.random() * KEYS.length | 0];
-      line.textContent = t;
-      const delay = Math.random() < 0.14 ? 900 + Math.random() * 1400
-                                         : 160 + Math.random() * 220;
-      setTimeout(type, delay);
-    })();
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      line.textContent = 'dreaming in progress…';
+    } else {
+      (function type() {
+        if (!line.isConnected) return;   // window closed or content swapped — stop typing
+        if (t.length > 12) t = '';
+        t += Math.random() < 0.16 ? EMO[Math.random() * EMO.length | 0]
+                                  : KEYS[Math.random() * KEYS.length | 0];
+        line.textContent = t;
+        const delay = Math.random() < 0.14 ? 900 + Math.random() * 1400
+                                           : 160 + Math.random() * 220;
+        setTimeout(type, delay);
+      })();
+    }
 
     return shell;
   }
@@ -1038,6 +1055,7 @@
   function makeWindow() {
     const el = document.createElement('div');
     el.className = 'window';
+    el.tabIndex = -1;
     el.setAttribute('role', 'dialog');
     el.innerHTML =
       '<div class="titlebar">' +
@@ -1060,7 +1078,7 @@
       btnMin:   el.querySelector('.min'),
       btnMax:   el.querySelector('.max'),
       btnClose: el.querySelector('.close'),
-      x: 0, y: 0, key: null, taskBtn: null,
+      x: 0, y: 0, key: null, taskBtn: null, returnFocusEl: null,
       maximized: false, minimized: false, prev: null,
     };
   }
@@ -1078,12 +1096,18 @@
 
       // already open? restore + focus it.
       const existing = this.windows.find(w => w.key === key);
-      if (existing) { this.restore(existing); this.focus(existing); history.replaceState(null, '', '#' + key); return; }
+      if (existing) {
+        if (opts.returnFocus) existing.returnFocusEl = opts.returnFocus;
+        this.restore(existing); this.focus(existing);
+        history.replaceState(null, '', '#' + key);
+        return;
+      }
 
       // at cap? reuse the most recent non-pinned window (the launcher never gets swapped).
       const reusable = this.windows.filter(w => !w.pinned);
       if (this.windows.length >= this.config.maxWindows && this.config.reuseWhenCapped && reusable.length) {
         const w = reusable[reusable.length - 1];
+        w.returnFocusEl = opts.returnFocus || null;
         this.bind(w, key); this.restore(w); this.focus(w);
         if (opts.origin) this.offsetFrom(w, opts.origin);
         history.replaceState(null, '', '#' + key);
@@ -1092,6 +1116,7 @@
 
       // otherwise spin up a fresh window.
       const w = makeWindow();
+      w.returnFocusEl = opts.returnFocus || null;
       this.windows.push(w);
       this.wire(w);
       this.bind(w, key);
@@ -1142,7 +1167,10 @@
       place(w);
     },
 
-    focus(w) { w.el.style.zIndex = ++this.z; },
+    focus(w) {
+      w.el.style.zIndex = ++this.z;
+      if (!w.el.contains(document.activeElement)) w.el.focus({ preventScroll: true });
+    },
 
     minimize(w) { w.minimized = true; w.el.classList.add('hidden'); if (w.taskBtn) w.taskBtn.classList.add('pressed'); },
     restore(w)  { w.minimized = false; w.el.classList.remove('hidden'); if (w.taskBtn) w.taskBtn.classList.remove('pressed'); },
@@ -1174,11 +1202,13 @@
     },
 
     close(w) {
+      const returnFocusEl = w.returnFocusEl;
       if (w.taskBtn) w.taskBtn.remove();
       w.el.remove();
       this.windows = this.windows.filter(x => x !== w);
       // drop the deep-link hash so a refresh doesn't resurrect the closed window
       if (location.hash === '#' + w.key) history.replaceState(null, '', location.pathname + location.search);
+      if (returnFocusEl && returnFocusEl.isConnected) returnFocusEl.focus({ preventScroll: true });
     },
 
     // one taskbar button per window
