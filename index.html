@@ -959,8 +959,9 @@
     } else {
       function startBurst() {
         if (!line.isConnected) return;   // window closed or content swapped — stop typing
-        t = '';
-        renderTyping();
+        // Keep one continuous stream; trim only old, already-scrolled-off text.
+        if (t.length > 512) t = t.slice(-384);
+        if (t) t += ' ';
         const burstLength = 7 + (Math.random() * 10 | 0);
         let typed = 0;
 
