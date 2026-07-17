@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>welcome.exe — slanted columns mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@1,700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --window-face: #fdf6fb;
+    --window-border: #c9b3ec;
+    --text: #3a2a40;
+    --muted: #8a7a92;
+    --taskbar-h: 46px;
+    --titlebar-h: 34px;
+  }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: 'Nunito', system-ui, sans-serif;
+    color: var(--text);
+    -webkit-user-select: none; user-select: none;
+  }
+
+  /* ── desktop + taskbar (same as live site) ── */
+  #desktop {
+    position: fixed; inset: 0 0 var(--taskbar-h) 0;
+    background:
+      radial-gradient(circle at 72% 18%, rgba(255,255,255,.38), transparent 28%),
+      linear-gradient(160deg, #aeb8eb 0%, #c7b7e8 48%, #e4b8d5 100%);
+    overflow: hidden;
+  }
+  #tagline {
+    position: absolute; right: 18px; bottom: 14px;
+    font-size: 15px; font-weight: 700; font-style: italic;
+    color: rgba(255,255,255,0.92); text-shadow: 0 1px 3px rgba(60,40,70,0.75);
+    text-align: right; pointer-events: none;
+  }
+  #taskbar {
+    position: fixed; left: 0; right: 0; bottom: 0; height: var(--taskbar-h);
+    display: flex; align-items: center; padding-right: 4px;
+    background: linear-gradient(180deg, #cdbbed 0%, #c2a9e6 7%, #b89ce0 50%, #ad8ed8 93%, #c4b0ea 100%);
+    border-top: 1px solid rgba(255,255,255,0.5);
+    box-shadow: 0 -2px 8px rgba(60,40,70,0.25); z-index: 100;
+  }
+  #start {
+    height: 100%; display: flex; align-items: center; gap: 7px;
+    padding: 0 18px 0 14px; border: none; font-family: inherit;
+    font-size: 16px; font-weight: 800; font-style: italic; color: #fff;
+    text-shadow: 0 1px 2px rgba(40,80,50,0.6); cursor: pointer;
+    border-radius: 0 12px 12px 0;
+    background: linear-gradient(180deg, #b6ecc0 0%, #97dca6 46%, #7fce90 56%, #74c688 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 2px 0 6px rgba(60,40,70,0.25);
+  }
+  .task-btn {
+    display: flex; align-items: center; gap: 7px; margin-left: 8px;
+    height: 30px; min-width: 150px; max-width: 200px; padding: 0 12px;
+    border: 1px solid rgba(255,255,255,0.4); border-radius: 6px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.4), rgba(255,255,255,0.12));
+    color: #fff; font-weight: 700; font-size: 13px;
+    text-shadow: 0 1px 1px rgba(80,50,90,0.5); white-space: nowrap;
+  }
+
+  /* ── generic window chrome (same as live site) ── */
+  .window {
+    position: absolute;
+    background: var(--window-face);
+    border: 1px solid var(--window-border);
+    border-radius: 10px 10px 7px 7px;
+    box-shadow: 0 18px 50px -12px rgba(60,40,70,0.5), 0 0 0 1px rgba(255,255,255,0.6) inset;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .titlebar {
+    height: var(--titlebar-h); display: flex; align-items: center; flex: none;
+    padding: 0 6px 0 10px; gap: 8px; position: relative;
+    background: linear-gradient(180deg, #f9c8e0 0%, #f4a6cb 9%, #ee98c2 48%, #e98fbb 90%, #f3aacd 100%);
+    border-radius: 9px 9px 0 0;
+  }
+  .titlebar::after {
+    content: ''; position: absolute; left: 8px; right: 8px; top: 2px; height: 12px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.65), rgba(255,255,255,0));
+    border-radius: 8px; pointer-events: none;
+  }
+  .titlebar .t-icon { font-size: 16px; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.25)); }
+  .titlebar .t-title {
+    flex: 1; color: #fff; font-weight: 700; font-size: 14px;
+    text-shadow: 0 1px 2px rgba(120,50,90,0.7); white-space: nowrap;
+  }
+  .t-controls { display: flex; gap: 4px; }
+  .t-btn {
+    width: 22px; height: 22px;
+    border: 1px solid rgba(255,255,255,0.7); border-radius: 5px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.12));
+    color: #fff; font-size: 13px; font-weight: 800; line-height: 1;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    text-shadow: 0 1px 1px rgba(120,50,90,0.6);
+  }
+  .t-btn.close { background: linear-gradient(180deg, #ff9fb6, #ec6f90); }
+
+  /* ═══════════ welcome.exe — terminal-dark, slanted columns ═══════════ */
+  #welcome {
+    width: min(600px, calc(100vw - 48px));
+    left: 50%; top: 44%;
+    transform: translate(calc(-50% - 36px), calc(-50% - 36px));
+    z-index: 10;
+  }
+  .wx-body { display: flex; flex-direction: column; background: #0e0a13; }
+  .wx-hello {
+    display: flex; align-items: baseline; gap: 12px;
+    padding: 18px 22px 14px;
+    font-family: 'Courier New', monospace;
+    background:
+      repeating-linear-gradient(0deg, rgba(142,240,162,0.04) 0 1px, transparent 1px 3px),
+      #0e0a13;
+  }
+  .wx-hello .wordmark {
+    font-weight: 700; font-size: 23px; letter-spacing: 0.02em;
+    color: #8ef0a2; text-shadow: 0 0 8px rgba(142,240,162,0.55);
+  }
+  .wx-hello .wordmark .cursor { animation: blink 1.1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .wx-hello .sub {
+    font-size: 12px; font-weight: 700; color: #58a86c;
+    text-shadow: 0 0 6px rgba(142,240,162,0.25);
+  }
+
+  /* the slanted launcher columns — side by side, leaning into the dark */
+  .cols {
+    display: flex; height: 384px; overflow: hidden;
+    margin: 6px -60px 0;
+  }
+  .col {
+    flex: 1 1 0; min-width: 0; position: relative;
+    display: flex; align-items: center; justify-content: center;
+    transform: skewX(-8deg);
+    margin: 0 -1px;               /* no hairline gaps between panels */
+    border: none; cursor: pointer; font-family: inherit;
+    transition: flex-grow .36s cubic-bezier(.5,1.4,.4,1), filter .2s ease;
+    box-shadow: 8px 0 18px -8px rgba(0,0,0,0.55);
+  }
+  .col .inner {
+    transform: skewX(8deg);       /* counter-skew so content stays upright */
+    display: flex; flex-direction: column; align-items: center; gap: 13px;
+    width: 100%; padding: 0 12px; text-align: center;
+  }
+  .col .art {
+    height: 52px; display: flex; align-items: center; justify-content: center;
+    filter: drop-shadow(0 3px 4px rgba(10,5,15,0.5));
+    transition: transform .3s ease;
+  }
+  .col .label {
+    font-size: 18px; font-weight: 800; font-style: italic; letter-spacing: 0.01em;
+    color: #fff; text-shadow: 0 1px 3px rgba(30,15,35,0.55);
+    white-space: nowrap;
+  }
+  .col.ch .label { font-family: 'Lora', Georgia, serif; }
+  .col .desc {
+    max-height: 0; overflow: hidden;
+    font-size: 12px; font-weight: 700; line-height: 1.45;
+    color: rgba(255,255,255,0.95); text-shadow: 0 1px 2px rgba(30,15,35,0.5);
+    opacity: 0; transform: translateY(6px);
+    transition: max-height .32s ease, opacity .26s ease .08s, transform .26s ease .08s;
+  }
+  .col .arrow {
+    font-size: 17px; font-weight: 800; color: rgba(255,255,255,0.9);
+    text-shadow: 0 1px 2px rgba(30,15,35,0.5);
+    opacity: 0; transition: opacity .25s ease;
+  }
+  .col:hover, .col:focus-visible { flex-grow: 2.3; filter: brightness(1.06); z-index: 2; }
+  .col:hover .desc, .col:focus-visible .desc { max-height: 120px; opacity: 1; transform: none; }
+  .col:hover .arrow, .col:focus-visible .arrow { opacity: 1; animation: nudge 1s ease infinite .3s; }
+  @keyframes nudge { 50% { transform: translateY(4px); } }
+  .col:hover .art { animation: bounce .55s cubic-bezier(.4,1.6,.4,1); }
+  @keyframes bounce { 35% { transform: translateY(-7px) rotate(-8deg); } 70% { transform: translateY(0) rotate(4deg); } }
+
+  .col.yt { background: linear-gradient(170deg, #ff9d9d, #ef7288); }
+  .col.ch { background: linear-gradient(170deg, #f9b8d8, #ea82b8); }
+  .col.wr { background: linear-gradient(170deg, #cdb5f2, #a081d8); }
+  .col.me { background: linear-gradient(170deg, #a5e5b3, #6cc383); }
+  /* outer columns bleed past the window edges — nudge their content back inside */
+  .col.yt { padding-left: 52px; }
+  .col.me { padding-right: 52px; }
+
+  /* ── writing icon: a classic word editor, one line, typing forever ── */
+  .doc-icon {
+    display: block; width: 42px; height: 48px;
+    background: #fff; border-radius: 3px; overflow: hidden; text-align: left;
+    box-shadow: 0 2px 6px rgba(10,5,15,0.4);
+  }
+  .doc-bar {
+    display: block; height: 8px; background: #e9e4ef;
+    border-bottom: 1px solid #d6cfde; position: relative;
+  }
+  .doc-bar::after {
+    content: ''; position: absolute; left: 3px; top: 2.5px; width: 24px; height: 3px;
+    background: repeating-linear-gradient(90deg, #b6adc2 0 4px, transparent 4px 6px);
+  }
+  .doc-line {
+    display: block; padding: 7px 3px 0;
+    font-family: 'Courier New', monospace; font-size: 7px; font-weight: 700;
+    color: #4a3f52; white-space: nowrap; overflow: hidden;
+  }
+  .doc-caret {
+    display: inline-block; width: 1px; height: 9px;
+    background: #3a2a40; vertical-align: -1.5px;
+    animation: blink 1s steps(1) infinite;
+  }
+
+  /* ── mini CRT (benched for now — the coding-terminal version) ──
+  .crt { display: block; width: 46px; }
+  .crt-screen {
+    display: block; height: 33px; background: #061106;
+    border: 3px solid #d9d0c1; border-bottom-width: 6px;
+    border-radius: 5px 5px 4px 4px; overflow: hidden;
+    font-family: 'Courier New', monospace; font-size: 6.5px; line-height: 1.25;
+    font-weight: 700; color: #7ef29a; text-shadow: 0 0 3px rgba(126,242,154,0.8);
+    padding: 1px 2px; word-break: break-all; white-space: pre-wrap;
+  }
+  .crt-cursor { animation: blink .8s steps(1) infinite; }
+  .crt-stand { display: block; width: 10px; height: 3px; background: #b7ad9c; margin: 0 auto; }
+  .crt-base  { display: block; width: 24px; height: 3px; background: #d9d0c1; border-radius: 2px; margin: 0 auto; }
+  ── */
+
+  .deer-art { width: 38px; height: 38px; image-rendering: pixelated; display: block; }
+
+  .wx-foot {
+    padding: 10px 20px; text-align: center;
+    font-family: 'Courier New', monospace;
+    font-size: 11.5px; font-weight: 700; color: #58a86c;
+    background: #0e0a13; border-top: 1px solid #1d1526;
+  }
+
+  /* ═══════════ the spawned window (offset bottom-right) ═══════════ */
+  #child {
+    width: min(560px, calc(100vw - 48px));
+    left: 50%; top: 44%;
+    z-index: 20;
+    transform: translate(calc(-50% + 36px), calc(-50% + 36px)) scale(0.92);
+    opacity: 0; pointer-events: none;
+    transition: transform .26s cubic-bezier(.4,1.3,.4,1), opacity .2s ease;
+  }
+  #child.open {
+    transform: translate(calc(-50% + 36px), calc(-50% + 36px)) scale(1);
+    opacity: 1; pointer-events: auto;
+  }
+  #child .window-body { padding: 22px; min-height: 340px; -webkit-user-select: text; user-select: text; }
+  #child .doc-eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #c9b3ec; margin-bottom: 6px;
+  }
+  #child .doc-title { font-size: 22px; font-weight: 800; margin-bottom: 12px; }
+  #child p { font-size: 14px; line-height: 1.6; }
+  #child p + p { margin-top: 10px; }
+  #child .stub {
+    margin-top: 16px; border: 1.5px dashed #b3a6bb; border-radius: 10px;
+    padding: 24px 18px; text-align: center; color: var(--muted);
+    font-size: 13px; font-weight: 700; background: rgba(201,179,236,0.06);
+  }
+  #child .yt-link {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 4px; padding: 9px 16px;
+    background: #ff0000; color: #fff; font-weight: 800; font-size: 13.5px;
+    border-radius: 999px; text-decoration: none;
+    box-shadow: 0 5px 14px -5px rgba(255,0,0,0.6);
+  }
+  #child .yt-link:hover { filter: brightness(1.1); }
+
+  @media (max-width: 620px) {
+    #welcome { transform: translate(-50%, calc(-50% - 20px)); }
+    #child   { transform: translate(-50%, calc(-50% + 20px)) scale(0.92); }
+    #child.open { transform: translate(-50%, calc(-50% + 20px)) scale(1); }
+    .col .desc { display: none; }
+    .col .label { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+  <div id="desktop">
+    <div id="tagline">leave the world better<br/>than you found it 🌱</div>
+
+    <!-- welcome.exe — always stays open -->
+    <div class="window" id="welcome">
+      <div class="titlebar">
+        <span class="t-icon">🦌</span>
+        <span class="t-title">welcome.exe</span>
+        <div class="t-controls">
+          <button class="t-btn">_</button><button class="t-btn">▢</button><button class="t-btn close">✕</button>
+        </div>
+      </div>
+      <div class="wx-body">
+        <div class="wx-hello">
+          <span class="wordmark">dain<span class="cursor">_</span></span>
+          <span class="sub">internet creature&nbsp; // making things online</span>
+        </div>
+        <div class="cols">
+          <button class="col yt" data-open="yt">
+            <span class="inner">
+              <span class="art">
+                <svg width="44" height="31" viewBox="0 0 28 20" aria-hidden="true">
+                  <rect width="28" height="20" rx="5" fill="#ff0000"/>
+                  <path d="M11.2 5.6v8.8L19.2 10z" fill="#fff"/>
+                </svg>
+              </span>
+              <span class="label">youtube</span>
+              <span class="desc">videos about making things — code, creatures, and chaos</span>
+              <span class="arrow">↓</span>
+            </span>
+          </button>
+          <button class="col ch" data-open="ch">
+            <span class="inner">
+              <span class="art">
+                <!-- SVG recreation of the chordial app icon; swap for the real PNG in production -->
+                <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true">
+                  <rect width="64" height="64" rx="15" fill="#5a3b4f"/>
+                  <path d="M24 54 C 16 44, 15 28, 22 12" fill="none" stroke="#8fae6f" stroke-width="2.6" stroke-linecap="round"/>
+                  <ellipse cx="14" cy="18" rx="7" ry="3.4" fill="#9dbb77" transform="rotate(-32 14 18)"/>
+                  <ellipse cx="27" cy="10" rx="6.6" ry="3.2" fill="#8fae6f" transform="rotate(18 27 10)"/>
+                  <ellipse cx="12" cy="33" rx="7" ry="3.4" fill="#8fae6f" transform="rotate(-12 12 33)"/>
+                  <ellipse cx="25" cy="26" rx="6" ry="3" fill="#9dbb77" transform="rotate(24 25 26)"/>
+                  <ellipse cx="15" cy="47" rx="6.6" ry="3.2" fill="#9dbb77" transform="rotate(-40 15 47)"/>
+                  <path d="M47 22 C 43 15, 33 14, 27 20 C 20 27, 20 41, 27 48 C 33 54, 43 53, 47 47"
+                        fill="none" stroke="#ec9fc0" stroke-width="5.5" stroke-linecap="round"/>
+                  <path d="M47 22 C 45 18, 40 18, 39 22" fill="none" stroke="#ec9fc0" stroke-width="4" stroke-linecap="round"/>
+                  <circle cx="53" cy="31" r="2.6" fill="#ec9fc0"/>
+                  <circle cx="55" cy="38" r="2" fill="#ec9fc0"/>
+                </svg>
+              </span>
+              <span class="label">chordial</span>
+              <span class="desc">an AI companion that checks in on you first</span>
+              <span class="arrow">↓</span>
+            </span>
+          </button>
+          <button class="col wr" data-open="wr">
+            <span class="inner">
+              <span class="art">
+                <span class="doc-icon">
+                  <span class="doc-bar"></span>
+                  <span class="doc-line"><span id="docLine"></span><span class="doc-caret"></span></span>
+                </span>
+              </span>
+              <span class="label">writing</span>
+              <span class="desc">DORMANT — an era-spanning sci-fi epic about AI &amp; self</span>
+              <span class="arrow">↓</span>
+            </span>
+          </button>
+          <button class="col me" data-open="me">
+            <span class="inner">
+              <span class="art">
+                <img class="deer-art" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA1UlEQVR42mNgIABiEjL+gzADiYBcfYPfAbgMJlbd0HUAOr4YPxMF41I3fByAbiEhPHwc8K5++398mJBDho4DPjy/8R8ZE3IAzIKfGy/jxYTMHzwOQNdIroXEYrIdYGxmg9NQkBw2TBUHwAAhBwQdqQVjQuopcgA+TDUHoPsIhokNAULqB58DsDkIpFmvPwgFE3IALvUkl4CDxgHYMHqhAsP4siFZDkDGyBaFhMdhxchqSI7zUQcQcgi2OMdmMboDKG4PDLgDcFWnhDADtcGAO2AUDFsAAPeg6siIXWkbAAAAAElFTkSuQmCC"/>
+              </span>
+              <span class="label">about me</span>
+              <span class="desc">who i am, what i believe, and my mission</span>
+              <span class="arrow">↓</span>
+            </span>
+          </button>
+        </div>
+        <div class="wx-foot">pick a door 🚪 — or poke around the desktop behind me</div>
+      </div>
+    </div>
+
+    <!-- spawned window, offset to the bottom-right -->
+    <div class="window" id="child">
+      <div class="titlebar">
+        <span class="t-icon" id="c-icon">▶️</span>
+        <span class="t-title" id="c-title">youtube</span>
+        <div class="t-controls">
+          <button class="t-btn">_</button><button class="t-btn">▢</button><button class="t-btn close" id="c-close">✕</button>
+        </div>
+      </div>
+      <div class="window-body" id="c-body"></div>
+    </div>
+  </div>
+
+  <div id="taskbar">
+    <button id="start">🦌 start</button>
+    <span class="task-btn">🦌 welcome.exe</span>
+    <span class="task-btn" id="task-child" style="display:none"></span>
+  </div>
+
+<script>
+  const CONTENT = {
+    yt: { icon: '▶️', title: 'youtube', bg: '#fdeee0', html:
+      '<div class="doc-eyebrow">internetcreature os · channel</div>' +
+      '<div class="doc-title">theinternetcreature</div>' +
+      '<p>videos about making things online — dev logs, projects, and creature business.</p>' +
+      '<a class="yt-link" href="https://www.youtube.com/@theinternetcreature" target="_blank" rel="noopener">▶ @theinternetcreature</a>' +
+      '<div class="stub">latest video embed goes here</div>' },
+    ch: { icon: '💬', title: 'chordial', bg: '#fdeaf3', html:
+      '<div class="doc-eyebrow">internetcreature os · project</div>' +
+      '<div class="doc-title" style="font-family:Lora,serif;font-style:italic;color:#e98fbb">chordial</div>' +
+      '<p>my ambient AI companion — a chatbot that doesn’t just wait for you to talk to it, but proactively checks in on you.</p>' +
+      '<div class="stub">💬 existing chordial window content</div>' },
+    wr: { icon: '📖', title: 'writing', bg: '#eee3f7', html:
+      '<div class="doc-eyebrow">internetcreature os · writing</div>' +
+      '<div class="doc-title" style="font-family:Lora,serif;font-style:italic;color:#a98bdd">DORMANT</div>' +
+      '<p>an era-spanning sci-fi epic, dealing with themes of AI, self, and the current state of the world.</p>' +
+      '<div class="stub">📖 existing DORMANT.txt window content</div>' },
+    me: { icon: '🌱', title: 'about_me.txt', bg: '#f3f9ee', html:
+      '<div class="doc-eyebrow">internetcreature os · start here</div>' +
+      '<div class="doc-title">welcome to my little corner of the internet 🥰</div>' +
+      '<p>my name is Josh Larison. online, i usually go by Dain or theinternetcreature 🦌</p>' +
+      '<div class="stub">🌱 the current welcome.txt (mission statement) opens here, action pills and all</div>' },
+  };
+  const child = document.getElementById('child');
+  const cBody = document.getElementById('c-body');
+  const taskChild = document.getElementById('task-child');
+  document.querySelectorAll('.col').forEach(b => {
+    b.addEventListener('click', () => {
+      const c = CONTENT[b.dataset.open];
+      document.getElementById('c-icon').textContent = c.icon;
+      document.getElementById('c-title').textContent = c.title;
+      cBody.innerHTML = c.html;
+      cBody.style.background = c.bg;
+      child.classList.add('open');
+      taskChild.style.display = '';
+      taskChild.innerHTML = c.icon + ' ' + c.title;
+    });
+  });
+  document.getElementById('c-close').addEventListener('click', () => {
+    child.classList.remove('open');
+    taskChild.style.display = 'none';
+  });
+
+  /* the word editor types one keysmash line, slowly, with lil pauses */
+  const docLine = document.getElementById('docLine');
+  if (docLine) {
+    const KEYS = "ajkdsnfeioml";
+    const EMO = ['🦌','✨','💖','🌱','😭','🍓'];
+    let t = '';
+    (function type() {
+      if (t.length > 12) t = '';
+      t += Math.random() < 0.16 ? EMO[Math.random() * EMO.length | 0]
+                                : KEYS[Math.random() * KEYS.length | 0];
+      docLine.textContent = t;
+      const delay = Math.random() < 0.14 ? 900 + Math.random() * 1400
+                                         : 160 + Math.random() * 220;
+      setTimeout(type, delay);
+    })();
+  }
+
+  /* the tiny CRT keysmash (benched — kept for possible reuse)
+  const crtText = document.getElementById('crtText');
+  if (crtText) {
+    const crtScreen = crtText.parentElement;
+    const CKEYS = "asdfghjkl;asdfjklsnqweruionm";
+    let smash = "alksjdfns'a'dsjkn\n";
+    setInterval(() => {
+      const n = 2 + (Math.random() * 4 | 0);
+      for (let i = 0; i < n; i++) smash += CKEYS[Math.random() * CKEYS.length | 0];
+      if (Math.random() < 0.14) smash += "\n";
+      if (smash.length > 360) smash = smash.slice(-360);
+      crtText.textContent = smash;
+      crtScreen.scrollTop = crtScreen.scrollHeight;
+    }, 120);
+  }
+  */
+</script>
+</body>
+</html>
