@@ -16,7 +16,7 @@
 <meta name="twitter:card" content="summary" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;700&family=Lora:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;700&family=Lora:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Orbitron:wght@400;500&family=Roboto:wght@400;500&display=swap" rel="stylesheet" />
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -305,14 +305,20 @@
     display: flex; align-items: center; justify-content: center;
     transform: skewX(8deg);          /* leans the other way: small top, big bottom on the left */
     margin: 0 -1px;                  /* no hairline gaps between panels */
-    border: none; cursor: pointer; font-family: inherit;
+    cursor: pointer; font-family: inherit;
     transition: flex-grow .36s cubic-bezier(.5,1.4,.4,1), filter .2s ease;
     box-shadow: -8px 0 18px -8px rgba(0,0,0,0.55);
   }
+  .col-trigger {
+    position: absolute; inset: 0; z-index: 1;
+    border: 0; background: transparent; cursor: pointer;
+  }
+  .col-trigger:focus-visible { outline: none; }
   .col .inner {
     transform: skewX(-8deg);         /* counter-skew so content stays upright */
     display: flex; flex-direction: column; align-items: center; gap: 13px;
     width: 100%; padding: 0 12px; text-align: center;
+    position: relative; z-index: 2; pointer-events: none;
   }
   .col .art {
     height: 52px; display: flex; align-items: center; justify-content: center;
@@ -326,17 +332,24 @@
     white-space: nowrap;
   }
   .col .desc {
-    width: min(190px, 100%); max-height: 0; overflow: hidden; text-align: left;
+    width: min(210px, 100%); max-height: 0; overflow: hidden; text-align: left;
     font-size: 10.5px; font-weight: 400; line-height: 1.35; letter-spacing: 0.01em;
     color: rgba(255,255,255,0.95); text-shadow: 0 1px 2px rgba(30,15,35,0.5);
-    opacity: 0; transform: translateY(6px);
-    transition: max-height .32s ease, opacity .26s ease .08s, transform .26s ease .08s;
+    opacity: 0; visibility: hidden; transform: translateY(6px);
+    transition: max-height .32s ease, opacity .26s ease .08s, transform .26s ease .08s, visibility 0s linear .32s;
   }
   .desc-head {
-    display: block; margin-bottom: 7px;
-    font-size: 10px; font-weight: 500; letter-spacing: 0.04em;
-    color: #fff;
+    display: block; margin-bottom: 9px;
+    font-size: 13px; font-weight: 500; line-height: 1.25;
+    color: #fff; text-wrap: balance;
   }
+  .col.yt .desc-head { font-family: 'Roboto', Arial, sans-serif; letter-spacing: 0.01em; }
+  .col.ch .desc-head { font-family: 'Lora', Georgia, serif; font-size: 12.5px; font-weight: 500; }
+  .col.wr .desc-head {
+    font-family: 'Orbitron', 'IBM Plex Mono', monospace;
+    font-size: 12px; font-weight: 500; letter-spacing: 0.32em; text-transform: uppercase;
+  }
+  .col.me .desc-head { font-family: 'IBM Plex Mono', monospace; font-size: 14px; }
   .desc-tree {
     position: relative; display: grid; gap: 4px;
     padding-left: 13px;
@@ -350,19 +363,29 @@
     content: ''; position: absolute; left: -11px; top: 0.68em;
     width: 7px; height: 1px; background: rgba(255,255,255,0.48);
   }
+  .desc-tree a {
+    position: relative; z-index: 3; pointer-events: auto;
+    color: inherit; font: inherit; text-decoration: underline;
+    text-decoration-thickness: 1px; text-underline-offset: 2px;
+  }
+  .desc-tree a:hover, .desc-tree a:focus-visible { color: #fff; text-decoration-thickness: 2px; }
   .col .arrow {
     font-size: 17px; font-weight: 400; color: rgba(255,255,255,0.9);
     text-shadow: 0 1px 2px rgba(30,15,35,0.5);
     opacity: 0; transition: opacity .25s ease;
   }
-  .col:hover, .col:focus-visible { flex-grow: 2.3; filter: brightness(1.06); z-index: 2; }
-  .col:hover .desc, .col:focus-visible .desc { max-height: 220px; opacity: 1; transform: none; }
-  .col:hover .arrow, .col:focus-visible .arrow { opacity: 1; animation: wx-nudge 1s ease infinite .3s; }
+  .col:hover, .col:has(:focus-visible) { flex-grow: 2.3; filter: brightness(1.06); z-index: 2; }
+  .col:has(.col-trigger:focus-visible) { outline: 2px solid rgba(255,255,255,0.95); outline-offset: -3px; }
+  .col:hover .desc, .col:has(:focus-visible) .desc {
+    max-height: 220px; opacity: 1; visibility: visible; transform: none;
+    transition-delay: 0s, .08s, .08s, 0s;
+  }
+  .col:hover .arrow, .col:has(:focus-visible) .arrow { opacity: 1; animation: wx-nudge 1s ease infinite .3s; }
   @keyframes wx-nudge { 50% { transform: translateY(4px); } }
   .col:hover .art { animation: wx-bounce .55s cubic-bezier(.4,1.6,.4,1); }
   .col.wr:hover .art { animation: none; }
-  .cols:has(.col:not(.wr):hover) .col.wr:not(:hover):not(:focus-visible) .art,
-  .cols:has(.col:not(.wr):focus-visible) .col.wr:not(:hover):not(:focus-visible) .art {
+  .cols:has(.col:not(.wr):hover) .col.wr:not(:hover):not(:has(:focus-visible)) .art,
+  .cols:has(.col:not(.wr) :focus-visible) .col.wr:not(:hover):not(:has(:focus-visible)) .art {
     filter: blur(1.1px) drop-shadow(0 3px 4px rgba(10,5,15,0.5));
     opacity: 0.72;
   }
@@ -819,7 +842,8 @@
         '<span class="sub">internet creature&nbsp; // making things online</span>' +
       '</div>' +
       '<div class="cols">' +
-        '<button class="col yt" data-open="youtube">' +
+        '<div class="col yt">' +
+          '<button class="col-trigger" data-open="youtube" aria-label="open youtube"></button>' +
           '<span class="inner">' +
             '<span class="art">' +
               '<svg width="44" height="31" viewBox="0 0 28 20" aria-hidden="true">' +
@@ -840,8 +864,9 @@
             '</span>' +
             '<span class="arrow">↓</span>' +
           '</span>' +
-        '</button>' +
-        '<button class="col ch" data-open="chordial">' +
+        '</div>' +
+        '<div class="col ch">' +
+          '<button class="col-trigger" data-open="chordial" aria-label="open chordial"></button>' +
           '<span class="inner">' +
             '<span class="art">' +
               /* SVG recreation of the chordial app icon; swap for the real PNG when it lands */
@@ -870,8 +895,9 @@
             '</span>' +
             '<span class="arrow">↓</span>' +
           '</span>' +
-        '</button>' +
-        '<button class="col wr" data-open="dormant">' +
+        '</div>' +
+        '<div class="col wr">' +
+          '<button class="col-trigger" data-open="dormant" aria-label="open writing"></button>' +
           '<span class="inner">' +
             '<span class="art">' +
               '<span class="doc-icon">' +
@@ -884,13 +910,15 @@
               '<span class="desc-head">DORMANT</span>' +
               '<span class="desc-tree">' +
                 '<span>an era-spanning sci-fi epic</span>' +
-                '<span>ai &amp; self</span>' +
+                '<span>a philosophical exploration of self and ai</span>' +
+                '<span>inspired by <a href="https://en.wikipedia.org/wiki/Culture_series" target="_blank" rel="noopener">The Culture</a> and <a href="https://en.wikipedia.org/wiki/Remembrance_of_Earth%27s_Past" target="_blank" rel="noopener">Three Body Problem</a> series</span>' +
               '</span>' +
             '</span>' +
             '<span class="arrow">↓</span>' +
           '</span>' +
-        '</button>' +
-        '<button class="col me" data-open="welcome">' +
+        '</div>' +
+        '<div class="col me">' +
+          '<button class="col-trigger" data-open="welcome" aria-label="open about me"></button>' +
           '<span class="inner">' +
             '<span class="art"><img class="deer-art" alt="" src="start-deer.png"/></span>' +
             '<span class="label">about me</span>' +
@@ -904,11 +932,11 @@
             '</span>' +
             '<span class="arrow">↓</span>' +
           '</span>' +
-        '</button>' +
+        '</div>' +
       '</div>' +
       '<div class="wx-foot">click around and explore!</div>';
 
-    shell.querySelectorAll('.col').forEach(btn => {
+    shell.querySelectorAll('.col-trigger').forEach(btn => {
       btn.addEventListener('click', () => {
         const launcherWin = WM.windows.find(w => w.bodyEl.contains(shell));
         WM.open(btn.dataset.open, { origin: launcherWin, returnFocus: btn });
