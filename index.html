@@ -364,11 +364,18 @@
     width: 7px; height: 1px; background: rgba(255,255,255,0.48);
   }
   .desc-tree a {
-    position: relative; z-index: 3; pointer-events: auto;
+    position: relative; z-index: 3; display: inline-block; pointer-events: auto;
+    padding: 1px; margin: -1px;
+    -webkit-box-decoration-break: clone; box-decoration-break: clone;
     color: inherit; font: inherit; text-decoration: underline;
+    text-decoration-color: rgba(255,255,255,0.62);
     text-decoration-thickness: 1px; text-underline-offset: 2px;
+    transition: color .15s ease, text-decoration-color .15s ease, text-shadow .15s ease;
   }
-  .desc-tree a:hover, .desc-tree a:focus-visible { color: #fff; text-decoration-thickness: 2px; }
+  .desc-tree a:hover, .desc-tree a:focus-visible {
+    color: #fff; text-decoration-color: #fff; text-decoration-thickness: 2px;
+    text-shadow: 0 0 6px rgba(255,255,255,0.75);
+  }
   .col .arrow {
     font-size: 17px; font-weight: 400; color: rgba(255,255,255,0.9);
     text-shadow: 0 1px 2px rgba(30,15,35,0.5);
