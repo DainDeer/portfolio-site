@@ -220,18 +220,76 @@
   }
   .doc .note { color: var(--muted); font-size: 12.5px; font-style: italic; margin-top: 16px; }
 
-  /* ── contact program ── */
-  .contact-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
-  .contact-row {
-    display: flex; align-items: center; gap: 13px; padding: 12px 15px;
-    border: 1px solid var(--window-border); border-radius: 11px;
-    background: rgba(201,179,236,0.08); transition: background .15s ease;
+  /* ── contact program: buddy-list card, its own sky-blue look ── */
+  .ct { padding: 20px 20px 24px; }
+  .window.maximized .window-body:has(> .ct) > .ct { width: 100%; max-width: 520px; }
+  .ct-head { display: flex; align-items: baseline; gap: 10px; }
+  .ct-title { font-size: 22px; font-weight: 800; color: #1e3a52; }
+  .ct-status {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11.5px; font-weight: 700; color: #3f9e58;
   }
-  .contact-row:hover { background: rgba(244,166,203,0.12); }
-  .contact-row .ic { font-size: 21px; line-height: 1; }
-  .contact-row a { color: var(--pink-deep); font-weight: 800; font-size: 14px; text-decoration: none; }
-  .contact-row a:hover { color: #8a3c6e; border-bottom: 1px dashed rgba(184,86,143,0.5); }
-  .contact-row small { display: block; color: var(--muted); font-weight: 600; font-size: 11px; margin-top: 2px; }
+  .ct-status::before {
+    content: ''; width: 8px; height: 8px; border-radius: 50%;
+    background: #4cd964; box-shadow: 0 0 6px rgba(76,217,100,0.9);
+  }
+  .ct-sub { font-size: 12.5px; color: #5b7a94; font-weight: 600; margin: 3px 0 16px; }
+
+  /* the big twitter card — the creature's main perch */
+  .ct-tw {
+    display: flex; align-items: center; gap: 14px; position: relative; overflow: hidden;
+    padding: 16px 18px; border-radius: 16px; text-decoration: none;
+    background: linear-gradient(135deg, #55c0f5 0%, #1d9bf0 60%, #1683d6 100%);
+    box-shadow: 0 10px 24px -8px rgba(29,155,240,0.75), 0 0 0 1px rgba(255,255,255,0.35) inset;
+    transition: transform .16s ease, box-shadow .16s ease;
+  }
+  .ct-tw:hover { transform: translateY(-2px); box-shadow: 0 14px 30px -8px rgba(29,155,240,0.9), 0 0 0 1px rgba(255,255,255,0.45) inset; }
+  .ct-tw .bird { flex: none; width: 38px; height: 38px; filter: drop-shadow(0 2px 3px rgba(9,80,130,0.4)); }
+  /* oversized ghost bird photobombing the corner */
+  .ct-tw .bird-ghost {
+    position: absolute; right: -18px; bottom: -26px; width: 110px; height: 110px;
+    opacity: 0.14; transform: rotate(-8deg); pointer-events: none;
+  }
+  .ct-tw-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .ct-tw-handle {
+    color: #fff; font-weight: 800; font-size: 17px;
+    text-shadow: 0 1px 2px rgba(9,80,130,0.5);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .ct-tw-sub { color: #dbf1ff; font-size: 11.5px; font-weight: 600; }
+  .ct-tw-arrow { margin-left: auto; color: #fff; font-size: 18px; font-weight: 800; opacity: 0.85; }
+
+  .ct-sec {
+    font-size: 11px; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase;
+    color: #7aa3c4; margin: 18px 0 8px;
+  }
+  .ct-row {
+    display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+    border-radius: 13px; text-decoration: none;
+    background: #fff; border: 1px solid #d5e8f7;
+    box-shadow: 0 4px 12px -6px rgba(30,90,140,0.25);
+    transition: transform .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .ct-row + .ct-row { margin-top: 9px; }
+  .ct-row:hover { transform: translateY(-1px); border-color: #a8d4f2; background: #f4faff; }
+  .ct-ava {
+    flex: none; width: 40px; height: 40px; border-radius: 50%; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid #fff; box-shadow: 0 0 0 1.5px #cfe6f8, 0 3px 8px -3px rgba(30,90,140,0.4);
+  }
+  .ct-ava img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ct-ava.creature { background: linear-gradient(135deg, #fbe3f0, #e8d9f8); }
+  .ct-ava.creature img { width: 28px; height: 28px; object-fit: contain; image-rendering: pixelated; }
+  .ct-who { min-width: 0; }
+  .ct-addr {
+    display: block; color: #155a8a; font-weight: 800; font-size: 13.5px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .ct-note { display: block; color: #7a94ab; font-size: 11px; font-weight: 600; margin-top: 1px; }
+  .ct-send { margin-left: auto; font-size: 16px; opacity: 0; transition: opacity .15s ease; }
+  .ct-row:hover .ct-send { opacity: 1; }
+  .ct-ava.li { background: #fff; }
+  .ct-ava.li svg { width: 25px; height: 25px; display: block; }
 
   /* ── welcome.txt: section headings, mission highlight, action pills ── */
   .doc-sec {
@@ -268,6 +326,12 @@
     background: linear-gradient(180deg, #b6ecc0, #97dca6 55%, #7fce90);
     text-shadow: 0 1px 1px rgba(40,80,50,0.5);
     box-shadow: 0 4px 10px -4px rgba(127,206,144,0.8);
+  }
+  /* sky variant matches the contact program it opens */
+  .wa-btn.sky {
+    background: linear-gradient(180deg, #8fd4f8, #55c0f5 55%, #2ba3ea);
+    text-shadow: 0 1px 1px rgba(9,80,130,0.5);
+    box-shadow: 0 4px 10px -4px rgba(43,163,234,0.8);
   }
 
   /* ── welcome.exe: terminal-dark launcher with slanted columns ── */
@@ -480,12 +544,6 @@
   .r-role { font-size: 14px; font-weight: 600; color: #6a5c78; margin-top: 2px; }
   .r-contact { font-size: 12px; color: #5a5263; margin-top: 9px; line-height: 1.7; }
   .r-contact a { color: inherit; text-decoration: none; }       /* plain ink in default */
-  /* phone number is an image so scrapers can't harvest it.
-     source PNG is square with the text in the top band; object-fit crops to just the text */
-  .r-phone {
-    width: 82px; height: 16px; vertical-align: -3px;
-    object-fit: cover; object-position: top left;
-  }
   .r-sec { margin-top: 22px; }
   .r-sec h2 {
     font-size: 12px; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase;
@@ -741,21 +799,51 @@
     return wrap;
   }
 
-  /* ── contact program ─────────────────────────────────────────── */
+  /* ── contact program: buddy list with a logo per contact ────── */
   function makeContact() {
+    const BIRD = '<path fill="#fff" d="M23.643 4.937c-.835.37-1.732.62-2.675.733.962-.576 1.7-1.49 2.048-2.578-.9.534-1.897.922-2.958 1.13-.85-.904-2.06-1.47-3.4-1.47-2.572 0-4.658 2.086-4.658 4.66 0 .364.042.718.12 1.06-3.873-.195-7.304-2.05-9.602-4.868-.4.69-.63 1.49-.63 2.342 0 1.616.823 3.043 2.072 3.878-.764-.025-1.482-.234-2.11-.583v.06c0 2.257 1.605 4.14 3.737 4.568-.392.106-.803.162-1.227.162-.3 0-.593-.028-.877-.082.593 1.85 2.313 3.198 4.352 3.234-1.595 1.25-3.604 1.995-5.786 1.995-.376 0-.747-.022-1.112-.065 2.062 1.323 4.51 2.093 7.14 2.093 8.57 0 13.255-7.098 13.255-13.254 0-.2-.005-.402-.014-.602.91-.658 1.7-1.477 2.323-2.41z"/>';
     const wrap = document.createElement('div');
-    wrap.className = 'doc';
+    wrap.className = 'ct';
     wrap.innerHTML =
-      '<div class="doc-eyebrow">internetcreature os · say hi</div>' +
-      '<div class="doc-title">contact</div>' +
-      '<div class="contact-list">' +
-        '<div class="contact-row"><span class="ic">✉️</span><div>' +
-          '<a href="mailto:theinternetcreature@gmail.com">theinternetcreature@gmail.com</a>' +
-          '<small>content creation inbox</small></div></div>' +
-        '<div class="contact-row"><span class="ic">📬</span><div>' +
-          '<a href="mailto:jalarison@gmail.com">jalarison@gmail.com</a>' +
-          '<small>josh, directly</small></div></div>' +
-      '</div>';
+      '<div class="ct-head"><span class="ct-title">say hi 😄</span><span class="ct-status">online</span></div>' +
+      '<div class="ct-sub">dms and inboxes open.</div>' +
+      '<a class="ct-tw" href="https://twitter.com/theintrnetcreature" target="_blank" rel="noopener">' +
+        '<svg class="bird" viewBox="0 0 24 24" aria-hidden="true">' + BIRD + '</svg>' +
+        '<span class="ct-tw-text">' +
+          '<span class="ct-tw-handle">@theintrnetcreature</span>' +
+          '<span class="ct-tw-sub">daily bleats</span>' +
+        '</span>' +
+        '<span class="ct-tw-arrow">↗</span>' +
+        '<svg class="bird-ghost" viewBox="0 0 24 24" aria-hidden="true">' + BIRD + '</svg>' +
+      '</a>' +
+      '<div class="ct-sec">or by email</div>' +
+      '<a class="ct-row" href="mailto:theinternetcreature@gmail.com">' +
+        '<span class="ct-ava creature"><img src="start-deer.png" alt=""/></span>' +
+        '<span class="ct-who">' +
+          '<span class="ct-addr">theinternetcreature@gmail.com</span>' +
+          '<span class="ct-note">content creation inbox</span>' +
+        '</span>' +
+        '<span class="ct-send">✉️</span>' +
+      '</a>' +
+      '<a class="ct-row" href="mailto:jalarison@gmail.com">' +
+        '<span class="ct-ava"><img src="josh-contact.jpg" alt=""/></span>' +
+        '<span class="ct-who">' +
+          '<span class="ct-addr">jalarison@gmail.com</span>' +
+          '<span class="ct-note">personal email</span>' +
+        '</span>' +
+        '<span class="ct-send">✉️</span>' +
+      '</a>' +
+      '<div class="ct-sec">elsewhere</div>' +
+      '<a class="ct-row" href="https://www.linkedin.com/in/joshua-larison-2g6d8gr5/" target="_blank" rel="noopener">' +
+        '<span class="ct-ava li">' +
+          '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#0a66c2" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.225 0z"/></svg>' +
+        '</span>' +
+        '<span class="ct-who">' +
+          '<span class="ct-addr">joshua larison</span>' +
+          '<span class="ct-note">professional contact</span>' +
+        '</span>' +
+        '<span class="ct-send">↗</span>' +
+      '</a>';
     return wrap;
   }
 
@@ -825,7 +913,7 @@
     actions.innerHTML =
       '<button class="wa-btn" data-open="resume" title="recruiters go here!">\ud83d\udcc4 view r\u00e9sum\u00e9</button>' +
       '<button class="wa-btn sage" data-open="chordial" title="an AI companion that reaches out to you first">\ud83d\udcac explore chordial</button>' +
-      '<button class="wa-btn" data-open="contact" title="contact me!">\u2709\ufe0f say hi</button>';
+      '<button class="wa-btn sky" data-open="contact" title="twitter + email inside!">\u2709\ufe0f contact me</button>';
     actions.querySelectorAll('.wa-btn').forEach(b => {
       const key = b.dataset.open;
       b.addEventListener('click', () => {
@@ -1024,10 +1112,9 @@
             <h1 class="r-name">Josh Larison</h1>
             <div class="r-role">Data Infrastructure Engineer</div>
             <div class="r-contact">
-              <a href="mailto:jalarison@gmail.com">jalarison@gmail.com</a> &nbsp;·&nbsp;
-              <img class="r-phone" src="phone.png" alt="phone number (in the printed copy)" /> &nbsp;·&nbsp;
-              <a href="https://linkedin.com/in/joshua-larison" target="_blank" rel="noopener">linkedin.com/in/joshua-larison</a> &nbsp;·&nbsp;
-              Daly City, CA
+              <a href="https://internetcreature.dev/#contact">internetcreature.dev/#contact</a> &nbsp;·&nbsp;
+              <a href="https://www.linkedin.com/in/joshua-larison-2g6d8gr5/" target="_blank" rel="noopener">linkedin.com/in/joshua-larison</a> &nbsp;·&nbsp;
+              San Francisco Bay Area
             </div>
           </div>
         </header>
@@ -1161,7 +1248,7 @@
     }); } },
     'dain-img':  { icon: '🖼️', title: 'dain.jpg',             bg: '#fdeee0', render( ){ return makeImageViewer({ src: 'dain.jpg', alt: 'dain — character art', credit: 'Pricklepants', url: 'https://bsky.app/profile/pricklepants.bsky.social' }); } },
     'josh-img':  { icon: '📸', title: 'Josh.jpg',             bg: '#e3eefc', render( ){ return makeImageViewer({ src: 'Josh.jpg', alt: 'Josh' }); } },
-    contact:     { icon: '✉️', title: 'contact',              bg: '#fbeaf0', render( ){ return makeContact(); } },
+    contact:     { icon: '✉️', title: 'contact',              bg: '#e9f5fe', render( ){ return makeContact(); } },
   };
   const DESKTOP_ICONS = ['launcher', 'welcome', 'resume', 'youtube', 'chordial', 'chaos-cube', 'dormant', 'dain-img', 'josh-img', 'contact'];
 
