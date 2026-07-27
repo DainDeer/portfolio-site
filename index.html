@@ -6,12 +6,12 @@
 <title>internetcreature OS</title>
 <link rel="icon" type="image/png" href="favicon.png" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-<meta name="description" content="dain's corner of the internet — a lil pastel desktop OS holding my resume, projects, and other creature things 🦌" />
+<meta name="description" content="welcome to internetcreature OS" />
 <meta name="theme-color" content="#b9b8e8" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://internetcreature.dev/" />
 <meta property="og:title" content="internetcreature OS" />
-<meta property="og:description" content="dain's corner of the internet — a lil pastel desktop OS holding my resume, projects, and other creature things." />
+<meta property="og:description" content="welcome to internetcreature OS" />
 <meta property="og:image" content="https://internetcreature.dev/dain.jpg" />
 <meta name="twitter:card" content="summary" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -43,6 +43,8 @@
     overflow: hidden;
     -webkit-user-select: none; user-select: none;
   }
+  /* taps fire immediately — no 300ms double-tap-zoom wait on anything clickable */
+  a, button, .icon { touch-action: manipulation; }
 
   /* ───────── desktop ───────── */
   #desktop {
@@ -445,20 +447,30 @@
     text-shadow: 0 1px 2px rgba(30,15,35,0.5);
     opacity: 0; transition: opacity .25s ease;
   }
-  .col:hover, .col:has(:focus-visible) { flex-grow: 2.3; filter: brightness(1.06); z-index: 2; }
+  .col:has(:focus-visible) { flex-grow: 2.3; filter: brightness(1.06); z-index: 2; }
   .col:has(.col-trigger:focus-visible) { outline: 2px solid rgba(255,255,255,0.95); outline-offset: -3px; }
-  .col:hover .desc, .col:has(:focus-visible) .desc {
+  .col:has(:focus-visible) .desc {
     max-height: 220px; opacity: 1; visibility: visible; transform: none;
     transition-delay: 0s, .08s, .08s, 0s;
   }
-  .col:hover .arrow, .col:has(:focus-visible) .arrow { opacity: 1; animation: wx-nudge 1s ease infinite .3s; }
+  .col:has(:focus-visible) .arrow { opacity: 1; animation: wx-nudge 1s ease infinite .3s; }
   @keyframes wx-nudge { 50% { transform: translateY(4px); } }
-  .col:hover .art { animation: wx-bounce .55s cubic-bezier(.4,1.6,.4,1); }
-  .col.wr:hover .art { animation: none; }
-  .cols:has(.col:not(.wr):hover) .col.wr:not(:hover):not(:has(:focus-visible)) .art,
-  .cols:has(.col:not(.wr) :focus-visible) .col.wr:not(:hover):not(:has(:focus-visible)) .art {
-    filter: blur(1.1px) drop-shadow(0 3px 4px rgba(10,5,15,0.5));
-    opacity: 0.72;
+  /* hover expansion only where a real hover exists — the visibility flip would
+     otherwise trip iOS's "content changed on hover" heuristic and eat the first tap */
+  @media (hover: hover) {
+    .col:hover { flex-grow: 2.3; filter: brightness(1.06); z-index: 2; }
+    .col:hover .desc {
+      max-height: 220px; opacity: 1; visibility: visible; transform: none;
+      transition-delay: 0s, .08s, .08s, 0s;
+    }
+    .col:hover .arrow { opacity: 1; animation: wx-nudge 1s ease infinite .3s; }
+    .col:hover .art { animation: wx-bounce .55s cubic-bezier(.4,1.6,.4,1); }
+    .col.wr:hover .art { animation: none; }
+    .cols:has(.col:not(.wr):hover) .col.wr:not(:hover):not(:has(:focus-visible)) .art,
+    .cols:has(.col:not(.wr) :focus-visible) .col.wr:not(:hover):not(:has(:focus-visible)) .art {
+      filter: blur(1.1px) drop-shadow(0 3px 4px rgba(10,5,15,0.5));
+      opacity: 0.72;
+    }
   }
   @keyframes wx-bounce { 35% { transform: translateY(-7px) rotate(-8deg); } 70% { transform: translateY(0) rotate(4deg); } }
 
@@ -707,9 +719,29 @@
   }
   #toast.show { opacity: 1; transform: translate(-50%,-50%) scale(1); }
 
+  /* touch devices: fatter targets everywhere (~44px hit areas) */
+  @media (pointer: coarse) {
+    :root { --titlebar-h: 42px; }
+    .t-controls { gap: 6px; }
+    .t-btn { width: 34px; height: 34px; font-size: 15px; border-radius: 7px; }
+    .icon { padding: 10px 4px; gap: 6px; }
+    .wa-btn { padding: 11px 18px; font-size: 14px; }
+    .doc-link { padding: 11px 18px; }
+    .yt-link { padding: 12px 18px; }
+    .sm-item { padding: 12px 10px; }
+    .sm-shutdown { padding: 11px 12px; }
+    .task-btn { height: 36px; }
+    .seg button { padding: 8px 16px; }
+    .r-print { padding: 8px 13px; }
+    .imgview-credit { padding: 9px 14px; }
+  }
+
   @media (max-width: 520px) {
     .icon { width: 72px; }
     .window { width: calc(100% - 16px); }
+    /* two open windows + start + clock can't all afford 150px minimums */
+    .tasks { min-width: 0; }
+    .task-btn { min-width: 0; flex: 1 1 0; }
   }
 
   /* print only the resume page, no OS chrome (falls back to a normal print when no resume is open) */
@@ -1477,13 +1509,9 @@
     el.addEventListener('click', e => { e.stopPropagation(); clearSelection(); el.classList.add('selected'); });
     el.addEventListener('dblclick', () => WM.open(key));
     el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); WM.open(key); } });
-    let lastTap = 0;
+    // touch: one tap opens — double-click is a mouse ritual, not a thumb one
     el.addEventListener('pointerup', e => {
-      if (e.pointerType === 'touch') {
-        const now = Date.now();
-        if (now - lastTap < 400) WM.open(key);
-        lastTap = now;
-      }
+      if (e.pointerType === 'touch') WM.open(key);
     });
     iconsEl.appendChild(el);
   });
