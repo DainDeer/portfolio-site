@@ -1272,10 +1272,14 @@
   /* ── focus.exe: chordial's live focus view in an iframe ───────
      served from its own origin (focus.internetcreature.dev) so auth,
      the timer, and deploys stay chordial's business; the subdomains are
-     same-site, so the session cookie works inside the frame. a watchdog
-     shows a fallback if the chordial server can't be reached. */
+     same-site, so the session cookie works inside the frame.
+     readiness is a postMessage handshake from the page itself, NOT the
+     iframe's load event — load also fires for tunnel error pages (502s),
+     which must land on the fallback, not pose as the app. */
   function makeFocus() {
     const FOCUS_URL = 'https://focus.internetcreature.dev/';
+    const FOCUS_ORIGIN = new URL(FOCUS_URL).origin;
+    const READY_MSG = 'chordial:focus-ready';
     const shell = document.createElement('div');
     shell.className = 'focus-shell';
 
@@ -1312,11 +1316,14 @@
         if (!shell.classList.contains('ready')) shell.classList.add('failed');
       }, 9000);
     };
-    frame.addEventListener('load', () => {
+    const onReady = e => {
+      if (!shell.isConnected) { window.removeEventListener('message', onReady); return; }
+      if (e.origin !== FOCUS_ORIGIN || e.data !== READY_MSG) return;
       clearTimeout(watchdog);
-      shell.classList.remove('failed');
+      shell.classList.remove('failed');   // a late hello still counts
       shell.classList.add('ready');
-    });
+    };
+    window.addEventListener('message', onReady);
     retry.addEventListener('click', () => { arm(); frame.src = FOCUS_URL; });
     arm();
 
