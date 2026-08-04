@@ -140,8 +140,8 @@
     -webkit-user-select: text; user-select: text;
   }
 
-  /* maximized: fill the whole desktop and center sparse content (resume + welcome opt out — they manage their own layout) */
-  .window.maximized .window-body:not(:has(> .resume)):not(:has(> .welcome-shell)):not(:has(> .wx-shell)) {
+  /* maximized: fill the whole desktop and center sparse content (resume + welcome + focus opt out — they manage their own layout) */
+  .window.maximized .window-body:not(:has(> .resume)):not(:has(> .welcome-shell)):not(:has(> .wx-shell)):not(:has(> .focus-shell)) {
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
   }
@@ -626,6 +626,34 @@
     transition: transform .22s cubic-bezier(.4,1.2,.4,1), background .22s ease;
   }
   .resume.interactive .seg .knob { transform: translateX(100%); background: linear-gradient(180deg, #b9e6c2, #8fd49f); }
+
+  /* ── focus.exe: the live pomodoro dashboard, embedded from its own origin ── */
+  .focus-shell { position: relative; height: min(62vh, 540px); background: var(--body-bg, #171310); }
+  .window-body:has(> .focus-shell) { overflow: hidden; max-height: none; }
+  .window.maximized .focus-shell { height: 100%; }
+  .focus-frame {
+    width: 100%; height: 100%; border: 0; display: block;
+    opacity: 0; transition: opacity .35s ease;
+  }
+  .focus-shell.ready .focus-frame { opacity: 1; }
+  .focus-boot, .focus-fail {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px; text-align: center;
+    padding: 24px; color: #a3968a; font-size: 14px;
+  }
+  .focus-boot .big, .focus-fail .big { font-size: 34px; }
+  .focus-boot .cursor { animation: focusblink 1s steps(1) infinite; }
+  @keyframes focusblink { 50% { opacity: 0; } }
+  .focus-shell.ready .focus-boot, .focus-shell.failed .focus-boot { display: none; }
+  .focus-fail { display: none; }
+  .focus-shell.failed .focus-fail { display: flex; }
+  .focus-fail a { color: #fdba74; }
+  .focus-retry {
+    font: inherit; font-size: 13px; font-weight: 700; color: #ede4d8;
+    background: #262019; border: 1px solid #3a3128; border-radius: 999px;
+    padding: 6px 16px; cursor: pointer;
+  }
+  .focus-retry:hover { border-color: #f97316; color: #fdba74; }
 
   /* ───────── taskbar ───────── */
   #taskbar {
@@ -1241,6 +1269,61 @@
     return root;
   }
 
+  /* ── focus.exe: chordial's live focus view in an iframe ───────
+     served from its own origin (focus.internetcreature.dev) so auth,
+     the timer, and deploys stay chordial's business; the subdomains are
+     same-site, so the session cookie works inside the frame. a watchdog
+     shows a fallback if the chordial server can't be reached. */
+  function makeFocus() {
+    const FOCUS_URL = 'https://focus.internetcreature.dev/';
+    const shell = document.createElement('div');
+    shell.className = 'focus-shell';
+
+    const frame = document.createElement('iframe');
+    frame.className = 'focus-frame';
+    frame.title = 'focus — chordial';
+    frame.src = FOCUS_URL;
+
+    const boot = document.createElement('div');
+    boot.className = 'focus-boot';
+    boot.innerHTML =
+      '<span class="big">🍅</span>' +
+      '<div>starting focus.exe<span class="cursor">_</span></div>' +
+      '<div>dialing the chordial server…</div>';
+
+    const fail = document.createElement('div');
+    fail.className = 'focus-fail';
+    fail.innerHTML =
+      '<span class="big">😴</span>' +
+      '<div>couldn\'t reach the chordial server — it might be napping.</div>';
+    const retry = document.createElement('button');
+    retry.className = 'focus-retry';
+    retry.textContent = '↻ try again';
+    const link = document.createElement('a');
+    link.href = FOCUS_URL; link.target = '_blank'; link.rel = 'noopener';
+    link.textContent = 'open in its own tab ↗';
+    fail.append(retry, link);
+
+    let watchdog = null;
+    const arm = () => {
+      shell.classList.remove('ready', 'failed');
+      clearTimeout(watchdog);
+      watchdog = setTimeout(() => {
+        if (!shell.classList.contains('ready')) shell.classList.add('failed');
+      }, 9000);
+    };
+    frame.addEventListener('load', () => {
+      clearTimeout(watchdog);
+      shell.classList.remove('failed');
+      shell.classList.add('ready');
+    });
+    retry.addEventListener('click', () => { arm(); frame.src = FOCUS_URL; });
+    arm();
+
+    shell.append(frame, boot, fail);
+    return shell;
+  }
+
   const PROGRAMS = {
     launcher:    { icon: '🦌', title: 'welcome.exe',          bg: '#0e0a13', width: 'min(600px, calc(100% - 24px))', pinned: true, render( ){ return makeLauncher(); } },
     welcome:     { icon: '🌱', title: 'about_me.txt',         bg: '#f3f9ee', width: 'min(660px, calc(100% - 24px))', render( ){ return makeWelcome(); } },
@@ -1258,6 +1341,7 @@
         '"friday afternoon" feels like. it speaks discord today, on an architecture built to add telegram, ' +
         'web, and other AI providers next.</p>',
     }); } },
+    focus:       { icon: '🍅', title: 'focus.exe',            bg: '#171310', width: 'min(720px, calc(100% - 24px))', render( ){ return makeFocus(); } },
     'chaos-cube':{ icon: '🎴', title: 'chaos-commander-cube', bg: '#fdf6df', render( ){ return makeProjectDoc({
       title: 'chaos-commander-cube',
       repo: 'https://github.com/DainDeer/chaos-commander-cube',
@@ -1282,7 +1366,7 @@
     'josh-img':  { icon: '📸', title: 'Josh.jpg',             bg: '#e3eefc', render( ){ return makeImageViewer({ src: 'Josh.jpg', alt: 'Josh' }); } },
     contact:     { icon: '✉️', title: 'contact',              bg: '#e9f5fe', render( ){ return makeContact(); } },
   };
-  const DESKTOP_ICONS = ['launcher', 'welcome', 'resume', 'youtube', 'chordial', 'chaos-cube', 'dormant', 'dain-img', 'josh-img', 'contact'];
+  const DESKTOP_ICONS = ['launcher', 'welcome', 'resume', 'youtube', 'chordial', 'focus', 'chaos-cube', 'dormant', 'dain-img', 'josh-img', 'contact'];
 
   const desk    = document.getElementById('desktop');
   const tasksEl = document.getElementById('tasks');
