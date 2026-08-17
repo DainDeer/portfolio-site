@@ -410,7 +410,10 @@
     color: #fff; text-wrap: balance;
   }
   .col.yt .desc-head { font-family: 'Roboto', Arial, sans-serif; letter-spacing: 0.01em; }
-  .col.ch .desc-head { font-family: 'Lora', Georgia, serif; font-size: 12.5px; font-weight: 500; }
+  .col.ch .desc-head {
+    font-family: 'Nunito', system-ui, sans-serif;
+    font-size: 15px; font-weight: 800; letter-spacing: 0.015em;
+  }
   .col.wr .desc-head {
     font-family: 'Orbitron', 'IBM Plex Mono', monospace;
     font-size: 12px; font-weight: 500; letter-spacing: 0.32em; text-transform: uppercase;
@@ -972,7 +975,7 @@
     actions.className = 'welcome-actions';
     actions.innerHTML =
       '<button class="wa-btn" data-open="resume" title="recruiters go here!">\ud83d\udcc4 view r\u00e9sum\u00e9</button>' +
-      '<button class="wa-btn sage" data-open="chordial" title="an AI companion that reaches out to you first">\ud83d\udcac explore chordial</button>' +
+      '<button class="wa-btn sage" data-open="chordial" title="an ADHD productivity tool built for starting, staying, and coming back">\ud83d\udcac explore chordial</button>' +
       '<button class="wa-btn sky" data-open="contact" title="twitter + email inside!">\u2709\ufe0f contact me</button>';
     actions.querySelectorAll('.wa-btn').forEach(b => {
       const key = b.dataset.open;
@@ -1041,11 +1044,11 @@
             '</span>' +
             '<span class="label">chordial</span>' +
             '<span class="desc">' +
-              '<span class="desc-head">an ambient ai companion</span>' +
+              '<span class="desc-head">an ADHD productivity tool</span>' +
               '<span class="desc-tree">' +
-                '<span>reaches out when you need it</span>' +
-                '<span>productivity / focus / emotional support</span>' +
-                '<span>discord / telegram integration</span>' +
+                '<span>a body-double on your desktop</span>' +
+                '<span>structure for starting / staying / coming back</span>' +
+                '<span>a cast of helpers for everyday life</span>' +
               '</span>' +
             '</span>' +
             '<span class="arrow">↓</span>' +
@@ -1340,13 +1343,15 @@
       title: 'chordial', brandTitle: true,
       repo: 'https://github.com/DainDeer/chordial-mvp',
       body:
-        '<p><span class="brand">chordial</span> is my ambient AI companion project — a chatbot that ' +
-        'doesn\'t just wait for you to talk to it, but proactively checks in on you.</p>' +
-        '<p>under the hood it already has a persistent memory system (core memories, inferred facts, and ' +
-        'temporary notes that shape every prompt), proactive scheduling with quiet hours and polite backoff, ' +
-        'conversation compression for long-term context, and temporal awareness — it knows what ' +
-        '"friday afternoon" feels like. it speaks discord today, on an architecture built to add telegram, ' +
-        'web, and other AI providers next.</p>',
+        '<p><span class="brand">chordial</span> is an ADHD productivity tool — a body-double on your ' +
+        'desktop, a gently imposed two-week structure around your work, and a cast of helpers who assist ' +
+        'with different areas of life!</p>' +
+        '<p>most productivity tools assume the hard part is deciding what to do. with ADHD, the hard ' +
+        'parts are <strong>starting</strong>, <strong>staying</strong>, and <strong>coming back</strong> — ' +
+        'so those are what chordial is built around: one-tap focus blocks, time that banks instead of ' +
+        'punishing wandering attention, and gentle nudges that naturally quiet as your habits grow steadier.</p>' +
+        '<p>i\'m building it by myself, mostly because i wanted this thing to exist for me. i use it on ' +
+        'my actual work every day!</p>',
     }); } },
     focus:       { icon: '🍅', title: 'focus.exe',            bg: '#171310', width: 'min(720px, calc(100% - 24px))', render( ){ return makeFocus(); } },
     'chaos-cube':{ icon: '🎴', title: 'chaos-commander-cube', bg: '#fdf6df', render( ){ return makeProjectDoc({
