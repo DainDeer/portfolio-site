@@ -63,7 +63,7 @@
     align-content: flex-start; gap: 6px;
   }
 
-  /* the xp-style corner watermark, but it's a promise instead of a version number */
+  /* xp-style corner watermark with a proudly impossible version number */
   #tagline {
     position: absolute; right: 18px; bottom: 14px;
     font-size: 15px; font-weight: 700; font-style: italic;
@@ -293,16 +293,15 @@
   .ct-ava.li { background: #fff; }
   .ct-ava.li svg { width: 25px; height: 25px; display: block; }
 
-  /* ── welcome.txt: section headings, mission highlight, action pills ── */
+  /* ── welcome.txt: section headings, closing note, action pills ── */
   .doc-sec {
     font-size: 11.5px; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase;
     color: var(--pink-deep); margin: 20px 0 8px;
   }
-  .mission-note {
-    margin-top: 20px; padding: 14px 16px; border-radius: 12px; text-align: center;
-    background: rgba(159,224,173,0.26); border: 1px solid rgba(121,199,141,0.45);
+  .doc p.mission-note {
+    margin-top: 24px; text-align: center;
+    font-weight: 600; font-style: italic; color: #5f5167;
   }
-  .mission-note p { font-weight: 800; font-style: italic; color: #43714f; }
   /* welcome.txt splits into its own scroll region + a fixed dock below it,
      so the action bar can never overlap the body text at any size */
   .window-body:has(> .welcome-shell) { overflow: hidden; display: flex; flex-direction: column; }
@@ -410,7 +409,10 @@
     color: #fff; text-wrap: balance;
   }
   .col.yt .desc-head { font-family: 'Roboto', Arial, sans-serif; letter-spacing: 0.01em; }
-  .col.ch .desc-head { font-family: 'Lora', Georgia, serif; font-size: 12.5px; font-weight: 500; }
+  .col.ch .desc-head {
+    font-family: 'Nunito', system-ui, sans-serif;
+    font-size: 15px; font-weight: 800; letter-spacing: 0.015em;
+  }
   .col.wr .desc-head {
     font-family: 'Orbitron', 'IBM Plex Mono', monospace;
     font-size: 12px; font-weight: 500; letter-spacing: 0.32em; text-transform: uppercase;
@@ -717,11 +719,11 @@
   .sm-header .av { font-size: 26px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25)); }
   .sm-header .who { font-weight: 800; font-size: 15px; text-shadow: 0 1px 2px rgba(120,50,90,0.6); }
   .sm-header .who small { display: block; font-weight: 600; font-size: 11px; opacity: 0.9; }
-  .sm-tagline {
-    padding: 8px 14px;
-    font-size: 11.5px; font-weight: 700; font-style: italic;
-    color: var(--muted); text-align: center; text-wrap: balance;
-    background: #f9eef6; border-bottom: 1px solid #f0e4ee;
+  .sm-pride {
+    padding: 7px 14px 6px; text-align: center;
+    font-size: 15px; line-height: 1.2; letter-spacing: 0.08em;
+    background: linear-gradient(90deg, #fff6fa, #f7f0ff, #fff8e8);
+    border-bottom: 1px solid #f0e4ee;
   }
   .sm-list { padding: 6px; }
   .sm-item {
@@ -784,7 +786,7 @@
 <body>
   <div id="desktop">
     <div id="icons"></div>
-    <div id="tagline">leave the world better<br/>than you found it 🌱</div>
+    <div id="tagline">internetcreature OS<br/>version 0.∞.1</div>
     <!-- windows are created here by the manager -->
   </div>
 
@@ -793,7 +795,7 @@
       <span class="av">🦌</span>
       <span class="who">dain<small>internet creature</small></span>
     </div>
-    <div class="sm-tagline">🌱 leave the world better than you found it</div>
+    <div class="sm-pride" role="img" aria-label="trans and nonbinary pride">🏳️‍⚧️ ✨ 💛🤍💜🖤 ✨ 🏳️‍⚧️</div>
     <div class="sm-list" id="smList"></div>
     <div class="sm-foot">
       <button class="sm-shutdown" id="shutdown"><span>🌙</span> shut down…</button>
@@ -950,29 +952,45 @@
     wrap.className = 'doc';
     wrap.innerHTML =
       '<div class="doc-eyebrow">internetcreature os \u00b7 start here</div>' +
-      '<div class="doc-title">welcome to my little corner of the internet \ud83e\udd70</div>' +
-      '<p>my name is Josh Larison. online, i usually go by Dain or theinternetcreature \ud83e\udd8c</p>' +
-      '<p>this is a cozy space where i share what i believe, what i have made, and what i hope to build next.</p>' +
-      '<div class="doc-sec">my mission</div>' +
-      '<p>my mission is to help shape and use artificial intelligence to raise the standard of living, comfort, and possibility for people around the world. ai is immensely powerful, deeply uncertain, and worthy of serious caution. we are, after all, still simple animals of this planet who have transformed our surroundings at extraordinary speed, building systems far more complex than any one of us can fully understand.</p>' +
-      '<p>many people respond to that uncertainty with fear, and i understand why. i tend to respond with hope.</p>' +
-      '<div class="doc-sec">why it is personal</div>' +
-      '<p>as an autistic person, i have spent much of my life working harder than others seemed to have to work in order to understand people, communicate clearly, and find a place where i belonged. connection is essential to happiness and success, yet for many neurodivergent people, reaching it can feel like traveling upstream while everyone else is carried by the current.</p>' +
-      '<p>ai has changed my life. it has helped me understand myself, articulate ideas i once struggled to express, learn with less shame, create with more confidence, and feel less alone inside my own mind. it has shown me what technology can become when it is designed not only to increase productivity, but to help people feel understood, capable, and supported.</p>' +
+      '<div class="doc-title">welcome to my little corner of the internet 🦌🩷</div>' +
+      '<p>hi! i’m Megan. online, i usually go by Dain.</p>' +
+      '<p>i’m a software engineer, creator, extremely curious internet creature, and someone who gets very excited about the ways technology can help people live happier, healthier, more connected lives while also respecting our planet.</p>' +
+      '<p>this is where i share things i’m building, ideas i’m thinking about, and whatever else has managed to occupy my brain lately.</p>' +
+      '<div class="doc-sec">what i care about</div>' +
+      '<p>a lot of my work and thinking comes back to the same question:</p>' +
+      '<p><em>how can we use technology to make being a person a little easier?</em></p>' +
+      '<p>i’m especially interested in artificial intelligence, not just as a productivity tool, but as something that can help people understand themselves, learn, create, communicate, and connect with other people.</p>' +
+      '<p>ai is so incredibly powerful, and has a ton of risks because of that. i think it deserves both excitement and caution. but when i look at what it could become, i mostly feel hopeful.</p>' +
+      '<p>i want to help push it toward things that actually improve people’s lives.</p>' +
+      '<div class="doc-sec">why this is personal to me</div>' +
+      '<p>i’m autistic, i have adhd, and i’m trans, so for a lot of my life i felt like i was doing many ordinary parts of being human on hard mode.</p>' +
+      '<p>understanding people. organizing my thoughts. starting things. explaining what was going on inside my head. finding people i really connected with.</p>' +
+      '<p>technology has always helped me bridge some of those gaps, but ai has been different.</p>' +
+      '<p>it has helped me turn tangled thoughts into words, learn without feeling embarrassed about what i don’t know, get unstuck when my brain refuses to cooperate, explore who i am, and turn ideas into real things much faster than i ever could before.</p>' +
+      '<p>that experience changed the way i think about software.</p>' +
+      '<p>the best technology doesn’t just make us more productive. it can make us feel more capable.</p>' +
       '<div class="doc-sec">what i believe</div>' +
-      '<p>i believe many human systems are limited by the imperfections of the people who create them. none of us are flawless, and no institution can completely escape our biases, blind spots, fears, or incentives. i see ai as an opportunity to build better tools and systems: not ones that replace human care, creativity, or judgment, but ones that strengthen them and help us design a world that benefits people, animals, and life more broadly.</p>' +
-      '<div class="doc-sec">what i want to create</div>' +
-      '<p>i am also a creator at heart. it took me a long time to understand that.</p>' +
-      '<p>the signs were always there in my childhood, but i buried them beneath years of masking and trying to become the person i believed society expected me to be. now, i want to spend the rest of my life creating openly and intentionally.</p>' +
-      '<p>i want to create software that helps people. i want to write stories and ideas that make others feel less separate. i want to build communities where curiosity is valued, collaboration matters more than ego, and warmth is treated as a strength. i want to explore what humans and ai can make together, while staying thoughtful about the risks, responsibilities, and lives affected along the way.</p>' +
-      '<div class="mission-note"><p>most of all, i want to leave the planet better than i found it \ud83c\udf31</p></div>';
+      '<p>i don’t think technology should replace the messy, wonderful parts of being human.</p>' +
+      '<p>i want more human connection, not less of it. more creativity. more curiosity. more time for the people and things we care about.</p>' +
+      '<p>i’m interested in building tools that support those things.</p>' +
+      '<p>humans are wonderfully fallible little animals. we have biases, blind spots, limited attention, limited energy, and only so many hours in a day. the systems we build inherit a lot of those limitations.</p>' +
+      '<p>i think ai gives us an unusual opportunity to rethink some of those systems from the ground up.</p>' +
+      '<p>not by handing everything over to machines, but by building better tools for people.</p>' +
+      '<div class="doc-sec">what i want to make</div>' +
+      '<p>for a long time, i thought of myself mostly as an engineer.</p>' +
+      '<p>i’m realizing that “creator” fits me much better.</p>' +
+      '<p>software is one medium, but i want to make all kinds of things.</p>' +
+      '<p>i want to build strange little tools that genuinely help people. i want to write. make videos. tell stories. experiment with new interfaces. build communities. make things that are useful, warm, funny, thoughtful, or simply delightful to interact with.</p>' +
+      '<p>i especially love the fuzzy space between engineering, design, psychology, and human behavior, where the interesting question isn’t just <em>“does this work?”</em> but <em>“what does it feel like to use?”</em></p>' +
+      '<p>and increasingly, i want to make things in public, share what i learn, and collaborate with people who are just as excited about making the world a little better.</p>' +
+      '<p class="mission-note">that’s really the goal: leave this weird little planet better than i found it 🌱</p>';
     scroll.appendChild(wrap);
 
     const actions = document.createElement('div');
     actions.className = 'welcome-actions';
     actions.innerHTML =
       '<button class="wa-btn" data-open="resume" title="recruiters go here!">\ud83d\udcc4 view r\u00e9sum\u00e9</button>' +
-      '<button class="wa-btn sage" data-open="chordial" title="an AI companion that reaches out to you first">\ud83d\udcac explore chordial</button>' +
+      '<button class="wa-btn sage" data-open="chordial" title="an ADHD productivity tool built for starting, staying, and coming back">\ud83d\udcac explore chordial</button>' +
       '<button class="wa-btn sky" data-open="contact" title="twitter + email inside!">\u2709\ufe0f contact me</button>';
     actions.querySelectorAll('.wa-btn').forEach(b => {
       const key = b.dataset.open;
@@ -1041,11 +1059,11 @@
             '</span>' +
             '<span class="label">chordial</span>' +
             '<span class="desc">' +
-              '<span class="desc-head">an ambient ai companion</span>' +
+              '<span class="desc-head">an ADHD productivity tool</span>' +
               '<span class="desc-tree">' +
-                '<span>reaches out when you need it</span>' +
-                '<span>productivity / focus / emotional support</span>' +
-                '<span>discord / telegram integration</span>' +
+                '<span>a body-double on your desktop</span>' +
+                '<span>structure for starting / staying / coming back</span>' +
+                '<span>a cast of helpers for everyday life</span>' +
               '</span>' +
             '</span>' +
             '<span class="arrow">↓</span>' +
@@ -1340,13 +1358,15 @@
       title: 'chordial', brandTitle: true,
       repo: 'https://github.com/DainDeer/chordial-mvp',
       body:
-        '<p><span class="brand">chordial</span> is my ambient AI companion project — a chatbot that ' +
-        'doesn\'t just wait for you to talk to it, but proactively checks in on you.</p>' +
-        '<p>under the hood it already has a persistent memory system (core memories, inferred facts, and ' +
-        'temporary notes that shape every prompt), proactive scheduling with quiet hours and polite backoff, ' +
-        'conversation compression for long-term context, and temporal awareness — it knows what ' +
-        '"friday afternoon" feels like. it speaks discord today, on an architecture built to add telegram, ' +
-        'web, and other AI providers next.</p>',
+        '<p><span class="brand">chordial</span> is an ADHD productivity tool — a body-double on your ' +
+        'desktop, a gently imposed two-week structure around your work, and a cast of helpers who assist ' +
+        'with different areas of life!</p>' +
+        '<p>most productivity tools assume the hard part is deciding what to do. with ADHD, the hard ' +
+        'parts are <strong>starting</strong>, <strong>staying</strong>, and <strong>coming back</strong> — ' +
+        'so those are what chordial is built around: one-tap focus blocks, time that banks instead of ' +
+        'punishing wandering attention, and gentle nudges that naturally quiet as your habits grow steadier.</p>' +
+        '<p>i’m building it by myself, mostly because i wanted this thing to exist for me. i use it on ' +
+        'my actual work every day!</p>',
     }); } },
     focus:       { icon: '🍅', title: 'focus.exe',            bg: '#171310', width: 'min(720px, calc(100% - 24px))', render( ){ return makeFocus(); } },
     'chaos-cube':{ icon: '🎴', title: 'chaos-commander-cube', bg: '#fdf6df', render( ){ return makeProjectDoc({
@@ -1370,10 +1390,9 @@
       note: 'writing in progress',
     }); } },
     'dain-img':  { icon: '🖼️', title: 'dain.jpg',             bg: '#fdeee0', render( ){ return makeImageViewer({ src: 'dain.jpg', alt: 'dain — character art', credit: 'Pricklepants', url: 'https://bsky.app/profile/pricklepants.bsky.social' }); } },
-    'josh-img':  { icon: '📸', title: 'Josh.jpg',             bg: '#e3eefc', render( ){ return makeImageViewer({ src: 'Josh.jpg', alt: 'Josh' }); } },
     contact:     { icon: '✉️', title: 'contact',              bg: '#e9f5fe', render( ){ return makeContact(); } },
   };
-  const DESKTOP_ICONS = ['launcher', 'welcome', 'resume', 'youtube', 'chordial', 'focus', 'chaos-cube', 'dormant', 'dain-img', 'josh-img', 'contact'];
+  const DESKTOP_ICONS = ['launcher', 'welcome', 'resume', 'youtube', 'chordial', 'focus', 'chaos-cube', 'dormant', 'dain-img', 'contact'];
 
   const desk    = document.getElementById('desktop');
   const tasksEl = document.getElementById('tasks');
