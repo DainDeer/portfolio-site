@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="robots" content="noindex"/>
+<title>willowden 1.0 — design doc</title>
+<link rel="icon" href="../../favicon.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Lora:ital,wght@0,500;0,600;1,500;1,600&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --paper:      #fdf6fb;
+    --card:       #fffafd;
+    --ink:        #3a2a40;
+    --ink-soft:   #7a6685;
+    --ink-faint:  #a794b3;
+    --line:       #ecd9e6;
+    --line-soft:  #f4e6f0;
+    --blush:      #e98fbb;
+    --blush-soft: #f9c8e0;
+    --blush-wash: #fceaf3;
+    --lav:        #b9a3dc;
+    --lav-soft:   #e6dcf4;
+    --sage:       #7fae76;
+    --sage-soft:  #cfe3ca;
+    --sage-wash:  #eef6ec;
+    --amber:      #dfa23e;
+    --amber-soft: #f6e3bd;
+    --sky:        #7fb3d8;
+    --sky-soft:   #d7e8f4;
+    --dim:        #2a2033;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --serif: "Lora", Georgia, serif;
+    --sans: "Nunito", -apple-system, "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    background-image: radial-gradient(circle at 12% -4%, #fbeaf4 0%, transparent 46%),
+                      radial-gradient(circle at 96% 12%, #efe6f8 0%, transparent 40%);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16.5px;
+    line-height: 1.72;
+  }
+  .page { max-width: 880px; margin: 0 auto; padding: 48px 24px 120px; }
+
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--ink-faint); margin-bottom: 14px;
+  }
+  h1 {
+    font-family: var(--serif); font-style: italic; font-weight: 600;
+    font-size: clamp(34px, 6vw, 52px); line-height: 1.12; margin: 0 0 10px;
+  }
+  h1 .heart { font-style: normal; }
+  .subtitle { color: var(--ink-soft); font-size: 18px; max-width: 640px; margin: 0 0 22px; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px;
+  }
+  .chip {
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: .04em;
+    padding: 4px 12px; border-radius: 999px; border: 1px solid var(--line);
+    background: var(--card); color: var(--ink-soft);
+  }
+  .chip.warm { background: var(--blush-wash); border-color: var(--blush-soft); color: #a5527d; }
+
+  .toc {
+    margin: 34px 0 8px; padding: 20px 24px; border: 1px solid var(--line);
+    border-radius: 16px; background: var(--card);
+  }
+  .toc-title { font-family: var(--mono); font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 10px; }
+  .toc ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 36px; }
+  .toc li { margin: 3px 0; break-inside: avoid; }
+  .toc a { color: var(--ink); text-decoration: none; border-bottom: 1px dotted var(--blush-soft); }
+  .toc a:hover { color: #a5527d; border-bottom-style: solid; }
+  @media (max-width: 640px) { .toc ol { columns: 1; } }
+
+  h2 {
+    font-family: var(--sans); font-weight: 900; font-size: 26px;
+    letter-spacing: -.01em; margin: 72px 0 4px; scroll-margin-top: 24px;
+  }
+  h2 .no { color: var(--blush); font-family: var(--mono); font-weight: 500; font-size: 19px; margin-right: 10px; }
+  h3 {
+    font-family: var(--sans); font-weight: 800; font-size: 19px;
+    margin: 40px 0 2px; scroll-margin-top: 24px;
+  }
+  h3 .tiny { font-size: 15px; }
+  p { margin: 14px 0; }
+  b, strong { font-weight: 800; }
+  em { color: inherit; }
+  ul, ol { padding-left: 24px; }
+  li { margin: 6px 0; }
+  a { color: #a5527d; }
+  hr { border: 0; border-top: 1px solid var(--line); margin: 56px 0; }
+
+  .lede { font-size: 18px; color: var(--ink); }
+  .aside {
+    margin: 20px 0; padding: 14px 20px; border-left: 3px solid var(--blush-soft);
+    background: var(--blush-wash); border-radius: 0 12px 12px 0; color: #6d4a63; font-size: 15.5px;
+  }
+  .aside.sage { border-color: var(--sage-soft); background: var(--sage-wash); color: #4c6b46; }
+  .aside.lav  { border-color: var(--lav-soft); background: #f3eefa; color: #5d4a7a; }
+  .aside b { color: inherit; }
+
+  code, .mono { font-family: var(--mono); font-size: .88em; }
+  code {
+    background: #f6ecf3; border: 1px solid var(--line-soft);
+    padding: 1px 6px; border-radius: 6px;
+  }
+  pre {
+    background: #f9f1f7; border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px 18px; overflow-x: auto; font-size: 13.5px; line-height: 1.6;
+  }
+  pre code { background: none; border: 0; padding: 0; }
+
+  table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 15px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--mono); font-size: 11.5px; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-faint); font-weight: 600; }
+  tr:last-child td { border-bottom: 0; }
+  .verdict { font-weight: 900; white-space: nowrap; }
+  .verdict.keep { color: var(--sage); }
+  .verdict.change { color: #c2578f; }
+  .verdict.new { color: #8a6bbf; }
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--card); padding: 4px 14px; }
+
+  figure { margin: 30px 0; }
+  .frame {
+    border: 1px solid var(--line); border-radius: 18px; background: var(--card);
+    padding: 18px; box-shadow: 0 10px 30px -18px rgba(94, 57, 105, .28);
+  }
+  .frame svg { display: block; width: 100%; height: auto; }
+  figcaption {
+    font-size: 14px; color: var(--ink-soft); margin-top: 10px; padding: 0 6px;
+  }
+  figcaption b { color: var(--ink); }
+
+  /* ——— shared svg mockup styles ——— */
+  svg text { font-family: var(--sans); fill: var(--ink); }
+  svg .t-mono { font-family: var(--mono); }
+  svg .t-serif { font-family: var(--serif); font-style: italic; }
+  svg .t-soft { fill: var(--ink-soft); }
+  svg .t-faint { fill: var(--ink-faint); }
+  svg .t-white { fill: #fff; }
+  svg .t-b { font-weight: 800; }
+  svg .t-xb { font-weight: 900; }
+  svg .win { fill: #fdf6fb; stroke: #e5d0df; stroke-width: 1.5; }
+  svg .card { fill: #fffafd; stroke: var(--line); stroke-width: 1; }
+  svg .wash { fill: var(--blush-wash); }
+  svg .pill { fill: var(--blush-soft); }
+  svg .pill-deep { fill: var(--blush); }
+  svg .sage-bar { fill: var(--sage-soft); }
+  svg .sage-deep { fill: var(--sage); }
+  svg .lav-bar { fill: var(--lav-soft); }
+  svg .stroke-line { stroke: var(--line); stroke-width: 1; fill: none; }
+  svg .dot { fill: var(--line); }
+  svg .deer-body { fill: #e4c29b; }
+  svg .deer-dark { fill: #c9a276; }
+  svg .deer-cream { fill: #f6e7d3; }
+  svg .tine-lit { stroke: var(--blush); stroke-width: 3; fill: none; stroke-linecap: round; }
+  svg .tine-off { stroke: var(--line); stroke-width: 3; fill: none; stroke-linecap: round; }
+  svg .spot-dim { fill: rgba(42, 32, 51, .55); }
+  svg .arrow { stroke: var(--ink-faint); stroke-width: 1.6; fill: none; marker-end: url(#arr); }
+
+  .footer {
+    margin-top: 90px; padding-top: 24px; border-top: 1px solid var(--line);
+    color: var(--ink-faint); font-size: 13.5px; font-family: var(--mono);
+  }
+</style>
+</head>
+<body>
+<main class="page">
+
+  <div class="eyebrow">internetcreature os · wiki · design doc</div>
+  <h1>willowden 1.0 <span class="heart">🦌</span></h1>
+  <p class="subtitle">the desktop app — an ADHD planning companion and focus coach, and the next phase of chordial. this is the ground-up design for version 1.0: what it is, how it feels, what it's built from, and how we get there from the mvp.</p>
+  <div class="meta">
+    <span class="chip">status · working draft</span>
+    <span class="chip">date · 2026-08-24</span>
+    <span class="chip warm">pre-announcement — not linked from the site yet</span>
+  </div>
+
+  <nav class="toc">
+    <div class="toc-title">contents</div>
+    <ol>
+      <li><a href="#about">what this is</a></li>
+      <li><a href="#pillars">design pillars</a></li>
+      <li><a href="#journey">the shape of the journey</a></li>
+      <li><a href="#experience">the experience</a></li>
+      <li><a href="#flows">flows</a></li>
+      <li><a href="#honest">holding it honest</a></li>
+      <li><a href="#stack">technology, questioned</a></li>
+      <li><a href="#architecture">architecture</a></li>
+      <li><a href="#migration">migration &amp; build plan</a></li>
+      <li><a href="#v1">what 1.0 means</a></li>
+      <li><a href="#risks">risks &amp; open questions</a></li>
+      <li><a href="#sources">lineage</a></li>
+    </ol>
+  </nav>
+
+  <h2 id="about"><span class="no">1</span>what this is</h2>
+  <p class="lede">Willowden is a desktop app that helps you both <em>set</em> goals and <em>work toward</em> them. It's an AI-assisted planning tool when you're deciding what matters, and a pomodoro-shaped body double when you need help actually doing it — a small woodland den on your desktop, inhabited by a cast of animal helpers and chaired by a deer who sits with you while you work.</p>
+  <p>It is built for ADHD, autistic, and anxious brains — people for whom starting is the hard part, for whom "just use a to-do app" has failed a dozen times, and for whom most productivity software quietly assumes a motivation that isn't there. Willowden assumes the opposite: that on many days the app has to make the first move.</p>
+  <p>This document is the v1.0 design for Willowden as a product. It treats the project as a ground-up build: every technology and structural decision inherited from the chordial mvp is questioned in §6, and either re-earned or replaced. It also carries the migration plan (§8) — Willowden is not a rewrite; it is the mvp's proven runtime moving into its real home, with one deliberate surgical change to the native stack.</p>
+  <div class="aside lav"><b>naming.</b> "chordial" was the working name and stays as the internal code name; Willowden is the world the product ships as. The cast — Vel, Pip, Skip, Remy, Mabel, Juniper, Edwin — keep their names; the rename is the world, not the talent. A deliberate brand-language pass happens during migration; no mechanical find-and-replace.</div>
+
+  <h2 id="pillars"><span class="no">2</span>design pillars</h2>
+  <p>Five commitments. Every feature in this doc should be traceable to at least one of them, and anything that fights one of them is out — no matter how standard it is in productivity software.</p>
+  <h3>1 · user-first</h3>
+  <p>The user is gently guided, never forced. Every step of every flow is skippable, and skipping is recorded honestly as <em>deferred</em>, never as failure. Consent is asked per-privilege, after the feature has proven its worth, and every yes is reversible in Settings. The product drives — it opens the tour, drafts the morning, notices stalls — but driving means <em>extending one concrete invitation at a time</em>, never deciding for you.</p>
+  <h3>2 · unique voice</h3>
+  <p>Talking to the den should never feel like talking to a chatbot. The cast are authored characters with distinct voices, lanes, and speaking policies — a raccoon who runs a refined kitchen, an owl who drops his pen when genuinely impressed — governed by a council-wide rule set (no reflexive question-endings, animal traits as behavior not vocabulary, memory as affectionate specificity). Structural moments — tours, dings, celebrations — use <em>hand-authored lines</em>: zero tokens, offline-safe, never wandering. The model speaks only where a real conversation is happening.</p>
+  <h3>3 · constant structure, held flexibly</h3>
+  <p>Life runs in <b>cycles</b> — small, themed stretches of one to two weeks with a handful of commitments. But life is messy: cycles can be rescheduled, reorganized, resized, or abandoned, and the system treats a scope change as <em>data, not failure</em> (the reason, in your words, is the record). The one thing that never wavers is the map itself: you are always somewhere — in a cycle, between cycles, resting — and the app always shows you where. Structure is the constant; its contents bend.</p>
+  <h3>4 · one small bit of progress is always the objective</h3>
+  <p>The unit of the whole product is a tiny <b>block</b> of real work, and the verb is <b>banking</b> — stopping early still banks the minutes, because starting was the achievement. Fear of failure, executive dysfunction, and perfectionism all attack the first step; Willowden's answer is to make the first step absurdly small (three minutes counts), celebrate it sincerely, and never let a mechanic exist that punishes stopping. No streaks, anywhere, ever — streaks punish exactly the person this product is for. We reward <em>returns</em>, not unbroken chains.</p>
+  <h3>5 · the shape changes with the person</h3>
+  <p>Everyone arrives at a different point in their life, and Willowden offers something useful at every one of them. For a user in crisis it can be nearly a hand on the shoulder — maximum presence, drafted mornings, one obvious next thing. As evidence of steadiness accumulates, the product measurably recedes: check-ins stretch, nudges quiet, and the den becomes a backbone — a keeper of habits through moves, jobs, and life changes, and a quiet sentinel against sliding back. The arc bends; it never ends. This isn't a settings slider — it's computed from lived cycles, and it's the consent story for being present early: the presence demonstrably fades.</p>
+  <div class="aside"><b>the contract.</b> Beneath the pillars sit eight requirements — contracts, not aspirations; a complete implementation that makes one untrue is still the wrong implementation. <em>Action before interview. One invitation at a time. The real product immediately</em> (cycle zero runs on the permanent map, clock, rooms, and ledger — no throwaway tutorial UI). <em>Authored outside, adaptive inside. Real actions advance the journey</em> — never "next" buttons. <em>Nothing is failed</em> — invitations resolve done, deferred, or declined, and silence never becomes a red mark. <em>Always on the map</em> — all five strip states are designed states. <em>Presence is controlled</em> — installation and warmth are never treated as permission to monitor, notify, or launch.</div>
+
+  <h2 id="journey"><span class="no">3</span>the shape of the journey</h2>
+  <p>Pillar 5 is not a vibe — it's arithmetic the mvp already runs. Every closed cycle gets a deterministic scorecard (computed, never model-judged, and deliberately with <b>no overall grade</b>); steady cycles stretch the product's check-in beat by powers of two, capped at a sentinel floor. The result is four <b>postures</b> the whole product reads:</p>
+  <div class="table-scroll"><table>
+    <tr><th>posture</th><th>when</th><th>how willowden behaves</th></tr>
+    <tr><td><b>settling in</b></td><td>no lived cycles yet</td><td>maximum presence. the tour drives, mornings arrive pre-drafted, stalls get one gentle nudge. the app makes the first move because there's no evidence yet that you will.</td></tr>
+    <tr><td><b>building</b></td><td>cycles lived, steadiness not yet earned</td><td>full partnership. daily rhythm, cycle planning and retros, the den at conversational volume.</td></tr>
+    <tr><td><b>rhythm</b></td><td>consecutive steady cycles</td><td>the product recedes on evidence. check-ins stretch (8h → 16h → …), nudges thin, the deer mostly just sits with you.</td></tr>
+    <tr><td><b>keeping watch</b></td><td>steadiness at the cap</td><td>sentinel mode. willowden is a backbone: habits keep their skeleton, collections keeps your history, and the den watches quietly for leading indicators of a slide — re-escalating only by consent.</td></tr>
+  </table></div>
+  <p>Two properties keep this honest. <b>Bursts never earn quiet</b> — sustainability is part of the steady test, so a heroic all-nighter cycle doesn't read as "doing great, go away." And <b>absence of evidence never extends quiet</b> — an unjudgeable cycle earns nothing, so the product can't be tricked into silence by disengagement. A wobble resets the posture warmly, not punitively: the den simply leans back in.</p>
+  <p>The journey has a front door, too: every new user starts inside <b>cycle zero</b>, a short product-authored tutorial cycle whose commitments <em>are</em> the tour steps — the tutorial teaches the cycle system by being one. Cycle zero is covered in §5; the full product spec lives in the first-run design doc.</p>
+
+  <h2 id="experience"><span class="no">4</span>the experience</h2>
+  <p>Willowden's surfaces carry plain names — <b>Home</b>, the <b>Deer window</b>, <b>Rooms</b>, <b>Collections</b> — because navigation should say what it is; the warmth lives in the characters, never in labels you have to decode. Each surface answers one question: Home, <em>where am I?</em> The deer, <em>will something sit with me?</em> Rooms, <em>who can I talk with?</em> Collections, <em>what was remembered?</em> Chat is deliberately not the center — the map and the deer are the primary surface, and Rooms is a door you walk through when you want it.</p>
+
+  <h3>home &amp; the cycle strip</h3>
+  <p>Home answers one question at a glance: <em>where am I, and what's the one next thing?</em> Its centerpiece is the <b>cycle strip</b> — permanent UI that never nulls out. It renders whichever is true: the tutorial cycle, an active cycle, a cycle that's ready to close, an upcoming one, or a resting state. Exactly one next action pulses at any time; its verb is always the same one-tap <b>start a block ▸</b>.</p>
+
+  <figure>
+    <div class="frame">
+    <svg viewBox="0 0 900 620" role="img" aria-label="mockup of the willowden home window with cycle strip, antler rack, commitments, room door, and remembered days">
+      <rect x="10" y="10" width="880" height="600" rx="16" class="win"/>
+      <circle cx="34" cy="34" r="5" class="dot"/><circle cx="52" cy="34" r="5" class="dot"/><circle cx="70" cy="34" r="5" class="dot"/>
+      <text x="450" y="39" text-anchor="middle" class="t-mono t-faint" font-size="12">willowden</text>
+
+      <text x="42" y="86" font-size="23" class="t-xb">good morning, megan 🩷</text>
+      <text x="42" y="110" font-size="14" class="t-serif t-soft">the den is quieter these days — you've earned that.</text>
+
+      <!-- cycle strip card -->
+      <rect x="40" y="130" width="606" height="250" rx="14" class="card"/>
+      <text x="62" y="163" font-size="18" class="t-xb">steady hands</text>
+      <rect x="196" y="147" width="86" height="22" rx="11" class="lav-bar"/>
+      <text x="239" y="162" text-anchor="middle" font-size="11.5" class="t-mono" fill="#5d4a7a">day 4 of 14</text>
+      <rect x="290" y="147" width="62" height="22" rx="11" class="wash"/>
+      <text x="321" y="162" text-anchor="middle" font-size="11.5" class="t-mono" fill="#a5527d">frozen</text>
+
+      <!-- antler rack: symmetric, filling from the middle -->
+      <g transform="translate(343,202)">
+        <path d="M0,12 C-38,9 -85,6 -140,0 C-185,-5 -215,-10 -235,-16" class="tine-lit"/>
+        <path d="M0,12 C38,9 85,6 140,0 C185,-5 215,-10 235,-16" class="tine-lit"/>
+        <path d="M-46,7 C-52,-1 -55,-6 -62,-13" class="tine-lit"/>
+        <path d="M46,7 C52,-1 55,-6 62,-13" class="tine-lit"/>
+        <path d="M-102,3 C-109,-6 -113,-12 -116,-21" class="tine-lit"/>
+        <path d="M102,3 C109,-6 113,-12 116,-21" class="tine-lit"/>
+        <path d="M-158,-2 C-166,-11 -170,-18 -172,-27" class="tine-off"/>
+        <path d="M158,-2 C166,-11 170,-18 172,-27" class="tine-off"/>
+        <path d="M-206,-9 C-214,-18 -218,-25 -219,-33" class="tine-off"/>
+        <path d="M206,-9 C214,-18 218,-25 219,-33" class="tine-off"/>
+        <circle cx="0" cy="12" r="4.5" fill="var(--blush)"/>
+      </g>
+      <text x="343" y="232" text-anchor="middle" font-size="11" class="t-mono t-faint">the rack grows from the middle out · sheds at cycle close</text>
+
+      <!-- capacity bar -->
+      <rect x="62" y="246" width="522" height="12" rx="6" class="pill" opacity=".45"/>
+      <rect x="62" y="246" width="392" height="12" rx="6" class="pill"/>
+      <rect x="62" y="246" width="234" height="12" rx="6" class="sage-deep"/>
+      <text x="596" y="256" font-size="11" class="t-mono t-faint">9 / 20</text>
+
+      <!-- commitments -->
+      <g font-size="14">
+        <text x="62" y="288" class="t-b">practice piano</text>
+        <rect x="330" y="279" width="160" height="9" rx="4.5" class="sage-bar"/>
+        <rect x="330" y="279" width="106" height="9" rx="4.5" class="sage-deep"/>
+        <text x="500" y="288" font-size="11.5" class="t-mono t-soft">4 / 6</text>
+
+        <text x="62" y="316" class="t-b">portfolio case study</text>
+        <rect x="330" y="307" width="160" height="9" rx="4.5" class="sage-bar"/>
+        <rect x="330" y="307" width="64" height="9" rx="4.5" class="sage-deep"/>
+        <text x="500" y="316" font-size="11.5" class="t-mono t-soft">2 / 5</text>
+
+        <text x="62" y="344" class="t-b">move most days</text>
+        <rect x="330" y="335" width="160" height="9" rx="4.5" class="sage-bar"/>
+        <rect x="330" y="335" width="96" height="9" rx="4.5" class="sage-deep"/>
+        <text x="500" y="344" font-size="11.5" class="t-mono t-soft">✓ today</text>
+      </g>
+
+      <!-- next action -->
+      <rect x="52" y="358" width="582" height="0" fill="none"/>
+      <rect x="536" y="270" width="0" height="0" fill="none"/>
+
+      <!-- right rail: room door -->
+      <rect x="662" y="130" width="198" height="118" rx="14" class="card"/>
+      <text x="682" y="160" font-size="15" class="t-xb">rooms 🚪</text>
+      <circle cx="838" cy="155" r="5" fill="var(--blush)"/>
+      <text x="682" y="184" font-size="12.5" class="t-soft">🦌 vel: "left a thought</text>
+      <text x="682" y="201" font-size="12.5" class="t-soft">about tuesday for you"</text>
+      <text x="682" y="228" font-size="12" fill="#a5527d" class="t-b">step inside →</text>
+
+      <!-- right rail: cast -->
+      <rect x="662" y="262" width="198" height="118" rx="14" class="card"/>
+      <text x="682" y="290" font-size="12" class="t-mono t-faint">THE COUNCIL</text>
+      <g font-size="17" text-anchor="middle">
+        <circle cx="694" cy="318" r="15" class="wash"/><text x="694" y="324">🦌</text>
+        <circle cx="732" cy="318" r="15" class="wash"/><text x="732" y="324">🐿️</text>
+        <circle cx="770" cy="318" r="15" class="wash"/><text x="770" y="324">🐰</text>
+        <circle cx="808" cy="318" r="15" class="wash"/><text x="808" y="324">🦝</text>
+        <circle cx="713" cy="352" r="15" class="wash"/><text x="713" y="358">🐻</text>
+        <circle cx="751" cy="352" r="15" class="wash"/><text x="751" y="358">🦊</text>
+        <circle cx="789" cy="352" r="15" opacity=".45" class="wash"/><text x="789" y="358" opacity=".45">🦉</text>
+      </g>
+
+      <!-- next-action banner -->
+      <rect x="40" y="398" width="820" height="64" rx="14" class="wash"/>
+      <text x="64" y="426" font-size="12" class="t-mono" fill="#a5527d">NEXT · PORTFOLIO CASE STUDY</text>
+      <text x="64" y="448" font-size="16" class="t-b">outline section two — tiny counts</text>
+      <rect x="672" y="412" width="164" height="36" rx="18" class="pill-deep"/>
+      <text x="754" y="435" text-anchor="middle" font-size="14.5" class="t-white t-xb">start a block ▸</text>
+
+      <!-- remembered days -->
+      <text x="42" y="500" font-size="12" class="t-mono t-faint">REMEMBERED DAYS</text>
+      <g font-size="12.5">
+        <rect x="40" y="512" width="262" height="70" rx="12" class="card"/>
+        <text x="58" y="536" class="t-b">yesterday</text>
+        <text x="58" y="556" class="t-soft">3 blocks banked · pip cheered</text>
+        <rect x="316" y="512" width="262" height="70" rx="12" class="card"/>
+        <text x="334" y="536" class="t-b">tuesday</text>
+        <text x="334" y="556" class="t-soft">a rough one — mabel sat with you</text>
+        <rect x="592" y="512" width="262" height="70" rx="12" class="card"/>
+        <text x="610" y="536" class="t-b">monday</text>
+        <text x="610" y="556" class="t-soft">cycle frozen · 5 commitments</text>
+      </g>
+    </svg>
+    </div>
+    <figcaption><b>Home, mid-cycle.</b> The strip owns the top: theme, day count, the antler rack filling symmetrically from the middle, the capacity bar (planned in blush, banked in sage), and per-commitment fills. One next action pulses with the app's primary verb. Rooms is a door on the rail, not the default view — and Edwin sits dimmed because he speaks rarely, on purpose.</figcaption>
+  </figure>
+
+  <p>The strip's five states, side by side:</p>
+
+  <figure>
+    <div class="frame">
+    <svg viewBox="0 0 1240 260" role="img" aria-label="the five cycle strip states: tutorial, active, ready to close, upcoming, resting">
+      <g>
+        <rect x="10" y="34" width="232" height="190" rx="14" class="card"/>
+        <text x="26" y="24" font-size="12" class="t-mono t-faint">TUTORIAL</text>
+        <text x="28" y="66" font-size="15" class="t-xb">settling in</text>
+        <text x="28" y="86" font-size="12" class="t-soft">day 1 of 5 · cycle zero</text>
+        <g transform="translate(28,106)" font-size="12">
+          <circle cx="6" cy="4" r="5" fill="var(--blush)"/><text x="20" y="8">meet your deer</text>
+          <circle cx="6" cy="28" r="5" class="stroke-line" fill="#fff"/><text x="20" y="32" class="t-soft">bank a first block</text>
+          <circle cx="6" cy="52" r="5" class="stroke-line" fill="#fff"/><text x="20" y="56" class="t-soft">put things on the map</text>
+          <circle cx="6" cy="76" r="5" class="stroke-line" fill="#fff"/><text x="20" y="80" class="t-soft">talk with vel</text>
+          <circle cx="6" cy="100" r="5" class="stroke-line" fill="#fff"/><text x="20" y="104" class="t-soft">try willowden again</text>
+        </g>
+      </g>
+      <g>
+        <rect x="258" y="34" width="232" height="190" rx="14" class="card"/>
+        <text x="274" y="24" font-size="12" class="t-mono t-faint">ACTIVE</text>
+        <text x="276" y="66" font-size="15" class="t-xb">steady hands</text>
+        <text x="276" y="86" font-size="12" class="t-soft">day 4 of 14 · frozen</text>
+        <g transform="translate(374,124)">
+          <path d="M0,10 C-25,6 -55,2 -84,-8" class="tine-lit"/>
+          <path d="M0,10 C25,6 55,2 84,-8" class="tine-lit"/>
+          <path d="M-36,5 C-42,-3 -44,-8 -46,-15" class="tine-lit"/>
+          <path d="M36,5 C42,-3 44,-8 46,-15" class="tine-lit"/>
+          <path d="M-66,-2 C-72,-10 -74,-15 -75,-22" class="tine-off"/>
+          <path d="M66,-2 C72,-10 74,-15 75,-22" class="tine-off"/>
+          <circle cx="0" cy="10" r="3.5" fill="var(--blush)"/>
+        </g>
+        <rect x="276" y="158" width="196" height="10" rx="5" class="pill" opacity=".45"/>
+        <rect x="276" y="158" width="88" height="10" rx="5" class="sage-deep"/>
+        <text x="276" y="196" font-size="12" fill="#a5527d" class="t-b">next: outline section two ▸</text>
+      </g>
+      <g>
+        <rect x="506" y="34" width="232" height="190" rx="14" class="card"/>
+        <text x="522" y="24" font-size="12" class="t-mono t-faint">READY TO CLOSE</text>
+        <text x="524" y="66" font-size="15" class="t-xb">steady hands</text>
+        <text x="524" y="86" font-size="12" class="t-soft">the retro awaits — no rush</text>
+        <text x="618" y="146" text-anchor="middle" font-size="34">🍂</text>
+        <text x="618" y="172" text-anchor="middle" font-size="12" class="t-serif t-soft">never "day 12 of 5"</text>
+        <rect x="538" y="186" width="168" height="32" rx="16" class="pill"/>
+        <text x="622" y="207" text-anchor="middle" font-size="12.5" class="t-b" fill="#a5527d">close it together ▸</text>
+      </g>
+      <g>
+        <rect x="754" y="34" width="232" height="190" rx="14" class="card"/>
+        <text x="770" y="24" font-size="12" class="t-mono t-faint">UPCOMING</text>
+        <text x="772" y="66" font-size="15" class="t-xb">wind-down</text>
+        <text x="772" y="86" font-size="12" class="t-soft">begins monday</text>
+        <text x="866" y="150" text-anchor="middle" font-size="34">🌙</text>
+        <text x="866" y="182" text-anchor="middle" font-size="12" class="t-serif t-soft">a planned breath,</text>
+        <text x="866" y="200" text-anchor="middle" font-size="12" class="t-serif t-soft">not a gap</text>
+      </g>
+      <g>
+        <rect x="1002" y="34" width="232" height="190" rx="14" class="card"/>
+        <text x="1018" y="24" font-size="12" class="t-mono t-faint">RESTING</text>
+        <text x="1020" y="66" font-size="15" class="t-xb">between cycles</text>
+        <text x="1020" y="86" font-size="12" class="t-soft">the light stays on</text>
+        <text x="1114" y="148" text-anchor="middle" font-size="34">🏮</text>
+        <rect x="1034" y="168" width="168" height="32" rx="16" class="pill"/>
+        <text x="1118" y="189" text-anchor="middle" font-size="12.5" class="t-b" fill="#a5527d">start a fresh cycle ▸</text>
+      </g>
+    </svg>
+    </div>
+    <figcaption><b>Never off the map.</b> The strip renders tutorial, active, ready-to-close, upcoming, and resting — and never returns null. A cycle past its nominal end reads as <em>ready to close</em>, never "day 12 of 5" — it never closes itself. A lapsed user who comes back after weeks lands in the resting state with one warm affordance, not a blank screen or a guilt trip.</figcaption>
+  </figure>
+
+  <h3>the deer</h3>
+  <p>The deer is Willowden's body double — a tiny always-on-top window that sits in the corner of your desktop, holds the focus clock, and keeps you quiet company. She is the answer to the classic ADHD timer failure: a pomodoro in a browser tab is a pomodoro you've already lost. The deer is <em>un-losable</em>, draggable anywhere, and hers is the only window that needs to be open while you work. She can also live docked <em>inside</em> Home instead — where she sits is the person's choice (desktop recommended, because it lets Home close), remembered once made, and never nagged about.</p>
+  <p>Her clock is built around banking. Every run of minutes lands in the day's bank for that task — pausing banks, switching tasks banks, stopping early banks. A block has one authored <b>ding</b> when you cross your target, then overtime simply counts up; nothing auto-stops, nothing expires, and no state exists called "failed." Finishing a task is a hero moment: confetti, a full emergency un-loaf, and a keepsake may land in Collections.</p>
+  <p>She also has senses, with hard edges. A native collector reports <em>which app is frontmost and whether you're idle</em> — never window titles, never urls, never content — and that raw signal never leaves your machine. From it she notices drift ("you okay? we were doing the thing") exactly once per episode, welcomes you back, and hushes herself automatically when a meeting app is running. Her unprompted words ride a speech-gate stack — hourly budget, quiet hours, meeting hush — because <em>silence is the default gift</em>.</p>
+
+  <figure>
+    <div class="frame">
+    <svg viewBox="0 0 900 430" role="img" aria-label="mockup of the deer window with focus clock and task bank, plus her four states">
+      <!-- desktop suggestion -->
+      <rect x="10" y="10" width="450" height="410" rx="16" fill="#f2e8f2"/>
+      <text x="30" y="38" class="t-mono t-faint" font-size="11">YOUR DESKTOP, BOTTOM CORNER</text>
+
+      <!-- deer window -->
+      <rect x="95" y="56" width="280" height="340" rx="18" class="win"/>
+      <!-- bubble -->
+      <rect x="115" y="74" width="240" height="46" rx="12" class="card"/>
+      <path d="M215,120 l10,12 l6,-12 z" fill="#fffafd" stroke="var(--line)" stroke-width="1"/>
+      <text x="235" y="94" text-anchor="middle" font-size="12" class="t-serif">ding in five —</text>
+      <text x="235" y="110" text-anchor="middle" font-size="12" class="t-serif">you're doing the thing.</text>
+      <!-- deer (no antlers — the rack lives in the cycle strip) -->
+      <g transform="translate(238,186)">
+        <circle cx="52" cy="10" r="7" class="deer-cream"/>
+        <ellipse cx="6" cy="16" rx="52" ry="26" class="deer-body"/>
+        <ellipse cx="10" cy="24" rx="32" ry="12" class="deer-cream"/>
+        <circle cx="16" cy="0" r="4" class="deer-cream"/>
+        <circle cx="32" cy="8" r="3.2" class="deer-cream"/>
+        <ellipse cx="-30" cy="-6" rx="13" ry="21" transform="rotate(-16 -30 -6)" class="deer-body"/>
+        <ellipse cx="-52" cy="-38" rx="4.8" ry="12" transform="rotate(-38 -52 -38)" class="deer-dark"/>
+        <ellipse cx="-27" cy="-41" rx="4.8" ry="12" transform="rotate(16 -27 -41)" class="deer-dark"/>
+        <ellipse cx="-39" cy="-24" rx="14" ry="12.5" class="deer-body"/>
+        <ellipse cx="-52" cy="-19" rx="8.5" ry="6" class="deer-cream"/>
+        <circle cx="-59" cy="-20" r="2.6" fill="#3a2a40"/>
+        <circle cx="-40" cy="-26" r="2.7" fill="#3a2a40"/>
+        <circle cx="-33" cy="-15" r="3" fill="#e9a8c6" opacity=".65"/>
+      </g>
+      <!-- clock -->
+      <text x="235" y="256" text-anchor="middle" font-size="24" class="t-mono t-xb">18:32</text>
+      <rect x="127" y="268" width="216" height="10" rx="5" class="pill" opacity=".4"/>
+      <rect x="127" y="268" width="160" height="10" rx="5" class="pill-deep"/>
+      <text x="235" y="296" text-anchor="middle" font-size="11" class="t-mono t-faint">outline section two · target 25:00</text>
+      <!-- task rows -->
+      <g font-size="12">
+        <rect x="115" y="310" width="240" height="30" rx="9" class="wash"/>
+        <text x="127" y="329" class="t-b">portfolio case study</text>
+        <text x="343" y="329" text-anchor="end" class="t-mono t-soft" font-size="10.5">42m ▸</text>
+        <rect x="115" y="346" width="240" height="30" rx="9" fill="#faf3f8"/>
+        <text x="127" y="365" class="t-soft">practice piano</text>
+        <text x="343" y="365" text-anchor="end" class="t-mono t-faint" font-size="10.5">0m ▸</text>
+      </g>
+      <text x="127" y="390" font-size="11.5" class="t-faint">＋ tell me a thing…</text>
+
+      <!-- states -->
+      <text x="500" y="38" class="t-mono t-faint" font-size="11">HER STATES</text>
+      <g font-size="13.5">
+        <rect x="496" y="54" width="384" height="76" rx="12" class="card"/>
+        <text x="516" y="86" font-size="24">😴</text>
+        <text x="556" y="80" class="t-b">loaf</text>
+        <text x="556" y="100" font-size="12" class="t-soft">no block running. present, zero demand.</text>
+
+        <rect x="496" y="142" width="384" height="76" rx="12" class="card"/>
+        <text x="516" y="174" font-size="24">👀</text>
+        <text x="556" y="168" class="t-b">watch</text>
+        <text x="556" y="188" font-size="12" class="t-soft">a block is live — she sits with you while you work.</text>
+
+        <rect x="496" y="230" width="384" height="76" rx="12" class="card"/>
+        <text x="516" y="262" font-size="24">✨</text>
+        <text x="556" y="256" class="t-b">perked</text>
+        <text x="556" y="276" font-size="12" class="t-soft">speaking: a ding, a welcome-back, a celebration.</text>
+
+        <rect x="496" y="318" width="384" height="76" rx="12" class="card" opacity=".62"/>
+        <text x="516" y="350" font-size="24">🤫</text>
+        <text x="556" y="344" class="t-b">hushed</text>
+        <text x="556" y="364" font-size="12" class="t-soft">meeting nearby — desaturated, silent, clock still counting.</text>
+      </g>
+    </svg>
+    </div>
+    <figcaption><b>The deer window.</b> Speech bubble, the un-losable clock, and the day's task banks — quick-add included, so capturing a thought never means finding the main window. Deliberately antler-free: the antlers belong to the cycle, not the sprite.</figcaption>
+  </figure>
+
+  <div class="aside lav"><b>who is she?</b> Deliberately unresolved: whether the desktop deer <em>is</em> Vel, an embodiment the whole den shares, or a quiet companion with an identity of her own is left open until the character direction feels true. Day one calls her simply <em>your deer</em>; Vel is named when the person first opens Rooms. Nothing in the architecture forces this answer early, so it stays a character decision, not a schema one.</div>
+
+  <h3>the rooms &amp; the council</h3>
+  <p>Conversation happens in <b>rooms</b> — small, purpose-built spaces instead of one endless thread. Today's room is the daily default; a sealed cycle opens a retro room and a planning room; old days stay browsable as "remembered days." Every room's durable output is structured — events, observations, a summary — never the raw transcript, so new reasoning never replays old conversations and yesterday stays yesterday.</p>
+  <p>The rooms are inhabited by seven authored characters, each with a lane and a speaking policy: <b>Vel</b> 🦌 the deer who chairs the house, <b>Pip</b> 🐿️ productivity, <b>Skip</b> 🐰 movement, <b>Remy</b> 🦝 nutrition, <b>Mabel</b> 🐻 wellbeing, <b>Juniper</b> 🦊 creative sparks, and <b>Edwin</b> 🦉 reflection — who speaks rarely, on purpose. One speaker per turn; routing is deterministic first, with a small-model decider only for genuine gray zones; helpers <em>listen</em> far more than they speak. Every name and species is yours to reshape in conversation — they're authored defaults, not fixed mascots.</p>
+  <p>What keeps this from being "a chatbot with skins": the council shares <b>one memory</b> beneath all rooms (no competing realities), their observations are evidence-tied rather than vibes, and their voices obey house rules — no reflexive question-endings, animal traits expressed as behavior rather than vocabulary, memory shown as affectionate specificity. Talking to Remy about dinner should feel like talking to <em>Remy</em>, and never like talking to a language model doing a raccoon voice.</p>
+
+  <figure>
+    <div class="frame">
+    <svg viewBox="0 0 900 540" role="img" aria-label="mockup of today's room with attributed council speakers and the composer">
+      <rect x="10" y="10" width="880" height="520" rx="16" class="win"/>
+      <circle cx="34" cy="34" r="5" class="dot"/><circle cx="52" cy="34" r="5" class="dot"/><circle cx="70" cy="34" r="5" class="dot"/>
+      <text x="450" y="39" text-anchor="middle" class="t-mono t-faint" font-size="12">rooms · today's room</text>
+      <text x="852" y="39" text-anchor="end" font-size="12" fill="#a5527d" class="t-b">← home</text>
+
+      <!-- vel -->
+      <circle cx="66" cy="92" r="18" class="wash" stroke="var(--blush)" stroke-width="2"/>
+      <text x="66" y="99" text-anchor="middle" font-size="16">🦌</text>
+      <text x="96" y="78" font-size="11" class="t-mono t-soft">vel</text>
+      <rect x="96" y="86" width="470" height="58" rx="14" class="card"/>
+      <text x="114" y="110" font-size="13.5">morning. one small thing before you start — tuesday's piano</text>
+      <text x="114" y="130" font-size="13.5">block overlaps your appointment. want me to slide it?</text>
+
+      <!-- user -->
+      <rect x="430" y="166" width="436" height="40" rx="14" class="pill"/>
+      <text x="450" y="191" font-size="13.5">oh right!! yeah — slide it to wednesday please</text>
+
+      <!-- pip -->
+      <circle cx="66" cy="252" r="18" class="wash" stroke="var(--amber)" stroke-width="2"/>
+      <text x="66" y="259" text-anchor="middle" font-size="16">🐿️</text>
+      <text x="96" y="238" font-size="11" class="t-mono t-soft">pip</text>
+      <rect x="96" y="246" width="486" height="58" rx="14" class="card"/>
+      <text x="114" y="270" font-size="13.5">done. <tspan class="t-serif">*stamps it twice for legitimacy*</tspan> wednesday it is —</text>
+      <text x="114" y="290" font-size="13.5">filed under "future pip's problem." the board already agrees.</text>
+
+      <!-- user via phone -->
+      <rect x="430" y="326" width="436" height="40" rx="14" class="pill"/>
+      <text x="450" y="351" font-size="13.5">banked 20 minutes at the café, heading home</text>
+      <text x="866" y="382" text-anchor="end" font-size="11" class="t-serif t-faint">📱 from telegram</text>
+
+      <!-- mabel -->
+      <circle cx="66" cy="424" r="18" class="wash" stroke="var(--sage)" stroke-width="2"/>
+      <text x="66" y="431" text-anchor="middle" font-size="16">🐻</text>
+      <text x="96" y="410" font-size="11" class="t-mono t-soft">mabel</text>
+      <rect x="96" y="418" width="420" height="40" rx="14" class="card"/>
+      <text x="114" y="443" font-size="13.5">café blocks count double in spirit. safe travels home, honey.</text>
+
+      <!-- composer -->
+      <rect x="30" y="478" width="760" height="38" rx="19" fill="#fff" stroke="var(--line)" stroke-width="1"/>
+      <text x="52" y="502" font-size="13" class="t-faint">say something to the room…</text>
+      <circle cx="836" cy="497" r="19" class="pill-deep"/>
+      <text x="836" y="503" text-anchor="middle" font-size="14" class="t-white">↑</text>
+    </svg>
+    </div>
+    <figcaption><b>Today's room.</b> One conversation, many voices — each helper attributed with their own hue, one speaker per turn. The same room follows you to your phone through the tether; a line sent from Telegram appears here with a quiet whisper of where it came from.</figcaption>
+  </figure>
+
+  <h3>collections</h3>
+  <p>Collections is Willowden's memory of what you've done — the half of the dopamine engine that never resets, rendered as a shelf in the deer's corner of the world. It holds two kinds of objects. <b>Keepsakes</b> are cozy recognitions of process that accumulate from the event stream: your first banked block, ten blocks, a block before 9am, an <em>honest defer</em> ("not today" was the right answer), a return after four days away — comebacks are first-class here, celebrated with complete sincerity. <b>Trophies</b> sit above them: when a big personal goal actually finishes, it becomes a permanent object displayed <em>with its story</em> — what it was, when, what it took — and the story stays editable, because it's yours.</p>
+  <p>The trophies carry the collection's deepest job. ADHD memory systematically dismisses, minimizes, and forgets its own past accomplishments — so the collection is an external memory that argues back: <em>you did do this; here it is.</em> Retros deliberately walk past it. And the whole engine obeys one celebration law: when several things land at once, exactly <b>one hero moment</b> plays and everything else updates quietly. Recognition must never itself become noise.</p>
+
+  <figure>
+    <div class="frame">
+    <svg viewBox="0 0 900 400" role="img" aria-label="mockup of collections: keepsake objects, a comeback award, and a trophy with its story">
+      <rect x="10" y="10" width="880" height="380" rx="16" class="win"/>
+      <text x="42" y="52" font-size="19" class="t-xb">collections</text>
+      <text x="42" y="74" font-size="13" class="t-serif t-soft">everything here really happened.</text>
+
+      <!-- shelf boards -->
+      <rect x="42" y="170" width="530" height="10" rx="5" fill="#dcc3a8"/>
+      <rect x="42" y="300" width="530" height="10" rx="5" fill="#dcc3a8"/>
+
+      <!-- row 1 objects -->
+      <g text-anchor="middle">
+        <text x="92" y="158" font-size="34">🌰</text>
+        <text x="92" y="196" font-size="10.5" class="t-mono t-soft">first block</text>
+        <text x="190" y="158" font-size="34">🕯️</text>
+        <text x="190" y="196" font-size="10.5" class="t-mono t-soft">ten blocks</text>
+        <text x="288" y="158" font-size="34">🌧️</text>
+        <text x="288" y="196" font-size="10.5" class="t-mono t-soft">rainy return</text>
+        <text x="386" y="158" font-size="34">🧭</text>
+        <text x="386" y="196" font-size="10.5" class="t-mono t-soft">first freeze</text>
+        <text x="484" y="158" font-size="34">🍵</text>
+        <text x="484" y="196" font-size="10.5" class="t-mono t-soft">the council</text>
+      </g>
+      <!-- row 2 -->
+      <g text-anchor="middle">
+        <text x="104" y="288" font-size="34">🌷</text>
+        <text x="104" y="326" font-size="10.5" class="t-mono" fill="#a5527d">back after 4 days</text>
+        <text x="256" y="288" font-size="34">🌅</text>
+        <text x="256" y="326" font-size="10.5" class="t-mono t-soft">block before 9am</text>
+        <text x="392" y="288" font-size="34">🍃</text>
+        <text x="392" y="326" font-size="10.5" class="t-mono t-soft">an honest defer</text>
+        <g opacity=".38">
+          <text x="496" y="288" font-size="34">🫧</text>
+          <text x="496" y="326" font-size="10.5" class="t-mono t-soft">not yet…</text>
+        </g>
+      </g>
+
+      <!-- trophy -->
+      <rect x="608" y="96" width="254" height="262" rx="14" class="wash"/>
+      <text x="735" y="158" text-anchor="middle" font-size="52">🏆</text>
+      <rect x="688" y="176" width="94" height="8" rx="4" fill="#dcc3a8"/>
+      <text x="735" y="212" text-anchor="middle" font-size="14" class="t-xb">shipped the demo</text>
+      <text x="735" y="234" text-anchor="middle" font-size="11" class="t-mono t-soft">march 2026 · 6 cycles</text>
+      <text x="735" y="268" text-anchor="middle" font-size="12" class="t-serif" fill="#6d4a63">"you said it would never</text>
+      <text x="735" y="286" text-anchor="middle" font-size="12" class="t-serif" fill="#6d4a63">be done. it's done."</text>
+      <text x="735" y="322" text-anchor="middle" font-size="10.5" class="t-mono t-faint">TROPHY · PERMANENT</text>
+    </svg>
+    </div>
+    <figcaption><b>Collections.</b> Keepsakes accumulate from process — including for saying no honestly; trophies mark finished personal goals and keep their editable stories. Nothing here can be lost, decayed, or reset — the only direction is fuller.</figcaption>
+  </figure>
+
+  <div class="aside"><b>and the antlers?</b> They're the collection's seasonal counterpart — the rank layer. Antlers grow on the cycle strip during a cycle (pure process arithmetic: days shown up, blocks started, returns) and <em>shed naturally at cycle close</em>, because that's what antlers do. The reached spread is recorded in the journal, and next cycle regrows fresh. Nothing infinite accumulates to grind or to lose; a user in earned quiet isn't bleeding a ladder position; and antler arithmetic reads presence only — never execution-vs-plan, never scores — so it can't smuggle in a grade.</div>
+
+  <h2 id="flows"><span class="no">5</span>flows</h2>
+
+  <h3>the first fifteen minutes</h3>
+  <p>The front door is the app itself — signup lives in the desktop client (invite code, name, auto-detected timezone; pronouns are deliberately <em>not</em> a form field — Vel asks conversationally later, where "none," "several," and "skip" are all real answers). Signup drops you directly into <b>cycle zero</b>: a five-day, product-authored tutorial cycle whose commitments are the tour steps. The contract: first block <b>started within ~5 minutes</b> of signup, <b>banked within ~15</b> — action before interview, always.</p>
+  <p>The tour runs coach-marks style: the window dims, one region gets the light, and the deer — embedded <em>inside</em> the main window for now — narrates in hand-authored lines. Steps advance on real actions, not "next" buttons, and every invitation resolves honestly: <b>done</b> (with evidence in a real event), <b>deferred</b> (stops blocking, stays available), or <b>declined</b> (never offered again unless re-chosen in Settings) — silence just leaves it pending. Even the "one real thing" respects privacy: naming the task is optional, and an <em>unnamed block</em> is a full citizen — the map records the time, never the content.</p>
+  <p>At the block beat she asks where she should sit: out on your desktop in her own little window (recommended — she can stay when Home closes, and it shows what the deer window <em>is</em> at the exact moment it becomes real) or staying right here inside the main window. Both placements are first-class, the choice is remembered, and choosing "inside" never generates later pressure to switch. Then you pick 3, 5, or 10 minutes, do the thing, bank it, and the first keepsake lands in Collections as the hero moment of the day.</p>
+
+  <figure>
+    <div class="frame">
+    <svg viewBox="0 0 900 560" role="img" aria-label="mockup of the day-zero tour: dimmed window, spotlight on quick-add, deer narrating">
+      <rect x="10" y="10" width="880" height="540" rx="16" class="win"/>
+      <circle cx="34" cy="34" r="5" class="dot"/><circle cx="52" cy="34" r="5" class="dot"/><circle cx="70" cy="34" r="5" class="dot"/>
+      <text x="450" y="39" text-anchor="middle" class="t-mono t-faint" font-size="12">willowden</text>
+
+      <!-- faint underlying home -->
+      <rect x="40" y="70" width="600" height="150" rx="14" class="card"/>
+      <text x="62" y="102" font-size="15" class="t-xb">settling in</text>
+      <text x="62" y="122" font-size="11.5" class="t-soft">day 1 of 5 · cycle zero</text>
+      <g transform="translate(340,150)">
+        <path d="M0,10 C-30,6 -60,2 -90,-6" class="tine-off"/>
+        <path d="M0,10 C30,6 60,2 90,-6" class="tine-off"/>
+        <circle cx="0" cy="10" r="3.5" fill="var(--blush)"/>
+      </g>
+      <rect x="662" y="70" width="198" height="150" rx="14" class="card"/>
+      <text x="682" y="100" font-size="14" class="t-xb">rooms 🚪</text>
+
+      <!-- dim with spotlight hole -->
+      <path d="M11,52 h878 v497 h-878 z M40,250 h620 v92 a14,14 0 0 1 -14,14 h-592 a14,14 0 0 1 -14,-14 z" fill-rule="evenodd" class="spot-dim"/>
+
+      <!-- spotlighted quick-add -->
+      <rect x="40" y="250" width="620" height="106" rx="14" fill="#fff" stroke="var(--blush)" stroke-width="2"/>
+      <text x="64" y="282" font-size="12" class="t-mono" fill="#a5527d">STEP 3 OF 5 · ONE REAL THING</text>
+      <rect x="64" y="296" width="472" height="40" rx="20" fill="#fdf6fb" stroke="var(--line)" stroke-width="1"/>
+      <text x="84" y="321" font-size="13.5" class="t-faint">type one thing you need to do…</text>
+      <rect x="548" y="296" width="92" height="40" rx="20" class="pill-deep"/>
+      <text x="594" y="321" text-anchor="middle" font-size="13.5" class="t-white t-xb">add</text>
+
+      <!-- deer + bubble (in-window during tour) -->
+      <g transform="translate(152,468) scale(.92)">
+        <circle cx="52" cy="10" r="7" class="deer-cream"/>
+        <ellipse cx="6" cy="16" rx="52" ry="26" class="deer-body"/>
+        <ellipse cx="10" cy="24" rx="32" ry="12" class="deer-cream"/>
+        <circle cx="16" cy="0" r="4" class="deer-cream"/>
+        <circle cx="32" cy="8" r="3.2" class="deer-cream"/>
+        <ellipse cx="-30" cy="-6" rx="13" ry="21" transform="rotate(-16 -30 -6)" class="deer-body"/>
+        <ellipse cx="-52" cy="-38" rx="4.8" ry="12" transform="rotate(-38 -52 -38)" class="deer-dark"/>
+        <ellipse cx="-27" cy="-41" rx="4.8" ry="12" transform="rotate(16 -27 -41)" class="deer-dark"/>
+        <ellipse cx="-39" cy="-24" rx="14" ry="12.5" class="deer-body"/>
+        <ellipse cx="-52" cy="-19" rx="8.5" ry="6" class="deer-cream"/>
+        <circle cx="-59" cy="-20" r="2.6" fill="#3a2a40"/>
+        <circle cx="-40" cy="-26" r="2.7" fill="#3a2a40"/>
+      </g>
+      <rect x="238" y="418" width="426" height="66" rx="14" fill="#fff" stroke="var(--line)"/>
+      <path d="M238,462 l-16,10 l18,4 z" fill="#fff" stroke="var(--line)"/>
+      <text x="260" y="445" font-size="13.5" class="t-serif">tell me one thing you need to do. tiny counts.</text>
+      <text x="260" y="466" font-size="13.5" class="t-serif">honestly, tiny is best.</text>
+      <text x="680" y="530" font-size="11" class="t-mono" fill="#f4e6f0">AUTHORED LINES · ZERO TOKENS</text>
+    </svg>
+    </div>
+    <figcaption><b>The day-zero tour, beat three.</b> Single-window spotlight choreography; the deer lives in-window until the block beat, where she asks where she should sit — her own desktop window (recommended) or staying inside. Every tour line is hand-written — the model doesn't speak until you first open Rooms and meet Vel.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="frame">
+    <svg viewBox="0 0 1000 300" role="img" aria-label="timeline of the first run: signup through graduation">
+      <line x1="50" y1="120" x2="640" y2="120" stroke="var(--blush-soft)" stroke-width="3"/>
+      <line x1="640" y1="120" x2="950" y2="120" stroke="var(--line)" stroke-width="3" stroke-dasharray="2 7"/>
+      <g text-anchor="middle">
+        <circle cx="70" cy="120" r="9" class="pill-deep"/>
+        <text x="70" y="90" font-size="12.5" class="t-b">signup</text>
+        <text x="70" y="150" font-size="10.5" class="t-mono t-faint">0:00</text>
+        <text x="70" y="166" font-size="10.5" class="t-soft">name + timezone,</text>
+        <text x="70" y="180" font-size="10.5" class="t-soft">nothing else</text>
+
+        <circle cx="185" cy="120" r="9" class="pill-deep"/>
+        <text x="185" y="90" font-size="12.5" class="t-b">the map</text>
+        <text x="185" y="150" font-size="10.5" class="t-mono t-faint">0:02</text>
+        <text x="185" y="166" font-size="10.5" class="t-soft">"this is your cycle —</text>
+        <text x="185" y="180" font-size="10.5" class="t-soft">settling in, day 1 of 5"</text>
+
+        <circle cx="300" cy="120" r="9" class="pill-deep"/>
+        <text x="300" y="90" font-size="12.5" class="t-b">one real thing</text>
+        <text x="300" y="150" font-size="10.5" class="t-mono t-faint">0:04</text>
+        <text x="300" y="166" font-size="10.5" class="t-soft">quick-add a task.</text>
+        <text x="300" y="180" font-size="10.5" class="t-soft">tiny is best.</text>
+
+        <circle cx="415" cy="120" r="9" class="pill-deep"/>
+        <text x="415" y="76" font-size="12.5" class="t-b">the block</text>
+        <text x="415" y="92" font-size="10.5" class="t-soft">choose where she sits 🦌</text>
+        <text x="415" y="150" font-size="10.5" class="t-mono" fill="#a5527d">≤ 5:00 · started</text>
+        <text x="415" y="166" font-size="10.5" class="t-soft">you pick 3, 5, or</text>
+        <text x="415" y="180" font-size="10.5" class="t-soft">10 minutes</text>
+
+        <circle cx="530" cy="120" r="9" class="pill-deep"/>
+        <text x="530" y="76" font-size="12.5" class="t-b">banked ✨</text>
+        <text x="530" y="92" font-size="10.5" class="t-soft">first keepsake — hero moment</text>
+        <text x="530" y="150" font-size="10.5" class="t-mono" fill="#a5527d">≤ 15:00 · banked</text>
+        <text x="530" y="166" font-size="10.5" class="t-soft">stopping early still</text>
+        <text x="530" y="180" font-size="10.5" class="t-soft">banks. that's the lesson.</text>
+
+        <circle cx="700" cy="120" r="9" fill="var(--lav)"/>
+        <text x="700" y="90" font-size="12.5" class="t-b">warm-up</text>
+        <text x="700" y="150" font-size="10.5" class="t-mono t-faint">days 2–5</text>
+        <text x="700" y="166" font-size="10.5" class="t-soft">one invitation a day — take it,</text>
+        <text x="700" y="180" font-size="10.5" class="t-soft">shrink it, or defer · vel asks one</text>
+
+        <circle cx="880" cy="120" r="9" fill="var(--sage)"/>
+        <text x="880" y="76" font-size="12.5" class="t-b">graduation 🎓</text>
+        <text x="880" y="92" font-size="10.5" class="t-soft">mini-retro + cycle one</text>
+        <text x="880" y="150" font-size="10.5" class="t-mono t-faint">day ~5</text>
+        <text x="880" y="166" font-size="10.5" class="t-soft">pip proposes from evidence:</text>
+        <text x="880" y="180" font-size="10.5" class="t-soft">"what did i get wrong?"</text>
+      </g>
+      <text x="500" y="256" text-anchor="middle" font-size="12" class="t-serif t-soft">intake happens opportunistically along the way — there is no interview, and every step is skippable.</text>
+    </svg>
+    </div>
+    <figcaption><b>First run as a timeline.</b> On day five — or earlier, once every invitation is resolved — cycle zero turns <em>ready to close</em>; it never closes itself, and never expires. Showing up only on days one and five can still graduate. Cycle one is proposed from observed behavior plus the person's correction, explicitly provisional, with a deterministic fallback so a model outage can never block graduating.</figcaption>
+  </figure>
+
+  <h3>a day, and a cycle</h3>
+  <p>The daily loop is deliberately tiny. By your morning, today's shape is already drafted — the deer greets you with one proposed first block — start it, shrink it, swap it, or say not today. Opening the app is never a blank page; it's an invitation already extended, and if the app was closed all day, the invitation is simply prepared for the next launch. Blocks happen (or don't — a quiet day simply grows nothing), and in the evening a soft settle closes the day: what banked, one line from the deer, tomorrow's seed.</p>
+  <p>The cycle loop wraps it. Planning happens in a room with Pip — commitments get a capacity, a priority, and a <em>next action</em> each, then the plan <b>freezes</b> as an immutable baseline. Living the cycle is just days; changing your mind mid-cycle is a first-class <b>scope change</b>, recorded with your reason, mutating the working plan while the baseline stays honest. When its days run out, the cycle turns <b>ready to close</b> — never "day 16 of 14," never auto-closed. Closing is a chosen moment: Edwin files a scorecard — pure arithmetic, evidence-tied prose, no overall grade — and presents it in a retro room; planning the next cycle starts from what actually happened. Then the strip shows the upcoming cycle, or rests.</p>
+
+  <figure>
+    <div class="frame">
+    <svg viewBox="0 0 1000 400" role="img" aria-label="the daily loop and the cycle loop as two circuits">
+      <defs>
+        <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L7,4 L0,8 z" fill="#a794b3"/></marker>
+      </defs>
+      <text x="250" y="40" text-anchor="middle" font-size="13" class="t-mono t-faint">EVERY DAY</text>
+      <g text-anchor="middle" font-size="13">
+        <rect x="160" y="70" width="180" height="46" rx="23" class="wash"/>
+        <text x="250" y="90" class="t-b">morning pass</text>
+        <text x="250" y="106" font-size="10.5" class="t-soft">today's shape, pre-drafted</text>
+        <rect x="330" y="180" width="160" height="46" rx="23" class="wash"/>
+        <text x="410" y="200" class="t-b">start a block</text>
+        <text x="410" y="216" font-size="10.5" class="t-soft">one tap · deer sits with you</text>
+        <rect x="160" y="290" width="180" height="46" rx="23" class="wash"/>
+        <text x="250" y="310" class="t-b">bank it</text>
+        <text x="250" y="326" font-size="10.5" class="t-soft">early, on time, overtime — all bank</text>
+        <rect x="10" y="180" width="160" height="46" rx="23" class="wash"/>
+        <text x="90" y="200" class="t-b">evening settle</text>
+        <text x="90" y="216" font-size="10.5" class="t-soft">what landed · tomorrow's seed</text>
+      </g>
+      <path d="M330,105 C365,120 390,145 400,175" class="arrow"/>
+      <path d="M400,232 C385,258 355,282 330,296" class="arrow"/>
+      <path d="M165,300 C130,285 105,258 95,232" class="arrow"/>
+      <path d="M95,175 C110,145 140,118 168,104" class="arrow"/>
+
+      <text x="750" y="40" text-anchor="middle" font-size="13" class="t-mono t-faint">EVERY CYCLE (1–2 WEEKS)</text>
+      <g text-anchor="middle" font-size="13">
+        <rect x="660" y="70" width="180" height="46" rx="23" class="lav-bar"/>
+        <text x="750" y="90" class="t-b">plan &amp; freeze</text>
+        <text x="750" y="106" font-size="10.5" class="t-soft">with pip · baseline sealed</text>
+        <rect x="830" y="180" width="160" height="46" rx="23" class="lav-bar"/>
+        <text x="910" y="200" class="t-b">live the days</text>
+        <text x="910" y="216" font-size="10.5" class="t-soft">antlers grow · scope bends</text>
+        <rect x="660" y="290" width="180" height="46" rx="23" class="lav-bar"/>
+        <text x="750" y="310" class="t-b">retro</text>
+        <text x="750" y="326" font-size="10.5" class="t-soft">edwin's card · no grades</text>
+        <rect x="510" y="180" width="160" height="46" rx="23" class="lav-bar"/>
+        <text x="590" y="200" class="t-b">breathe</text>
+        <text x="590" y="216" font-size="10.5" class="t-soft">upcoming · or resting</text>
+      </g>
+      <path d="M830,105 C865,120 890,145 900,175" class="arrow"/>
+      <path d="M900,232 C885,258 855,282 830,296" class="arrow"/>
+      <path d="M665,300 C630,285 605,258 595,232" class="arrow"/>
+      <path d="M595,175 C610,145 640,118 668,104" class="arrow"/>
+      <text x="500" y="382" text-anchor="middle" font-size="12" class="t-serif t-soft">the daily loop spins inside the cycle loop — and a scope change mid-cycle is data, never failure.</text>
+    </svg>
+    </div>
+    <figcaption><b>Two loops.</b> The inner loop is the day; the outer is the cycle. Retros feed planning, planning feeds days, and the space between cycles is a designed state, not an absence.</figcaption>
+  </figure>
+
+  <h3>falling off, and coming back</h3>
+  <p>This flow gets designed with the same care as the happy path, because it <em>is</em> the path for this audience. Missing days grows nothing and shames nothing. Stalls trigger at most one gentle, presence-routed nudge — deer bubble if you're at the desk, Telegram if you're away and tethered, or simply waiting for your next launch — and its copy always offers the smaller step: <em>"shrink it?" / "not today — want me to hold it for tomorrow?"</em> Ignored nudges back off exponentially; the den never nags twice on the same beat.</p>
+  <p>Coming back — after four days or four weeks — lands you in the resting state with one warm affordance: start a fresh cycle, drafted by Pip from whatever evidence exists. The comeback itself earns a keepsake, sincerely. And for weeks that went sideways mid-cycle, <b>rewind</b> exists: retroactively marking a stretch as paused, so the record tells the truth ("I was sick") instead of averaging your illness into your capacity.</p>
+
+  <h3>the consent ladder</h3>
+  <p>Willowden's presence is powerful, so its privileges are individually consented — each asked <em>after</em> its first payoff, never during the day-zero tour, each with its benefit explained, each reversible in Settings with visible pause and hush controls. A "no" degrades gracefully — the feature explains once what it loses, then stays quiet — and stays "no" until the person changes it themselves. At most one new permission is ever asked for in a single session.</p>
+  <div class="table-scroll"><table>
+    <tr><th>privilege</th><th>asked when</th><th>what it buys</th></tr>
+    <tr><td>launch at login</td><td>after the first banked block</td><td>the deer is already there in the morning</td></tr>
+    <tr><td>native notifications</td><td>first time a ding lands while the app is backgrounded</td><td>dings and settles reach you outside the window</td></tr>
+    <tr><td>idle / frontmost-app sensing</td><td>first focus session after day zero</td><td>drift check-ins, welcome-backs, automatic meeting hush</td></tr>
+    <tr><td>the tether (telegram)</td><td>day 2 at the earliest</td><td>the den can reach your pocket when you're away from the desk</td></tr>
+    <tr><td>proactive morning/evening contact</td><td>after the first morning pass is seen</td><td>the day arrives pre-drafted</td></tr>
+  </table></div>
+
+  <h2 id="honest"><span class="no">6</span>holding it honest</h2>
+  <p>The warm parts of this design only stay warm if the hard parts are contractual. Four sets of requirements travel with every build slice.</p>
+
+  <h3>accessible by default</h3>
+  <ul>
+    <li>Every tour beat and block action is keyboard-reachable; pause and skip controls are persistent and predictable.</li>
+    <li>The map, the antler rack, and every color-coded state have screen-reader equivalents — recognition that can't be perceived isn't recognition.</li>
+    <li>Reduced-motion alternatives exist for the step-out, the pulsing next action, and confetti.</li>
+    <li>The deer window can be resized, hidden, or taken off always-on-top; authored lines never vanish before they can be read.</li>
+  </ul>
+
+  <h3>privacy, user-visible</h3>
+  <ul>
+    <li>Raw app identifiers, idle readings, and window state stay on the device — structurally, not by policy.</li>
+    <li>What does sync is inspectable: tasks, blocks, decisions, cycles, rooms. The person can see the exact evidence behind the cycle-one proposal.</li>
+    <li>Collectors can be disabled without losing focus blocks — and a block can run unnamed; the map records the time, never the content.</li>
+    <li>Devices, preferences, and stored data can be reviewed and removed.</li>
+  </ul>
+
+  <h3>failure &amp; recovery</h3>
+  <p>The journey is a product state, not a chain of screens — it survives ordinary desktop life:</p>
+  <div class="table-scroll"><table>
+    <tr><th>when</th><th>what holds</th></tr>
+    <tr><td>the network disappears</td><td>the authored tour and the focus clock continue; events wait durably in the outbox</td></tr>
+    <tr><td>a signup response is lost</td><td>the retry returns the same account, never a duplicate</td></tr>
+    <tr><td>home closes mid-block</td><td>the native clock and the deer window carry on without it</td></tr>
+    <tr><td>the computer sleeps</td><td>sleep time is never silently counted as focus</td></tr>
+    <tr><td>the app updates mid-journey</td><td>the pinned journey version resumes at a compatible beat</td></tr>
+    <tr><td>the model is unavailable</td><td>authored flow continues; graduation uses the deterministic fallback</td></tr>
+    <tr><td>day five passes quietly</td><td>the strip turns ready to close — never "day 12 of 5", never expired</td></tr>
+    <tr><td>another device moves ahead</td><td>facts reconcile without replaying celebrations</td></tr>
+  </table></div>
+
+  <h3>measures</h3>
+  <p>Raw engagement time is not success, and a deferral is not funnel failure — control and recovery are outcomes worth measuring in their own right.</p>
+  <div class="table-scroll"><table>
+    <tr><th>primary</th><th>diagnostic</th><th>guardrails</th></tr>
+    <tr>
+      <td>signup → first block started (≤ ~5 min) · first block banked (≤ ~15) · a return during days 2–5 · the cycle-one review reached</td>
+      <td>deferral rates by beat · durations chosen · early bank vs planned completion · fallback-proposal rate · deer placement chosen</td>
+      <td>never reward more notifications · never punish sharing less · accessibility paths measured too · never optimize for fewer deferrals</td>
+    </tr>
+  </table></div>
+
+  <h2 id="stack"><span class="no">7</span>technology, questioned</h2>
+  <p>Willowden is treated as a ground-up build: nothing is inherited by momentum. Every layer of the chordial mvp was put on trial against the alternatives that exist in 2026. The honest outcome: <b>one big change, one big addition, and a lot of re-earned keeps</b> — because the mvp's server runtime is proven by ~860 tests and a 100-user load drill, and throwing away proven software to feel like a fresh start is exactly the ADHD trap this product exists to fight.</p>
+
+  <div class="table-scroll"><table>
+    <tr><th>layer</th><th>mvp had</th><th>considered</th><th>verdict</th></tr>
+    <tr><td>desktop shell</td><td>Tauri v2</td><td>Electron · Flutter · native Swift/WinUI ×2</td><td class="verdict keep">keep</td></tr>
+    <tr><td>ui</td><td>React + TypeScript</td><td>Svelte · Solid · Leptos (Rust)</td><td class="verdict keep">keep</td></tr>
+    <tr><td>native engine</td><td>bundled Python sidecar</td><td>in-process Rust core · keep sidecar</td><td class="verdict change">replace → Rust</td></tr>
+    <tr><td>local store</td><td>SQLite (sidecar-owned)</td><td>SQLite via rusqlite · embedded KV</td><td class="verdict keep">keep (moves into Rust)</td></tr>
+    <tr><td>server runtime</td><td>Python · aiohttp · the dainframe engine</td><td>Rust/axum rewrite · Node · FastAPI</td><td class="verdict keep">keep</td></tr>
+    <tr><td>canonical db</td><td>Postgres</td><td>—</td><td class="verdict keep">keep</td></tr>
+    <tr><td>sync</td><td>bespoke event-sourcing contract</td><td>CRDT libraries · sync services</td><td class="verdict keep">keep</td></tr>
+    <tr><td>ai</td><td>server-side gateway, cached prefixes, metering</td><td>on-device models · client-side keys</td><td class="verdict keep">keep</td></tr>
+    <tr><td>updates</td><td>Tauri updater, self-hosted signed feed</td><td>store distribution · Sparkle-style</td><td class="verdict keep">keep</td></tr>
+    <tr><td>identity</td><td>chat-minted link codes only</td><td>—</td><td class="verdict new">new: app-native signup</td></tr>
+  </table></div>
+
+  <h3>the change: the python sidecar dies</h3>
+  <p>The mvp's desktop app is three cooperating pieces: a Rust/Tauri shell, a React frontend, and a bundled PyInstaller Python sidecar that owns the focus clock, speech gates, drift watching, and sync outbox over a loopback HTTP port. It worked — and the very first boxed launch showed why it's the wrong shape to ship. The sidecar is a <em>process</em>: it can be orphaned (the shell's kill reached PyInstaller's bootloader but not the interpreter beneath it), it takes 6–8 seconds to self-extract on launch, it needs port ownership, adoption probes, respawn ladders, watchdogs, and a token handoff between windows — an entire supervision discipline for what is, functionally, a clock and some rules. And PyInstaller-inside-hardened-runtime is a known notarization risk on macOS.</p>
+  <p><b>In Willowden there is no sidecar process at all.</b> The Tauri app <em>is</em> the native engine: the Rust core owns the local SQLite, the focus clock, the journey projection, authored-line selection, the collectors, the speech-gate stack, and the sync outbox. The UI sends commands ("start block") and renders state; it never decides that a domain step completed. This deletes the loopback server, the port, the supervision code, the orphan bug class, and the startup delay in one move — and it makes the Windows build (the first target) dramatically simpler to sign and ship. The engine logic ports from small, well-tested, dependency-light Python modules with an existing behavioral test suite to port against.</p>
+
+  <h3>the keeps, and why they're earned</h3>
+  <ul>
+    <li><b>Tauri over Electron/Flutter/native.</b> The deer demands a tiny, always-on-top, transparent, draggable window with a system tray — Tauri does this well on both Windows and macOS from one codebase, at a ~10MB footprint where Electron starts at ~150MB. Going Rust-core makes Tauri's Rust process the natural home for the engine rather than an inconvenience. Two separate native apps would double every UI feature forever for a team of one.</li>
+    <li><b>React stays.</b> The entire mvp frontend — rooms, cycle panel, deer window, link flow — is working React with its own test suite. Svelte or Solid would be marginally lighter and cost a full rewrite of proven components. No user-visible payoff.</li>
+    <li><b>The Python server stays Python.</b> The server is not distributed to users — it runs on one box we control, so Python costs nothing at the door. What it carries is enormous: the dainframe engine, the council runtime, rooms-as-streams, the sync contract, scorecards, the taper, metering, the tether — all drill-tested at 100 simulated users with headroom that is orders of magnitude above real traffic. A Rust rewrite of the server would be months of work to reach feature parity with software that already exists. Rejected without much agony.</li>
+    <li><b>Bespoke sync over CRDTs.</b> Device events are append-only facts (a block banked, a drift noticed) — they never conflict, so CRDT merge semantics solve a problem this design doesn't have. The existing contract (client event UUIDs, per-device sequences, durable ACK cursors, rejection tombstones, at-least-once delivery / exactly-once apply) is simpler, auditable, and already survived a load drill and several adversarial reviews. Canonical-row mutations go through the server store, which owns the invariants.</li>
+    <li><b>AI stays server-side, and mostly silent.</b> A distributed binary can never hold API keys, so the gateway model stands: providers, prompt-cache discipline, model tiering, and per-user token budgets all live on the server. On-device models were considered for ambient lines and rejected — authored lines are better than small-model lines for structural moments (voice pillar), and the batched-pool design covers generated ambience affordably. The cost posture holds because the routing spine is deterministic first: silence costs nothing.</li>
+    <li><b>Self-hosted updates stay.</b> The signed Tauri updater feed served from our own server already works, keeps distribution independent of stores, and fits the invite-gated rollout. Store distribution can come later if it earns its review-cycle tax.</li>
+  </ul>
+
+  <h3>the addition: identity grows a front door</h3>
+  <p>The mvp's identity machinery is chat-first — accounts are created as a side effect of a chat message, and link codes are minted by asking a bot. Willowden inverts it: <code>POST /api/v1/signup</code> (invite code, name, timezone, client nonce — idempotent, so a lost response retries to the same account) creates the user and the first device credential in one step. Second devices are approved from the first device's Settings. There are no passwords by design; credentials live in the OS keychain; account recovery is email-shaped and must be settled before the API freezes. Chat platforms become what they always should have been: accessories.</p>
+
+  <h2 id="architecture"><span class="no">8</span>architecture</h2>
+  <p>Client/server from day one, designed for 100+ users at every stage — even while there's exactly one. The server is the brain and the canonical truth; the desktop app is a rich local client that owns everything latency-critical, privacy-critical, or offline-critical. The line between them is drawn by three rules: <b>keys never leave the server, raw signals never leave the device, and anything that must be instant must be local.</b></p>
+
+  <figure>
+    <div class="frame">
+    <svg viewBox="0 0 1000 470" role="img" aria-label="willowden architecture: desktop app with react windows and rust core, cloud server, phone tether">
+      <!-- desk -->
+      <rect x="20" y="40" width="450" height="390" rx="18" class="card"/>
+      <text x="44" y="74" font-size="15" class="t-xb">💻 your desk — the willowden app</text>
+      <rect x="44" y="92" width="402" height="88" rx="12" class="wash"/>
+      <text x="62" y="118" font-size="13" class="t-b">react windows</text>
+      <text x="62" y="138" font-size="11.5" class="t-soft">home · rooms · cycle strip · the deer window · the tour</text>
+      <text x="62" y="156" font-size="11.5" class="t-soft">render state, send commands — never decide completion</text>
+      <rect x="44" y="192" width="402" height="132" rx="12" fill="#f3eefa"/>
+      <text x="62" y="218" font-size="13" class="t-b">rust core — in-process, no sidecar</text>
+      <text x="62" y="238" font-size="11.5" class="t-soft">local sqlite · focus clock &amp; banking · journey projection</text>
+      <text x="62" y="256" font-size="11.5" class="t-soft">authored lines · speech gates (budget · quiet hours · hush)</text>
+      <text x="62" y="274" font-size="11.5" class="t-soft">collectors (frontmost app · idle) · drift watch · sync outbox</text>
+      <text x="62" y="296" font-size="11" class="t-mono" fill="#8a6bbf">works offline — the clock never needs the network</text>
+      <rect x="44" y="336" width="402" height="72" rx="12" class="sage-wash" fill="var(--sage-wash)"/>
+      <text x="62" y="362" font-size="12.5" class="t-b" fill="#4c6b46">🔒 the privacy boundary</text>
+      <text x="62" y="382" font-size="11.5" fill="#4c6b46">raw signals sanitized at the source and consumed in-process —</text>
+      <text x="62" y="398" font-size="11.5" fill="#4c6b46">only derived events cross. no titles, no urls, no api keys, ever.</text>
+
+      <!-- link -->
+      <path d="M470,200 h60" class="arrow"/>
+      <path d="M530,240 h-60" class="arrow"/>
+      <text x="500" y="188" text-anchor="middle" font-size="10" class="t-mono t-faint">derived</text>
+      <text x="500" y="217" text-anchor="middle" font-size="10" class="t-mono t-faint">events ↑</text>
+      <text x="500" y="262" text-anchor="middle" font-size="10" class="t-mono t-faint">views ↓</text>
+
+      <!-- server -->
+      <rect x="530" y="40" width="450" height="310" rx="18" class="card"/>
+      <text x="554" y="74" font-size="15" class="t-xb">🌲 the willowden server</text>
+      <g font-size="11.5">
+        <rect x="554" y="92" width="402" height="52" rx="12" class="wash"/>
+        <text x="572" y="114" font-size="12.5" class="t-b">accounts &amp; sync</text>
+        <text x="572" y="132" class="t-soft">signup · revocable device credentials · the sync contract · ws</text>
+        <rect x="554" y="152" width="402" height="52" rx="12" class="wash"/>
+        <text x="572" y="174" font-size="12.5" class="t-b">the den runtime</text>
+        <text x="572" y="192" class="t-soft">rooms as streams · council routing · scorecards · taper · journey</text>
+        <rect x="554" y="212" width="402" height="52" rx="12" class="wash"/>
+        <text x="572" y="234" font-size="12.5" class="t-b">llm gateway — keys live here only</text>
+        <text x="572" y="252" class="t-soft">providers · cached prompt prefixes · tiering · per-user budgets</text>
+        <rect x="554" y="272" width="402" height="52" rx="12" class="wash"/>
+        <text x="572" y="294" font-size="12.5" class="t-b">postgres — canonical shared reality</text>
+        <text x="572" y="312" class="t-soft">cycles · events · observations · memories · collections — per user</text>
+      </g>
+
+      <!-- phone -->
+      <rect x="640" y="382" width="230" height="60" rx="14" class="card"/>
+      <text x="664" y="408" font-size="13" class="t-b">📱 the tether</text>
+      <text x="664" y="426" font-size="11" class="t-soft">telegram, today's room only · optional</text>
+      <path d="M755,382 v-28" class="arrow"/>
+    </svg>
+    </div>
+    <figcaption><b>The topology.</b> The one structural change from the mvp is inside the desk box: the Python sidecar process is gone and its whole job moved into the Tauri app's Rust core. Everything else — the sync contract, the runtime, the gateway — carries over intact.</figcaption>
+  </figure>
+
+  <p>Responsibilities, precisely: the <b>UI</b> renders and requests. The <b>Rust core</b> records domain facts (a block banked is a fact the core writes, not a UI opinion), advances local projections, gates speech, and feeds the outbox. The <b>server</b> owns accounts, the shared workspace, all model calls, and cross-device reconciliation. Multi-tenancy is API shape, not hardening: every query tenant-scoped, every device credential individually revocable, per-user quotas at the gateway — all already true in the mvp and drill-verified.</p>
+
+  <h2 id="migration"><span class="no">9</span>migration &amp; build plan</h2>
+  <p>Willowden is a move, not a rewrite. The chordial mvp keeps living as the stable dogfooding build for a couple of weeks while the new home is prepared; the server keeps deploying from its main branch throughout — server code barely changes in this migration at all.</p>
+
+  <h3>step 0 · the new home</h3>
+  <ul>
+    <li><b>Private <code>willowden</code> repo — history preserved, HEAD curated.</b> A history-preserving mirror of chordial-mvp keeps the git archaeology (every lesson stays findable forever), but willowden does <em>not</em> inherit the mvp's accumulated paperwork by default. The public mvp repo stays as the pre-rename record.</li>
+    <li><b>The consolidation.</b> The mvp accrued docs and tests the way a build site accrues scaffolding — a lot of it was load-bearing <em>while building</em> and is dead weight in the finished structure. As a deliberate migration step, everything at HEAD gets reviewed against one bar: <em>does this describe willowden, or does it remember chordial?</em> Docs are inventoried and either distilled into a small living doc set or retired to git history (superseded phase plans, exploratory designs for roads not taken, migration audits that already served their purpose). Tests get the same pass: suites guarding behavior that lives on are kept and carried through the port; tests pinning machinery that dies with it — the sidecar process, its supervision layer, retired platform plumbing — are retired alongside, honestly, rather than ported out of momentum.</li>
+    <li><b>This design doc is the seed.</b> It is written to stand on its own — the design, in one place, speaking for itself. Willowden's doc set grows outward from it (per-slice implementation plans, the voice reference, the covenant), rather than starting from the mvp's pile and subtracting.</li>
+    <li><b>The rename slice lands first</b> — app identifier, product name, update-feed paths — because the identifier must be right <em>before</em> the first signed build ships (a signed app can't change identity without stranding its updater). The brand-language pass through docs and copy happens deliberately here; no mechanical find-and-replace, since the cast and "the den" vocabulary already carry most of the voice.</li>
+    <li>One workflow note: the adversarial second-model review loop currently reads PRs from public URLs; the private repo needs a new intake for it (patch files or a review bot with repo access).</li>
+    <li>One fix that doesn't wait: the mvp's <code>ENABLE_DISCORD</code> default crashes app-only rigs — a small config PR to chordial-mvp now, independent of everything else.</li>
+  </ul>
+
+  <h3>step 1 · the rust core port (the surgical change)</h3>
+  <p>The sidecar's Python modules are small, dependency-light, and behavior-tested — close to a spec. The port is mechanical by design, with the mvp kept runnable beside it as a behavioral oracle:</p>
+  <div class="table-scroll"><table>
+    <tr><th>python sidecar</th><th>rust core home</th><th>notes</th></tr>
+    <tr><td><code>focus.py</code> — task clocks, banking, dings</td><td><code>core::focus</code></td><td>wall-time arithmetic on stored timestamps — restart-safe by construction; injectable clock for tests</td></tr>
+    <tr><td><code>gates.py</code> — speech-gate stack</td><td><code>core::gates</code></td><td>budget / quiet hours / meeting hush; events never gated, only words</td></tr>
+    <tr><td><code>drift.py</code> — activity state, drift watch</td><td><code>core::drift</code></td><td>merges with the collectors already living in Rust — one language boundary disappears</td></tr>
+    <tr><td><code>lines.py</code> — authored lines</td><td><code>core::lines</code></td><td>never-repeat picker; the line files themselves are data, untouched</td></tr>
+    <tr><td>sqlite store + sync outbox</td><td><code>core::outbox</code></td><td>same schema, same seq/ACK-cursor discipline; server contract unchanged — zero server work</td></tr>
+    <tr><td>loopback HTTP API + token handoff</td><td>Tauri commands + events</td><td>the seam becomes a function call; the deer window subscribes to state instead of polling a port</td></tr>
+    <tr><td><code>parent.py</code> — orphan watch</td><td><span class="mono">— deleted</span></td><td>no process to orphan. the entire supervision layer (spawn, adopt, watchdog, respawn ladder) goes with it</td></tr>
+  </table></div>
+  <p>Exit criterion: the ported core passes the sidecar's behavioral test suite (translated), and a live smoke reproduces the mvp's proven spine — start a block, ding, bank, sync, watch the server's cycle view move.</p>
+
+  <h3>step 2 · windows first</h3>
+  <p>The first signed, distributable Willowden build targets Windows — the larger audience and the cheaper gate (no notarization; SmartScreen's "unknown publisher" nag is a known cosmetic tax, with paid code-signing available later if direct distribution warrants it). macOS follows as configuration, not work: with the PyInstaller binary gone, notarization loses its riskiest ingredient, and the Apple developer enrollment already exists.</p>
+
+  <h3>steps 3–7 · the product slices</h3>
+  <p>With the native foundation in place, the first-run design builds vertically — each slice an end-to-end experience, not a layer:</p>
+  <ol>
+    <li><b>Signup + journey spine</b> — the app-native front door; journey runs and step facts as the single source of onboarding truth (replacing the mvp's split-brain "onboarded?" checks).</li>
+    <li><b>The day-zero vertical slice</b> — signup → tour → task → block → bank → hero celebration, with durable resume. <em>This is the milestone:</em> the complete five-minute experience, including both deer placements, the accessibility paths, and a first hardcoded keepsake.</li>
+    <li><b>Warm-up</b> — days 2–5: Vel's one-question-a-day room moments, morning pass and evening settle, the consent ladder, catch-up for absent users.</li>
+    <li><b>Graduation</b> — the cycle-zero mini-retro and the validated, bounded, fallback-guarded cycle-one proposal (mostly existing cycle-rooms machinery, made journey-aware).</li>
+    <li><b>The dopamine engine</b> — the general awards service, Collections with user-editable trophy stories, and the antler rack with its shed-and-regrow beat — last, once the event vocabulary is stable.</li>
+  </ol>
+
+  <h2 id="v1"><span class="no">10</span>what 1.0 means</h2>
+  <p>Version 1.0 is done when this sentence is true for a stranger, not just for me:</p>
+  <div class="aside"><b>a person with an invite code, on windows or macos, downloads a signed installer, creates their account inside the app, banks their first block within fifteen minutes, graduates from cycle zero into a cycle proposed from their own evidence, and then lives the daily and cycle loops — deer, rooms, collections, antlers — with the app updating itself and never once requiring a chat platform.</b></div>
+  <p>The ship checklist behind that sentence:</p>
+  <ul>
+    <li>signup, device linking, keychain credentials, and a settled account-recovery answer</li>
+    <li>the full first-run: cycle zero, the tour, warm-up, graduation — resumable at every beat, every step skippable</li>
+    <li>the five-state cycle strip, blocks and banking, scope changes, rewind, retro and planning rooms</li>
+    <li>the seven-member council at authored-voice quality, one speaker per turn, observations evidence-tied</li>
+    <li>Collections — keepsakes, trophies, comeback awards — and the antler rack; one hero celebration per moment</li>
+    <li>keyboard access, reduced-motion alternatives, and screen-reader equivalents across the tour and the focus loop</li>
+    <li>the taper running end to end, so presence demonstrably fades on steadiness</li>
+    <li>the tether as a day-2+ optional accessory; presence-aware nudge routing</li>
+    <li>signed builds for both platforms on the self-hosted update feed; token budgets and the ops dashboard live</li>
+  </ul>
+  <p><b>Deliberately not in 1.0:</b> the native mobile app (the tether is the honest interim), the returning/lapsed-user re-entry design (the tutorial-cycle mechanic is built to be seeded from existing data later — the seam is held open, the design deferred), parent/guardian reports, store distribution, avatar animation beyond static expressions, and user-created helpers.</p>
+  <div class="aside lav"><b>the prototype question.</b> Beneath every metric, one thing to learn from the first stranger who tries it: do people understand, without explanation — <em>choose something real → give it a small block → let the map remember?</em></div>
+
+  <h2 id="risks"><span class="no">11</span>risks &amp; open questions</h2>
+  <ul>
+    <li><b>The port is the risk window.</b> Rewriting working Python in Rust invites regressions precisely where the mvp is most proven. Mitigations: behavioral tests ported before code, the mvp kept runnable as an oracle, and the sync contract untouched so the server never notices the swap.</li>
+    <li><b>The voice is the moat, and the hardest thing to keep.</b> Every new surface (tour, awards, nudges) is a chance to drift into generic-assistant tone. The authored-lines discipline and the council voice reference are the guardrails; any copy that could appear in any productivity app should be rewritten or cut.</li>
+    <li><b>Solo-builder scope.</b> This doc's cut lists are contractual. The five build slices are vertical on purpose — the project must always be a working app that's missing features, never a pile of features that don't make an app.</li>
+    <li><b>Model dependency.</b> Anything on a critical path carries a deterministic fallback (graduation already does; the pattern generalizes). A model outage may cost charm, never progress.</li>
+    <li><b>Windows reality-testing.</b> The mvp's native layer grew up on macOS; collectors, tray, and window behavior all need genuine Windows dogfooding, not compile-checks.</li>
+  </ul>
+  <p>And the decisions deliberately left unfrozen — each with a working direction, and the point by which it must become concrete:</p>
+  <div class="table-scroll"><table>
+    <tr><th>decision</th><th>working direction</th><th>needed by</th></tr>
+    <tr><td>account recovery</td><td>email-based, no passwords by design</td><td>before the signup api freezes</td></tr>
+    <tr><td>access codes</td><td>short-lived minted codes; static only in development</td><td>public signup</td></tr>
+    <tr><td>cycle-zero length</td><td>five user-local days; three if dogfooding says the warm-up drags</td><td>settling-in slice</td></tr>
+    <tr><td>deer identity</td><td>her relationship to vel stays unspecified until the character direction feels true</td><td>character design</td></tr>
+    <tr><td>returning &amp; lapsed users</td><td>resume via re-entry; the tutorial cycle re-seeded from existing data</td><td>re-entry design (deliberately later)</td></tr>
+  </table></div>
+
+  <h2 id="sources"><span class="no">12</span>lineage</h2>
+  <p>This page stands on its own — it is the design, not a summary of other documents. What follows is its lineage: the mvp-era docs this design distilled from. During the migration's consolidation pass (§8) each of these is either folded into willowden's small living doc set or retired to git history; a few are expected to survive as first-class companions (the voice reference and the covenant in particular):</p>
+  <ul class="mono" style="font-size:13.5px; line-height:2;">
+    <li>FIRST_RUN_DESIGN.md — cycle zero, the tour, the driving hand, the dopamine engine</li>
+    <li>ROOMS_DESIGN.md — rooms, the council, cycles, the taper, the 100-user architecture</li>
+    <li>APP_FIRST_AUDIT.md — the migration inventory: where the mvp still assumes chat-first</li>
+    <li>COUNCIL_VOICE_REFERENCE.md — the authority on every character's voice</li>
+    <li>CREATIVE_COVENANT.md — the ethics frame: completion vs collaboration, no dependency by design</li>
+    <li>REWIND_DESIGN.md — retroactive pause, so the record can tell the truth about hard weeks</li>
+    <li>PACKAGING.md · OPERATIONS.md — the box, the meter, the drill</li>
+  </ul>
+
+  <div class="footer">willowden · a quiet den for loud brains · working draft — not yet announced 🦌</div>
+
+</main>
+</body>
+</html>
