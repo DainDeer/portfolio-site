@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>auction board — 18-team guillotine</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0f1218; --panel:#171b24; --panel2:#1e2330; --line:#2a3040;
+    --ink:#e8e6df; --muted:#8a8f9c; --pink:#ff6fb5; --pink-dim:#5a2a45;
+    --rb:#f2c14e; --wr:#5cc8c0; --qb:#a58cff; --te:#f0895a; --dst:#7f8ea3;
+    --display:"Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+    --body:"Inter", system-ui, -apple-system, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px}
+  button{font:inherit;cursor:pointer}
+  input{font:inherit}
+  .wrap{max-width:900px;margin:0 auto;padding:12px 12px 80px}
+
+  /* header / room meter */
+  header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 20px;margin-bottom:10px}
+  h1{font-family:var(--display);font-weight:700;font-size:28px;letter-spacing:.02em;margin:0;text-transform:lowercase}
+  h1 span{color:var(--pink)}
+  .settings{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+  .settings label{display:flex;flex-direction:column;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+  .settings input{width:64px;background:var(--panel2);border:1px solid var(--line);color:var(--ink);padding:4px 6px;border-radius:4px;font-family:var(--display);font-size:18px}
+
+  .meter{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:12px}
+  .meter div{background:var(--panel);padding:10px 12px}
+  .meter b{display:block;font-family:var(--display);font-size:30px;font-weight:700;line-height:1}
+  .meter small{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-top:4px}
+  .meter .hot b{color:var(--pink)}
+
+  /* controls */
+  .controls{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:5}
+  .tabs{display:flex;gap:4px}
+  .tabs button{background:var(--panel);border:1px solid var(--line);color:var(--muted);padding:6px 10px;border-radius:6px;font-family:var(--display);font-size:16px;letter-spacing:.04em}
+  .tabs button.on{color:var(--ink);border-color:var(--ink)}
+  .tabs button.on[data-pos=RB]{color:var(--rb);border-color:var(--rb)}
+  .tabs button.on[data-pos=WR]{color:var(--wr);border-color:var(--wr)}
+  .tabs button.on[data-pos=QB]{color:var(--qb);border-color:var(--qb)}
+  .tabs button.on[data-pos=TE]{color:var(--te);border-color:var(--te)}
+  .tabs button.on[data-pos=STAR]{color:var(--pink);border-color:var(--pink)}
+  #q{flex:1;min-width:140px;background:var(--panel);border:1px solid var(--line);color:var(--ink);padding:7px 10px;border-radius:6px}
+  .ghost{background:transparent;border:1px solid var(--line);color:var(--muted);padding:6px 10px;border-radius:6px;font-size:12px}
+  .ghost:hover{color:var(--ink)}
+
+  /* rows */
+  .row{display:grid;grid-template-columns:34px 36px 1fr 44px 60px 60px 30px;align-items:center;gap:6px;padding:7px 8px;border-bottom:1px solid var(--line);cursor:pointer}
+  .row:hover{background:var(--panel)}
+  .row.taken{opacity:.32;text-decoration:line-through}
+  .row.taken:hover{opacity:.6}
+  .rank{font-family:var(--display);color:var(--muted);font-size:15px}
+  .pos{font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.06em;padding:2px 0;text-align:center;border-radius:3px;background:var(--panel2)}
+  .pos.RB{color:var(--rb)} .pos.WR{color:var(--wr)} .pos.QB{color:var(--qb)} .pos.TE{color:var(--te)}
+  .name{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .name.star::before{content:"★ ";color:var(--pink)}
+  .team{color:var(--muted);font-size:12px}
+  .base{color:var(--muted);font-family:var(--display);font-size:17px;text-align:right}
+  .adj{font-family:var(--display);font-size:22px;font-weight:700;text-align:right}
+  .adj.paid{color:var(--pink);font-weight:500}
+  .starbtn{background:none;border:none;color:var(--line);font-size:18px;padding:0}
+  .starbtn.on{color:var(--pink)}
+  .hdr{display:grid;grid-template-columns:34px 36px 1fr 44px 60px 60px 30px;gap:6px;padding:4px 8px;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em}
+  .hdr .r{text-align:right}
+
+  /* draft slots */
+  h2{font-family:var(--display);font-size:20px;font-weight:700;margin:22px 0 8px;letter-spacing:.02em;text-transform:lowercase}
+  .slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+  .slot{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px;cursor:pointer;display:flex;gap:8px;align-items:center}
+  .slot b{font-family:var(--display);font-size:22px;color:var(--pink);min-width:26px}
+  .slot span{font-size:12px}
+  .slot.taken{opacity:.3;text-decoration:line-through}
+  .slot .paid{margin-left:auto;font-family:var(--display);color:var(--muted)}
+
+  .note{color:var(--muted);font-size:12px;line-height:1.5;margin:8px 0 0}
+  .foot{position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--line);padding:8px 12px;display:flex;gap:8px;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted)}
+  .foot b{color:var(--ink);font-family:var(--display);font-size:16px}
+  @media (max-width:520px){
+    .row,.hdr{grid-template-columns:28px 32px 1fr 36px 48px 54px 26px;gap:4px;padding-left:4px;padding-right:4px}
+    .meter{grid-template-columns:repeat(2,1fr)}
+    .team{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>auction <span>board</span></h1>
+    <div class="settings">
+      <label>teams <input id="teams" type="number" value="18" min="2"></label>
+      <label>budget / team <input id="budget" type="number" value="200" min="1"></label>
+      <label>players / team <input id="ppt" type="number" value="4" min="1"></label>
+    </div>
+  </header>
+
+  <div class="meter">
+    <div class="hot"><b id="mMoney">—</b><small>money left in room</small></div>
+    <div><b id="mSlots">—</b><small>player slots left</small></div>
+    <div><b id="mAvg">—</b><small>avg $ per remaining slot</small></div>
+    <div><b id="mInfl">—</b><small>inflation vs list</small></div>
+  </div>
+
+  <div class="controls">
+    <div class="tabs">
+      <button class="on" data-pos="ALL">all</button>
+      <button data-pos="RB">rb</button>
+      <button data-pos="WR">wr</button>
+      <button data-pos="QB">qb</button>
+      <button data-pos="TE">te</button>
+      <button data-pos="STAR">★</button>
+    </div>
+    <input id="q" placeholder="search player…" autocomplete="off">
+    <button class="ghost" id="showTaken">show taken</button>
+    <button class="ghost" id="undo">undo last</button>
+    <button class="ghost" id="copyState">copy state</button>
+    <button class="ghost" id="restoreState">restore</button>
+  </div>
+
+  <div class="hdr"><span>#</span><span>pos</span><span>player</span><span>tm</span><span class="r">list $</span><span class="r">room $</span><span></span></div>
+  <div id="list"></div>
+
+  <h2>draft position picks (d/st)</h2>
+  <div class="slots" id="slots"></div>
+  <p class="note">tap a player when they're won — enter what they went for (leave blank to assume room value). "room $" rescales the list values to this room: money still on the table ÷ list value of the top players who can still be drafted. base list is FFToday PPR auction values (12-team, $200) updated 8/20/26, so treat it as relative worth, not gospel. state is saved into the page url and this browser as you go, so a refresh keeps it — "copy state" as a backup.</p>
+</div>
+
+<div class="foot">
+  <span>my spend: <b id="mySpend">$0</b> · my slots: <b id="mySlots">0</b></span>
+  <span id="lastPick"></span>
+</div>
+
+<script>
+// [rank, pos, name, team, listValue] — FFToday PPR auction values, 8/20/26 (12-team, $200)
+const RAW=[
+[1,"WR","Puka Nacua","LAR",52],[2,"RB","Jahmyr Gibbs","DET",51],[3,"RB","Bijan Robinson","ATL",51],[4,"WR","Ja'Marr Chase","CIN",51],
+[5,"WR","Jaxon Smith-Njigba","SEA",48],[6,"WR","Amon-Ra St. Brown","DET",46],[7,"RB","Christian McCaffrey","SF",43],[8,"RB","Jonathan Taylor","IND",38],
+[9,"WR","Drake London","ATL",38],[10,"WR","Justin Jefferson","MIN",34],[11,"WR","CeeDee Lamb","DAL",34],[12,"RB","James Cook","BUF",33],
+[13,"WR","Chris Olave","NO",33],[14,"RB","Omarion Hampton","LAC",30],[15,"RB","Saquon Barkley","PHI",30],[16,"WR","Rashee Rice","KC",30],
+[17,"WR","Nico Collins","HOU",30],[18,"RB","Ashton Jeanty","LV",29],[19,"RB","Chase Brown","CIN",29],[20,"WR","A.J. Brown","NE",29],
+[21,"RB","De'Von Achane","MIA",28],[22,"WR","Garrett Wilson","NYJ",28],[23,"TE","Brock Bowers","LV",28],[24,"RB","Kenneth Walker","KC",27],
+[25,"QB","Josh Allen","BUF",26],[26,"RB","Derrick Henry","BAL",26],[27,"WR","George Pickens","DAL",26],[28,"WR","DeVonta Smith","PHI",26],
+[29,"TE","Trey McBride","ARI",26],[30,"RB","Jeremiyah Love","ARI",25],[31,"RB","Breece Hall","NYJ",25],[32,"WR","Zay Flowers","BAL",25],
+[33,"RB","Kyren Williams","LAR",24],[34,"RB","Josh Jacobs","GB",23],[35,"WR","Malik Nabers","NYG",23],[36,"RB","Cam Skattebo","NYG",22],
+[37,"WR","Emeka Egbuka","TB",22],[38,"WR","Tetairoa McMillan","CAR",22],[39,"RB","Javonte Williams","DAL",21],[40,"WR","Davante Adams","LAR",21],
+[41,"WR","Jameson Williams","DET",21],[42,"RB","Bucky Irving","TB",20],[43,"WR","Ladd McConkey","LAC",19],[44,"WR","Jaylen Waddle","DEN",19],
+[45,"RB","Travis Etienne","NO",18],[46,"RB","D'Andre Swift","CHI",18],[47,"WR","Tee Higgins","CIN",18],[48,"WR","Christian Watson","GB",17],
+[49,"WR","D.J. Moore","BUF",17],[50,"WR","Mike Evans","SF",17],[51,"WR","Rome Odunze","CHI",17],[52,"WR","Luther Burden III","CHI",17],
+[53,"RB","Bhayshul Tuten","JAC",16],[54,"WR","Terry McLaurin","WAS",16],[55,"WR","DK Metcalf","PIT",16],[56,"TE","Colston Loveland","CHI",16],
+[57,"RB","Quinshon Judkins","CLE",15],[58,"WR","Marvin Harrison Jr.","ARI",14],[59,"TE","Tyler Warren","IND",14],[60,"QB","Drake Maye","NE",13],
+[61,"QB","Lamar Jackson","BAL",13],[62,"QB","Jalen Hurts","PHI",13],[63,"RB","David Montgomery","HOU",13],[64,"WR","Michael Pittman Jr.","PIT",13],
+[65,"TE","Harold Fannin Jr.","CLE",13],[66,"QB","Joe Burrow","CIN",12],[67,"RB","TreVeyon Henderson","NE",12],[68,"RB","Jaylen Warren","PIT",12],
+[69,"RB","Tony Pollard","TEN",12],[70,"WR","Courtland Sutton","DEN",12],[71,"WR","Jayden Reed","GB",12],[72,"WR","Alec Pierce","IND",12],
+[73,"RB","Jadarian Price","SEA",11],[74,"RB","Rhamondre Stevenson","NE",11],[75,"RB","Chuba Hubbard","CAR",11],[76,"RB","J.K. Dobbins","DEN",11],
+[77,"WR","Carnell Tate","TEN",11],[78,"TE","Kyle Pitts","ATL",11],[79,"RB","Rachaad White","WAS",10],[80,"WR","Jakobi Meyers","JAC",10],
+[81,"WR","Chris Godwin","TB",10],[82,"WR","Parker Washington","JAC",10],[83,"TE","Travis Kelce","KC",10],[84,"QB","Jayden Daniels","WAS",9],
+[85,"QB","Caleb Williams","CHI",9],[86,"RB","Rico Dowdle","PIT",9],[87,"RB","Jonathon Brooks","CAR",9],[88,"RB","RJ Harvey","DEN",9],
+[89,"WR","Wan'Dale Robinson","TEN",9],[90,"WR","Michael Wilson","ARI",9],[91,"WR","Brian Thomas Jr.","JAC",9],[92,"WR","Xavier Worthy","KC",9],
+[93,"WR","Khalil Shakir","BUF",9],[94,"WR","Romeo Doubs","NE",9],[95,"WR","Stefon Diggs","WAS",9],[96,"TE","Sam LaPorta","DET",9],
+[97,"TE","Mark Andrews","BAL",9],[98,"QB","Dak Prescott","DAL",8],[99,"RB","Aaron Jones","MIN",8],[100,"RB","Kenneth Gainwell","TB",8],
+[101,"WR","Josh Downs","IND",8],[102,"WR","Jordan Addison","MIN",8],[103,"WR","Quentin Johnston","LAC",8],[104,"QB","Bo Nix","DEN",7],
+[105,"QB","Justin Herbert","LAC",7],[106,"QB","Brock Purdy","SF",7],[107,"RB","Jacory Croskey-Merritt","WAS",7],[108,"RB","Blake Corum","LAR",7],
+[109,"WR","Matthew Golden","GB",7],[110,"WR","KC Concepcion","CLE",7],[111,"WR","De'Zhaun Stribling","SF",7],[112,"TE","Tucker Kraft","GB",7],
+[113,"QB","Jaxson Dart","NYG",6],[114,"QB","Jared Goff","DET",6],[115,"RB","Kyle Monangai","CHI",6],[116,"RB","Jordan Mason","MIN",6],
+[117,"RB","Alvin Kamara","NO",6],[118,"RB","Woody Marks","HOU",6],[119,"WR","Makai Lemon","PHI",6],[120,"WR","Rashid Shaheed","SEA",6],
+[121,"WR","Deebo Samuel","SF",6],[122,"WR","Jordyn Tyson","NO",6],[123,"TE","Jake Ferguson","DAL",6],[124,"QB","Trevor Lawrence","JAC",5],
+[125,"QB","Matthew Stafford","LAR",5],[126,"RB","Zach Charbonnet","SEA",5],[127,"RB","Tyjae Spears","TEN",5],[128,"RB","Dylan Sampson","CLE",5],
+[129,"RB","Chris Rodriguez Jr.","JAC",5],[130,"RB","Tyrone Tracy Jr.","NYG",5],[131,"WR","Jerry Jeudy","CLE",5],[132,"WR","Keenan Allen","IND",5],
+[133,"WR","Tre Tucker","LV",5],[134,"WR","Jalen Coker","CAR",5],[135,"WR","Jalen McMillan","TB",5],[136,"TE","Dallas Goedert","PHI",5],
+[137,"TE","George Kittle","SF",5],[138,"TE","Dalton Schultz","HOU",5],[139,"RB","Isiah Pacheco","DET",4],[140,"WR","Rashod Bateman","BAL",4],
+[141,"WR","Calvin Ridley","TEN",4],[142,"WR","Adonai Mitchell","NYJ",4],[143,"WR","Germie Bernard","PIT",4],[144,"WR","Jalen Nailor","LV",4],
+[145,"TE","Dalton Kincaid","BUF",4],[146,"QB","Patrick Mahomes","KC",3],[147,"QB","Tyler Shough","NO",3],[148,"RB","Brian Robinson Jr.","ATL",3],
+[149,"RB","Justice Hill","BAL",3],[150,"RB","Tyler Allgeier","ARI",3],[151,"RB","Keaton Mitchell","LAC",3],[152,"RB","Braelon Allen","NYJ",3],
+[153,"RB","Tank Bigsby","PHI",3],[154,"RB","Ray Davis","BUF",3],[155,"WR","Malik Washington","MIA",3],[156,"WR","Ryan Flournoy","DAL",3],
+[157,"WR","Jauan Jennings","MIN",3],[158,"WR","Denzel Boston","CLE",3],[159,"WR","Caleb Douglas","MIA",3],[160,"WR","Xavier Hutchinson","HOU",3],
+[161,"WR","Isaac TeSlaa","DET",3],[162,"TE","Hunter Henry","NE",3],[163,"TE","Isaiah Likely","NYG",3],[164,"TE","Juwan Johnson","NO",3],
+[165,"QB","Kyler Murray","MIN",2],[166,"QB","Malik Willis","MIA",2],[167,"QB","Sam Darnold","SEA",2],[168,"RB","MarShawn Lloyd","GB",2],
+[169,"RB","Samaje Perine","CIN",2],[170,"RB","George Holani","SEA",2],[171,"RB","Kimani Vidal","LAC",2],[172,"WR","Travis Hunter","JAC",2],
+[173,"WR","Devaughn Vele","NO",2],[174,"TE","Pat Freiermuth","PIT",2],[175,"TE","Greg Dulcich","MIA",2],[176,"QB","Baker Mayfield","TB",1],
+[177,"QB","Jordan Love","GB",1],[178,"WR","Xavier Legette","CAR",1],[179,"RB","Ty Johnson","BUF",1],[180,"TE","Brenton Strange","JAC",1],
+[181,"RB","Mike Washington Jr.","LV",1],[182,"RB","Jonah Coleman","DEN",1],[183,"WR","Cooper Kupp","SEA",1],[184,"WR","Darius Slayton","NYG",1],
+[185,"WR","Jaylin Noel","HOU",1],[186,"RB","Jaydon Blue","DAL",1],[187,"RB","Sean Tucker","TB",1],[188,"WR","Tre Harris","LAC",1],
+[189,"WR","Pat Bryant","DEN",1],[190,"WR","Omar Cooper Jr.","NYJ",1],[191,"RB","Emari Demercado","KC",1],[192,"WR","Tyquan Thornton","KC",1],
+[193,"WR","Ja'Kobi Lane","BAL",1]
+];
+const SLOT_NAMES=["Arizona Cardinals","Atlanta Falcons","Baltimore Ravens","Buffalo Bills","Carolina Panthers","Chicago Bears","Cleveland Browns","Cincinnati Bengals","Dallas Cowboys","Denver Broncos","Detroit Lions","Green Bay Packers","Houston Texans","Jacksonville Jaguars","Kansas City","LA Chargers","LA Rams","Las Vegas"];
+
+const players=RAW.map(r=>({rank:r[0],pos:r[1],name:r[2],team:r[3],base:r[4],taken:false,paid:null,mine:false,star:false}));
+const slots=SLOT_NAMES.map((n,i)=>({num:i+1,name:n,taken:false,paid:null,mine:false}));
+let filter="ALL", query="", showTaken=false, picksLog=[];
+
+const $=s=>document.querySelector(s);
+const num=id=>Math.max(0,parseInt($(id).value)||0);
+
+function room(){
+  const teams=num("#teams"), budget=num("#budget"), ppt=num("#ppt");
+  const totalSlots=teams*ppt;
+  const takenP=players.filter(p=>p.taken);
+  const slotsLeft=Math.max(0,totalSlots-takenP.length);
+  const spent=takenP.reduce((s,p)=>s+(p.paid||0),0)+slots.filter(s=>s.taken).reduce((s,x)=>s+(x.paid||0),0);
+  const moneyLeft=Math.max(0,teams*budget-spent);
+  const avail=players.filter(p=>!p.taken).sort((a,b)=>b.base-a.base);
+  const pool=avail.slice(0,slotsLeft).reduce((s,p)=>s+p.base,0);
+  const factor=pool>0?moneyLeft/pool:0;
+  return {teams,budget,ppt,totalSlots,slotsLeft,moneyLeft,factor,avail,pool};
+}
+function adj(p,r){ return Math.max(1,Math.round(p.base*r.factor)); }
+
+function render(){
+  const r=room();
+  $("#mMoney").textContent="$"+r.moneyLeft.toLocaleString();
+  $("#mSlots").textContent=r.slotsLeft;
+  $("#mAvg").textContent=r.slotsLeft?"$"+Math.round(r.moneyLeft/r.slotsLeft):"—";
+  $("#mInfl").textContent=r.factor?r.factor.toFixed(2)+"×":"—";
+
+  const q=query.toLowerCase();
+  const list=players.filter(p=>{
+    if(!showTaken&&p.taken) return false;
+    if(filter==="STAR"&&!p.star) return false;
+    if(filter!=="ALL"&&filter!=="STAR"&&p.pos!==filter) return false;
+    if(q&&!(p.name.toLowerCase().includes(q)||p.team.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  $("#list").innerHTML=list.map(p=>`
+    <div class="row ${p.taken?"taken":""}" data-i="${p.rank}">
+      <span class="rank">${p.rank}</span>
+      <span class="pos ${p.pos}">${p.pos}</span>
+      <span class="name ${p.star?"star":""}">${p.name}${p.mine?' <span style="color:var(--pink)">· mine</span>':""}</span>
+      <span class="team">${p.team}</span>
+      <span class="base">$${p.base}</span>
+      <span class="adj ${p.taken?"paid":""}">${p.taken?(p.paid!=null?"$"+p.paid:"—"):"$"+adj(p,r)}</span>
+      <button class="starbtn ${p.star?"on":""}" data-star="${p.rank}" title="target">★</button>
+    </div>`).join("")||`<p class="note">nothing here.</p>`;
+
+  $("#slots").innerHTML=slots.map(s=>`
+    <div class="slot ${s.taken?"taken":""}" data-s="${s.num}">
+      <b>${s.num}</b><span>${s.name}${s.mine?' <span style="color:var(--pink)">· mine</span>':""}</span>
+      <span class="paid">${s.taken&&s.paid!=null?"$"+s.paid:""}</span>
+    </div>`).join("");
+
+  const mine=[...players.filter(p=>p.mine),...slots.filter(s=>s.mine)];
+  $("#mySpend").textContent="$"+mine.reduce((s,x)=>s+(x.paid||0),0);
+  $("#mySlots").textContent=players.filter(p=>p.mine).length+"/"+r.ppt;
+  const last=picksLog[picksLog.length-1];
+  $("#lastPick").textContent=last?`last: ${last.label}`:"";
+  $("#showTaken").textContent=showTaken?"hide taken":"show taken";
+}
+
+function mark(p,label){
+  if(p.taken){ // un-take
+    p.taken=false;p.paid=null;p.mine=false;render();return;
+  }
+  const r=room();
+  const suggested=p.base!=null?adj(p,r):"";
+  const raw=prompt(`${label} — sold for how much? (add "m" if it's yours, e.g. 61m)`,suggested);
+  if(raw===null) return;
+  const mine=/m/i.test(raw);
+  const val=parseInt(raw);
+  p.taken=true;p.paid=isNaN(val)?(p.base!=null?suggested:null):val;p.mine=mine;
+  picksLog.push({obj:p,label:`${label} $${p.paid??"?"}${mine?" (mine)":""}`});
+  render();
+}
+
+$("#list").addEventListener("click",e=>{
+  const star=e.target.closest("[data-star]");
+  if(star){const p=players.find(x=>x.rank==star.dataset.star);p.star=!p.star;render();return;}
+  const row=e.target.closest(".row"); if(!row) return;
+  const p=players.find(x=>x.rank==row.dataset.i);
+  mark(p,p.name);
+});
+$("#slots").addEventListener("click",e=>{
+  const el=e.target.closest(".slot"); if(!el) return;
+  const s=slots.find(x=>x.num==el.dataset.s);
+  mark(s,`pick #${s.num} (${s.name})`);
+});
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");filter=b.dataset.pos;render();
+}));
+$("#q").addEventListener("input",e=>{query=e.target.value;render();});
+$("#showTaken").addEventListener("click",()=>{showTaken=!showTaken;render();});
+$("#undo").addEventListener("click",()=>{
+  const h=picksLog.pop(); if(!h) return;
+  h.obj.taken=false;h.obj.paid=null;h.obj.mine=false;render();
+});
+["#teams","#budget","#ppt"].forEach(id=>$(id).addEventListener("input",render));
+
+// persistence: state is packed into the url hash on every change (survives refresh, no storage apis needed)
+function pack(){
+  return JSON.stringify({
+    t:num("#teams"),b:num("#budget"),k:num("#ppt"),
+    p:players.filter(p=>p.taken||p.star).map(p=>[p.rank,p.taken?1:0,p.paid,p.mine?1:0,p.star?1:0]),
+    s:slots.filter(s=>s.taken).map(s=>[s.num,s.paid,s.mine?1:0])
+  });
+}
+function unpack(str){
+  const d=JSON.parse(str);
+  $("#teams").value=d.t;$("#budget").value=d.b;$("#ppt").value=d.k;
+  players.forEach(p=>{p.taken=false;p.paid=null;p.mine=false;p.star=false});
+  slots.forEach(s=>{s.taken=false;s.paid=null;s.mine=false});
+  (d.p||[]).forEach(([r,t,pd,m,st])=>{const p=players.find(x=>x.rank==r);if(!p)return;p.taken=!!t;p.paid=pd;p.mine=!!m;p.star=!!st;});
+  (d.s||[]).forEach(([n,pd,m])=>{const s=slots.find(x=>x.num==n);if(!s)return;s.taken=true;s.paid=pd;s.mine=!!m;});
+}
+const _render=render;
+render=function(){
+  _render();
+  const state=pack();
+  try{ window.history.replaceState(null,"","#"+encodeURIComponent(state)); }catch(e){}
+  try{ localStorage.setItem("auction-board-state",state); }catch(e){}
+};
+try{
+  if(location.hash.length>1) unpack(decodeURIComponent(location.hash.slice(1)));
+  else{ const saved=localStorage.getItem("auction-board-state"); if(saved) unpack(saved); }
+}catch(e){}
+
+$("#copyState").addEventListener("click",()=>{
+  const s=pack();
+  (navigator.clipboard?navigator.clipboard.writeText(s):Promise.reject()).then(()=>alert("state copied — paste it into 'restore' if the page ever resets"),()=>prompt("copy this:",s));
+});
+$("#restoreState").addEventListener("click",()=>{
+  const s=prompt("paste saved state:"); if(!s) return;
+  try{unpack(s);render();}catch(e){alert("couldn't read that — make sure it's the full pasted text");}
+});
+render();
+</script>
+</body>
+</html>
