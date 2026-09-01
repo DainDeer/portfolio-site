@@ -161,8 +161,6 @@
   svg .deer-body { fill: #e4c29b; }
   svg .deer-dark { fill: #c9a276; }
   svg .deer-cream { fill: #f6e7d3; }
-  svg .tine-lit { stroke: var(--blush); stroke-width: 3; fill: none; stroke-linecap: round; }
-  svg .tine-off { stroke: var(--line); stroke-width: 3; fill: none; stroke-linecap: round; }
   svg .spot-dim { fill: rgba(42, 32, 51, .55); }
   svg .arrow { stroke: var(--ink-faint); stroke-width: 1.6; fill: none; marker-end: url(#arr); }
 
@@ -176,12 +174,12 @@
 <main class="page">
 
   <div class="eyebrow">internetcreature os · wiki · design doc</div>
-  <h1>willowden 1.0 <span class="heart">🦌</span></h1>
+  <h1>willowden 1.0 <span class="heart">🍃</span></h1>
   <p class="subtitle">the desktop app — an ADHD planning companion and focus coach, and the next phase of chordial. this is the ground-up design for version 1.0: what it is, how it feels, what it's built from, and how we get there from the mvp.</p>
   <div class="meta">
     <span class="chip">status · working draft</span>
     <span class="chip">date · 2026-08-24</span>
-    <span class="chip warm">pre-announcement — not linked from the site yet</span>
+    <span class="chip warm">internal — wiki not linked from the site</span>
   </div>
 
   <nav class="toc">
@@ -203,23 +201,23 @@
   </nav>
 
   <h2 id="about"><span class="no">1</span>what this is</h2>
-  <p class="lede">Willowden is a desktop app that helps you both <em>set</em> goals and <em>work toward</em> them. It's an AI-assisted planning tool when you're deciding what matters, and a pomodoro-shaped body double when you need help actually doing it — a small woodland den on your desktop, inhabited by a cast of animal helpers and chaired by a deer who sits with you while you work.</p>
+  <p class="lede">Willowden is a desktop app that helps you both <em>set</em> goals and <em>work toward</em> them. It's an AI-assisted planning tool when you're deciding what matters, and a pomodoro-shaped body double when you need help actually doing it — a calm little presence on your desktop. A cast of helpers, each with a different role, any of whom can sit with you while you work.</p>
   <p>It is built for ADHD, autistic, and anxious brains — people for whom starting is the hard part, for whom "just use a to-do app" has failed a dozen times, and for whom most productivity software quietly assumes a motivation that isn't there. Willowden assumes the opposite: that on many days the app has to make the first move.</p>
   <p>This document is the v1.0 design for Willowden as a product. It treats the project as a ground-up build: every technology and structural decision inherited from the chordial mvp is questioned in §6, and either re-earned or replaced. It also carries the migration plan (§8) — Willowden is not a rewrite; it is the mvp's proven runtime moving into its real home, with one deliberate surgical change to the native stack.</p>
-  <div class="aside lav"><b>naming.</b> "chordial" was the working name and stays as the internal code name; Willowden is the world the product ships as. The cast — Vel, Pip, Skip, Remy, Mabel, Juniper, Edwin — keep their names; the rename is the world, not the talent. A deliberate brand-language pass happens during migration; no mechanical find-and-replace.</div>
+  <div class="aside lav"><b>naming.</b> "chordial" was the working name and stays as the internal code name; Willowden is the name the product ships as. The cast — Vel, Pip, Skip, Remy, Mabel, Juniper, Edwin — keep their names; the rename is the product, not the cast. The voice is minimalist, cute, kind, and straightforward — a deliberate brand-language pass happens during migration; no mechanical find-and-replace.</div>
 
   <h2 id="pillars"><span class="no">2</span>design pillars</h2>
   <p>Five commitments. Every feature in this doc should be traceable to at least one of them, and anything that fights one of them is out — no matter how standard it is in productivity software.</p>
   <h3>1 · user-first</h3>
   <p>The user is gently guided, never forced. Every step of every flow is skippable, and skipping is recorded honestly as <em>deferred</em>, never as failure. Consent is asked per-privilege, after the feature has proven its worth, and every yes is reversible in Settings. The product drives — it opens the tour, drafts the morning, notices stalls — but driving means <em>extending one concrete invitation at a time</em>, never deciding for you.</p>
   <h3>2 · unique voice</h3>
-  <p>Talking to the den should never feel like talking to a chatbot. The cast are authored characters with distinct voices, lanes, and speaking policies — a raccoon who runs a refined kitchen, an owl who drops his pen when genuinely impressed — governed by a council-wide rule set (no reflexive question-endings, animal traits as behavior not vocabulary, memory as affectionate specificity). Structural moments — tours, dings, celebrations — use <em>hand-authored lines</em>: zero tokens, offline-safe, never wandering. The model speaks only where a real conversation is happening.</p>
+  <p>Talking to willowden should never feel like talking to a chatbot. The cast are authored characters with distinct voices, lanes, and speaking policies — a raccoon who runs a refined kitchen, an owl who drops his pen when genuinely impressed — governed by a cast-wide rule set (no reflexive question-endings, animal traits as behavior not vocabulary, memory as affectionate specificity). Structural moments — tours, dings, celebrations — use <em>hand-authored lines</em>: zero tokens, offline-safe, never wandering. The model speaks only where a real conversation is happening.</p>
   <h3>3 · constant structure, held flexibly</h3>
   <p>Life runs in <b>cycles</b> — small, themed stretches of one to two weeks with a handful of commitments. But life is messy: cycles can be rescheduled, reorganized, resized, or abandoned, and the system treats a scope change as <em>data, not failure</em> (the reason, in your words, is the record). The one thing that never wavers is the map itself: you are always somewhere — in a cycle, between cycles, resting — and the app always shows you where. Structure is the constant; its contents bend.</p>
   <h3>4 · one small bit of progress is always the objective</h3>
   <p>The unit of the whole product is a tiny <b>block</b> of real work, and the verb is <b>banking</b> — stopping early still banks the minutes, because starting was the achievement. Fear of failure, executive dysfunction, and perfectionism all attack the first step; Willowden's answer is to make the first step absurdly small (three minutes counts), celebrate it sincerely, and never let a mechanic exist that punishes stopping. No streaks, anywhere, ever — streaks punish exactly the person this product is for. We reward <em>returns</em>, not unbroken chains.</p>
   <h3>5 · the shape changes with the person</h3>
-  <p>Everyone arrives at a different point in their life, and Willowden offers something useful at every one of them. For a user in crisis it can be nearly a hand on the shoulder — maximum presence, drafted mornings, one obvious next thing. As evidence of steadiness accumulates, the product measurably recedes: check-ins stretch, nudges quiet, and the den becomes a backbone — a keeper of habits through moves, jobs, and life changes, and a quiet sentinel against sliding back. The arc bends; it never ends. This isn't a settings slider — it's computed from lived cycles, and it's the consent story for being present early: the presence demonstrably fades.</p>
+  <p>Everyone arrives at a different point in their life, and Willowden offers something useful at every one of them. For a user in crisis it can be nearly a hand on the shoulder — maximum presence, drafted mornings, one obvious next thing. As evidence of steadiness accumulates, the product measurably recedes: check-ins stretch, nudges quiet, and willowden becomes a backbone — a keeper of habits through moves, jobs, and life changes, and a quiet sentinel against sliding back. The arc bends; it never ends. This isn't a settings slider — it's computed from lived cycles, and it's the consent story for being present early: the presence demonstrably fades.</p>
   <div class="aside"><b>the contract.</b> Beneath the pillars sit eight requirements — contracts, not aspirations; a complete implementation that makes one untrue is still the wrong implementation. <em>Action before interview. One invitation at a time. The real product immediately</em> (cycle zero runs on the permanent map, clock, rooms, and ledger — no throwaway tutorial UI). <em>Authored outside, adaptive inside. Real actions advance the journey</em> — never "next" buttons. <em>Nothing is failed</em> — invitations resolve done, deferred, or declined, and silence never becomes a red mark. <em>Always on the map</em> — all five strip states are designed states. <em>Presence is controlled</em> — installation and warmth are never treated as permission to monitor, notify, or launch.</div>
 
   <h2 id="journey"><span class="no">3</span>the shape of the journey</h2>
@@ -227,28 +225,28 @@
   <div class="table-scroll"><table>
     <tr><th>posture</th><th>when</th><th>how willowden behaves</th></tr>
     <tr><td><b>settling in</b></td><td>no lived cycles yet</td><td>maximum presence. the tour drives, mornings arrive pre-drafted, stalls get one gentle nudge. the app makes the first move because there's no evidence yet that you will.</td></tr>
-    <tr><td><b>building</b></td><td>cycles lived, steadiness not yet earned</td><td>full partnership. daily rhythm, cycle planning and retros, the den at conversational volume.</td></tr>
-    <tr><td><b>rhythm</b></td><td>consecutive steady cycles</td><td>the product recedes on evidence. check-ins stretch (8h → 16h → …), nudges thin, the deer mostly just sits with you.</td></tr>
-    <tr><td><b>keeping watch</b></td><td>steadiness at the cap</td><td>sentinel mode. willowden is a backbone: habits keep their skeleton, collections keeps your history, and the den watches quietly for leading indicators of a slide — re-escalating only by consent.</td></tr>
+    <tr><td><b>building</b></td><td>cycles lived, steadiness not yet earned</td><td>full partnership. daily rhythm, cycle planning and retros, the cast at conversational volume.</td></tr>
+    <tr><td><b>rhythm</b></td><td>consecutive steady cycles</td><td>the product recedes on evidence. check-ins stretch (8h → 16h → …), nudges thin, your companion mostly just sits with you.</td></tr>
+    <tr><td><b>keeping watch</b></td><td>steadiness at the cap</td><td>sentinel mode. willowden is a backbone: habits keep their skeleton, collections keeps your history, and it watches quietly for leading indicators of a slide — re-escalating only by consent.</td></tr>
   </table></div>
-  <p>Two properties keep this honest. <b>Bursts never earn quiet</b> — sustainability is part of the steady test, so a heroic all-nighter cycle doesn't read as "doing great, go away." And <b>absence of evidence never extends quiet</b> — an unjudgeable cycle earns nothing, so the product can't be tricked into silence by disengagement. A wobble resets the posture warmly, not punitively: the den simply leans back in.</p>
-  <p>The journey has a front door, too: every new user starts inside <b>cycle zero</b>, a short product-authored tutorial cycle whose commitments <em>are</em> the tour steps — the tutorial teaches the cycle system by being one. Cycle zero is covered in §5; the full product spec lives in the first-run design doc.</p>
+  <p>Two properties keep this honest. <b>Bursts never earn quiet</b> — sustainability is part of the steady test, so a heroic all-nighter cycle doesn't read as "doing great, go away." And <b>absence of evidence never extends quiet</b> — an unjudgeable cycle earns nothing, so the product can't be tricked into silence by disengagement. A wobble resets the posture warmly, not punitively: willowden simply leans back in.</p>
+  <p>The journey has a front door, too: every new user starts inside <b>cycle zero</b>, a short product-authored tutorial cycle whose commitments <em>are</em> the tour steps — the tutorial teaches the cycle system by being one. Cycle zero is covered in §5; the full product spec lives in <a href="first-run.html">the first-run design doc</a>.</p>
 
   <h2 id="experience"><span class="no">4</span>the experience</h2>
-  <p>Willowden's surfaces carry plain names — <b>Home</b>, the <b>Deer window</b>, <b>Rooms</b>, <b>Collections</b> — because navigation should say what it is; the warmth lives in the characters, never in labels you have to decode. Each surface answers one question: Home, <em>where am I?</em> The deer, <em>will something sit with me?</em> Rooms, <em>who can I talk with?</em> Collections, <em>what was remembered?</em> Chat is deliberately not the center — the map and the deer are the primary surface, and Rooms is a door you walk through when you want it.</p>
+  <p>Willowden's surfaces carry plain names — <b>Home</b>, the <b>Companion window</b>, <b>Rooms</b>, <b>Collections</b> — because navigation should say what it is; the warmth lives in the characters, never in labels you have to decode. Each surface answers one question: Home, <em>where am I?</em> The companion, <em>will something sit with me?</em> Rooms, <em>who can I talk with?</em> Collections, <em>what was remembered?</em> Chat is deliberately not the center — the map and the companion are the primary surface, and Rooms is a door you walk through when you want it.</p>
 
   <h3>home &amp; the cycle strip</h3>
   <p>Home answers one question at a glance: <em>where am I, and what's the one next thing?</em> Its centerpiece is the <b>cycle strip</b> — permanent UI that never nulls out. It renders whichever is true: the tutorial cycle, an active cycle, a cycle that's ready to close, an upcoming one, or a resting state. Exactly one next action pulses at any time; its verb is always the same one-tap <b>start a block ▸</b>.</p>
 
   <figure>
     <div class="frame">
-    <svg viewBox="0 0 900 620" role="img" aria-label="mockup of the willowden home window with cycle strip, antler rack, commitments, room door, and remembered days">
+    <svg viewBox="0 0 900 620" role="img" aria-label="mockup of the willowden home window with cycle strip, day track, commitments, room door, and remembered days">
       <rect x="10" y="10" width="880" height="600" rx="16" class="win"/>
       <circle cx="34" cy="34" r="5" class="dot"/><circle cx="52" cy="34" r="5" class="dot"/><circle cx="70" cy="34" r="5" class="dot"/>
       <text x="450" y="39" text-anchor="middle" class="t-mono t-faint" font-size="12">willowden</text>
 
       <text x="42" y="86" font-size="23" class="t-xb">good morning, megan 🩷</text>
-      <text x="42" y="110" font-size="14" class="t-serif t-soft">the den is quieter these days — you've earned that.</text>
+      <text x="42" y="110" font-size="14" class="t-serif t-soft">it's quieter here these days — you've earned that.</text>
 
       <!-- cycle strip card -->
       <rect x="40" y="130" width="606" height="250" rx="14" class="card"/>
@@ -258,21 +256,24 @@
       <rect x="290" y="147" width="62" height="22" rx="11" class="wash"/>
       <text x="321" y="162" text-anchor="middle" font-size="11.5" class="t-mono" fill="#a5527d">frozen</text>
 
-      <!-- antler rack: symmetric, filling from the middle -->
-      <g transform="translate(343,202)">
-        <path d="M0,12 C-38,9 -85,6 -140,0 C-185,-5 -215,-10 -235,-16" class="tine-lit"/>
-        <path d="M0,12 C38,9 85,6 140,0 C185,-5 215,-10 235,-16" class="tine-lit"/>
-        <path d="M-46,7 C-52,-1 -55,-6 -62,-13" class="tine-lit"/>
-        <path d="M46,7 C52,-1 55,-6 62,-13" class="tine-lit"/>
-        <path d="M-102,3 C-109,-6 -113,-12 -116,-21" class="tine-lit"/>
-        <path d="M102,3 C109,-6 113,-12 116,-21" class="tine-lit"/>
-        <path d="M-158,-2 C-166,-11 -170,-18 -172,-27" class="tine-off"/>
-        <path d="M158,-2 C166,-11 170,-18 172,-27" class="tine-off"/>
-        <path d="M-206,-9 C-214,-18 -218,-25 -219,-33" class="tine-off"/>
-        <path d="M206,-9 C214,-18 218,-25 219,-33" class="tine-off"/>
-        <circle cx="0" cy="12" r="4.5" fill="var(--blush)"/>
+      <!-- day track: one small mark per day, filling as days are lived -->
+      <g transform="translate(83,202)">
+        <circle cx="0" cy="0" r="5" fill="var(--blush)"/>
+        <circle cx="40" cy="0" r="5" fill="var(--blush)"/>
+        <circle cx="80" cy="0" r="5" fill="var(--blush)"/>
+        <circle cx="120" cy="0" r="5" fill="var(--blush)"/>
+        <circle cx="160" cy="0" r="5" class="dot"/>
+        <circle cx="200" cy="0" r="5" class="dot"/>
+        <circle cx="240" cy="0" r="5" class="dot"/>
+        <circle cx="280" cy="0" r="5" class="dot"/>
+        <circle cx="320" cy="0" r="5" class="dot"/>
+        <circle cx="360" cy="0" r="5" class="dot"/>
+        <circle cx="400" cy="0" r="5" class="dot"/>
+        <circle cx="440" cy="0" r="5" class="dot"/>
+        <circle cx="480" cy="0" r="5" class="dot"/>
+        <circle cx="520" cy="0" r="5" class="dot"/>
       </g>
-      <text x="343" y="232" text-anchor="middle" font-size="11" class="t-mono t-faint">the rack grows from the middle out · sheds at cycle close</text>
+      <text x="343" y="232" text-anchor="middle" font-size="11" class="t-mono t-faint">one mark per day · the track resets at cycle close</text>
 
       <!-- capacity bar -->
       <rect x="62" y="246" width="522" height="12" rx="6" class="pill" opacity=".45"/>
@@ -312,7 +313,7 @@
 
       <!-- right rail: cast -->
       <rect x="662" y="262" width="198" height="118" rx="14" class="card"/>
-      <text x="682" y="290" font-size="12" class="t-mono t-faint">THE COUNCIL</text>
+      <text x="682" y="290" font-size="12" class="t-mono t-faint">THE CAST</text>
       <g font-size="17" text-anchor="middle">
         <circle cx="694" cy="318" r="15" class="wash"/><text x="694" y="324">🦌</text>
         <circle cx="732" cy="318" r="15" class="wash"/><text x="732" y="324">🐿️</text>
@@ -345,7 +346,7 @@
       </g>
     </svg>
     </div>
-    <figcaption><b>Home, mid-cycle.</b> The strip owns the top: theme, day count, the antler rack filling symmetrically from the middle, the capacity bar (planned in blush, banked in sage), and per-commitment fills. One next action pulses with the app's primary verb. Rooms is a door on the rail, not the default view — and Edwin sits dimmed because he speaks rarely, on purpose.</figcaption>
+    <figcaption><b>Home, mid-cycle.</b> The strip owns the top: theme, day count, the day track filling as days are lived, the capacity bar (planned in blush, banked in sage), and per-commitment fills. One next action pulses with the app's primary verb. Rooms is a door on the rail, not the default view — and Edwin sits dimmed because he speaks rarely, on purpose.</figcaption>
   </figure>
 
   <p>The strip's five states, side by side:</p>
@@ -359,7 +360,7 @@
         <text x="28" y="66" font-size="15" class="t-xb">settling in</text>
         <text x="28" y="86" font-size="12" class="t-soft">day 1 of 5 · cycle zero</text>
         <g transform="translate(28,106)" font-size="12">
-          <circle cx="6" cy="4" r="5" fill="var(--blush)"/><text x="20" y="8">meet your deer</text>
+          <circle cx="6" cy="4" r="5" fill="var(--blush)"/><text x="20" y="8">meet your companion</text>
           <circle cx="6" cy="28" r="5" class="stroke-line" fill="#fff"/><text x="20" y="32" class="t-soft">bank a first block</text>
           <circle cx="6" cy="52" r="5" class="stroke-line" fill="#fff"/><text x="20" y="56" class="t-soft">put things on the map</text>
           <circle cx="6" cy="76" r="5" class="stroke-line" fill="#fff"/><text x="20" y="80" class="t-soft">talk with vel</text>
@@ -371,14 +372,21 @@
         <text x="274" y="24" font-size="12" class="t-mono t-faint">ACTIVE</text>
         <text x="276" y="66" font-size="15" class="t-xb">steady hands</text>
         <text x="276" y="86" font-size="12" class="t-soft">day 4 of 14 · frozen</text>
-        <g transform="translate(374,124)">
-          <path d="M0,10 C-25,6 -55,2 -84,-8" class="tine-lit"/>
-          <path d="M0,10 C25,6 55,2 84,-8" class="tine-lit"/>
-          <path d="M-36,5 C-42,-3 -44,-8 -46,-15" class="tine-lit"/>
-          <path d="M36,5 C42,-3 44,-8 46,-15" class="tine-lit"/>
-          <path d="M-66,-2 C-72,-10 -74,-15 -75,-22" class="tine-off"/>
-          <path d="M66,-2 C72,-10 74,-15 75,-22" class="tine-off"/>
-          <circle cx="0" cy="10" r="3.5" fill="var(--blush)"/>
+        <g transform="translate(283,124)">
+          <circle cx="0" cy="0" r="3.2" fill="var(--blush)"/>
+          <circle cx="14" cy="0" r="3.2" fill="var(--blush)"/>
+          <circle cx="28" cy="0" r="3.2" fill="var(--blush)"/>
+          <circle cx="42" cy="0" r="3.2" fill="var(--blush)"/>
+          <circle cx="56" cy="0" r="3.2" class="dot"/>
+          <circle cx="70" cy="0" r="3.2" class="dot"/>
+          <circle cx="84" cy="0" r="3.2" class="dot"/>
+          <circle cx="98" cy="0" r="3.2" class="dot"/>
+          <circle cx="112" cy="0" r="3.2" class="dot"/>
+          <circle cx="126" cy="0" r="3.2" class="dot"/>
+          <circle cx="140" cy="0" r="3.2" class="dot"/>
+          <circle cx="154" cy="0" r="3.2" class="dot"/>
+          <circle cx="168" cy="0" r="3.2" class="dot"/>
+          <circle cx="182" cy="0" r="3.2" class="dot"/>
         </g>
         <rect x="276" y="158" width="196" height="10" rx="5" class="pill" opacity=".45"/>
         <rect x="276" y="158" width="88" height="10" rx="5" class="sage-deep"/>
@@ -417,26 +425,26 @@
     <figcaption><b>Never off the map.</b> The strip renders tutorial, active, ready-to-close, upcoming, and resting — and never returns null. A cycle past its nominal end reads as <em>ready to close</em>, never "day 12 of 5" — it never closes itself. A lapsed user who comes back after weeks lands in the resting state with one warm affordance, not a blank screen or a guilt trip.</figcaption>
   </figure>
 
-  <h3>the deer</h3>
-  <p>The deer is Willowden's body double — a tiny always-on-top window that sits in the corner of your desktop, holds the focus clock, and keeps you quiet company. She is the answer to the classic ADHD timer failure: a pomodoro in a browser tab is a pomodoro you've already lost. The deer is <em>un-losable</em>, draggable anywhere, and hers is the only window that needs to be open while you work. She can also live docked <em>inside</em> Home instead — where she sits is the person's choice (desktop recommended, because it lets Home close), remembered once made, and never nagged about.</p>
-  <p>Her clock is built around banking. Every run of minutes lands in the day's bank for that task — pausing banks, switching tasks banks, stopping early banks. A block has one authored <b>ding</b> when you cross your target, then overtime simply counts up; nothing auto-stops, nothing expires, and no state exists called "failed." Finishing a task is a hero moment: confetti, a full emergency un-loaf, and a keepsake may land in Collections.</p>
-  <p>She also has senses, with hard edges. A native collector reports <em>which app is frontmost and whether you're idle</em> — never window titles, never urls, never content — and that raw signal never leaves your machine. From it she notices drift ("you okay? we were doing the thing") exactly once per episode, welcomes you back, and hushes herself automatically when a meeting app is running. Her unprompted words ride a speech-gate stack — hourly budget, quiet hours, meeting hush — because <em>silence is the default gift</em>.</p>
+  <h3>the companion</h3>
+  <p>The Companion window is Willowden's body double — a tiny always-on-top window that sits in the corner of your desktop, holds the focus clock, and keeps you quiet company. Any of the cast can sit there; who keeps you company is your choice. It's the answer to the classic ADHD timer failure: a pomodoro in a browser tab is a pomodoro you've already lost. The companion is <em>un-losable</em>, draggable anywhere, and its window is the only one that needs to be open while you work. It can also live docked <em>inside</em> Home instead — where it sits is the person's choice (desktop recommended, because it lets Home close), remembered once made, and never nagged about.</p>
+  <p>Its clock is built around banking. Every run of minutes lands in the day's bank for that task — pausing banks, switching tasks banks, stopping early banks. A block has one authored <b>ding</b> when you cross your target, then overtime simply counts up; nothing auto-stops, nothing expires, and no state exists called "failed." Finishing a task is a hero moment: confetti, your companion springing to their feet, and a keepsake may land in Collections.</p>
+  <p>The companion also has senses, with hard edges. A native collector reports <em>which app is frontmost and whether you're idle</em> — never window titles, never urls, never content — and that raw signal never leaves your machine. From it your companion notices drift ("you okay? we were doing the thing") exactly once per episode, welcomes you back, and hushes automatically when a meeting app is running. Unprompted words ride a speech-gate stack — hourly budget, quiet hours, meeting hush — because <em>silence is the default gift</em>.</p>
 
   <figure>
     <div class="frame">
-    <svg viewBox="0 0 900 430" role="img" aria-label="mockup of the deer window with focus clock and task bank, plus her four states">
+    <svg viewBox="0 0 900 430" role="img" aria-label="mockup of the companion window with focus clock and task bank, plus its four states">
       <!-- desktop suggestion -->
       <rect x="10" y="10" width="450" height="410" rx="16" fill="#f2e8f2"/>
       <text x="30" y="38" class="t-mono t-faint" font-size="11">YOUR DESKTOP, BOTTOM CORNER</text>
 
-      <!-- deer window -->
+      <!-- companion window -->
       <rect x="95" y="56" width="280" height="340" rx="18" class="win"/>
       <!-- bubble -->
       <rect x="115" y="74" width="240" height="46" rx="12" class="card"/>
       <path d="M215,120 l10,12 l6,-12 z" fill="#fffafd" stroke="var(--line)" stroke-width="1"/>
       <text x="235" y="94" text-anchor="middle" font-size="12" class="t-serif">ding in five —</text>
       <text x="235" y="110" text-anchor="middle" font-size="12" class="t-serif">you're doing the thing.</text>
-      <!-- deer (no antlers — the rack lives in the cycle strip) -->
+      <!-- the companion — a deer today, but any of the cast can sit here -->
       <g transform="translate(238,186)">
         <circle cx="52" cy="10" r="7" class="deer-cream"/>
         <ellipse cx="6" cy="16" rx="52" ry="26" class="deer-body"/>
@@ -469,17 +477,17 @@
       <text x="127" y="390" font-size="11.5" class="t-faint">＋ tell me a thing…</text>
 
       <!-- states -->
-      <text x="500" y="38" class="t-mono t-faint" font-size="11">HER STATES</text>
+      <text x="500" y="38" class="t-mono t-faint" font-size="11">COMPANION STATES</text>
       <g font-size="13.5">
         <rect x="496" y="54" width="384" height="76" rx="12" class="card"/>
         <text x="516" y="86" font-size="24">😴</text>
-        <text x="556" y="80" class="t-b">loaf</text>
+        <text x="556" y="80" class="t-b">rest</text>
         <text x="556" y="100" font-size="12" class="t-soft">no block running. present, zero demand.</text>
 
         <rect x="496" y="142" width="384" height="76" rx="12" class="card"/>
         <text x="516" y="174" font-size="24">👀</text>
         <text x="556" y="168" class="t-b">watch</text>
-        <text x="556" y="188" font-size="12" class="t-soft">a block is live — she sits with you while you work.</text>
+        <text x="556" y="188" font-size="12" class="t-soft">a block is live — your companion sits with you while you work.</text>
 
         <rect x="496" y="230" width="384" height="76" rx="12" class="card"/>
         <text x="516" y="262" font-size="24">✨</text>
@@ -493,19 +501,19 @@
       </g>
     </svg>
     </div>
-    <figcaption><b>The deer window.</b> Speech bubble, the un-losable clock, and the day's task banks — quick-add included, so capturing a thought never means finding the main window. Deliberately antler-free: the antlers belong to the cycle, not the sprite.</figcaption>
+    <figcaption><b>The Companion window.</b> Speech bubble, the un-losable clock, and the day's task banks — quick-add included, so capturing a thought never means finding the main window. A deer sits here today, but the seat belongs to whichever companion you choose.</figcaption>
   </figure>
 
-  <div class="aside lav"><b>who is she?</b> Deliberately unresolved: whether the desktop deer <em>is</em> Vel, an embodiment the whole den shares, or a quiet companion with an identity of her own is left open until the character direction feels true. Day one calls her simply <em>your deer</em>; Vel is named when the person first opens Rooms. Nothing in the architecture forces this answer early, so it stays a character decision, not a schema one.</div>
+  <div class="aside lav"><b>who sits with you?</b> The seat isn't owned by one character — any of the cast can keep you company, and the choice is always yours. What stays deliberately unresolved is who greets a brand-new user on day one: day one says simply <em>your companion</em>; Vel is named when the person first opens Rooms. Nothing in the architecture forces this answer early, so it stays a character decision, not a schema one.</div>
 
-  <h3>the rooms &amp; the council</h3>
+  <h3>the rooms &amp; the cast</h3>
   <p>Conversation happens in <b>rooms</b> — small, purpose-built spaces instead of one endless thread. Today's room is the daily default; a sealed cycle opens a retro room and a planning room; old days stay browsable as "remembered days." Every room's durable output is structured — events, observations, a summary — never the raw transcript, so new reasoning never replays old conversations and yesterday stays yesterday.</p>
-  <p>The rooms are inhabited by seven authored characters, each with a lane and a speaking policy: <b>Vel</b> 🦌 the deer who chairs the house, <b>Pip</b> 🐿️ productivity, <b>Skip</b> 🐰 movement, <b>Remy</b> 🦝 nutrition, <b>Mabel</b> 🐻 wellbeing, <b>Juniper</b> 🦊 creative sparks, and <b>Edwin</b> 🦉 reflection — who speaks rarely, on purpose. One speaker per turn; routing is deterministic first, with a small-model decider only for genuine gray zones; helpers <em>listen</em> far more than they speak. Every name and species is yours to reshape in conversation — they're authored defaults, not fixed mascots.</p>
-  <p>What keeps this from being "a chatbot with skins": the council shares <b>one memory</b> beneath all rooms (no competing realities), their observations are evidence-tied rather than vibes, and their voices obey house rules — no reflexive question-endings, animal traits expressed as behavior rather than vocabulary, memory shown as affectionate specificity. Talking to Remy about dinner should feel like talking to <em>Remy</em>, and never like talking to a language model doing a raccoon voice.</p>
+  <p>The rooms are inhabited by seven authored characters, each with a role and a speaking policy: <b>Vel</b> 🦌 who chairs the cast, <b>Pip</b> 🐿️ productivity, <b>Skip</b> 🐰 movement, <b>Remy</b> 🦝 nutrition, <b>Mabel</b> 🐻 wellbeing, <b>Juniper</b> 🦊 creative sparks, and <b>Edwin</b> 🦉 reflection — who speaks rarely, on purpose. One speaker per turn; routing is deterministic first, with a small-model decider only for genuine gray zones; helpers <em>listen</em> far more than they speak. Every name and species is yours to reshape in conversation — they're authored defaults, not fixed mascots.</p>
+  <p>What keeps this from being "a chatbot with skins": the cast shares <b>one memory</b> beneath all rooms (no competing realities), their observations are evidence-tied rather than vibes, and their voices obey shared rules — no reflexive question-endings, animal traits expressed as behavior rather than vocabulary, memory shown as affectionate specificity. Talking to Remy about dinner should feel like talking to <em>Remy</em>, and never like talking to a language model doing a raccoon voice.</p>
 
   <figure>
     <div class="frame">
-    <svg viewBox="0 0 900 540" role="img" aria-label="mockup of today's room with attributed council speakers and the composer">
+    <svg viewBox="0 0 900 540" role="img" aria-label="mockup of today's room with attributed cast speakers and the composer">
       <rect x="10" y="10" width="880" height="520" rx="16" class="win"/>
       <circle cx="34" cy="34" r="5" class="dot"/><circle cx="52" cy="34" r="5" class="dot"/><circle cx="70" cy="34" r="5" class="dot"/>
       <text x="450" y="39" text-anchor="middle" class="t-mono t-faint" font-size="12">rooms · today's room</text>
@@ -554,7 +562,7 @@
   </figure>
 
   <h3>collections</h3>
-  <p>Collections is Willowden's memory of what you've done — the half of the dopamine engine that never resets, rendered as a shelf in the deer's corner of the world. It holds two kinds of objects. <b>Keepsakes</b> are cozy recognitions of process that accumulate from the event stream: your first banked block, ten blocks, a block before 9am, an <em>honest defer</em> ("not today" was the right answer), a return after four days away — comebacks are first-class here, celebrated with complete sincerity. <b>Trophies</b> sit above them: when a big personal goal actually finishes, it becomes a permanent object displayed <em>with its story</em> — what it was, when, what it took — and the story stays editable, because it's yours.</p>
+  <p>Collections is Willowden's memory of what you've done — the half of the dopamine engine that never resets, rendered as a quiet shelf of things that really happened. It holds two kinds of objects. <b>Keepsakes</b> are cozy recognitions of process that accumulate from the event stream: your first banked block, ten blocks, a block before 9am, an <em>honest defer</em> ("not today" was the right answer), a return after four days away — comebacks are first-class here, celebrated with complete sincerity. <b>Trophies</b> sit above them: when a big personal goal actually finishes, it becomes a permanent object displayed <em>with its story</em> — what it was, when, what it took — and the story stays editable, because it's yours.</p>
   <p>The trophies carry the collection's deepest job. ADHD memory systematically dismisses, minimizes, and forgets its own past accomplishments — so the collection is an external memory that argues back: <em>you did do this; here it is.</em> Retros deliberately walk past it. And the whole engine obeys one celebration law: when several things land at once, exactly <b>one hero moment</b> plays and everything else updates quietly. Recognition must never itself become noise.</p>
 
   <figure>
@@ -579,7 +587,7 @@
         <text x="386" y="158" font-size="34">🧭</text>
         <text x="386" y="196" font-size="10.5" class="t-mono t-soft">first freeze</text>
         <text x="484" y="158" font-size="34">🍵</text>
-        <text x="484" y="196" font-size="10.5" class="t-mono t-soft">the council</text>
+        <text x="484" y="196" font-size="10.5" class="t-mono t-soft">the cast</text>
       </g>
       <!-- row 2 -->
       <g text-anchor="middle">
@@ -609,18 +617,18 @@
     <figcaption><b>Collections.</b> Keepsakes accumulate from process — including for saying no honestly; trophies mark finished personal goals and keep their editable stories. Nothing here can be lost, decayed, or reset — the only direction is fuller.</figcaption>
   </figure>
 
-  <div class="aside"><b>and the antlers?</b> They're the collection's seasonal counterpart — the rank layer. Antlers grow on the cycle strip during a cycle (pure process arithmetic: days shown up, blocks started, returns) and <em>shed naturally at cycle close</em>, because that's what antlers do. The reached spread is recorded in the journal, and next cycle regrows fresh. Nothing infinite accumulates to grind or to lose; a user in earned quiet isn't bleeding a ladder position; and antler arithmetic reads presence only — never execution-vs-plan, never scores — so it can't smuggle in a grade.</div>
+  <div class="aside"><b>and the day track?</b> It's the collection's seasonal counterpart — the rank layer. The track fills on the cycle strip during a cycle (pure process arithmetic: days shown up, blocks started, returns) and <em>resets at cycle close</em>, by design. The reached fill is recorded in the journal, and the next cycle starts fresh. Nothing infinite accumulates to grind or to lose; a user in earned quiet isn't bleeding a ladder position; and the track's arithmetic reads presence only — never execution-vs-plan, never scores — so it can't smuggle in a grade.</div>
 
   <h2 id="flows"><span class="no">5</span>flows</h2>
 
   <h3>the first fifteen minutes</h3>
   <p>The front door is the app itself — signup lives in the desktop client (invite code, name, auto-detected timezone; pronouns are deliberately <em>not</em> a form field — Vel asks conversationally later, where "none," "several," and "skip" are all real answers). Signup drops you directly into <b>cycle zero</b>: a five-day, product-authored tutorial cycle whose commitments are the tour steps. The contract: first block <b>started within ~5 minutes</b> of signup, <b>banked within ~15</b> — action before interview, always.</p>
-  <p>The tour runs coach-marks style: the window dims, one region gets the light, and the deer — embedded <em>inside</em> the main window for now — narrates in hand-authored lines. Steps advance on real actions, not "next" buttons, and every invitation resolves honestly: <b>done</b> (with evidence in a real event), <b>deferred</b> (stops blocking, stays available), or <b>declined</b> (never offered again unless re-chosen in Settings) — silence just leaves it pending. Even the "one real thing" respects privacy: naming the task is optional, and an <em>unnamed block</em> is a full citizen — the map records the time, never the content.</p>
-  <p>At the block beat she asks where she should sit: out on your desktop in her own little window (recommended — she can stay when Home closes, and it shows what the deer window <em>is</em> at the exact moment it becomes real) or staying right here inside the main window. Both placements are first-class, the choice is remembered, and choosing "inside" never generates later pressure to switch. Then you pick 3, 5, or 10 minutes, do the thing, bank it, and the first keepsake lands in Collections as the hero moment of the day.</p>
+  <p>The tour runs coach-marks style: the window dims, one region gets the light, and your companion — embedded <em>inside</em> the main window for now — narrates in hand-authored lines. Steps advance on real actions, not "next" buttons, and every invitation resolves honestly: <b>done</b> (with evidence in a real event), <b>deferred</b> (stops blocking, stays available), or <b>declined</b> (never offered again unless re-chosen in Settings) — silence just leaves it pending. Even the "one real thing" respects privacy: naming the task is optional, and an <em>unnamed block</em> is a full citizen — the map records the time, never the content.</p>
+  <p>At the block beat your companion asks where it should sit: out on your desktop in its own little window (recommended — it can stay when Home closes, and it shows what the Companion window <em>is</em> at the exact moment it becomes real) or staying right here inside the main window. Both placements are first-class, the choice is remembered, and choosing "inside" never generates later pressure to switch. Then you pick 3, 5, or 10 minutes, do the thing, bank it, and the first keepsake lands in Collections as the hero moment of the day.</p>
 
   <figure>
     <div class="frame">
-    <svg viewBox="0 0 900 560" role="img" aria-label="mockup of the day-zero tour: dimmed window, spotlight on quick-add, deer narrating">
+    <svg viewBox="0 0 900 560" role="img" aria-label="mockup of the day-zero tour: dimmed window, spotlight on quick-add, companion narrating">
       <rect x="10" y="10" width="880" height="540" rx="16" class="win"/>
       <circle cx="34" cy="34" r="5" class="dot"/><circle cx="52" cy="34" r="5" class="dot"/><circle cx="70" cy="34" r="5" class="dot"/>
       <text x="450" y="39" text-anchor="middle" class="t-mono t-faint" font-size="12">willowden</text>
@@ -630,9 +638,11 @@
       <text x="62" y="102" font-size="15" class="t-xb">settling in</text>
       <text x="62" y="122" font-size="11.5" class="t-soft">day 1 of 5 · cycle zero</text>
       <g transform="translate(340,150)">
-        <path d="M0,10 C-30,6 -60,2 -90,-6" class="tine-off"/>
-        <path d="M0,10 C30,6 60,2 90,-6" class="tine-off"/>
-        <circle cx="0" cy="10" r="3.5" fill="var(--blush)"/>
+        <circle cx="-80" cy="0" r="4" fill="var(--blush)"/>
+        <circle cx="-40" cy="0" r="4" class="dot"/>
+        <circle cx="0" cy="0" r="4" class="dot"/>
+        <circle cx="40" cy="0" r="4" class="dot"/>
+        <circle cx="80" cy="0" r="4" class="dot"/>
       </g>
       <rect x="662" y="70" width="198" height="150" rx="14" class="card"/>
       <text x="682" y="100" font-size="14" class="t-xb">rooms 🚪</text>
@@ -648,7 +658,7 @@
       <rect x="548" y="296" width="92" height="40" rx="20" class="pill-deep"/>
       <text x="594" y="321" text-anchor="middle" font-size="13.5" class="t-white t-xb">add</text>
 
-      <!-- deer + bubble (in-window during tour) -->
+      <!-- companion + bubble (in-window during tour) -->
       <g transform="translate(152,468) scale(.92)">
         <circle cx="52" cy="10" r="7" class="deer-cream"/>
         <ellipse cx="6" cy="16" rx="52" ry="26" class="deer-body"/>
@@ -670,7 +680,7 @@
       <text x="680" y="530" font-size="11" class="t-mono" fill="#f4e6f0">AUTHORED LINES · ZERO TOKENS</text>
     </svg>
     </div>
-    <figcaption><b>The day-zero tour, beat three.</b> Single-window spotlight choreography; the deer lives in-window until the block beat, where she asks where she should sit — her own desktop window (recommended) or staying inside. Every tour line is hand-written — the model doesn't speak until you first open Rooms and meet Vel.</figcaption>
+    <figcaption><b>The day-zero tour, beat three.</b> Single-window spotlight choreography; the companion lives in-window until the block beat, where it asks where it should sit — its own desktop window (recommended) or staying inside. Every tour line is hand-written — the model doesn't speak until you first open Rooms and meet Vel.</figcaption>
   </figure>
 
   <figure>
@@ -699,7 +709,7 @@
 
         <circle cx="415" cy="120" r="9" class="pill-deep"/>
         <text x="415" y="76" font-size="12.5" class="t-b">the block</text>
-        <text x="415" y="92" font-size="10.5" class="t-soft">choose where she sits 🦌</text>
+        <text x="415" y="92" font-size="10.5" class="t-soft">choose where your companion sits</text>
         <text x="415" y="150" font-size="10.5" class="t-mono" fill="#a5527d">≤ 5:00 · started</text>
         <text x="415" y="166" font-size="10.5" class="t-soft">you pick 3, 5, or</text>
         <text x="415" y="180" font-size="10.5" class="t-soft">10 minutes</text>
@@ -731,7 +741,7 @@
   </figure>
 
   <h3>a day, and a cycle</h3>
-  <p>The daily loop is deliberately tiny. By your morning, today's shape is already drafted — the deer greets you with one proposed first block — start it, shrink it, swap it, or say not today. Opening the app is never a blank page; it's an invitation already extended, and if the app was closed all day, the invitation is simply prepared for the next launch. Blocks happen (or don't — a quiet day simply grows nothing), and in the evening a soft settle closes the day: what banked, one line from the deer, tomorrow's seed.</p>
+  <p>The daily loop is deliberately tiny. By your morning, today's shape is already drafted — your companion greets you with one proposed first block — start it, shrink it, swap it, or say not today. Opening the app is never a blank page; it's an invitation already extended, and if the app was closed all day, the invitation is simply prepared for the next launch. Blocks happen (or don't — a quiet day simply adds nothing), and in the evening a soft settle closes the day: what banked, one line from your companion, tomorrow's seed.</p>
   <p>The cycle loop wraps it. Planning happens in a room with Pip — commitments get a capacity, a priority, and a <em>next action</em> each, then the plan <b>freezes</b> as an immutable baseline. Living the cycle is just days; changing your mind mid-cycle is a first-class <b>scope change</b>, recorded with your reason, mutating the working plan while the baseline stays honest. When its days run out, the cycle turns <b>ready to close</b> — never "day 16 of 14," never auto-closed. Closing is a chosen moment: Edwin files a scorecard — pure arithmetic, evidence-tied prose, no overall grade — and presents it in a retro room; planning the next cycle starts from what actually happened. Then the strip shows the upcoming cycle, or rests.</p>
 
   <figure>
@@ -747,7 +757,7 @@
         <text x="250" y="106" font-size="10.5" class="t-soft">today's shape, pre-drafted</text>
         <rect x="330" y="180" width="160" height="46" rx="23" class="wash"/>
         <text x="410" y="200" class="t-b">start a block</text>
-        <text x="410" y="216" font-size="10.5" class="t-soft">one tap · deer sits with you</text>
+        <text x="410" y="216" font-size="10.5" class="t-soft">one tap · your companion sits with you</text>
         <rect x="160" y="290" width="180" height="46" rx="23" class="wash"/>
         <text x="250" y="310" class="t-b">bank it</text>
         <text x="250" y="326" font-size="10.5" class="t-soft">early, on time, overtime — all bank</text>
@@ -767,7 +777,7 @@
         <text x="750" y="106" font-size="10.5" class="t-soft">with pip · baseline sealed</text>
         <rect x="830" y="180" width="160" height="46" rx="23" class="lav-bar"/>
         <text x="910" y="200" class="t-b">live the days</text>
-        <text x="910" y="216" font-size="10.5" class="t-soft">antlers grow · scope bends</text>
+        <text x="910" y="216" font-size="10.5" class="t-soft">the track fills · scope bends</text>
         <rect x="660" y="290" width="180" height="46" rx="23" class="lav-bar"/>
         <text x="750" y="310" class="t-b">retro</text>
         <text x="750" y="326" font-size="10.5" class="t-soft">edwin's card · no grades</text>
@@ -786,17 +796,17 @@
   </figure>
 
   <h3>falling off, and coming back</h3>
-  <p>This flow gets designed with the same care as the happy path, because it <em>is</em> the path for this audience. Missing days grows nothing and shames nothing. Stalls trigger at most one gentle, presence-routed nudge — deer bubble if you're at the desk, Telegram if you're away and tethered, or simply waiting for your next launch — and its copy always offers the smaller step: <em>"shrink it?" / "not today — want me to hold it for tomorrow?"</em> Ignored nudges back off exponentially; the den never nags twice on the same beat.</p>
+  <p>This flow gets designed with the same care as the happy path, because it <em>is</em> the path for this audience. Missing days costs nothing and shames nothing. Stalls trigger at most one gentle, presence-routed nudge — a companion bubble if you're at the desk, Telegram if you're away and tethered, or simply waiting for your next launch — and its copy always offers the smaller step: <em>"shrink it?" / "not today — want me to hold it for tomorrow?"</em> Ignored nudges back off exponentially; willowden never nags twice on the same beat.</p>
   <p>Coming back — after four days or four weeks — lands you in the resting state with one warm affordance: start a fresh cycle, drafted by Pip from whatever evidence exists. The comeback itself earns a keepsake, sincerely. And for weeks that went sideways mid-cycle, <b>rewind</b> exists: retroactively marking a stretch as paused, so the record tells the truth ("I was sick") instead of averaging your illness into your capacity.</p>
 
   <h3>the consent ladder</h3>
   <p>Willowden's presence is powerful, so its privileges are individually consented — each asked <em>after</em> its first payoff, never during the day-zero tour, each with its benefit explained, each reversible in Settings with visible pause and hush controls. A "no" degrades gracefully — the feature explains once what it loses, then stays quiet — and stays "no" until the person changes it themselves. At most one new permission is ever asked for in a single session.</p>
   <div class="table-scroll"><table>
     <tr><th>privilege</th><th>asked when</th><th>what it buys</th></tr>
-    <tr><td>launch at login</td><td>after the first banked block</td><td>the deer is already there in the morning</td></tr>
+    <tr><td>launch at login</td><td>after the first banked block</td><td>your companion is already there in the morning</td></tr>
     <tr><td>native notifications</td><td>first time a ding lands while the app is backgrounded</td><td>dings and settles reach you outside the window</td></tr>
     <tr><td>idle / frontmost-app sensing</td><td>first focus session after day zero</td><td>drift check-ins, welcome-backs, automatic meeting hush</td></tr>
-    <tr><td>the tether (telegram)</td><td>day 2 at the earliest</td><td>the den can reach your pocket when you're away from the desk</td></tr>
+    <tr><td>the tether (telegram)</td><td>day 2 at the earliest</td><td>willowden can reach your pocket when you're away from the desk</td></tr>
     <tr><td>proactive morning/evening contact</td><td>after the first morning pass is seen</td><td>the day arrives pre-drafted</td></tr>
   </table></div>
 
@@ -806,9 +816,9 @@
   <h3>accessible by default</h3>
   <ul>
     <li>Every tour beat and block action is keyboard-reachable; pause and skip controls are persistent and predictable.</li>
-    <li>The map, the antler rack, and every color-coded state have screen-reader equivalents — recognition that can't be perceived isn't recognition.</li>
+    <li>The map, the day track, and every color-coded state have screen-reader equivalents — recognition that can't be perceived isn't recognition.</li>
     <li>Reduced-motion alternatives exist for the step-out, the pulsing next action, and confetti.</li>
-    <li>The deer window can be resized, hidden, or taken off always-on-top; authored lines never vanish before they can be read.</li>
+    <li>The Companion window can be resized, hidden, or taken off always-on-top; authored lines never vanish before they can be read.</li>
   </ul>
 
   <h3>privacy, user-visible</h3>
@@ -825,7 +835,7 @@
     <tr><th>when</th><th>what holds</th></tr>
     <tr><td>the network disappears</td><td>the authored tour and the focus clock continue; events wait durably in the outbox</td></tr>
     <tr><td>a signup response is lost</td><td>the retry returns the same account, never a duplicate</td></tr>
-    <tr><td>home closes mid-block</td><td>the native clock and the deer window carry on without it</td></tr>
+    <tr><td>home closes mid-block</td><td>the native clock and the Companion window carry on without it</td></tr>
     <tr><td>the computer sleeps</td><td>sleep time is never silently counted as focus</td></tr>
     <tr><td>the app updates mid-journey</td><td>the pinned journey version resumes at a compatible beat</td></tr>
     <tr><td>the model is unavailable</td><td>authored flow continues; graduation uses the deterministic fallback</td></tr>
@@ -839,7 +849,7 @@
     <tr><th>primary</th><th>diagnostic</th><th>guardrails</th></tr>
     <tr>
       <td>signup → first block started (≤ ~5 min) · first block banked (≤ ~15) · a return during days 2–5 · the cycle-one review reached</td>
-      <td>deferral rates by beat · durations chosen · early bank vs planned completion · fallback-proposal rate · deer placement chosen</td>
+      <td>deferral rates by beat · durations chosen · early bank vs planned completion · fallback-proposal rate · companion placement chosen</td>
       <td>never reward more notifications · never punish sharing less · accessibility paths measured too · never optimize for fewer deferrals</td>
     </tr>
   </table></div>
@@ -867,9 +877,9 @@
 
   <h3>the keeps, and why they're earned</h3>
   <ul>
-    <li><b>Tauri over Electron/Flutter/native.</b> The deer demands a tiny, always-on-top, transparent, draggable window with a system tray — Tauri does this well on both Windows and macOS from one codebase, at a ~10MB footprint where Electron starts at ~150MB. Going Rust-core makes Tauri's Rust process the natural home for the engine rather than an inconvenience. Two separate native apps would double every UI feature forever for a team of one.</li>
-    <li><b>React stays.</b> The entire mvp frontend — rooms, cycle panel, deer window, link flow — is working React with its own test suite. Svelte or Solid would be marginally lighter and cost a full rewrite of proven components. No user-visible payoff.</li>
-    <li><b>The Python server stays Python.</b> The server is not distributed to users — it runs on one box we control, so Python costs nothing at the door. What it carries is enormous: the dainframe engine, the council runtime, rooms-as-streams, the sync contract, scorecards, the taper, metering, the tether — all drill-tested at 100 simulated users with headroom that is orders of magnitude above real traffic. A Rust rewrite of the server would be months of work to reach feature parity with software that already exists. Rejected without much agony.</li>
+    <li><b>Tauri over Electron/Flutter/native.</b> The companion demands a tiny, always-on-top, transparent, draggable window with a system tray — Tauri does this well on both Windows and macOS from one codebase, at a ~10MB footprint where Electron starts at ~150MB. Going Rust-core makes Tauri's Rust process the natural home for the engine rather than an inconvenience. Two separate native apps would double every UI feature forever for a team of one.</li>
+    <li><b>React stays.</b> The entire mvp frontend — rooms, cycle panel, companion window, link flow — is working React with its own test suite. Svelte or Solid would be marginally lighter and cost a full rewrite of proven components. No user-visible payoff.</li>
+    <li><b>The Python server stays Python.</b> The server is not distributed to users — it runs on one box we control, so Python costs nothing at the door. What it carries is enormous: the dainframe engine, the cast runtime, rooms-as-streams, the sync contract, scorecards, the taper, metering, the tether — all drill-tested at 100 simulated users with headroom that is orders of magnitude above real traffic. A Rust rewrite of the server would be months of work to reach feature parity with software that already exists. Rejected without much agony.</li>
     <li><b>Bespoke sync over CRDTs.</b> Device events are append-only facts (a block banked, a drift noticed) — they never conflict, so CRDT merge semantics solve a problem this design doesn't have. The existing contract (client event UUIDs, per-device sequences, durable ACK cursors, rejection tombstones, at-least-once delivery / exactly-once apply) is simpler, auditable, and already survived a load drill and several adversarial reviews. Canonical-row mutations go through the server store, which owns the invariants.</li>
     <li><b>AI stays server-side, and mostly silent.</b> A distributed binary can never hold API keys, so the gateway model stands: providers, prompt-cache discipline, model tiering, and per-user token budgets all live on the server. On-device models were considered for ambient lines and rejected — authored lines are better than small-model lines for structural moments (voice pillar), and the batched-pool design covers generated ambience affordably. The cost posture holds because the routing spine is deterministic first: silence costs nothing.</li>
     <li><b>Self-hosted updates stay.</b> The signed Tauri updater feed served from our own server already works, keeps distribution independent of stores, and fits the invite-gated rollout. Store distribution can come later if it earns its review-cycle tax.</li>
@@ -889,7 +899,7 @@
       <text x="44" y="74" font-size="15" class="t-xb">💻 your desk — the willowden app</text>
       <rect x="44" y="92" width="402" height="88" rx="12" class="wash"/>
       <text x="62" y="118" font-size="13" class="t-b">react windows</text>
-      <text x="62" y="138" font-size="11.5" class="t-soft">home · rooms · cycle strip · the deer window · the tour</text>
+      <text x="62" y="138" font-size="11.5" class="t-soft">home · rooms · cycle strip · the companion window · the tour</text>
       <text x="62" y="156" font-size="11.5" class="t-soft">render state, send commands — never decide completion</text>
       <rect x="44" y="192" width="402" height="132" rx="12" fill="#f3eefa"/>
       <text x="62" y="218" font-size="13" class="t-b">rust core — in-process, no sidecar</text>
@@ -911,14 +921,14 @@
 
       <!-- server -->
       <rect x="530" y="40" width="450" height="310" rx="18" class="card"/>
-      <text x="554" y="74" font-size="15" class="t-xb">🌲 the willowden server</text>
+      <text x="554" y="74" font-size="15" class="t-xb">☁️ the willowden server</text>
       <g font-size="11.5">
         <rect x="554" y="92" width="402" height="52" rx="12" class="wash"/>
         <text x="572" y="114" font-size="12.5" class="t-b">accounts &amp; sync</text>
         <text x="572" y="132" class="t-soft">signup · revocable device credentials · the sync contract · ws</text>
         <rect x="554" y="152" width="402" height="52" rx="12" class="wash"/>
-        <text x="572" y="174" font-size="12.5" class="t-b">the den runtime</text>
-        <text x="572" y="192" class="t-soft">rooms as streams · council routing · scorecards · taper · journey</text>
+        <text x="572" y="174" font-size="12.5" class="t-b">the willowden runtime</text>
+        <text x="572" y="192" class="t-soft">rooms as streams · cast routing · scorecards · taper · journey</text>
         <rect x="554" y="212" width="402" height="52" rx="12" class="wash"/>
         <text x="572" y="234" font-size="12.5" class="t-b">llm gateway — keys live here only</text>
         <text x="572" y="252" class="t-soft">providers · cached prompt prefixes · tiering · per-user budgets</text>
@@ -947,7 +957,7 @@
     <li><b>Private <code>willowden</code> repo — history preserved, HEAD curated.</b> A history-preserving mirror of chordial-mvp keeps the git archaeology (every lesson stays findable forever), but willowden does <em>not</em> inherit the mvp's accumulated paperwork by default. The public mvp repo stays as the pre-rename record.</li>
     <li><b>The consolidation.</b> The mvp accrued docs and tests the way a build site accrues scaffolding — a lot of it was load-bearing <em>while building</em> and is dead weight in the finished structure. As a deliberate migration step, everything at HEAD gets reviewed against one bar: <em>does this describe willowden, or does it remember chordial?</em> Docs are inventoried and either distilled into a small living doc set or retired to git history (superseded phase plans, exploratory designs for roads not taken, migration audits that already served their purpose). Tests get the same pass: suites guarding behavior that lives on are kept and carried through the port; tests pinning machinery that dies with it — the sidecar process, its supervision layer, retired platform plumbing — are retired alongside, honestly, rather than ported out of momentum.</li>
     <li><b>This design doc is the seed.</b> It is written to stand on its own — the design, in one place, speaking for itself. Willowden's doc set grows outward from it (per-slice implementation plans, the voice reference, the covenant), rather than starting from the mvp's pile and subtracting.</li>
-    <li><b>The rename slice lands first</b> — app identifier, product name, update-feed paths — because the identifier must be right <em>before</em> the first signed build ships (a signed app can't change identity without stranding its updater). The brand-language pass through docs and copy happens deliberately here; no mechanical find-and-replace, since the cast and "the den" vocabulary already carry most of the voice.</li>
+    <li><b>The rename slice lands first</b> — app identifier, product name, update-feed paths — because the identifier must be right <em>before</em> the first signed build ships (a signed app can't change identity without stranding its updater). The brand-language pass through docs and copy happens deliberately here; no mechanical find-and-replace, since the cast already carries most of the voice — and the pass is also where chordial-era forest vocabulary ("the den", antlers, the deer-as-mascot) retires in favor of the minimalist voice.</li>
     <li>One workflow note: the adversarial second-model review loop currently reads PRs from public URLs; the private repo needs a new intake for it (patch files or a review bot with repo access).</li>
     <li>One fix that doesn't wait: the mvp's <code>ENABLE_DISCORD</code> default crashes app-only rigs — a small config PR to chordial-mvp now, independent of everything else.</li>
   </ul>
@@ -961,7 +971,7 @@
     <tr><td><code>drift.py</code> — activity state, drift watch</td><td><code>core::drift</code></td><td>merges with the collectors already living in Rust — one language boundary disappears</td></tr>
     <tr><td><code>lines.py</code> — authored lines</td><td><code>core::lines</code></td><td>never-repeat picker; the line files themselves are data, untouched</td></tr>
     <tr><td>sqlite store + sync outbox</td><td><code>core::outbox</code></td><td>same schema, same seq/ACK-cursor discipline; server contract unchanged — zero server work</td></tr>
-    <tr><td>loopback HTTP API + token handoff</td><td>Tauri commands + events</td><td>the seam becomes a function call; the deer window subscribes to state instead of polling a port</td></tr>
+    <tr><td>loopback HTTP API + token handoff</td><td>Tauri commands + events</td><td>the seam becomes a function call; the companion window subscribes to state instead of polling a port</td></tr>
     <tr><td><code>parent.py</code> — orphan watch</td><td><span class="mono">— deleted</span></td><td>no process to orphan. the entire supervision layer (spawn, adopt, watchdog, respawn ladder) goes with it</td></tr>
   </table></div>
   <p>Exit criterion: the ported core passes the sidecar's behavioral test suite (translated), and a live smoke reproduces the mvp's proven spine — start a block, ding, bank, sync, watch the server's cycle view move.</p>
@@ -970,25 +980,25 @@
   <p>The first signed, distributable Willowden build targets Windows — the larger audience and the cheaper gate (no notarization; SmartScreen's "unknown publisher" nag is a known cosmetic tax, with paid code-signing available later if direct distribution warrants it). macOS follows as configuration, not work: with the PyInstaller binary gone, notarization loses its riskiest ingredient, and the Apple developer enrollment already exists.</p>
 
   <h3>steps 3–7 · the product slices</h3>
-  <p>With the native foundation in place, the first-run design builds vertically — each slice an end-to-end experience, not a layer:</p>
+  <p>With the native foundation in place, <a href="first-run.html">the first-run design</a> builds vertically — each slice an end-to-end experience, not a layer:</p>
   <ol>
     <li><b>Signup + journey spine</b> — the app-native front door; journey runs and step facts as the single source of onboarding truth (replacing the mvp's split-brain "onboarded?" checks).</li>
-    <li><b>The day-zero vertical slice</b> — signup → tour → task → block → bank → hero celebration, with durable resume. <em>This is the milestone:</em> the complete five-minute experience, including both deer placements, the accessibility paths, and a first hardcoded keepsake.</li>
+    <li><b>The day-zero vertical slice</b> — signup → tour → task → block → bank → hero celebration, with durable resume. <em>This is the milestone:</em> the complete five-minute experience, including both companion placements, the accessibility paths, and a first hardcoded keepsake.</li>
     <li><b>Warm-up</b> — days 2–5: Vel's one-question-a-day room moments, morning pass and evening settle, the consent ladder, catch-up for absent users.</li>
     <li><b>Graduation</b> — the cycle-zero mini-retro and the validated, bounded, fallback-guarded cycle-one proposal (mostly existing cycle-rooms machinery, made journey-aware).</li>
-    <li><b>The dopamine engine</b> — the general awards service, Collections with user-editable trophy stories, and the antler rack with its shed-and-regrow beat — last, once the event vocabulary is stable.</li>
+    <li><b>The dopamine engine</b> — the general awards service, Collections with user-editable trophy stories, and the day track with its reset-at-close beat — last, once the event vocabulary is stable.</li>
   </ol>
 
   <h2 id="v1"><span class="no">10</span>what 1.0 means</h2>
   <p>Version 1.0 is done when this sentence is true for a stranger, not just for me:</p>
-  <div class="aside"><b>a person with an invite code, on windows or macos, downloads a signed installer, creates their account inside the app, banks their first block within fifteen minutes, graduates from cycle zero into a cycle proposed from their own evidence, and then lives the daily and cycle loops — deer, rooms, collections, antlers — with the app updating itself and never once requiring a chat platform.</b></div>
+  <div class="aside"><b>a person with an invite code, on windows or macos, downloads a signed installer, creates their account inside the app, banks their first block within fifteen minutes, graduates from cycle zero into a cycle proposed from their own evidence, and then lives the daily and cycle loops — companion, rooms, collections — with the app updating itself and never once requiring a chat platform.</b></div>
   <p>The ship checklist behind that sentence:</p>
   <ul>
     <li>signup, device linking, keychain credentials, and a settled account-recovery answer</li>
-    <li>the full first-run: cycle zero, the tour, warm-up, graduation — resumable at every beat, every step skippable</li>
+    <li><a href="first-run.html">the full first-run</a>: cycle zero, the tour, warm-up, graduation — resumable at every beat, every step skippable</li>
     <li>the five-state cycle strip, blocks and banking, scope changes, rewind, retro and planning rooms</li>
-    <li>the seven-member council at authored-voice quality, one speaker per turn, observations evidence-tied</li>
-    <li>Collections — keepsakes, trophies, comeback awards — and the antler rack; one hero celebration per moment</li>
+    <li>the seven-member cast at authored-voice quality, one speaker per turn, observations evidence-tied</li>
+    <li>Collections — keepsakes, trophies, comeback awards — and the day track; one hero celebration per moment</li>
     <li>keyboard access, reduced-motion alternatives, and screen-reader equivalents across the tour and the focus loop</li>
     <li>the taper running end to end, so presence demonstrably fades on steadiness</li>
     <li>the tether as a day-2+ optional accessory; presence-aware nudge routing</li>
@@ -1000,7 +1010,7 @@
   <h2 id="risks"><span class="no">11</span>risks &amp; open questions</h2>
   <ul>
     <li><b>The port is the risk window.</b> Rewriting working Python in Rust invites regressions precisely where the mvp is most proven. Mitigations: behavioral tests ported before code, the mvp kept runnable as an oracle, and the sync contract untouched so the server never notices the swap.</li>
-    <li><b>The voice is the moat, and the hardest thing to keep.</b> Every new surface (tour, awards, nudges) is a chance to drift into generic-assistant tone. The authored-lines discipline and the council voice reference are the guardrails; any copy that could appear in any productivity app should be rewritten or cut.</li>
+    <li><b>The voice is the moat, and the hardest thing to keep.</b> Every new surface (tour, awards, nudges) is a chance to drift into generic-assistant tone. The authored-lines discipline and the cast voice reference are the guardrails; any copy that could appear in any productivity app should be rewritten or cut — and the voice itself is minimalist, cute, kind, and straightforward, never twee.</li>
     <li><b>Solo-builder scope.</b> This doc's cut lists are contractual. The five build slices are vertical on purpose — the project must always be a working app that's missing features, never a pile of features that don't make an app.</li>
     <li><b>Model dependency.</b> Anything on a critical path carries a deterministic fallback (graduation already does; the pattern generalizes). A model outage may cost charm, never progress.</li>
     <li><b>Windows reality-testing.</b> The mvp's native layer grew up on macOS; collectors, tray, and window behavior all need genuine Windows dogfooding, not compile-checks.</li>
@@ -1011,7 +1021,7 @@
     <tr><td>account recovery</td><td>email-based, no passwords by design</td><td>before the signup api freezes</td></tr>
     <tr><td>access codes</td><td>short-lived minted codes; static only in development</td><td>public signup</td></tr>
     <tr><td>cycle-zero length</td><td>five user-local days; three if dogfooding says the warm-up drags</td><td>settling-in slice</td></tr>
-    <tr><td>deer identity</td><td>her relationship to vel stays unspecified until the character direction feels true</td><td>character design</td></tr>
+    <tr><td>default companion</td><td>which of the cast greets a brand-new user stays unspecified until the character direction feels true</td><td>character design</td></tr>
     <tr><td>returning &amp; lapsed users</td><td>resume via re-entry; the tutorial cycle re-seeded from existing data</td><td>re-entry design (deliberately later)</td></tr>
   </table></div>
 
@@ -1027,7 +1037,7 @@
     <li>PACKAGING.md · OPERATIONS.md — the box, the meter, the drill</li>
   </ul>
 
-  <div class="footer">willowden · a quiet den for loud brains · working draft — not yet announced 🦌</div>
+  <div class="footer">willowden · quiet company for loud brains · working draft 🍃</div>
 
 </main>
 </body>

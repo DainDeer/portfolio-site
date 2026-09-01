@@ -1,0 +1,2810 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Willowden's first-run product design: a five-day settling-in cycle built around one real block of work.">
+  <meta name="theme-color" content="#263b31">
+  <title>First run · Willowden wiki</title>
+  <link rel="icon" href="../../favicon.png"/>
+  <style>
+    :root {
+      --ink: #26342e;
+      --ink-soft: #53615a;
+      --forest: #263b31;
+      --forest-2: #354c3f;
+      --moss: #77836c;
+      --sage: #b9c4aa;
+      --sage-light: #dfe5d5;
+      --paper: #f8f6ed;
+      --paper-deep: #ede9dc;
+      --white: #fffef9;
+      --copper: #bb704f;
+      --copper-soft: #e9c8b5;
+      --gold: #c6a45b;
+      --line: rgba(38, 52, 46, 0.14);
+      --shadow: 0 22px 70px rgba(38, 52, 46, 0.12);
+      --shadow-soft: 0 10px 35px rgba(38, 52, 46, 0.08);
+      --serif: Iowan Old Style, Baskerville, "Times New Roman", serif;
+      --sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --radius: 22px;
+      --rail: 258px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 32px;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 7% 2%, rgba(185, 196, 170, 0.34), transparent 24rem),
+        radial-gradient(circle at 90% 14%, rgba(233, 200, 181, 0.28), transparent 30rem),
+        var(--paper);
+      font: 16px/1.65 var(--sans);
+      text-rendering: optimizeLegibility;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0.18;
+      background-image:
+        linear-gradient(rgba(38, 52, 46, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(38, 52, 46, 0.02) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: linear-gradient(to bottom, black, transparent 85%);
+    }
+
+    a {
+      color: inherit;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      color: inherit;
+    }
+
+    .skip-link {
+      position: fixed;
+      left: 16px;
+      top: 12px;
+      z-index: 100;
+      padding: 10px 14px;
+      color: var(--white);
+      background: var(--forest);
+      border-radius: 999px;
+      transform: translateY(-160%);
+      transition: transform 160ms ease;
+    }
+
+    .skip-link:focus {
+      transform: translateY(0);
+    }
+
+    .read-progress {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 80;
+      height: 3px;
+      background: transparent;
+    }
+
+    .read-progress span {
+      display: block;
+      width: 0;
+      height: 100%;
+      background: var(--copper);
+    }
+
+    .topbar {
+      display: none;
+    }
+
+    .page {
+      display: grid;
+      grid-template-columns: var(--rail) minmax(0, 1fr);
+      max-width: 1500px;
+      margin: 0 auto;
+    }
+
+    .rail {
+      position: sticky;
+      top: 0;
+      align-self: start;
+      height: 100vh;
+      padding: 34px 28px 28px;
+      border-right: 1px solid var(--line);
+      background: rgba(248, 246, 237, 0.76);
+      backdrop-filter: blur(18px);
+      overflow-y: auto;
+    }
+
+    .wordmark {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      margin-bottom: 31px;
+      color: var(--forest);
+      text-decoration: none;
+    }
+
+    .wordmark-mark {
+      flex: none;
+      width: 34px;
+      height: 34px;
+      background: url("../../willowden-icon.png") center / contain no-repeat;
+      filter: drop-shadow(0 2px 5px rgba(38, 52, 46, 0.22));
+    }
+
+    .wordmark strong {
+      display: block;
+      font: 600 17px/1 var(--serif);
+      letter-spacing: 0.02em;
+    }
+
+    .wordmark small {
+      display: block;
+      margin-top: 4px;
+      color: var(--ink-soft);
+      font-size: 10px;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .rail-label {
+      margin: 0 0 10px;
+      color: var(--moss);
+      font-size: 10px;
+      font-weight: 750;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .toc {
+      display: grid;
+      gap: 1px;
+    }
+
+    .toc a {
+      position: relative;
+      display: block;
+      padding: 6px 8px 6px 14px;
+      color: var(--ink-soft);
+      border-radius: 9px;
+      font-size: 12px;
+      line-height: 1.3;
+      text-decoration: none;
+      transition: color 130ms ease, background 130ms ease;
+    }
+
+    .toc a::before {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: 50%;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: transparent;
+      transform: translateY(-50%);
+    }
+
+    .toc a:hover,
+    .toc a.active {
+      color: var(--forest);
+      background: rgba(185, 196, 170, 0.25);
+    }
+
+    .toc a.active::before {
+      background: var(--copper);
+    }
+
+    .rail-note {
+      margin-top: 28px;
+      padding: 14px;
+      color: var(--ink-soft);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    main {
+      min-width: 0;
+      padding: 0 7vw 100px;
+    }
+
+    .hero {
+      min-height: 92vh;
+      display: grid;
+      grid-template-columns: minmax(0, 1.04fr) minmax(330px, 0.78fr);
+      gap: clamp(40px, 7vw, 100px);
+      align-items: center;
+      padding: 70px 0 64px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 24px;
+      color: var(--forest);
+      font-size: 11px;
+      font-weight: 760;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 28px;
+      height: 1px;
+      background: var(--copper);
+    }
+
+    h1,
+    h2,
+    h3 {
+      color: var(--forest);
+      font-family: var(--serif);
+      font-weight: 500;
+      letter-spacing: -0.025em;
+    }
+
+    h1 {
+      max-width: 760px;
+      margin: 0;
+      font-size: clamp(58px, 7vw, 104px);
+      line-height: 0.88;
+    }
+
+    .hero-intro {
+      max-width: 670px;
+      margin: 34px 0 0;
+      color: var(--ink-soft);
+      font-size: clamp(17px, 1.5vw, 21px);
+      line-height: 1.55;
+    }
+
+    .promise {
+      position: relative;
+      max-width: 630px;
+      margin-top: 36px;
+      padding-left: 24px;
+      color: var(--forest);
+      font: 500 clamp(19px, 1.7vw, 25px)/1.45 var(--serif);
+    }
+
+    .promise::before {
+      content: "";
+      position: absolute;
+      inset: 4px auto 4px 0;
+      width: 3px;
+      border-radius: 3px;
+      background: var(--copper);
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 38px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 5px 11px;
+      color: var(--ink-soft);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 254, 249, 0.46);
+      font-size: 11px;
+      font-weight: 650;
+      letter-spacing: 0.03em;
+    }
+
+    .hero-visual {
+      position: relative;
+      min-height: 570px;
+      display: grid;
+      place-items: center;
+    }
+
+    .hero-orbit {
+      position: absolute;
+      width: min(36vw, 500px);
+      aspect-ratio: 1;
+      border: 1px solid rgba(38, 59, 49, 0.13);
+      border-radius: 50%;
+    }
+
+    .hero-orbit::before,
+    .hero-orbit::after {
+      content: "";
+      position: absolute;
+      inset: 11%;
+      border: 1px solid rgba(38, 59, 49, 0.08);
+      border-radius: inherit;
+    }
+
+    .hero-orbit::after {
+      inset: 24%;
+    }
+
+    .cycle-card {
+      position: relative;
+      z-index: 2;
+      width: min(100%, 390px);
+      padding: 29px;
+      border: 1px solid rgba(38, 59, 49, 0.14);
+      border-radius: 28px;
+      background: rgba(255, 254, 249, 0.88);
+      box-shadow: var(--shadow);
+      transform: rotate(1.4deg);
+    }
+
+    .cycle-card::after {
+      content: "";
+      position: absolute;
+      inset: 9px;
+      pointer-events: none;
+      border: 1px solid rgba(38, 59, 49, 0.05);
+      border-radius: 21px;
+    }
+
+    .cycle-kicker {
+      display: flex;
+      justify-content: space-between;
+      color: var(--moss);
+      font-size: 10px;
+      font-weight: 760;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .cycle-card h2 {
+      margin: 14px 0 8px;
+      font-size: 42px;
+    }
+
+    .cycle-card p {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 13px;
+    }
+
+    .day-path {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 26px 0 21px;
+    }
+
+    .day-path::before {
+      content: "";
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      top: 50%;
+      height: 2px;
+      background: var(--sage-light);
+    }
+
+    .day-dot {
+      position: relative;
+      z-index: 1;
+      width: 16px;
+      height: 16px;
+      border: 3px solid var(--white);
+      border-radius: 50%;
+      background: var(--sage);
+      box-shadow: 0 0 0 1px var(--sage);
+    }
+
+    .day-dot.done {
+      background: var(--copper);
+      box-shadow: 0 0 0 1px var(--copper);
+    }
+
+    .mini-action {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: var(--sage-light);
+    }
+
+    .mini-action span {
+      color: var(--forest);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .mini-action b {
+      color: var(--copper);
+      font-size: 11px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .deer-bubble {
+      position: absolute;
+      z-index: 4;
+      right: 0;
+      bottom: 62px;
+      width: 185px;
+      padding: 13px 15px;
+      color: var(--forest);
+      border: 1px solid var(--line);
+      border-radius: 16px 16px 4px 16px;
+      background: var(--white);
+      box-shadow: var(--shadow-soft);
+      font: 500 15px/1.35 var(--serif);
+      transform: rotate(-2deg);
+    }
+
+    .deer-bubble small {
+      display: block;
+      margin-top: 7px;
+      color: var(--moss);
+      font: 650 9px/1 var(--sans);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .section {
+      padding: 86px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: 180px minmax(0, 1fr);
+      gap: 34px;
+      align-items: start;
+      margin-bottom: 46px;
+    }
+
+    .section-number {
+      color: var(--copper);
+      font-size: 11px;
+      font-weight: 780;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .section h2 {
+      max-width: 850px;
+      margin: 0;
+      font-size: clamp(38px, 4.8vw, 70px);
+      line-height: 1;
+    }
+
+    .section-lede {
+      max-width: 790px;
+      margin: 20px 0 0;
+      color: var(--ink-soft);
+      font-size: 18px;
+    }
+
+    .content-offset {
+      margin-left: 214px;
+    }
+
+    .three-scale,
+    .principle-grid,
+    .surface-grid,
+    .metric-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .three-scale {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .scale-card,
+    .principle,
+    .surface,
+    .metric-card {
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 254, 249, 0.58);
+    }
+
+    .scale-card strong,
+    .surface strong {
+      display: block;
+      margin-bottom: 12px;
+      color: var(--copper);
+      font-size: 10px;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .scale-card h3,
+    .principle h3,
+    .surface h3,
+    .metric-card h3 {
+      margin: 0 0 9px;
+      font-size: 23px;
+      line-height: 1.12;
+    }
+
+    .scale-card p,
+    .principle p,
+    .surface p,
+    .metric-card p {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 13px;
+    }
+
+    .non-goals {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 28px;
+    }
+
+    .non-goals span {
+      padding: 8px 12px;
+      color: var(--ink-soft);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(237, 233, 220, 0.58);
+      font-size: 12px;
+    }
+
+    .principle-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .principle {
+      position: relative;
+      min-height: 166px;
+      padding-left: 64px;
+    }
+
+    .principle-index {
+      position: absolute;
+      left: 22px;
+      top: 22px;
+      display: grid;
+      width: 27px;
+      height: 27px;
+      place-items: center;
+      color: var(--white);
+      border-radius: 50%;
+      background: var(--forest);
+      font-size: 10px;
+      font-weight: 750;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0;
+      margin-top: 18px;
+    }
+
+    .timeline-day {
+      position: relative;
+      min-height: 260px;
+      padding: 58px 18px 22px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      border-left: 1px solid var(--line);
+      background: rgba(255, 254, 249, 0.42);
+    }
+
+    .timeline-day:first-child {
+      border-radius: 22px 0 0 22px;
+    }
+
+    .timeline-day:last-child {
+      border-right: 1px solid var(--line);
+      border-radius: 0 22px 22px 0;
+    }
+
+    .timeline-day::before {
+      content: "";
+      position: absolute;
+      left: 18px;
+      top: 27px;
+      width: 11px;
+      height: 11px;
+      border: 3px solid var(--paper);
+      border-radius: 50%;
+      background: var(--copper);
+      box-shadow: 0 0 0 1px var(--copper);
+    }
+
+    .timeline-day:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      left: 31px;
+      right: -1px;
+      top: 34px;
+      height: 1px;
+      background: var(--copper-soft);
+    }
+
+    .timeline-day b {
+      color: var(--moss);
+      font-size: 10px;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .timeline-day h3 {
+      margin: 11px 0 12px;
+      font-size: 21px;
+    }
+
+    .timeline-day p {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 12px;
+    }
+
+    .plain-note {
+      margin-top: 24px;
+      padding: 18px 20px;
+      color: var(--forest);
+      border-left: 3px solid var(--copper);
+      background: rgba(233, 200, 181, 0.18);
+      font: 500 17px/1.55 var(--serif);
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 0.85fr) minmax(340px, 1.15fr);
+      gap: clamp(26px, 5vw, 70px);
+      align-items: start;
+    }
+
+    .prose h3 {
+      margin: 26px 0 9px;
+      font-size: 25px;
+    }
+
+    .prose h3:first-child {
+      margin-top: 0;
+    }
+
+    .prose p {
+      margin: 0 0 15px;
+      color: var(--ink-soft);
+    }
+
+    .prose ul {
+      padding-left: 20px;
+      color: var(--ink-soft);
+    }
+
+    .ui-window {
+      overflow: hidden;
+      border: 1px solid rgba(38, 59, 49, 0.18);
+      border-radius: 24px;
+      background: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .window-bar {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      height: 39px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--line);
+      background: var(--paper-deep);
+    }
+
+    .window-bar i {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(38, 52, 46, 0.18);
+    }
+
+    .signup-ui {
+      padding: 36px;
+    }
+
+    .signup-ui .logo-line {
+      margin-bottom: 30px;
+      color: var(--forest);
+      font: 500 26px/1 var(--serif);
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      color: var(--moss);
+      font-size: 10px;
+      font-weight: 750;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .field-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 46px;
+      padding: 0 14px;
+      color: var(--forest);
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--paper);
+      font-size: 13px;
+    }
+
+    .field-box em {
+      color: var(--copper);
+      font-size: 10px;
+      font-style: normal;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .primary-button {
+      width: 100%;
+      margin-top: 8px;
+      padding: 13px 18px;
+      color: var(--white);
+      border: 0;
+      border-radius: 12px;
+      background: var(--forest);
+      font-size: 12px;
+      font-weight: 740;
+      letter-spacing: 0.03em;
+    }
+
+    .commitments {
+      display: grid;
+      gap: 10px;
+      counter-reset: commitment;
+    }
+
+    .commitment {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) auto;
+      gap: 13px;
+      align-items: center;
+      padding: 15px 17px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 254, 249, 0.58);
+    }
+
+    .commitment::before {
+      counter-increment: commitment;
+      content: counter(commitment);
+      display: grid;
+      width: 27px;
+      height: 27px;
+      place-items: center;
+      color: var(--forest);
+      border-radius: 50%;
+      background: var(--sage-light);
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .commitment strong {
+      display: block;
+      font-size: 13px;
+    }
+
+    .commitment small {
+      display: block;
+      margin-top: 2px;
+      color: var(--ink-soft);
+      font-size: 11px;
+    }
+
+    .commitment .state {
+      color: var(--moss);
+      font-size: 9px;
+      font-weight: 760;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .identity-note {
+      margin-top: 24px;
+      padding: 25px;
+      border-radius: var(--radius);
+      background: var(--forest);
+      color: rgba(255, 254, 249, 0.72);
+    }
+
+    .identity-note h3 {
+      margin: 0 0 8px;
+      color: var(--white);
+      font-size: 25px;
+    }
+
+    .identity-note p {
+      margin: 0;
+      font-size: 13px;
+    }
+
+    .beats {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(150px, 1fr));
+      gap: 10px;
+      overflow-x: auto;
+      padding: 5px 2px 16px;
+      scroll-snap-type: x proximity;
+    }
+
+    .beat {
+      min-height: 185px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255, 254, 249, 0.58);
+      scroll-snap-align: start;
+    }
+
+    .beat b {
+      display: block;
+      margin-bottom: 20px;
+      color: var(--copper);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .beat h3 {
+      margin: 0 0 8px;
+      font-size: 21px;
+    }
+
+    .beat p {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 12px;
+    }
+
+    .placement-demo {
+      margin-top: 34px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: var(--paper-deep);
+    }
+
+    .placement-toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .placement-toolbar h3 {
+      margin: 0;
+      font-size: 25px;
+    }
+
+    .segmented {
+      display: flex;
+      gap: 6px;
+      padding: 4px;
+      border-radius: 12px;
+      background: rgba(38, 59, 49, 0.08);
+    }
+
+    .segmented button,
+    .duration-row button,
+    .state-tabs button {
+      padding: 9px 12px;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 680;
+    }
+
+    .segmented button[aria-pressed="true"],
+    .duration-row button[aria-pressed="true"],
+    .state-tabs button[aria-selected="true"] {
+      color: var(--white);
+      background: var(--forest);
+      box-shadow: 0 4px 12px rgba(38, 59, 49, 0.16);
+    }
+
+    .recommended {
+      display: inline-block;
+      margin-left: 4px;
+      color: var(--copper);
+      font-size: 8px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .demo-stage {
+      position: relative;
+      min-height: 390px;
+      overflow: hidden;
+      border-radius: 19px;
+      background:
+        linear-gradient(135deg, rgba(185, 196, 170, 0.46), rgba(255, 254, 249, 0.5)),
+        var(--paper);
+    }
+
+    .demo-app {
+      position: absolute;
+      inset: 28px 110px 28px 28px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--white);
+      box-shadow: var(--shadow-soft);
+      transition: inset 260ms ease, opacity 220ms ease;
+    }
+
+    .demo-app-head {
+      padding: 17px 19px;
+      border-bottom: 1px solid var(--line);
+      color: var(--moss);
+      font-size: 10px;
+      font-weight: 760;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+
+    .demo-app-body {
+      display: grid;
+      height: calc(100% - 52px);
+      place-items: center;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .duration-row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 18px 0;
+    }
+
+    .duration-row button {
+      min-width: 52px;
+      border: 1px solid var(--line);
+    }
+
+    .demo-app-body h4 {
+      margin: 0;
+      color: var(--forest);
+      font: 500 27px/1.2 var(--serif);
+    }
+
+    .demo-app-body p {
+      max-width: 280px;
+      margin: 8px auto 0;
+      color: var(--ink-soft);
+      font-size: 12px;
+    }
+
+    .deer-companion {
+      position: absolute;
+      z-index: 4;
+      right: 34px;
+      bottom: 34px;
+      width: 150px;
+      padding: 16px;
+      color: var(--white);
+      border-radius: 24px;
+      background: var(--forest);
+      box-shadow: var(--shadow);
+      text-align: center;
+      transition: right 280ms ease, bottom 280ms ease, transform 280ms ease;
+    }
+
+    .deer-companion.embedded {
+      right: 126px;
+      bottom: 62px;
+      transform: scale(0.86);
+    }
+
+    .deer-face {
+      position: relative;
+      width: 55px;
+      height: 50px;
+      margin: 3px auto 9px;
+      border-radius: 52% 52% 46% 46%;
+      background: #d7b08b;
+    }
+
+    .deer-face::before,
+    .deer-face::after {
+      content: "";
+      position: absolute;
+      top: -8px;
+      width: 21px;
+      height: 27px;
+      border-radius: 85% 15% 80% 20%;
+      background: #c58d68;
+    }
+
+    .deer-face::before {
+      left: -10px;
+      transform: rotate(-32deg);
+    }
+
+    .deer-face::after {
+      right: -10px;
+      transform: scaleX(-1) rotate(-32deg);
+    }
+
+    .deer-eyes {
+      position: absolute;
+      left: 15px;
+      right: 15px;
+      top: 22px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .deer-eyes i {
+      width: 4px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--forest);
+    }
+
+    .deer-nose {
+      position: absolute;
+      left: 50%;
+      bottom: 8px;
+      width: 7px;
+      height: 5px;
+      border-radius: 60% 60% 50% 50%;
+      background: var(--forest);
+      transform: translateX(-50%);
+    }
+
+    .timer {
+      font: 500 23px/1 var(--serif);
+    }
+
+    .timer-label {
+      margin-top: 6px;
+      color: rgba(255, 254, 249, 0.58);
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .surface-grid {
+      grid-template-columns: repeat(4, 1fr);
+      margin-bottom: 32px;
+    }
+
+    .surface {
+      min-height: 160px;
+    }
+
+    .home-mock {
+      overflow: hidden;
+      border: 1px solid rgba(38, 59, 49, 0.16);
+      border-radius: 27px;
+      background: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .home-top {
+      display: flex;
+      justify-content: space-between;
+      padding: 18px 23px;
+      border-bottom: 1px solid var(--line);
+      color: var(--forest);
+      font: 500 19px/1 var(--serif);
+    }
+
+    .home-top span:last-child {
+      color: var(--moss);
+      font: 650 9px/1 var(--sans);
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .home-cycle {
+      padding: 23px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(223, 229, 213, 0.4);
+    }
+
+    .home-cycle-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      color: var(--moss);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .home-line {
+      height: 5px;
+      margin: 17px 0 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: var(--sage-light);
+    }
+
+    .home-line span {
+      display: block;
+      width: 38%;
+      height: 100%;
+      background: var(--copper);
+    }
+
+    .home-cycle p {
+      margin: 0;
+      color: var(--forest);
+      font-size: 12px;
+    }
+
+    .home-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 0.6fr;
+    }
+
+    .next-block {
+      min-height: 220px;
+      padding: 28px;
+      border-right: 1px solid var(--line);
+    }
+
+    .next-block small,
+    .room-card small {
+      color: var(--moss);
+      font-size: 9px;
+      font-weight: 750;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .next-block h3 {
+      margin: 12px 0 23px;
+      font-size: 31px;
+    }
+
+    .mock-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .mock-actions span {
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .mock-actions span:first-child {
+      color: var(--white);
+      border-color: var(--forest);
+      background: var(--forest);
+    }
+
+    .home-side {
+      display: grid;
+      grid-template-rows: 1fr 1fr;
+    }
+
+    .room-card {
+      padding: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .room-card:last-child {
+      border: 0;
+    }
+
+    .room-card strong {
+      display: block;
+      margin-top: 11px;
+      font: 500 18px/1.2 var(--serif);
+    }
+
+    .state-wrap {
+      margin-top: 34px;
+      padding: 23px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 254, 249, 0.5);
+    }
+
+    .state-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 18px;
+    }
+
+    .state-tabs button {
+      border: 1px solid var(--line);
+    }
+
+    .state-panel {
+      display: flex;
+      justify-content: space-between;
+      gap: 30px;
+      align-items: center;
+      min-height: 100px;
+      padding: 20px;
+      border-radius: 14px;
+      background: var(--sage-light);
+    }
+
+    .state-panel h3 {
+      margin: 0 0 4px;
+      font-size: 25px;
+    }
+
+    .state-panel p {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 12px;
+    }
+
+    .state-next {
+      flex: 0 0 auto;
+      color: var(--copper);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .daily-grid,
+    .permission-list,
+    .failure-grid,
+    .delivery-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .daily-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .daily-card {
+      padding: 25px;
+      border-radius: var(--radius);
+      background: var(--forest);
+      color: rgba(255, 254, 249, 0.72);
+    }
+
+    .daily-card:nth-child(2) {
+      background: var(--forest-2);
+    }
+
+    .daily-card:nth-child(3) {
+      color: var(--ink-soft);
+      background: var(--sage-light);
+    }
+
+    .daily-card b {
+      color: var(--copper-soft);
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .daily-card:nth-child(3) b {
+      color: var(--copper);
+    }
+
+    .daily-card h3 {
+      margin: 15px 0 10px;
+      color: var(--white);
+      font-size: 27px;
+    }
+
+    .daily-card:nth-child(3) h3 {
+      color: var(--forest);
+    }
+
+    .daily-card p {
+      margin: 0;
+      font-size: 13px;
+    }
+
+    .proposal {
+      display: grid;
+      grid-template-columns: 0.8fr 1.2fr;
+      gap: 14px;
+    }
+
+    .evidence-card,
+    .proposal-card {
+      padding: 27px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--white);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .evidence-card h3,
+    .proposal-card h3 {
+      margin: 0 0 18px;
+      font-size: 28px;
+    }
+
+    .evidence-stat {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 12px;
+    }
+
+    .evidence-stat span {
+      color: var(--ink-soft);
+    }
+
+    .evidence-stat b {
+      color: var(--forest);
+    }
+
+    .uncertainty {
+      margin-top: 16px;
+      padding: 12px;
+      color: var(--ink-soft);
+      border-radius: 11px;
+      background: var(--paper-deep);
+      font-size: 11px;
+    }
+
+    .proposal-theme {
+      margin-bottom: 20px;
+      padding: 15px;
+      border-radius: 13px;
+      background: var(--sage-light);
+    }
+
+    .proposal-theme small {
+      display: block;
+      color: var(--moss);
+      font-size: 9px;
+      font-weight: 750;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+
+    .proposal-theme strong {
+      display: block;
+      margin-top: 4px;
+      font: 500 21px/1.2 var(--serif);
+    }
+
+    .proposal-item {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 12px;
+    }
+
+    .proposal-item i {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--copper);
+    }
+
+    .permission {
+      display: grid;
+      grid-template-columns: minmax(150px, 0.5fr) minmax(0, 1fr) minmax(0, 1fr);
+      gap: 20px;
+      padding: 17px 19px;
+      border-bottom: 1px solid var(--line);
+      font-size: 12px;
+    }
+
+    .permission:first-child {
+      border-top: 1px solid var(--line);
+    }
+
+    .permission strong {
+      color: var(--forest);
+    }
+
+    .permission span {
+      color: var(--ink-soft);
+    }
+
+    .collection-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .collection-item {
+      position: relative;
+      min-height: 190px;
+      display: grid;
+      align-content: end;
+      padding: 20px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: var(--white);
+    }
+
+    .collection-item::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 25px;
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: var(--sage-light);
+      transform: translateX(-50%);
+      box-shadow:
+        inset 0 0 0 18px rgba(255, 254, 249, 0.45),
+        0 10px 30px rgba(38, 52, 46, 0.08);
+    }
+
+    .collection-item:nth-child(2)::before {
+      border-radius: 40% 60% 45% 55%;
+      background: var(--copper-soft);
+    }
+
+    .collection-item:nth-child(3)::before {
+      width: 50px;
+      border-radius: 16px;
+      background: #d7c694;
+      transform: translateX(-50%) rotate(9deg);
+    }
+
+    .collection-item:nth-child(4)::before {
+      background: var(--paper-deep);
+      box-shadow: inset 0 0 0 2px var(--sage), 0 10px 30px rgba(38, 52, 46, 0.08);
+    }
+
+    .collection-item strong {
+      position: relative;
+      z-index: 1;
+      display: block;
+      font: 500 18px/1.2 var(--serif);
+    }
+
+    .collection-item small {
+      position: relative;
+      z-index: 1;
+      display: block;
+      margin-top: 5px;
+      color: var(--ink-soft);
+      font-size: 10px;
+    }
+
+    .lifecycle {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 22px;
+      align-items: center;
+      margin: 25px 0;
+    }
+
+    .life-state {
+      position: relative;
+      padding: 18px 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--white);
+      text-align: center;
+      font-size: 11px;
+      font-weight: 720;
+    }
+
+    .life-state:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -19px;
+      top: 50%;
+      color: var(--copper);
+      transform: translateY(-50%);
+    }
+
+    .life-state.accent {
+      color: var(--white);
+      border-color: var(--forest);
+      background: var(--forest);
+    }
+
+    .fact-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 25px;
+    }
+
+    .fact {
+      padding: 16px;
+      color: var(--ink-soft);
+      border-radius: 13px;
+      background: var(--paper-deep);
+      font-size: 11px;
+    }
+
+    .fact strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--forest);
+      font-size: 12px;
+    }
+
+    .architecture {
+      display: grid;
+      grid-template-columns: 1fr auto 1.2fr auto 1fr;
+      gap: 15px;
+      align-items: stretch;
+    }
+
+    .arch-box {
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--white);
+    }
+
+    .arch-box.native {
+      color: var(--white);
+      border-color: var(--forest);
+      background: var(--forest);
+    }
+
+    .arch-box h3 {
+      margin: 0 0 15px;
+      font-size: 24px;
+    }
+
+    .arch-box.native h3 {
+      color: var(--white);
+    }
+
+    .arch-box ul {
+      margin: 0;
+      padding-left: 17px;
+      color: var(--ink-soft);
+      font-size: 11px;
+    }
+
+    .arch-box.native ul {
+      color: rgba(255, 254, 249, 0.7);
+    }
+
+    .arch-arrow {
+      display: grid;
+      place-items: center;
+      color: var(--copper);
+      font-size: 22px;
+    }
+
+    .failure-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .failure {
+      display: grid;
+      grid-template-columns: 45px minmax(0, 1fr);
+      gap: 14px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: rgba(255, 254, 249, 0.5);
+    }
+
+    .failure b {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      color: var(--copper);
+      border-radius: 50%;
+      background: var(--copper-soft);
+      font-size: 11px;
+    }
+
+    .failure strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 12px;
+    }
+
+    .failure span {
+      display: block;
+      color: var(--ink-soft);
+      font-size: 11px;
+    }
+
+    .requirements {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .requirement-card {
+      padding: 27px;
+      border-radius: 22px;
+      background: var(--sage-light);
+    }
+
+    .requirement-card:nth-child(2) {
+      background: var(--copper-soft);
+    }
+
+    .requirement-card h3 {
+      margin: 0 0 16px;
+      font-size: 29px;
+    }
+
+    .requirement-card ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--ink-soft);
+      font-size: 12px;
+    }
+
+    .metric-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .metric-card {
+      min-height: 180px;
+    }
+
+    .metric-card ul {
+      margin: 12px 0 0;
+      padding-left: 17px;
+      color: var(--ink-soft);
+      font-size: 11px;
+    }
+
+    .delivery-list {
+      counter-reset: delivery;
+    }
+
+    .delivery {
+      display: grid;
+      grid-template-columns: 56px minmax(180px, 0.35fr) minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+      padding: 20px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .delivery::before {
+      counter-increment: delivery;
+      content: "0" counter(delivery);
+      color: var(--copper);
+      font: 500 24px/1 var(--serif);
+    }
+
+    .delivery h3 {
+      margin: 0;
+      font-size: 23px;
+    }
+
+    .delivery p {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 12px;
+    }
+
+    .decision-table {
+      width: 100%;
+      border-collapse: collapse;
+      border-top: 1px solid var(--line);
+    }
+
+    .decision-table th,
+    .decision-table td {
+      padding: 15px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      font-size: 12px;
+    }
+
+    .decision-table th {
+      color: var(--moss);
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .decision-table td:first-child {
+      color: var(--forest);
+      font-weight: 720;
+    }
+
+    .final-question {
+      margin-top: 55px;
+      padding: clamp(28px, 5vw, 58px);
+      color: var(--white);
+      border-radius: 30px;
+      background: var(--forest);
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .final-question small {
+      color: var(--copper-soft);
+      font-size: 9px;
+      font-weight: 760;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .final-question p {
+      max-width: 850px;
+      margin: 18px auto 0;
+      font: 500 clamp(28px, 3.4vw, 48px)/1.14 var(--serif);
+    }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 25px;
+      padding: 34px 0 0;
+      color: var(--moss);
+      border-top: 1px solid var(--line);
+      font-size: 10px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    :focus-visible {
+      outline: 3px solid rgba(187, 112, 79, 0.5);
+      outline-offset: 3px;
+    }
+
+    @media (max-width: 1120px) {
+      :root {
+        --rail: 220px;
+      }
+
+      main {
+        padding-inline: 5vw;
+      }
+
+      .hero {
+        grid-template-columns: 1fr;
+        padding-top: 90px;
+      }
+
+      .hero-visual {
+        min-height: 490px;
+      }
+
+      .hero-orbit {
+        width: min(70vw, 490px);
+      }
+
+      .section-head {
+        grid-template-columns: 120px minmax(0, 1fr);
+      }
+
+      .content-offset {
+        margin-left: 154px;
+      }
+
+      .timeline {
+        grid-template-columns: repeat(5, minmax(175px, 1fr));
+        overflow-x: auto;
+        padding-bottom: 12px;
+      }
+
+      .surface-grid,
+      .collection-grid,
+      .fact-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .architecture {
+        grid-template-columns: 1fr;
+      }
+
+      .arch-arrow {
+        transform: rotate(90deg);
+      }
+    }
+
+    @media (max-width: 780px) {
+      html {
+        scroll-padding-top: 76px;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 70;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 64px;
+        padding: 0 18px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(248, 246, 237, 0.9);
+        backdrop-filter: blur(18px);
+      }
+
+      .topbar .wordmark {
+        margin: 0;
+      }
+
+      .menu-button {
+        width: 40px;
+        height: 40px;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        background: var(--white);
+        cursor: pointer;
+      }
+
+      .page {
+        display: block;
+      }
+
+      .rail {
+        position: fixed;
+        inset: 64px 0 auto;
+        z-index: 60;
+        width: 100%;
+        height: calc(100vh - 64px);
+        padding: 22px;
+        border: 0;
+        transform: translateY(-120%);
+        transition: transform 220ms ease;
+      }
+
+      .rail.open {
+        transform: translateY(0);
+      }
+
+      .rail > .wordmark {
+        display: none;
+      }
+
+      .rail-note {
+        max-width: 420px;
+      }
+
+      main {
+        padding: 0 20px 70px;
+      }
+
+      .hero {
+        min-height: auto;
+        padding: 78px 0 58px;
+      }
+
+      h1 {
+        font-size: clamp(58px, 18vw, 88px);
+      }
+
+      .hero-visual {
+        min-height: 450px;
+      }
+
+      .deer-bubble {
+        right: 2px;
+      }
+
+      .section {
+        padding: 65px 0;
+      }
+
+      .section-head {
+        display: block;
+      }
+
+      .section-number {
+        display: block;
+        margin-bottom: 14px;
+      }
+
+      .content-offset {
+        margin-left: 0;
+      }
+
+      .three-scale,
+      .principle-grid,
+      .daily-grid,
+      .proposal,
+      .requirements,
+      .metric-grid,
+      .failure-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .split {
+        grid-template-columns: 1fr;
+      }
+
+      .surface-grid,
+      .collection-grid,
+      .fact-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .placement-toolbar {
+        display: block;
+      }
+
+      .segmented {
+        margin-top: 14px;
+        overflow-x: auto;
+      }
+
+      .demo-app {
+        inset: 24px;
+      }
+
+      .deer-companion {
+        right: 28px;
+      }
+
+      .deer-companion.embedded {
+        right: 34px;
+      }
+
+      .home-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .next-block {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .home-side {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto;
+      }
+
+      .room-card {
+        border-right: 1px solid var(--line);
+        border-bottom: 0;
+      }
+
+      .permission {
+        grid-template-columns: 1fr;
+        gap: 5px;
+      }
+
+      .lifecycle {
+        grid-template-columns: 1fr;
+      }
+
+      .life-state:not(:last-child)::after {
+        right: 50%;
+        top: auto;
+        bottom: -22px;
+        transform: translateX(50%) rotate(90deg);
+      }
+
+      .delivery {
+        grid-template-columns: 45px minmax(0, 1fr);
+      }
+
+      .delivery p {
+        grid-column: 2;
+      }
+
+      .decision-table {
+        display: block;
+        overflow-x: auto;
+      }
+    }
+
+    @media (max-width: 510px) {
+      .hero-visual {
+        min-height: 410px;
+      }
+
+      .cycle-card {
+        padding: 22px;
+      }
+
+      .deer-bubble {
+        bottom: 15px;
+      }
+
+      .surface-grid,
+      .collection-grid,
+      .fact-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .demo-stage {
+        min-height: 450px;
+      }
+
+      .demo-app {
+        inset: 18px;
+      }
+
+      .demo-app-body {
+        align-content: start;
+        padding-top: 35px;
+      }
+
+      .deer-companion,
+      .deer-companion.embedded {
+        right: 50%;
+        bottom: 24px;
+        transform: translateX(50%) scale(0.82);
+      }
+
+      .home-side {
+        grid-template-columns: 1fr;
+      }
+
+      .room-card {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      footer {
+        display: block;
+      }
+
+      footer span {
+        display: block;
+        margin-bottom: 7px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+
+    @media print {
+      body {
+        background: white;
+      }
+
+      .rail,
+      .topbar,
+      .read-progress,
+      .placement-toolbar {
+        display: none;
+      }
+
+      .page {
+        display: block;
+      }
+
+      main {
+        padding: 0;
+      }
+
+      .hero {
+        min-height: auto;
+      }
+
+      .section {
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="read-progress" aria-hidden="true"><span id="readProgress"></span></div>
+
+  <header class="topbar">
+    <a class="wordmark" href="./" aria-label="Willowden wiki home">
+      <span class="wordmark-mark" aria-hidden="true"></span>
+      <span><strong>willowden</strong><small>wiki · first run</small></span>
+    </a>
+    <button class="menu-button" id="menuButton" type="button" aria-expanded="false" aria-controls="wikiRail" aria-label="Open contents">☰</button>
+  </header>
+
+  <div class="page" id="top">
+    <aside class="rail" id="wikiRail">
+      <a class="wordmark" href="./" aria-label="Willowden wiki home">
+        <span class="wordmark-mark" aria-hidden="true"></span>
+        <span><strong>willowden</strong><small>wiki · first run</small></span>
+      </a>
+      <p class="rail-label">On this page</p>
+      <nav class="toc" aria-label="Page contents">
+        <a href="#summary">Summary</a>
+        <a href="#contract">Design contract</a>
+        <a href="#journey">Five-day journey</a>
+        <a href="#front-door">Front door</a>
+        <a href="#cycle-zero">Cycle zero</a>
+        <a href="#day-one">Day one</a>
+        <a href="#interface">Interface</a>
+        <a href="#warm-up">Days two–five</a>
+        <a href="#graduation">Graduation</a>
+        <a href="#consent">Presence &amp; consent</a>
+        <a href="#collections">Collections</a>
+        <a href="#states">Journey states</a>
+        <a href="#architecture">System shape</a>
+        <a href="#recovery">Failure &amp; recovery</a>
+        <a href="#requirements">Access &amp; privacy</a>
+        <a href="#measures">Measures</a>
+        <a href="#delivery">Delivery</a>
+        <a href="#decisions">Open decisions</a>
+      </nav>
+      <div class="rail-note">
+        <strong>Product direction</strong><br>
+        macOS + Windows · updated August 24, 2026<br>
+        <a href="./">← back to the design doc</a>
+      </div>
+    </aside>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="page-title">
+        <div>
+          <span class="eyebrow">Willowden product design</span>
+          <h1 id="page-title">First<br>run.</h1>
+          <p class="hero-intro">
+            Not an account-setup funnel. Not an interview. The first run is the
+            first small experience of Willowden working: put one real thing on
+            the map, give it a few minutes, and bank the time.
+          </p>
+          <p class="promise">
+            Start a real block within about five minutes of signup. Bank it
+            within about fifteen. Leave knowing what Willowden is for.
+          </p>
+          <div class="hero-meta">
+            <span class="tag">five-day settling-in cycle</span>
+            <span class="tag">desktop first</span>
+            <span class="tag">no streaks</span>
+            <span class="tag">authored + resumable</span>
+          </div>
+        </div>
+
+        <div class="hero-visual" aria-label="Settling-in cycle preview">
+          <div class="hero-orbit" aria-hidden="true"></div>
+          <article class="cycle-card">
+            <div class="cycle-kicker"><span>cycle zero</span><span>day 1 of 5</span></div>
+            <h2>settling in</h2>
+            <p>A small map for learning what feels possible.</p>
+            <div class="day-path" aria-label="One of five days begun">
+              <i class="day-dot done"></i><i class="day-dot"></i><i class="day-dot"></i><i class="day-dot"></i><i class="day-dot"></i>
+            </div>
+            <div class="mini-action"><span>bank your first block</span><b>next →</b></div>
+          </article>
+          <div class="deer-bubble">tiny counts. honestly, tiny is best.<small>your companion</small></div>
+        </div>
+      </section>
+
+      <section class="section" id="summary">
+        <header class="section-head">
+          <span class="section-number">01 · Summary</span>
+          <div>
+            <h2>Value first. Understanding later.</h2>
+            <p class="section-lede">
+              The first run begins a real five-day cycle called <strong>settling in</strong>.
+              It teaches Willowden through the same map, focus blocks, Rooms, and
+              reflection that remain after onboarding is over.
+            </p>
+          </div>
+        </header>
+        <div class="content-offset">
+          <div class="three-scale">
+            <article class="scale-card">
+              <strong>first five minutes</strong>
+              <h3>Begin something real</h3>
+              <p>Join, see the map, name—or privately choose—one thing, and start a block.</p>
+            </article>
+            <article class="scale-card">
+              <strong>first fifteen minutes</strong>
+              <h3>Bank the time</h3>
+              <p>Finish or stop honestly, see the map move, and receive one collection item.</p>
+            </article>
+            <article class="scale-card">
+              <strong>first five days</strong>
+              <h3>Let the fit emerge</h3>
+              <p>Try a few blocks, unload open loops, talk with Vel, and correct what Willowden learns.</p>
+            </article>
+          </div>
+          <div class="non-goals" aria-label="First run non-goals">
+            <span>not a complete profile</span>
+            <span>not every feature</span>
+            <span>not every permission</span>
+            <span>not a required chat integration</span>
+            <span>not a streak</span>
+            <span>not a claim to already understand you</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="contract">
+        <header class="section-head">
+          <span class="section-number">02 · Design contract</span>
+          <div>
+            <h2>The experience has rules.</h2>
+            <p class="section-lede">These are requirements, not aspirations. A complete implementation that makes one untrue is still the wrong implementation.</p>
+          </div>
+        </header>
+        <div class="content-offset principle-grid">
+          <article class="principle"><span class="principle-index">1</span><h3>Action before interview</h3><p>Questions about goals, friction, and capacity arrive only after useful action.</p></article>
+          <article class="principle"><span class="principle-index">2</span><h3>One invitation at a time</h3><p>Show where the path leads, but make only one next move ask for attention.</p></article>
+          <article class="principle"><span class="principle-index">3</span><h3>The real product immediately</h3><p>Cycle zero uses the permanent map, clock, Rooms, and event ledger.</p></article>
+          <article class="principle"><span class="principle-index">4</span><h3>Authored outside, adaptive inside</h3><p>Sequence and safety are deterministic. Conversation adapts only where it helps.</p></article>
+          <article class="principle"><span class="principle-index">5</span><h3>Actions move progress</h3><p>Tasks, blocks, Rooms, and honest deferrals advance the journey—not arbitrary Next buttons.</p></article>
+          <article class="principle"><span class="principle-index">6</span><h3>Nothing is failed</h3><p>Invitations can be done, deferred, or declined. Silence never becomes a red mark.</p></article>
+          <article class="principle"><span class="principle-index">7</span><h3>Always on the map</h3><p>Tutorial, active, upcoming, ready-to-close, and resting are all designed states.</p></article>
+          <article class="principle"><span class="principle-index">8</span><h3>Presence is controlled</h3><p>Installation and warmth are never treated as permission to monitor, notify, or launch.</p></article>
+        </div>
+      </section>
+
+      <section class="section" id="journey">
+        <header class="section-head">
+          <span class="section-number">03 · Journey</span>
+          <div>
+            <h2>Five days, without a streak.</h2>
+            <p class="section-lede">Day one is the local signup date. Day five creates a reflection point, not a deadline or expiry.</p>
+          </div>
+        </header>
+        <div class="content-offset">
+          <div class="timeline" aria-label="Five-day settling-in journey">
+            <article class="timeline-day"><b>day 1</b><h3>Begin</h3><p>Guided arrival, one real thing, and a short block. Learn only a first task and one session sample.</p></article>
+            <article class="timeline-day"><b>day 2</b><h3>Return</h3><p>Offer one proposed block. Open loops and a conversation with Vel are optional.</p></article>
+            <article class="timeline-day"><b>day 3</b><h3>Adjust</h3><p>Make the invitation smaller or better timed. Learn from correction, not compliance.</p></article>
+            <article class="timeline-day"><b>day 4</b><h3>Leave room</h3><p>Another low-pressure opportunity—or a quiet day that grows nothing and loses nothing.</p></article>
+            <article class="timeline-day"><b>day 5</b><h3>Reflect</h3><p>Show what Willowden inferred, name uncertainty, and let the person correct the draft.</p></article>
+          </div>
+          <p class="plain-note">A person who appears only on days one and five can still graduate. Someone who wants more time remains “ready to close,” never “day 12 of 5.”</p>
+        </div>
+      </section>
+
+      <section class="section" id="front-door">
+        <header class="section-head">
+          <span class="section-number">04 · Front door</span>
+          <div>
+            <h2>Join inside Willowden.</h2>
+            <p class="section-lede">No chat service, browser login, or existing device is required to create the first account.</p>
+          </div>
+        </header>
+        <div class="content-offset split">
+          <div class="prose">
+            <h3>Ask only what is needed</h3>
+            <ul>
+              <li>An access code while signup remains gated.</li>
+              <li>The name Willowden should use.</li>
+              <li>An automatically detected timezone that can be corrected.</li>
+            </ul>
+            <p>Pronouns, goals, working style, and personal context are not form fields. Vel can ask open questions later, and every question can be declined.</p>
+            <h3>Make failure honest</h3>
+            <p>Signup requires connectivity. If the service cannot be reached, Willowden preserves entered fields locally and stays on this screen. An idempotency key makes a retry return the same account after a lost response.</p>
+            <h3>Approve other devices here</h3>
+            <p>An authenticated device creates a short-lived link code from Settings. Linking is a product feature, not a favor requested from a cast member.</p>
+          </div>
+          <div class="ui-window" aria-label="First launch signup mockup">
+            <div class="window-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+            <div class="signup-ui">
+              <div class="logo-line">willowden</div>
+              <div class="field"><label>What should I call you?</label><div class="field-box">Dain</div></div>
+              <div class="field"><label>Your time</label><div class="field-box"><span>America/Los_Angeles</span><em>change</em></div></div>
+              <div class="field"><label>Access code</label><div class="field-box">•••• ••••</div></div>
+              <button class="primary-button" type="button">enter Willowden →</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="cycle-zero">
+        <header class="section-head">
+          <span class="section-number">05 · Cycle zero</span>
+          <div>
+            <h2>Settling in is a real cycle.</h2>
+            <p class="section-lede">It has a theme, dates, and stable identity like later cycles. Its commitments are projections of real first-run facts, never a second editable copy.</p>
+          </div>
+        </header>
+        <div class="content-offset split">
+          <div class="commitments" aria-label="Settling-in commitments">
+            <article class="commitment"><div><strong>Meet your companion</strong><small>Experience the desktop companion.</small></div><span class="state">guided</span></article>
+            <article class="commitment"><div><strong>Bank a first block</strong><small>Planned duration is not required.</small></div><span class="state">focus</span></article>
+            <article class="commitment"><div><strong>Put things on the map</strong><small>Add a few real open loops, now or later.</small></div><span class="state">tasks</span></article>
+            <article class="commitment"><div><strong>Talk with Vel</strong><small>Open Rooms for one optional moment.</small></div><span class="state">rooms</span></article>
+            <article class="commitment"><div><strong>Try Willowden again</strong><small>Return and respond, including by deferring.</small></div><span class="state">return</span></article>
+          </div>
+          <div>
+            <div class="prose">
+              <h3>Done, deferred, or declined</h3>
+              <p><strong>Done</strong> has evidence in a real domain event. <strong>Deferred</strong> stops blocking graduation but remains available. <strong>Declined</strong> is not offered again unless chosen in Settings.</p>
+              <p>Silence leaves an invitation pending but never marks it failed. Actions may satisfy commitments out of order.</p>
+            </div>
+            <aside class="identity-note">
+              <h3>The companion and Vel</h3>
+              <p>The companion seat isn't owned by one character — any of the cast can sit with you, and the choice is yours. What this design does not decide is who greets a brand-new user. Day one calls it simply <strong>your companion</strong>. Vel is named when the person opens Rooms.</p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="day-one">
+        <header class="section-head">
+          <span class="section-number">06 · Day one</span>
+          <div>
+            <h2>A guided path into one real block.</h2>
+            <p class="section-lede">The product is present but quiet. Each beat points to one action, while pause and skip remain available.</p>
+          </div>
+        </header>
+        <div class="content-offset">
+          <div class="beats" aria-label="Day-one beats">
+            <article class="beat"><b>01</b><h3>Arrival</h3><p>“hey. i'm your companion. i live down here.”</p></article>
+            <article class="beat"><b>02</b><h3>The map</h3><p>Show settling in and promise that progress never goes backwards.</p></article>
+            <article class="beat"><b>03</b><h3>One thing</h3><p>Name a real open loop, or keep it private and start an unnamed block.</p></article>
+            <article class="beat"><b>04</b><h3>Choose</h3><p>Pick 3, 5, or 10 minutes and choose where your companion sits.</p></article>
+            <article class="beat"><b>05</b><h3>Sit together</h3><p>The native clock runs locally. The main window can disappear.</p></article>
+            <article class="beat"><b>06</b><h3>Bank</h3><p>Stopping honestly still keeps the time. Planned completion is separate.</p></article>
+            <article class="beat"><b>07</b><h3>Leave Rooms open</h3><p>“vel's in rooms when you feel like talking. no rush.”</p></article>
+          </div>
+
+          <div class="placement-demo">
+            <div class="placement-toolbar">
+              <div><span class="section-number">Interactive mockup</span><h3>Where should your companion sit?</h3></div>
+              <div class="segmented" aria-label="Companion placement">
+                <button type="button" data-placement="desktop" aria-pressed="true">Desktop <span class="recommended">recommended</span></button>
+                <button type="button" data-placement="embedded" aria-pressed="false">Inside Willowden</button>
+              </div>
+            </div>
+            <div class="demo-stage">
+              <div class="demo-app">
+                <div class="demo-app-head">settling in · day 1 of 5</div>
+                <div class="demo-app-body">
+                  <div>
+                    <h4>What feels possible right now?</h4>
+                    <p>Choose a tiny block. You can bank it early and keep every minute.</p>
+                    <div class="duration-row" aria-label="Block duration">
+                      <button type="button" aria-pressed="false">3 min</button>
+                      <button type="button" aria-pressed="true">5 min</button>
+                      <button type="button" aria-pressed="false">10 min</button>
+                    </div>
+                    <button class="primary-button" type="button">begin block →</button>
+                  </div>
+                </div>
+              </div>
+              <div class="deer-companion" id="deerCompanion" aria-label="Desktop companion timer preview">
+                <div class="deer-face" aria-hidden="true"><span class="deer-eyes"><i></i><i></i></span><span class="deer-nose"></span></div>
+                <div class="timer">05:00</div>
+                <div class="timer-label">ready when you are</div>
+              </div>
+            </div>
+          </div>
+          <p class="plain-note">Desktop is recommended because it demonstrates Willowden's background companion and lets Home close. Keeping the companion inside is fully functional and produces no later pressure to switch.</p>
+        </div>
+      </section>
+
+      <section class="section" id="interface">
+        <header class="section-head">
+          <span class="section-number">07 · Interface</span>
+          <div>
+            <h2>Plain names. Distinct jobs.</h2>
+            <p class="section-lede">Willowden does not name every surface with a metaphor. Home, Rooms, and Collections say what they are.</p>
+          </div>
+        </header>
+        <div class="content-offset">
+          <div class="surface-grid">
+            <article class="surface"><strong>Home</strong><h3>Where am I?</h3><p>See the cycle and start, shrink, replace, or defer the next block.</p></article>
+            <article class="surface"><strong>Companion window</strong><h3>Will something sit with me?</h3><p>Run, pause, and bank a block without keeping Home open.</p></article>
+            <article class="surface"><strong>Rooms</strong><h3>Who can I talk with?</h3><p>Talk with Vel or another of the cast when conversation helps.</p></article>
+            <article class="surface"><strong>Collections</strong><h3>What was remembered?</h3><p>Revisit meaningful firsts, returns, and personal milestones.</p></article>
+          </div>
+
+          <div class="home-mock" aria-label="Willowden Home mockup">
+            <div class="home-top"><span>willowden</span><span>quiet mode · settings</span></div>
+            <div class="home-cycle">
+              <div class="home-cycle-head"><span>settling in · day 2 of 5</span><span>2 things banked</span></div>
+              <div class="home-line"><span></span></div>
+              <p>Next: put a few things on the map.</p>
+            </div>
+            <div class="home-grid">
+              <div class="next-block">
+                <small>a small next block</small>
+                <h3>Outline the opening paragraph</h3>
+                <div class="mock-actions"><span>start 10 min</span><span>make smaller</span><span>not today</span></div>
+              </div>
+              <div class="home-side">
+                <div class="room-card"><small>rooms</small><strong>Talk with Vel →</strong></div>
+                <div class="room-card"><small>quick add</small><strong>What else is on your mind?</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="state-wrap">
+            <div class="state-tabs" role="tablist" aria-label="Cycle map states">
+              <button role="tab" type="button" data-cycle-state="tutorial" aria-selected="true">Tutorial</button>
+              <button role="tab" type="button" data-cycle-state="active" aria-selected="false">Active</button>
+              <button role="tab" type="button" data-cycle-state="upcoming" aria-selected="false">Upcoming</button>
+              <button role="tab" type="button" data-cycle-state="ready" aria-selected="false">Ready to close</button>
+              <button role="tab" type="button" data-cycle-state="resting" aria-selected="false">Resting</button>
+            </div>
+            <div class="state-panel" role="tabpanel">
+              <div><h3 id="stateTitle">Settling in · day 2 of 5</h3><p id="stateCopy">The tutorial path and its next unresolved invitation.</p></div>
+              <span class="state-next" id="stateAction">start a block →</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="warm-up">
+        <header class="section-head">
+          <span class="section-number">08 · Days two–five</span>
+          <div>
+            <h2>Learn through invitations.</h2>
+            <p class="section-lede">No hidden intake checklist appears. Willowden offers useful moments and lets understanding accumulate only from what the person does or chooses to share.</p>
+          </div>
+        </header>
+        <div class="content-offset daily-grid">
+          <article class="daily-card"><b>morning</b><h3>One prepared block</h3><p>Start it, make it smaller, choose something else, or say not today. If the app was closed, prepare it on next launch.</p></article>
+          <article class="daily-card"><b>during the day</b><h3>One good question</h3><p>Vel may ask about one missing area at most once. Conversation never gates focus or graduation.</p></article>
+          <article class="daily-card"><b>evening · optional</b><h3>A soft settle</h3><p>Time banked, one authored line, and tomorrow's tentative seed. No deficits or should-have list.</p></article>
+        </div>
+      </section>
+
+      <section class="section" id="graduation">
+        <header class="section-head">
+          <span class="section-number">09 · Graduation</span>
+          <div>
+            <h2>Evidence, corrected by the person.</h2>
+            <p class="section-lede">On day five—or earlier when every invitation is resolved—cycle zero becomes ready to close. It never closes itself.</p>
+          </div>
+        </header>
+        <div class="content-offset proposal">
+          <article class="evidence-card">
+            <h3>What happened</h3>
+            <div class="evidence-stat"><span>days Willowden opened</span><b>3</b></div>
+            <div class="evidence-stat"><span>blocks started</span><b>5</b></div>
+            <div class="evidence-stat"><span>minutes banked</span><b>72</b></div>
+            <div class="evidence-stat"><span>common window</span><b>late morning</b></div>
+            <p class="uncertainty">Five novelty-period days are thin evidence. This is a starting guess, not your true capacity.</p>
+          </article>
+          <article class="proposal-card">
+            <h3>A small first cycle</h3>
+            <div class="proposal-theme"><small>two-week experiment</small><strong>Make room for the next version</strong></div>
+            <div class="proposal-item"><i></i><span>Three writing blocks each week</span></div>
+            <div class="proposal-item"><i></i><span>One admin reset on Friday</span></div>
+            <div class="proposal-item"><i></i><span>Keep 40% of capacity unallocated</span></div>
+            <div class="mock-actions" style="margin-top:22px"><span>review &amp; edit</span><span>make smaller</span><span>plan later</span></div>
+          </article>
+        </div>
+        <p class="plain-note content-offset">Pip's draft is structured, bounded, and editable. If generation is unavailable or invalid, a conservative deterministic template keeps graduation moving.</p>
+      </section>
+
+      <section class="section" id="consent">
+        <header class="section-head">
+          <span class="section-number">10 · Presence &amp; consent</span>
+          <div>
+            <h2>Warmth is not permission.</h2>
+            <p class="section-lede">Willowden can become quieter as rhythm forms. That taper protects against permanent intensity; actual consent comes from separate, reversible choices.</p>
+          </div>
+        </header>
+        <div class="content-offset">
+          <div class="permission-list">
+            <div class="permission"><strong>Launch at login</strong><span>Your companion and clock are ready without opening Home.</span><span>Without it: start Willowden manually.</span></div>
+            <div class="permission"><strong>Native notifications</strong><span>Morning invitations can arrive while Home is closed.</span><span>Without it: wait until next launch.</span></div>
+            <div class="permission"><strong>Desktop activity sensing</strong><span>Your companion can notice idle or drift during a live block.</span><span>Without it: the timer still works.</span></div>
+            <div class="permission"><strong>Away-from-desk tether</strong><span>A chosen messaging service may carry invitations.</span><span>Without it: remain desktop-only.</span></div>
+            <div class="permission"><strong>Morning/evening contact</strong><span>Willowden may initiate those moments.</span><span>Without it: show them only when requested.</span></div>
+          </div>
+          <p class="plain-note">Ask contextually, at most one new permission in a session, only after the first payoff. A “no” stays no until the person changes it in Settings.</p>
+        </div>
+      </section>
+
+      <section class="section" id="collections">
+        <header class="section-head">
+          <span class="section-number">11 · Collections</span>
+          <div>
+            <h2>Remember process without grading it.</h2>
+            <p class="section-lede">Collection items mark meaningful firsts and returns. The day track fills inside a cycle and resets at its close. Neither becomes a ladder to protect.</p>
+          </div>
+        </header>
+        <div class="content-offset">
+          <div class="collection-grid" aria-label="Example collection items">
+            <article class="collection-item"><strong>First block</strong><small>Time banked, however small.</small></article>
+            <article class="collection-item"><strong>Honest defer</strong><small>Not today was the right answer.</small></article>
+            <article class="collection-item"><strong>First cycle</strong><small>A plan chosen and frozen.</small></article>
+            <article class="collection-item"><strong>Welcome back</strong><small>Returned after time away.</small></article>
+          </div>
+          <div class="split" style="margin-top:28px">
+            <div class="prose"><h3>One hero per moment</h3><p>If a block resolves a commitment, fills the day track, and earns an item, only the collection item celebrates. Everything else updates quietly.</p></div>
+            <div class="prose"><h3>No overall rank</h3><p>Growth reads starting, banking, and returning—never execution versus plan. Nothing shrinks during a cycle, and the final shape remains with its history.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="states">
+        <header class="section-head">
+          <span class="section-number">12 · Journey states</span>
+          <div>
+            <h2>Onboarding is not a pointer.</h2>
+            <p class="section-lede">Account onboarding, device education, feature tours, re-entry, and replay are separate runs. Progress projects from real domain facts.</p>
+          </div>
+        </header>
+        <div class="content-offset">
+          <div class="lifecycle" aria-label="First-run lifecycle">
+            <div class="life-state">created</div>
+            <div class="life-state">guided arrival</div>
+            <div class="life-state">settling in</div>
+            <div class="life-state accent">ready to close</div>
+            <div class="life-state">graduated</div>
+          </div>
+          <div class="fact-grid">
+            <div class="fact"><strong>task.created</strong>Satisfies putting something on the map.</div>
+            <div class="fact"><strong>focus_block.banked</strong>Satisfies banking a first block.</div>
+            <div class="fact"><strong>room + helper state</strong>Satisfies talking with Vel.</div>
+            <div class="fact"><strong>journey decision</strong>Records defer, decline, resume, or permission.</div>
+          </div>
+          <p class="plain-note">The journey keeps no second mutable copy of task, focus, helper, or cycle state. Each run pins a template version; active runs change only through an explicit migration.</p>
+        </div>
+      </section>
+
+      <section class="section" id="architecture">
+        <header class="section-head">
+          <span class="section-number">13 · System shape</span>
+          <div>
+            <h2>One native app. No local sidecar.</h2>
+            <p class="section-lede">The background-capable Tauri process owns everything latency-, privacy-, or offline-critical. The service owns shared account and workspace truth.</p>
+          </div>
+        </header>
+        <div class="content-offset architecture">
+          <article class="arch-box"><h3>React windows</h3><ul><li>Home and Rooms</li><li>Guided-focus UI</li><li>Input and rendering</li><li>Accessible interactions</li></ul></article>
+          <span class="arch-arrow" aria-hidden="true">→</span>
+          <article class="arch-box native"><h3>Tauri / Rust core</h3><ul><li>Local SQLite and sync outbox</li><li>Focus clock and recovery</li><li>Journey projections</li><li>Authored lines and quiet gates</li><li>Collectors and notifications</li></ul></article>
+          <span class="arch-arrow" aria-hidden="true">→</span>
+          <article class="arch-box"><h3>Willowden service</h3><ul><li>Accounts and devices</li><li>Shared workspace and event log</li><li>Rooms and model orchestration</li><li>Cross-device reconciliation</li></ul></article>
+        </div>
+      </section>
+
+      <section class="section" id="recovery">
+        <header class="section-head">
+          <span class="section-number">14 · Failure &amp; recovery</span>
+          <div>
+            <h2>A product state, not a chain of screens.</h2>
+            <p class="section-lede">The journey survives ordinary desktop life: dropped networks, sleep, updates, closed windows, and more than one device.</p>
+          </div>
+        </header>
+        <div class="content-offset failure-grid">
+          <article class="failure"><b>01</b><div><strong>Network disappears</strong><span>Authored tour and focus continue. Events wait durably.</span></div></article>
+          <article class="failure"><b>02</b><div><strong>Signup response is lost</strong><span>Retry returns the same account, never a duplicate.</span></div></article>
+          <article class="failure"><b>03</b><div><strong>Home closes mid-block</strong><span>The native clock and chosen companion window continue.</span></div></article>
+          <article class="failure"><b>04</b><div><strong>The computer sleeps</strong><span>Sleep time is never silently counted as focus.</span></div></article>
+          <article class="failure"><b>05</b><div><strong>The app updates</strong><span>The pinned journey resumes at a compatible beat.</span></div></article>
+          <article class="failure"><b>06</b><div><strong>The model is unavailable</strong><span>Authored flow continues; cycle one uses a fallback.</span></div></article>
+          <article class="failure"><b>07</b><div><strong>Day five passes</strong><span>The map becomes ready to close, with no overflow.</span></div></article>
+          <article class="failure"><b>08</b><div><strong>Another device moves ahead</strong><span>Facts reconcile without replaying celebrations.</span></div></article>
+        </div>
+      </section>
+
+      <section class="section" id="requirements">
+        <header class="section-head">
+          <span class="section-number">15 · Requirements</span>
+          <div>
+            <h2>Accessible and legible by default.</h2>
+            <p class="section-lede">The first run asks for real tasks and observes behavior. Both the interface and its privacy boundary must be understandable.</p>
+          </div>
+        </header>
+        <div class="content-offset requirements">
+          <article class="requirement-card">
+            <h3>Accessibility</h3>
+            <ul>
+              <li>Keyboard access to every beat and block action.</li>
+              <li>Predictable focus and persistent pause/skip controls.</li>
+              <li>Screen-reader equivalents for map, day track, color, and animation.</li>
+              <li>Reduced-motion alternatives for step-out, pulsing, and confetti.</li>
+              <li>Resizable or hidden companion window; always-on-top can be disabled.</li>
+              <li>Authored lines never vanish before they can be read.</li>
+            </ul>
+          </article>
+          <article class="requirement-card">
+            <h3>Privacy</h3>
+            <ul>
+              <li>Raw app identifiers, idle readings, and window state stay local.</li>
+              <li>Synced facts remain visible: tasks, blocks, decisions, cycles, and Rooms.</li>
+              <li>The person can inspect evidence used for cycle one.</li>
+              <li>Collectors can be disabled without disabling focus blocks.</li>
+              <li>Devices, preferences, and stored data can be reviewed or removed.</li>
+              <li>No weather, precise location, titles, or content for novelty rewards.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="measures">
+        <header class="section-head">
+          <span class="section-number">16 · Measures</span>
+          <div>
+            <h2>Useful action with low confusion.</h2>
+            <p class="section-lede">Raw engagement time is not success. Deferral is not funnel failure. Control and recovery are measurable outcomes.</p>
+          </div>
+        </header>
+        <div class="content-offset metric-grid">
+          <article class="metric-card"><h3>Primary</h3><ul><li>Signup → block start</li><li>First block started within five minutes</li><li>First block banked within fifteen</li><li>Return during days two–five</li><li>Cycle-one review reached</li></ul></article>
+          <article class="metric-card"><h3>Diagnostic</h3><ul><li>Deferral by beat</li><li>Duration selected</li><li>Early bank vs planned completion</li><li>Fallback proposal rate</li><li>Companion placement choice</li></ul></article>
+          <article class="metric-card"><h3>Guardrails</h3><ul><li>Never reward more notifications</li><li>Never punish less data sharing</li><li>Include accessibility paths</li><li>Analytics follow deletion rules</li><li>No optimization for fewer deferrals</li></ul></article>
+        </div>
+      </section>
+
+      <section class="section" id="delivery">
+        <header class="section-head">
+          <span class="section-number">17 · Delivery</span>
+          <div>
+            <h2>Build the vertical experience first.</h2>
+            <p class="section-lede">The first milestone is signup through one banked block—not a disconnected layer of infrastructure or UI.</p>
+          </div>
+        </header>
+        <div class="content-offset delivery-list">
+          <article class="delivery"><h3>Native foundation</h3><p>Rust core, local database, durable outbox, focus recovery, registration, credential storage, and device approval.</p></article>
+          <article class="delivery"><h3>Day-one slice</h3><p>Signup → real thing → block → durable resume → one collection item. Include both companion placements and accessibility paths.</p></article>
+          <article class="delivery"><h3>Settling-in days</h3><p>Morning invitation, optional Vel questions, contextual permissions, visible learned-context review, and deterministic backoff.</p></article>
+          <article class="delivery"><h3>Graduation</h3><p>Ready-to-close state, mini-retro, bounded proposal, fallback, editing, scheduling, upcoming, and resting states.</p></article>
+          <article class="delivery"><h3>Collections</h3><p>General award rules, collection history, user-editable milestone stories, day-track fill, reset, and cycle record.</p></article>
+        </div>
+      </section>
+
+      <section class="section" id="decisions">
+        <header class="section-head">
+          <span class="section-number">18 · Open decisions</span>
+          <div>
+            <h2>Leave the right things unfrozen.</h2>
+            <p class="section-lede">These choices do not block the day-one prototype, but each has a clear point by which it must become concrete.</p>
+          </div>
+        </header>
+        <div class="content-offset">
+          <table class="decision-table">
+            <thead><tr><th>Decision</th><th>Working direction</th><th>Needed by</th></tr></thead>
+            <tbody>
+              <tr><td>Account recovery</td><td>Email-based recovery without a password.</td><td>Registration API freeze</td></tr>
+              <tr><td>Access codes</td><td>Short-lived minted codes; static only in development.</td><td>Public signup</td></tr>
+              <tr><td>Cycle-zero length</td><td>Five local calendar days.</td><td>Settling-in slice</td></tr>
+              <tr><td>Default companion</td><td>Keep which of the cast greets a new user unspecified until the character direction feels true.</td><td>Character design</td></tr>
+              <tr><td>Companion placement</td><td>Offer both; recommend desktop and remember the choice.</td><td>Day-one testing</td></tr>
+              <tr><td>Navigation</td><td>Home, Rooms, and Collections.</td><td>Copy freeze</td></tr>
+              <tr><td>Long-stale onboarding</td><td>Resume through re-entry, then offer graduation or a fresh run.</td><td>Re-entry design</td></tr>
+            </tbody>
+          </table>
+
+          <aside class="final-question">
+            <small>The prototype question</small>
+            <p>Do people understand, without explanation: choose something real → give it a small block → let the map remember?</p>
+          </aside>
+        </div>
+      </section>
+
+      <footer>
+        <span>Willowden wiki · first run</span>
+        <span>Product direction · August 24, 2026</span>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      var menuButton = document.getElementById("menuButton");
+      var rail = document.getElementById("wikiRail");
+      var progress = document.getElementById("readProgress");
+      var tocLinks = Array.prototype.slice.call(document.querySelectorAll(".toc a"));
+      var sections = tocLinks.map(function (link) {
+        return document.querySelector(link.getAttribute("href"));
+      }).filter(Boolean);
+
+      menuButton.addEventListener("click", function () {
+        var open = rail.classList.toggle("open");
+        menuButton.setAttribute("aria-expanded", String(open));
+        menuButton.setAttribute("aria-label", open ? "Close contents" : "Open contents");
+      });
+
+      tocLinks.forEach(function (link) {
+        link.addEventListener("click", function () {
+          rail.classList.remove("open");
+          menuButton.setAttribute("aria-expanded", "false");
+        });
+      });
+
+      function updateProgress() {
+        var scrollable = document.documentElement.scrollHeight - window.innerHeight;
+        var amount = scrollable > 0 ? window.scrollY / scrollable * 100 : 0;
+        progress.style.width = Math.min(100, Math.max(0, amount)) + "%";
+      }
+
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          tocLinks.forEach(function (link) {
+            link.classList.toggle("active", link.getAttribute("href") === "#" + entry.target.id);
+          });
+        });
+      }, { rootMargin: "-18% 0px -68% 0px", threshold: 0 });
+
+      sections.forEach(function (section) { observer.observe(section); });
+      window.addEventListener("scroll", updateProgress, { passive: true });
+      updateProgress();
+
+      var placementButtons = document.querySelectorAll("[data-placement]");
+      var deer = document.getElementById("deerCompanion");
+      placementButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          placementButtons.forEach(function (item) { item.setAttribute("aria-pressed", "false"); });
+          button.setAttribute("aria-pressed", "true");
+          deer.classList.toggle("embedded", button.getAttribute("data-placement") === "embedded");
+          deer.setAttribute("aria-label", button.getAttribute("data-placement") === "embedded" ? "Embedded companion timer preview" : "Desktop companion timer preview");
+        });
+      });
+
+      var durationButtons = document.querySelectorAll(".duration-row button");
+      durationButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          durationButtons.forEach(function (item) { item.setAttribute("aria-pressed", "false"); });
+          button.setAttribute("aria-pressed", "true");
+          var minutes = button.textContent.trim().split(" ")[0];
+          document.querySelector(".timer").textContent = ("0" + minutes).slice(-2) + ":00";
+        });
+      });
+
+      var stateData = {
+        tutorial: ["Settling in · day 2 of 5", "The tutorial path and its next unresolved invitation.", "start a block →"],
+        active: ["Make room for the next version", "A live cycle with commitments, capacity, and one proposed next block.", "start next block →"],
+        upcoming: ["Begins Monday", "A chosen cycle is waiting while the person takes a planned breath.", "review cycle →"],
+        ready: ["Ready to close", "The warm summary is prepared. Nothing expires while it waits.", "sit for the retro →"],
+        resting: ["Between cycles", "The light stays on without inventing work or urgency.", "plan when ready →"]
+      };
+      var stateButtons = document.querySelectorAll("[data-cycle-state]");
+      stateButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          stateButtons.forEach(function (item) { item.setAttribute("aria-selected", "false"); });
+          button.setAttribute("aria-selected", "true");
+          var data = stateData[button.getAttribute("data-cycle-state")];
+          document.getElementById("stateTitle").textContent = data[0];
+          document.getElementById("stateCopy").textContent = data[1];
+          document.getElementById("stateAction").textContent = data[2];
+        });
+      });
+    }());
+  </script>
+</body>
+</html>

@@ -201,6 +201,7 @@
     font-family: 'Lora', Georgia, serif; font-weight: 700; font-style: italic;
     color: var(--pink-deep); letter-spacing: 0.01em;
   }
+  .brand.wd { color: #7b8a52; }
   .doc-title.brand { font-size: 26px; }
 
   .doc-link {
@@ -407,9 +408,9 @@
     color: #fff; text-wrap: balance;
   }
   .col.yt .desc-head { font-family: 'Roboto', Arial, sans-serif; letter-spacing: 0.01em; }
-  .col.ch .desc-head {
-    font-family: 'Nunito', system-ui, sans-serif;
-    font-size: 15px; font-weight: 800; letter-spacing: 0.015em;
+  .col.wd .desc-head {
+    font-family: 'Lora', Georgia, serif;
+    font-size: 15px; font-weight: 600; font-style: italic; letter-spacing: 0.02em;
   }
   .col.wr .desc-head {
     font-family: 'Orbitron', 'IBM Plex Mono', monospace;
@@ -475,7 +476,8 @@
   @keyframes wx-bounce { 35% { transform: translateY(-7px) rotate(-8deg); } 70% { transform: translateY(0) rotate(4deg); } }
 
   .col.yt { background: linear-gradient(190deg, #ff9d9d, #ef7288); }
-  .col.ch { background: linear-gradient(190deg, #f9b8d8, #ea82b8); }
+  /* willowden door wears the app icon's own weather: warm brown up top, sage below */
+  .col.wd { background: linear-gradient(190deg, #bd8d58, #8c9a68); }
   .col.wr { background: linear-gradient(190deg, #cdb5f2, #a081d8); }
   .col.me { background: linear-gradient(190deg, #a5e5b3, #6cc383); }
   /* outer columns bleed past the window edges — nudge their content back inside */
@@ -507,6 +509,7 @@
     animation: wx-blink 1s steps(1) infinite;
   }
   .deer-art { width: 38px; height: 38px; image-rendering: pixelated; display: block; }
+  .wd-art { width: 44px; height: 44px; display: block; }
 
   .wx-foot {
     padding: 10px 20px; text-align: center; flex: none;
@@ -750,7 +753,7 @@
     wrap.className = 'doc';
     let html =
       '<div class="doc-eyebrow">internetcreature os · ' + (cfg.eyebrow || 'project') + '</div>' +
-      '<div class="doc-title' + (cfg.brandTitle ? ' brand' : '') + '">' + cfg.title + '</div>';
+      '<div class="doc-title' + (cfg.brandTitle ? ' brand' : '') + (cfg.titleClass ? ' ' + cfg.titleClass : '') + '">' + cfg.title + '</div>';
     if (cfg.repo) {
       html += '<a class="doc-link" href="' + cfg.repo + '" target="_blank" rel="noopener">' +
               '<span class="gh">🔗</span> view on github</a>';
@@ -873,7 +876,7 @@
     const actions = document.createElement('div');
     actions.className = 'welcome-actions';
     actions.innerHTML =
-      '<button class="wa-btn sage" data-open="chordial" title="an ADHD productivity tool built for starting, staying, and coming back">\ud83d\udcac explore chordial</button>' +
+      '<button class="wa-btn sage" data-open="willowden" title="an ADHD planning companion &amp; focus coach \u2014 the next chapter of chordial">\ud83c\udf43 explore willowden</button>' +
       '<button class="wa-btn sky" data-open="contact" title="twitter + email inside!">\u2709\ufe0f contact me</button>';
     actions.querySelectorAll('.wa-btn').forEach(b => {
       const key = b.dataset.open;
@@ -918,32 +921,17 @@
             '<span class="arrow">↓</span>' +
           '</span>' +
         '</div>' +
-        '<div class="col ch">' +
-          '<button class="col-trigger" data-open="chordial" aria-label="open chordial"></button>' +
+        '<div class="col wd">' +
+          '<button class="col-trigger" data-open="willowden" aria-label="open willowden"></button>' +
           '<span class="inner">' +
-            '<span class="art">' +
-              /* SVG recreation of the chordial app icon; swap for the real PNG when it lands */
-              '<svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true">' +
-                '<rect width="64" height="64" rx="15" fill="#5a3b4f"/>' +
-                '<path d="M24 54 C 16 44, 15 28, 22 12" fill="none" stroke="#8fae6f" stroke-width="2.6" stroke-linecap="round"/>' +
-                '<ellipse cx="14" cy="18" rx="7" ry="3.4" fill="#9dbb77" transform="rotate(-32 14 18)"/>' +
-                '<ellipse cx="27" cy="10" rx="6.6" ry="3.2" fill="#8fae6f" transform="rotate(18 27 10)"/>' +
-                '<ellipse cx="12" cy="33" rx="7" ry="3.4" fill="#8fae6f" transform="rotate(-12 12 33)"/>' +
-                '<ellipse cx="25" cy="26" rx="6" ry="3" fill="#9dbb77" transform="rotate(24 25 26)"/>' +
-                '<ellipse cx="15" cy="47" rx="6.6" ry="3.2" fill="#9dbb77" transform="rotate(-40 15 47)"/>' +
-                '<path d="M47 22 C 43 15, 33 14, 27 20 C 20 27, 20 41, 27 48 C 33 54, 43 53, 47 47" fill="none" stroke="#ec9fc0" stroke-width="5.5" stroke-linecap="round"/>' +
-                '<path d="M47 22 C 45 18, 40 18, 39 22" fill="none" stroke="#ec9fc0" stroke-width="4" stroke-linecap="round"/>' +
-                '<circle cx="53" cy="31" r="2.6" fill="#ec9fc0"/>' +
-                '<circle cx="55" cy="38" r="2" fill="#ec9fc0"/>' +
-              '</svg>' +
-            '</span>' +
-            '<span class="label">chordial</span>' +
+            '<span class="art"><img class="wd-art" alt="" src="willowden-icon.png"/></span>' +
+            '<span class="label">willowden</span>' +
             '<span class="desc">' +
-              '<span class="desc-head">an ADHD productivity tool</span>' +
+              '<span class="desc-head">an ADHD planning companion</span>' +
               '<span class="desc-tree">' +
-                '<span>a body-double on your desktop</span>' +
-                '<span>structure for starting / staying / coming back</span>' +
-                '<span>a cast of helpers for everyday life</span>' +
+                '<span>a companion who sits with you while you work</span>' +
+                '<span>a cast of helpers, each with a different role</span>' +
+                '<span>the next chapter of chordial</span>' +
               '</span>' +
             '</span>' +
             '<span class="arrow">↓</span>' +
@@ -1125,6 +1113,28 @@
     launcher:    { icon: '🦌', title: 'welcome.exe',          bg: '#0e0a13', width: 'min(600px, calc(100% - 24px))', pinned: true, render( ){ return makeLauncher(); } },
     welcome:     { icon: '🌱', title: 'about_me.txt',         bg: '#f3f9ee', width: 'min(660px, calc(100% - 24px))', render( ){ return makeWelcome(); } },
     youtube:     { icon: '▶️', title: 'youtube',              bg: '#fdeee0', render( ){ return makeYoutube(); } },
+    willowden:   { icon: '🍃', title: 'willowden',            bg: '#f3f4ea', width: 'min(660px, calc(100% - 24px))', render( ){ return makeProjectDoc({
+      title: 'willowden', brandTitle: true, titleClass: 'wd',
+      body:
+        '<p><span class="brand wd">willowden</span> is an ADHD planning companion and focus coach — ' +
+        'a calm little presence on your desktop. a cast of helpers, each with a different role, any of ' +
+        'whom can sit with you while you work.</p>' +
+        '<p>it helps you both <strong>set</strong> goals and <strong>work toward</strong> them: life runs in ' +
+        'small themed cycles, work happens in tiny focus blocks, and stopping early still <strong>banks</strong> ' +
+        'the minutes — because starting was the achievement. no streaks, anywhere, ever.</p>' +
+        '<p>willowden is being built in a private repository right now, growing out of everything its ' +
+        'predecessor taught me.</p>' +
+        '<div class="doc-sec">its roots: chordial</div>' +
+        '<p><span class="brand">chordial</span> is the working name and the proving ground — the mvp i built ' +
+        'for myself and use on my actual work every day. the body double, the focus blocks that bank, the ' +
+        'cast of helpers: they were all born there, and its code is public.</p>' +
+        '<a class="doc-link" href="https://github.com/internet-creature/chordial-mvp" target="_blank" rel="noopener">' +
+        '<span class="gh">🔗</span> view chordial on github</a>' +
+        '<p>you can read more about the mvp in <a href="#chordial">its own window</a>, or watch its live ' +
+        'focus view running in <a href="#focus">focus.exe</a>.</p>',
+      tags: ['ADHD', 'desktop app', 'in development'],
+      note: 'willowden 1.0 is under construction in a private repository 🌿',
+    }); } },
     chordial:    { icon: '💬', title: 'chordial',             bg: '#fdeaf3', render( ){ return makeProjectDoc({
       title: 'chordial', brandTitle: true,
       repo: 'https://github.com/internet-creature/chordial-mvp',
@@ -1137,7 +1147,8 @@
         'so those are what chordial is built around: one-tap focus blocks, time that banks instead of ' +
         'punishing wandering attention, and gentle nudges that naturally quiet as your habits grow steadier.</p>' +
         '<p>i’m building it by myself, mostly because i wanted this thing to exist for me. i use it on ' +
-        'my actual work every day!</p>',
+        'my actual work every day!</p>' +
+        '<p>chordial was the beginning — its next chapter is <a href="#willowden"><span class="brand wd">willowden</span></a>.</p>',
     }); } },
     focus:       { icon: '🍅', title: 'focus.exe',            bg: '#171310', width: 'min(720px, calc(100% - 24px))', render( ){ return makeFocus(); } },
     'chaos-cube':{ icon: '🎴', title: 'chaos-commander-cube', bg: '#fdf6df', render( ){ return makeProjectDoc({
@@ -1156,7 +1167,7 @@
     'dain-img':  { icon: '🖼️', title: 'dain.jpg',             bg: '#fdeee0', render( ){ return makeImageViewer({ src: 'dain.jpg', alt: 'dain — character art', credit: 'Pricklepants', url: 'https://bsky.app/profile/pricklepants.bsky.social' }); } },
     contact:     { icon: '✉️', title: 'contact',              bg: '#e9f5fe', render( ){ return makeContact(); } },
   };
-  const DESKTOP_ICONS = ['launcher', 'welcome', 'youtube', 'chordial', 'focus', 'chaos-cube', 'dormant', 'dain-img', 'contact'];
+  const DESKTOP_ICONS = ['launcher', 'welcome', 'youtube', 'willowden', 'chordial', 'focus', 'chaos-cube', 'dormant', 'dain-img', 'contact'];
 
   const desk    = document.getElementById('desktop');
   const tasksEl = document.getElementById('tasks');
