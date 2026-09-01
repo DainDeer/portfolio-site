@@ -143,36 +143,11 @@
     }
 
     .wordmark-mark {
-      position: relative;
-      width: 30px;
-      height: 30px;
-      border: 1px solid rgba(38, 59, 49, 0.42);
-      border-radius: 50% 50% 46% 46%;
-      background: var(--sage-light);
-    }
-
-    .wordmark-mark::before,
-    .wordmark-mark::after {
-      content: "";
-      position: absolute;
-      top: -7px;
-      width: 11px;
-      height: 15px;
-      border-top: 2px solid var(--forest);
-    }
-
-    .wordmark-mark::before {
-      left: 2px;
-      border-left: 2px solid var(--forest);
-      border-radius: 9px 0 0;
-      transform: rotate(-19deg);
-    }
-
-    .wordmark-mark::after {
-      right: 2px;
-      border-right: 2px solid var(--forest);
-      border-radius: 0 9px 0 0;
-      transform: rotate(19deg);
+      flex: none;
+      width: 34px;
+      height: 34px;
+      background: url("../../willowden-icon.png") center / contain no-repeat;
+      filter: drop-shadow(0 2px 5px rgba(38, 52, 46, 0.22));
     }
 
     .wordmark strong {
@@ -413,50 +388,6 @@
       color: var(--ink-soft);
       font-size: 13px;
     }
-
-    .antlers {
-      position: relative;
-      height: 82px;
-      margin: 26px 0 18px;
-    }
-
-    .antlers::before,
-    .antlers::after {
-      content: "";
-      position: absolute;
-      top: 42px;
-      width: 46%;
-      height: 23px;
-      border-top: 3px solid var(--gold);
-    }
-
-    .antlers::before {
-      right: 50%;
-      border-radius: 80% 0 0;
-      transform: rotate(-8deg);
-      transform-origin: right;
-    }
-
-    .antlers::after {
-      left: 50%;
-      border-radius: 0 80% 0 0;
-      transform: rotate(8deg);
-      transform-origin: left;
-    }
-
-    .tine {
-      position: absolute;
-      z-index: 1;
-      width: 22px;
-      height: 35px;
-      border-left: 3px solid var(--gold);
-      border-radius: 60% 0 0;
-    }
-
-    .tine.t1 { left: 25%; top: 24px; transform: rotate(-25deg); }
-    .tine.t2 { left: 38%; top: 33px; transform: rotate(-14deg); }
-    .tine.t3 { right: 38%; top: 33px; transform: scaleX(-1) rotate(-14deg); }
-    .tine.t4 { right: 25%; top: 24px; transform: scaleX(-1) rotate(-25deg); }
 
     .day-path {
       position: relative;
@@ -2280,15 +2211,12 @@
             <div class="cycle-kicker"><span>cycle zero</span><span>day 1 of 5</span></div>
             <h2>settling in</h2>
             <p>A small map for learning what feels possible.</p>
-            <div class="antlers" aria-label="Early antler growth">
-              <i class="tine t1"></i><i class="tine t2"></i><i class="tine t3"></i><i class="tine t4"></i>
-            </div>
             <div class="day-path" aria-label="One of five days begun">
               <i class="day-dot done"></i><i class="day-dot"></i><i class="day-dot"></i><i class="day-dot"></i><i class="day-dot"></i>
             </div>
             <div class="mini-action"><span>bank your first block</span><b>next →</b></div>
           </article>
-          <div class="deer-bubble">tiny counts. honestly, tiny is best.<small>your deer</small></div>
+          <div class="deer-bubble">tiny counts. honestly, tiny is best.<small>your companion</small></div>
         </div>
       </section>
 
@@ -2393,7 +2321,7 @@
             <h3>Make failure honest</h3>
             <p>Signup requires connectivity. If the service cannot be reached, Willowden preserves entered fields locally and stays on this screen. An idempotency key makes a retry return the same account after a lost response.</p>
             <h3>Approve other devices here</h3>
-            <p>An authenticated device creates a short-lived link code from Settings. Linking is a product feature, not a favor requested from a council member.</p>
+            <p>An authenticated device creates a short-lived link code from Settings. Linking is a product feature, not a favor requested from a cast member.</p>
           </div>
           <div class="ui-window" aria-label="First launch signup mockup">
             <div class="window-bar" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -2418,7 +2346,7 @@
         </header>
         <div class="content-offset split">
           <div class="commitments" aria-label="Settling-in commitments">
-            <article class="commitment"><div><strong>Meet your deer</strong><small>Experience the desktop companion.</small></div><span class="state">guided</span></article>
+            <article class="commitment"><div><strong>Meet your companion</strong><small>Experience the desktop companion.</small></div><span class="state">guided</span></article>
             <article class="commitment"><div><strong>Bank a first block</strong><small>Planned duration is not required.</small></div><span class="state">focus</span></article>
             <article class="commitment"><div><strong>Put things on the map</strong><small>Add a few real open loops, now or later.</small></div><span class="state">tasks</span></article>
             <article class="commitment"><div><strong>Talk with Vel</strong><small>Open Rooms for one optional moment.</small></div><span class="state">rooms</span></article>
@@ -2431,8 +2359,8 @@
               <p>Silence leaves an invitation pending but never marks it failed. Actions may satisfy commitments out of order.</p>
             </div>
             <aside class="identity-note">
-              <h3>The deer and Vel</h3>
-              <p>This design does not decide whether the deer is Vel, an embodiment shared by Willowden, or a companion with an identity of its own. Day one calls it simply <strong>your deer</strong>. Vel is named when the person opens Rooms.</p>
+              <h3>The companion and Vel</h3>
+              <p>The companion seat isn't owned by one character — any of the cast can sit with you, and the choice is yours. What this design does not decide is who greets a brand-new user. Day one calls it simply <strong>your companion</strong>. Vel is named when the person opens Rooms.</p>
             </aside>
           </div>
         </div>
@@ -2448,10 +2376,10 @@
         </header>
         <div class="content-offset">
           <div class="beats" aria-label="Day-one beats">
-            <article class="beat"><b>01</b><h3>Arrival</h3><p>“hey. i'm your deer. i live down here.”</p></article>
+            <article class="beat"><b>01</b><h3>Arrival</h3><p>“hey. i'm your companion. i live down here.”</p></article>
             <article class="beat"><b>02</b><h3>The map</h3><p>Show settling in and promise that progress never goes backwards.</p></article>
             <article class="beat"><b>03</b><h3>One thing</h3><p>Name a real open loop, or keep it private and start an unnamed block.</p></article>
-            <article class="beat"><b>04</b><h3>Choose</h3><p>Pick 3, 5, or 10 minutes and choose where the deer sits.</p></article>
+            <article class="beat"><b>04</b><h3>Choose</h3><p>Pick 3, 5, or 10 minutes and choose where your companion sits.</p></article>
             <article class="beat"><b>05</b><h3>Sit together</h3><p>The native clock runs locally. The main window can disappear.</p></article>
             <article class="beat"><b>06</b><h3>Bank</h3><p>Stopping honestly still keeps the time. Planned completion is separate.</p></article>
             <article class="beat"><b>07</b><h3>Leave Rooms open</h3><p>“vel's in rooms when you feel like talking. no rush.”</p></article>
@@ -2459,8 +2387,8 @@
 
           <div class="placement-demo">
             <div class="placement-toolbar">
-              <div><span class="section-number">Interactive mockup</span><h3>Where should the deer sit?</h3></div>
-              <div class="segmented" aria-label="Deer placement">
+              <div><span class="section-number">Interactive mockup</span><h3>Where should your companion sit?</h3></div>
+              <div class="segmented" aria-label="Companion placement">
                 <button type="button" data-placement="desktop" aria-pressed="true">Desktop <span class="recommended">recommended</span></button>
                 <button type="button" data-placement="embedded" aria-pressed="false">Inside Willowden</button>
               </div>
@@ -2481,14 +2409,14 @@
                   </div>
                 </div>
               </div>
-              <div class="deer-companion" id="deerCompanion" aria-label="Desktop deer timer preview">
+              <div class="deer-companion" id="deerCompanion" aria-label="Desktop companion timer preview">
                 <div class="deer-face" aria-hidden="true"><span class="deer-eyes"><i></i><i></i></span><span class="deer-nose"></span></div>
                 <div class="timer">05:00</div>
                 <div class="timer-label">ready when you are</div>
               </div>
             </div>
           </div>
-          <p class="plain-note">Desktop is recommended because it demonstrates Willowden's background companion and lets Home close. Keeping the deer inside is fully functional and produces no later pressure to switch.</p>
+          <p class="plain-note">Desktop is recommended because it demonstrates Willowden's background companion and lets Home close. Keeping the companion inside is fully functional and produces no later pressure to switch.</p>
         </div>
       </section>
 
@@ -2503,8 +2431,8 @@
         <div class="content-offset">
           <div class="surface-grid">
             <article class="surface"><strong>Home</strong><h3>Where am I?</h3><p>See the cycle and start, shrink, replace, or defer the next block.</p></article>
-            <article class="surface"><strong>Deer window</strong><h3>Will something sit with me?</h3><p>Run, pause, and bank a block without keeping Home open.</p></article>
-            <article class="surface"><strong>Rooms</strong><h3>Who can I talk with?</h3><p>Talk with Vel or another council member when conversation helps.</p></article>
+            <article class="surface"><strong>Companion window</strong><h3>Will something sit with me?</h3><p>Run, pause, and bank a block without keeping Home open.</p></article>
+            <article class="surface"><strong>Rooms</strong><h3>Who can I talk with?</h3><p>Talk with Vel or another of the cast when conversation helps.</p></article>
             <article class="surface"><strong>Collections</strong><h3>What was remembered?</h3><p>Revisit meaningful firsts, returns, and personal milestones.</p></article>
           </div>
 
@@ -2598,9 +2526,9 @@
         </header>
         <div class="content-offset">
           <div class="permission-list">
-            <div class="permission"><strong>Launch at login</strong><span>The deer and clock are ready without opening Home.</span><span>Without it: start Willowden manually.</span></div>
+            <div class="permission"><strong>Launch at login</strong><span>Your companion and clock are ready without opening Home.</span><span>Without it: start Willowden manually.</span></div>
             <div class="permission"><strong>Native notifications</strong><span>Morning invitations can arrive while Home is closed.</span><span>Without it: wait until next launch.</span></div>
-            <div class="permission"><strong>Desktop activity sensing</strong><span>The deer can notice idle or drift during a live block.</span><span>Without it: the timer still works.</span></div>
+            <div class="permission"><strong>Desktop activity sensing</strong><span>Your companion can notice idle or drift during a live block.</span><span>Without it: the timer still works.</span></div>
             <div class="permission"><strong>Away-from-desk tether</strong><span>A chosen messaging service may carry invitations.</span><span>Without it: remain desktop-only.</span></div>
             <div class="permission"><strong>Morning/evening contact</strong><span>Willowden may initiate those moments.</span><span>Without it: show them only when requested.</span></div>
           </div>
@@ -2613,7 +2541,7 @@
           <span class="section-number">11 · Collections</span>
           <div>
             <h2>Remember process without grading it.</h2>
-            <p class="section-lede">Collection items mark meaningful firsts and returns. Antlers grow inside a cycle and shed at its close. Neither becomes a ladder to protect.</p>
+            <p class="section-lede">Collection items mark meaningful firsts and returns. The day track fills inside a cycle and resets at its close. Neither becomes a ladder to protect.</p>
           </div>
         </header>
         <div class="content-offset">
@@ -2624,7 +2552,7 @@
             <article class="collection-item"><strong>Welcome back</strong><small>Returned after time away.</small></article>
           </div>
           <div class="split" style="margin-top:28px">
-            <div class="prose"><h3>One hero per moment</h3><p>If a block resolves a commitment, grows the antlers, and earns an item, only the collection item celebrates. Everything else updates quietly.</p></div>
+            <div class="prose"><h3>One hero per moment</h3><p>If a block resolves a commitment, fills the day track, and earns an item, only the collection item celebrates. Everything else updates quietly.</p></div>
             <div class="prose"><h3>No overall rank</h3><p>Growth reads starting, banking, and returning—never execution versus plan. Nothing shrinks during a cycle, and the final shape remains with its history.</p></div>
           </div>
         </div>
@@ -2684,7 +2612,7 @@
         <div class="content-offset failure-grid">
           <article class="failure"><b>01</b><div><strong>Network disappears</strong><span>Authored tour and focus continue. Events wait durably.</span></div></article>
           <article class="failure"><b>02</b><div><strong>Signup response is lost</strong><span>Retry returns the same account, never a duplicate.</span></div></article>
-          <article class="failure"><b>03</b><div><strong>Home closes mid-block</strong><span>The native clock and chosen deer window continue.</span></div></article>
+          <article class="failure"><b>03</b><div><strong>Home closes mid-block</strong><span>The native clock and chosen companion window continue.</span></div></article>
           <article class="failure"><b>04</b><div><strong>The computer sleeps</strong><span>Sleep time is never silently counted as focus.</span></div></article>
           <article class="failure"><b>05</b><div><strong>The app updates</strong><span>The pinned journey resumes at a compatible beat.</span></div></article>
           <article class="failure"><b>06</b><div><strong>The model is unavailable</strong><span>Authored flow continues; cycle one uses a fallback.</span></div></article>
@@ -2707,9 +2635,9 @@
             <ul>
               <li>Keyboard access to every beat and block action.</li>
               <li>Predictable focus and persistent pause/skip controls.</li>
-              <li>Screen-reader equivalents for map, antlers, color, and animation.</li>
+              <li>Screen-reader equivalents for map, day track, color, and animation.</li>
               <li>Reduced-motion alternatives for step-out, pulsing, and confetti.</li>
-              <li>Resizable or hidden deer window; always-on-top can be disabled.</li>
+              <li>Resizable or hidden companion window; always-on-top can be disabled.</li>
               <li>Authored lines never vanish before they can be read.</li>
             </ul>
           </article>
@@ -2737,7 +2665,7 @@
         </header>
         <div class="content-offset metric-grid">
           <article class="metric-card"><h3>Primary</h3><ul><li>Signup → block start</li><li>First block started within five minutes</li><li>First block banked within fifteen</li><li>Return during days two–five</li><li>Cycle-one review reached</li></ul></article>
-          <article class="metric-card"><h3>Diagnostic</h3><ul><li>Deferral by beat</li><li>Duration selected</li><li>Early bank vs planned completion</li><li>Fallback proposal rate</li><li>Deer placement choice</li></ul></article>
+          <article class="metric-card"><h3>Diagnostic</h3><ul><li>Deferral by beat</li><li>Duration selected</li><li>Early bank vs planned completion</li><li>Fallback proposal rate</li><li>Companion placement choice</li></ul></article>
           <article class="metric-card"><h3>Guardrails</h3><ul><li>Never reward more notifications</li><li>Never punish less data sharing</li><li>Include accessibility paths</li><li>Analytics follow deletion rules</li><li>No optimization for fewer deferrals</li></ul></article>
         </div>
       </section>
@@ -2752,10 +2680,10 @@
         </header>
         <div class="content-offset delivery-list">
           <article class="delivery"><h3>Native foundation</h3><p>Rust core, local database, durable outbox, focus recovery, registration, credential storage, and device approval.</p></article>
-          <article class="delivery"><h3>Day-one slice</h3><p>Signup → real thing → block → durable resume → one collection item. Include both deer placements and accessibility paths.</p></article>
+          <article class="delivery"><h3>Day-one slice</h3><p>Signup → real thing → block → durable resume → one collection item. Include both companion placements and accessibility paths.</p></article>
           <article class="delivery"><h3>Settling-in days</h3><p>Morning invitation, optional Vel questions, contextual permissions, visible learned-context review, and deterministic backoff.</p></article>
           <article class="delivery"><h3>Graduation</h3><p>Ready-to-close state, mini-retro, bounded proposal, fallback, editing, scheduling, upcoming, and resting states.</p></article>
-          <article class="delivery"><h3>Collections</h3><p>General award rules, collection history, user-editable milestone stories, antler growth, shed, and cycle record.</p></article>
+          <article class="delivery"><h3>Collections</h3><p>General award rules, collection history, user-editable milestone stories, day-track fill, reset, and cycle record.</p></article>
         </div>
       </section>
 
@@ -2774,8 +2702,8 @@
               <tr><td>Account recovery</td><td>Email-based recovery without a password.</td><td>Registration API freeze</td></tr>
               <tr><td>Access codes</td><td>Short-lived minted codes; static only in development.</td><td>Public signup</td></tr>
               <tr><td>Cycle-zero length</td><td>Five local calendar days.</td><td>Settling-in slice</td></tr>
-              <tr><td>Deer identity</td><td>Keep its relationship to Vel unspecified until the character direction feels true.</td><td>Character design</td></tr>
-              <tr><td>Deer placement</td><td>Offer both; recommend desktop and remember the choice.</td><td>Day-one testing</td></tr>
+              <tr><td>Default companion</td><td>Keep which of the cast greets a new user unspecified until the character direction feels true.</td><td>Character design</td></tr>
+              <tr><td>Companion placement</td><td>Offer both; recommend desktop and remember the choice.</td><td>Day-one testing</td></tr>
               <tr><td>Navigation</td><td>Home, Rooms, and Collections.</td><td>Copy freeze</td></tr>
               <tr><td>Long-stale onboarding</td><td>Resume through re-entry, then offer graduation or a fresh run.</td><td>Re-entry design</td></tr>
             </tbody>
@@ -2844,7 +2772,7 @@
           placementButtons.forEach(function (item) { item.setAttribute("aria-pressed", "false"); });
           button.setAttribute("aria-pressed", "true");
           deer.classList.toggle("embedded", button.getAttribute("data-placement") === "embedded");
-          deer.setAttribute("aria-label", button.getAttribute("data-placement") === "embedded" ? "Embedded deer timer preview" : "Desktop deer timer preview");
+          deer.setAttribute("aria-label", button.getAttribute("data-placement") === "embedded" ? "Embedded companion timer preview" : "Desktop companion timer preview");
         });
       });
 
