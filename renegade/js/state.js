@@ -145,6 +145,22 @@
   // Load: current saves as-is; Slice 1 saves (version 1) are migrated; anything else (unknown / corrupt) is set aside
   // and a new game starts with a notice. St.loadNotice explains what happened (shown once by the UI).
   St.loadNotice = null;
+  // New build → wipe progression (config.save.resetOnNewBuild). Runs once per build: the build id is stored under its own
+  // key, so later loads in the same build keep the save. Wipes every key the game stores (save, set-aside save, tuning).
+  St.buildNotice = null;
+  St.checkBuild = function () {
+    const cfg = DATA.config.save || {}, id = String((typeof window !== "undefined" && window.BUILD_ID) || "dev");
+    if (id === "dev") return false;
+    let stored = null; try { stored = localStorage.getItem(cfg.buildIdKey); } catch (e) { return false; }
+    let wiped = false;
+    if (cfg.resetOnNewBuild && stored !== id) {
+      const keys = [DATA.config.saveKey, DATA.config.saveKey + "_unreadable", DATA.config.overridesKey];
+      try { wiped = keys.some((k) => localStorage.getItem(k) != null); for (const k of keys) localStorage.removeItem(k); } catch (e) {}
+      if (wiped) St.buildNotice = "New build (" + id + "): progress reset.";
+    }
+    try { localStorage.setItem(cfg.buildIdKey, id); } catch (e) {}
+    return wiped;
+  };
   St.load = function () {
     let raw = null;
     try { raw = localStorage.getItem(DATA.config.saveKey); } catch (e) { return false; }

@@ -1,11 +1,13 @@
 // Boot: apply tuning overrides, load or create save, render, tick timers.
 (function () {
   const G = window.G;
+  G.State.checkBuild();   // before anything reads localStorage: a new build wipes progression (config.save.resetOnNewBuild)
   G.Debug.overrides = G.State.loadOverrides();
   if (!G.State.load()) G.State.newGame();
   G.logListeners.push(() => {});
   G.Sprites.preload(); // corpses/decals are stamped once onto the battle ground, so their art must be loaded before the first kill
   G.UI.render();
+  if (G.State.buildNotice) G.UI.toast(G.State.buildNotice);
   setInterval(() => G.UI.tick(), DATA.config.timers.tickMs);
   // re-render the map when real art arrives so placeholders get replaced
   let pending = false;

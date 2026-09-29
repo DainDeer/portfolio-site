@@ -5,6 +5,10 @@ DATA.config = {
   version: 2,               // save format. Slice 1 saves (version 1) are migrated on load (js/state.js St.migrate)
   saveKey: "renegade_slice1_save",      // same key as Slice 1 so an existing save is found and migrated
   overridesKey: "renegade_slice1_tuning",
+  // Megan, for now: a new build (window.BUILD_ID from js/build_id.js, the commit hash in packaged builds) wipes the saved
+  // progression once, so every build starts at the introduction. Set resetOnNewBuild: false to keep saves across builds.
+  // BUILD_ID "dev" (running from the repo) never resets.
+  save: { resetOnNewBuild: true, buildIdKey: "renegade_build_id" },
 
   // §7.3 Deployment score by progression stage. Tutorial = Basic body(1) + 2 Grunts.
   deploy: {
