@@ -1,0 +1,222 @@
+// Save state, bodies, grunts, XP routing, timers, local save.
+(function (root) {
+  const G = root.G, U = G.Util, S = G.Skills;
+  const St = G.State = {};
+  G.state = null;
+
+  const BODY_SKILLS = () => Object.keys(DATA.skills).filter((k) => DATA.skills[k].kind === "body");
+  const MIND_SKILLS = () => Object.keys(DATA.skills).filter((k) => DATA.skills[k].kind === "mind");
+  St.BODY_SKILLS = BODY_SKILLS; St.MIND_SKILLS = MIND_SKILLS;
+
+  St.makeBasicBody = function () {
+    const d = DATA.bodies.basicBody;
+    const skills = {};
+    for (const k of BODY_SKILLS()) skills[k] = S.make(d.skills[k] || 1);
+    return { uid: "body_basic", name: d.name, past: "a level-1 husk", family: "basic", cls: null, spec: null, quirks: [], skills, bodyXp: 0, restoreUntil: 0 };
+  };
+
+  St.rollHumanBody = function (rng, cls) {
+    const H = DATA.bodies.humanRoll, C = DATA.bodies.classes;
+    cls = cls || rng.pick(H.classPool);
+    const spec = rng.pick(C[cls].specialties);
+    const sp = DATA.bodies.specialties[spec];
+    const skills = {};
+    const cap = DATA.bodies.families.human.skillCap;
+    for (const k of BODY_SKILLS()) {
+      const base = sp.skills[k] || 1;
+      const v = base > 1 ? base + rng.int(-H.skillVariance, H.skillVariance) : 1;
+      skills[k] = S.make(U.clamp(v, 1, cap));
+    }
+    const nq = rng.int(H.quirksPerBody[0], H.quirksPerBody[1]);
+    const quirks = rng.shuffle(Object.keys(DATA.bodies.quirks).slice()).slice(0, nq);
+    return { uid: U.uid("body"), name: rng.pick(H.names), past: rng.pick(H.pasts), family: "human", cls, spec, quirks, skills, bodyXp: 0, restoreUntil: 0 };
+  };
+
+  St.rollHumanOffer = function (rng) {
+    const H = DATA.bodies.humanRoll;
+    const n = rng.int(H.offerCount[0], H.offerCount[1]);
+    const classes = rng.shuffle(H.classPool.slice());
+    const out = [];
+    for (let i = 0; i < n; i++) out.push(St.rollHumanBody(rng, H.distinctClasses ? classes[i % classes.length] : null));
+    // Doc Ilse L2 perk (Slice 2 §9): a Medic is guaranteed in the next human body pick (one-shot)
+    if (G.Quests && G.Quests.consumeMedicPick() && !out.some((b) => b.cls === "medic")) out[out.length - 1] = St.rollHumanBody(rng, "medic");
+    return out;
+  };
+
+  St.makeGrunt = function (rng, tpl) {
+    tpl = tpl || DATA.bodies.grunt;
+    const skills = {};
+    for (const k in tpl.skills) skills[k] = S.make(tpl.skills[k]);
+    return { uid: U.uid("grunt"), name: (tpl.rank === "core" ? tpl.name : "Grunt #" + rng.int(10, 99)), rank: tpl.rank || "grunt", tplKey: tpl === DATA.bodies.coreAllyTest ? "core" : "grunt",
+             weapon: rng.pick(tpl.weapons), skills, hp: null };
+  };
+  St.gruntTpl = (g) => (g.tplKey === "core" ? DATA.bodies.coreAllyTest : DATA.bodies.grunt);
+
+  St.newGame = function (seed) {
+    seed = seed == null ? U.randomSeed() : seed >>> 0;
+    const rng = U.makeRng(seed);
+    const mind = { skills: {} };
+    for (const k of MIND_SKILLS()) mind.skills[k] = S.make(DATA.startingMind[k] || 1);
+    const s = {
+      version: DATA.config.version, seed, created: Date.now(),
+      maps: null, world: { hollow_creek: "pending" }, everSeen: {}, locFlags: {},
+      zonesUnlocked: {}, passages: {}, quests: null, buildings: null, journal: [],
+      mind, lifetimeXp: 0,
+      bodies: [St.makeBasicBody()],
+      grunts: [], stash: { items: [], res: U.clone(DATA.items.startingStash.resources) },
+      loadout: { bodyId: "body_basic", gear: {}, pouch: [], grunts: [] },
+      tutorialDone: false, humanOffer: null, runCount: 0, extractions: 0, deaths: 0, lore: [],
+      run: null, lastResult: null
+    };
+    for (let i = 0; i < DATA.config.deploy.startingGrunts; i++) s.grunts.push(St.makeGrunt(rng));
+    const sg = DATA.items.startingGear;
+    for (const slot in sg) { const it = G.Items.make(sg[slot].base, sg[slot].rarity, sg[slot].ilvl, rng); s.stash.items.push(it); s.loadout.gear[slot] = it.uid; }
+    for (const it of DATA.items.startingStash.items) s.stash.items.push(G.Items.make(it.base, it.rarity, it.ilvl, rng));
+    s.maps = G.Zones.buildAll(seed);
+    for (const z of DATA.zones.order) if (DATA.zones.list[z].startUnlocked) s.zonesUnlocked[z] = true;
+    s.quests = G.Quests.freshState();
+    s.buildings = G.Outpost.freshState();
+    G.state = s;
+    s.loadout.grunts = s.grunts.slice(0, DATA.config.deploy.startingGrunts).map((g) => g.uid);
+    return s;
+  };
+
+  St.deployScore = () => (G.state.tutorialDone ? DATA.config.deploy.earlyScore : DATA.config.deploy.tutorialScore);
+  St.body = (uid) => G.state.bodies.find((b) => b.uid === uid);
+  St.bodyCost = (b) => DATA.bodies.families[b.family].deployCost;
+  St.bodyReady = (b) => !b.restoreUntil || b.restoreUntil <= G.now();
+  St.bodySprite = (b) => (b.cls ? DATA.bodies.classes[b.cls].sprite : DATA.bodies.basicBody.sprite);
+  St.bodyTitle = (b) => b.cls ? `${b.name}, ${b.past} — ${DATA.bodies.classes[b.cls].name} / ${DATA.bodies.specialties[b.spec].name}` : b.name;
+
+  St.restoreMs = function (b) {
+    const fam = DATA.bodies.families[b.family];
+    if (!fam.restoreBaseSec) return 0;
+    const R = DATA.config.restore;
+    const trans = Math.min(R.transferenceMaxPct, S.level(G.state.mind.skills, "transference") * R.transferencePctPerLevel);
+    return fam.restoreBaseSec * 1000 * (1 + S.bodyLevel(b) / 50) * R.bodyLabMult * (1 - trans / 100);
+  };
+
+  // --- XP routing. ref: {kind:'body', body} | {kind:'grunt', grunt} | null (enemies)
+  // Every gain emits G.XP events (floating "+N XP (Skill)" labels, Slice 2 §10): the skill, and for the worn body
+  // also the Body and Character XP it adds (derived), plus gold level-up labels.
+  St.giveXp = function (ref, skillId, amount) {
+    if (!ref || !amount || !DATA.skills[skillId]) return;
+    const def = DATA.skills[skillId];
+    const s = G.state, E = G.XP ? G.XP.emit : () => {};
+    const charBefore = S.charLevel(s);
+    const charAfter = () => { const c = S.charLevel(s); if (c > charBefore) E({ levelUp: `Character ${c}!` }); };
+    if (def.kind === "mind") {
+      if (ref.kind !== "body") return; // only the consciousness has mind skills
+      const got = amount * DATA.config.leveling.mindXpSourceMult;
+      const up = S.addXp({ name: "You", skills: s.mind.skills, cap: 99 }, skillId, amount);
+      s.lifetimeXp += got;
+      E({ label: def.name, n: got }); if (up) E({ levelUp: `${def.name} ${s.mind.skills[skillId].lvl}!` });
+      E({ label: "Character", n: got, derived: true }); charAfter();
+      return;
+    }
+    if (ref.kind === "body") {
+      const b = ref.body, fam = DATA.bodies.families[b.family], bl = S.bodyLevel(b);
+      const up = S.addXp({ name: b.name, skills: b.skills, cap: fam.skillCap, xpMult: fam.xpMult }, skillId, amount);
+      b.bodyXp = (b.bodyXp || 0) + amount; s.lifetimeXp += amount;
+      E({ label: def.name, n: amount }); if (up) E({ levelUp: `${def.name} ${b.skills[skillId].lvl}!` });
+      E({ label: "Body", n: amount, derived: true }); if (S.bodyLevel(b) > bl) E({ levelUp: `Body ${S.bodyLevel(b)}!` });
+      E({ label: "Character", n: amount, derived: true }); charAfter();
+    } else if (ref.kind === "grunt") {
+      const g = ref.grunt;
+      if (!g.skills[skillId]) return; // grunts only level the few skills they have
+      const up = S.addXp({ name: g.name, skills: g.skills, cap: 20 }, skillId, amount);
+      E({ label: def.name, n: amount }); if (up) E({ levelUp: `${def.name} ${g.skills[skillId].lvl}!` });
+    }
+  };
+
+  St.skillOf = function (ref, skillId) {
+    const def = DATA.skills[skillId];
+    if (!ref) return 1;
+    if (def.kind === "mind") return ref.kind === "body" ? S.level(G.state.mind.skills, skillId) : 0;
+    if (ref.kind === "body") return S.level(ref.body.skills, skillId);
+    if (ref.kind === "grunt") return S.level(ref.grunt.skills, skillId);
+    return 1;
+  };
+
+  // --- save / load
+  St.save = function () {
+    try { localStorage.setItem(DATA.config.saveKey, JSON.stringify({ s: G.state, clockOffset: G.clockOffset })); } catch (e) { /* storage may be unavailable */ }
+  };
+  // Load: current saves as-is; Slice 1 saves (version 1) are migrated; anything else (unknown / corrupt) is set aside
+  // and a new game starts with a notice. St.loadNotice explains what happened (shown once by the UI).
+  St.loadNotice = null;
+  St.load = function () {
+    let raw = null;
+    try { raw = localStorage.getItem(DATA.config.saveKey); } catch (e) { return false; }
+    if (!raw) return false;
+    try {
+      const o = JSON.parse(raw);
+      if (!o || !o.s) throw new Error("no state");
+      let st = o.s;
+      if (st.version === 1) { st = St.migrate(st); St.loadNotice = "Your Slice 1 save was carried over to Slice 2" + (St.migrateNotes.length ? ": " + St.migrateNotes.join(" ") : "."); }
+      else if (st.version !== DATA.config.version) throw new Error("unknown save version " + st.version);
+      St.repair(st);
+      G.state = st; G.clockOffset = o.clockOffset || 0;
+      return true;
+    } catch (e) {
+      try { localStorage.setItem(DATA.config.saveKey + "_unreadable", raw); } catch (e2) {}
+      St.loadNotice = "Your old save couldn't be read (" + e.message + "), so a new save was started. The old data was kept under \"" + DATA.config.saveKey + "_unreadable\".";
+      return false;
+    }
+  };
+
+  // Slice 1 (version 1) -> Slice 2 (version 2). Keeps: bodies, Grunts, mind skills, stash items, resources
+  // (circuits -> electronics, biomass kept but hidden), lore, world state, counters, tutorial progress.
+  // An expedition in progress is rolled back to its start (the snapshot Slice 1 took at deploy). Zone A is
+  // regenerated from the same seed (Slice 2 adds fixed Pump Station / Rail Yard slots), so map memory resets.
+  St.migrateNotes = [];
+  St.migrate = function (old) {
+    St.migrateNotes = [];
+    let s = old;
+    if (s.run && s.run.snapshot) { try { s = JSON.parse(s.run.snapshot); St.migrateNotes.push("the expedition in progress was rolled back to its start."); } catch (e) { s.run = null; } }
+    s.run = null;
+    const res = s.stash && s.stash.res ? s.stash.res : {};
+    for (const from in DATA.resourceRenames) if (res[from] != null) { const to = DATA.resourceRenames[from]; res[to] = (res[to] || 0) + res[from]; delete res[from]; }
+    s.stash.res = res;
+    for (const p of (s.loadout && s.loadout.pouch) || []) if (p.res && DATA.resourceRenames[p.res]) p.res = DATA.resourceRenames[p.res];
+    s.maps = G.Zones.buildAll(s.seed >>> 0);
+    delete s.map;
+    s.everSeen = {};
+    St.migrateNotes.push("Circuits became Electronics, and The Scablands was re-surveyed for Slice 2 (map memory reset).");
+    s.version = 2;
+    return s;
+  };
+
+  // Fill any Slice 2 fields a save is missing (also used after migration). Never throws on partial saves.
+  St.repair = function (s) {
+    if (!s.maps || !s.maps.a) s.maps = G.Zones.buildAll((s.seed >>> 0) || 1);
+    if (!s.maps.b) s.maps.b = G.Zones.build("b");
+    s.world = s.world || { hollow_creek: "pending" };
+    s.everSeen = s.everSeen || {}; s.locFlags = s.locFlags || {};
+    s.zonesUnlocked = s.zonesUnlocked || {};
+    for (const z of DATA.zones.order) if (DATA.zones.list[z].startUnlocked) s.zonesUnlocked[z] = true;
+    s.passages = s.passages || {};
+    s.quests = Object.assign(G.Quests.freshState(), s.quests || {});
+    s.buildings = Object.assign(G.Outpost.freshState(), s.buildings || {});
+    s.journal = s.journal || [];
+    s.stash = s.stash || { items: [], res: {} }; s.stash.items = s.stash.items || []; s.stash.res = s.stash.res || {};
+    for (const k in DATA.resources) if (s.stash.res[k] == null && !DATA.resources[k].hidden) s.stash.res[k] = 0;
+    s.lore = s.lore || []; s.bodies = s.bodies && s.bodies.length ? s.bodies : [St.makeBasicBody()];
+    s.grunts = s.grunts || []; s.loadout = s.loadout || { bodyId: "body_basic", gear: {}, pouch: [], grunts: [] };
+    s.loadout.gear = s.loadout.gear || {}; s.loadout.pouch = s.loadout.pouch || []; s.loadout.grunts = s.loadout.grunts || [];
+    return s;
+  };
+  St.wipe = function () { try { localStorage.removeItem(DATA.config.saveKey); } catch (e) {} };
+
+  // --- tuning overrides (debug panel)
+  St.saveOverrides = function (ov) { try { localStorage.setItem(DATA.config.overridesKey, JSON.stringify(ov)); } catch (e) {} };
+  St.loadOverrides = function () {
+    // Only overrides whose value already exists in DATA with the same type are applied (a Slice 1 tuning override
+    // for a removed or renamed field is dropped instead of creating a half-defined entry).
+    try {
+      const o = JSON.parse(localStorage.getItem(DATA.config.overridesKey) || "{}"), kept = {};
+      for (const p in o) { try { const cur = U.getPath(DATA, p); if (cur !== undefined && typeof cur === typeof o[p] && typeof cur !== "object") { U.setPath(DATA, p, o[p]); kept[p] = o[p]; } } catch (e) {} }
+      return kept;
+    } catch (e) { return {}; }
+  };
+})(typeof window !== "undefined" ? window : globalThis);

@@ -1,0 +1,16 @@
+// Boot: apply tuning overrides, load or create save, render, tick timers.
+(function () {
+  const G = window.G;
+  G.Debug.overrides = G.State.loadOverrides();
+  if (!G.State.load()) G.State.newGame();
+  G.logListeners.push(() => {});
+  G.Sprites.preload(); // corpses/decals are stamped once onto the battle ground, so their art must be loaded before the first kill
+  G.UI.render();
+  setInterval(() => G.UI.tick(), DATA.config.timers.tickMs);
+  // re-render the map when real art arrives so placeholders get replaced
+  let pending = false;
+  G.Sprites.listeners.push(() => { if (pending) return; pending = true; setTimeout(() => { pending = false; if (!G.UI.battle && !document.querySelector(".modal") && (document.querySelector(".map-wrap") || document.querySelector(".site-wrap") || document.querySelector(".town-stage")) && !G.UI.search) G.UI.render(); }, 300); });
+  window.addEventListener("beforeunload", () => G.State.save());
+  // Esc closes an outpost panel (back to the town view)
+  window.addEventListener("keydown", (e) => { if (e.key === "Escape" && !G.state.run && G.UI.panel && !document.querySelector(".modal")) { G.UI.openPanel(null); } });
+})();
