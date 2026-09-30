@@ -102,7 +102,8 @@
       for (const k in s.loadout.gear) if (s.loadout.gear[k] === itemUid) delete s.loadout.gear[k];
     }
     if (g.gear[slot]) s.stash.items.push(g.gear[slot]);
-    g.gear[slot] = it; St.save(); return null;
+    g.gear[slot] = it; if (it && G.GruntGear) St.cosUnlocked = G.GruntGear.noteEquip(it);   // Slice 5 §H: equipping once unlocks the look
+    St.save(); return null;
   };
   St.gruntItems = (g) => Object.values((g && g.gear) || {}).filter(Boolean);
   // template: Grunt, Veteran (the Grunt template with DATA.allies.veteran over it) or the debug core ally
@@ -124,7 +125,8 @@
       loadout: { bodyId: "body_basic", gear: {}, pouch: [], grunts: [] },
       tutorialDone: false, humanOffer: null, runCount: 0, extractions: 0, deaths: 0, lore: [],
       difficulty: DATA.config.difficulty.default, difficultyLocked: false,   // Slice 4 §H: picked on the start screen, locked at Play / the first deploy
-      run: null, lastResult: null, settings: St.defaultSettings(), tut: G.Tut ? G.Tut.fresh() : null, main: null, cards: G.Cards ? G.Cards.fresh() : null
+      run: null, lastResult: null, settings: St.defaultSettings(), tut: G.Tut ? G.Tut.fresh() : null, main: null, cards: G.Cards ? G.Cards.fresh() : null,
+      cosmetics: { unlocked: {} }   // Slice 5 §H: looks unlocked by equipping (js/gruntgear.js)
     };
     if (G.Main) { const prev = G.state; G.state = s; G.Main.st(); G.state = prev; }   // Slice 4 §B: main quests + the pods solution
     { const prev = G.state; G.state = s; for (let i = 0; i < DATA.config.deploy.startingGrunts; i++) s.grunts.push(St.makeGrunt(rng)); G.state = prev; }
@@ -284,7 +286,8 @@
     s.everSeen = s.everSeen || {}; s.locFlags = s.locFlags || {};
     s.zonesUnlocked = s.zonesUnlocked || {};
     for (const z of DATA.zones.order) if (DATA.zones.list[z].startUnlocked) s.zonesUnlocked[z] = true;
-    s.passages = s.passages || {}; s.debuffs = s.debuffs || {};   // Slice 3 §4b debuffs (Marked by the Orbitals: runs left)
+    s.passages = s.passages || {}; s.debuffs = s.debuffs || {};
+    s.cosmetics = s.cosmetics || { unlocked: {} }; s.cosmetics.unlocked = s.cosmetics.unlocked || {};   // Slice 5 §H   // Slice 3 §4b debuffs (Marked by the Orbitals: runs left)
     s.quests = Object.assign(G.Quests.freshState(), s.quests || {});
     s.buildings = Object.assign(G.Outpost.freshState(), s.buildings || {});
     s.journal = s.journal || [];

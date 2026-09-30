@@ -126,7 +126,11 @@
       const st = site.rooms[o.opens] && site.rooms[o.opens].open ? (o.broken ? "_broken" : "_open") : (o.locked ? "_locked" : "");
       return has(base + st) ? base + st : base;
     }
-    if (o.kind === "grate") return G.Zones.passageFound(o.pid) && has(o.sprite + "_open") ? o.sprite + "_open" : o.sprite;
+    if (o.kind === "grate") {   // the passage's own art (data, so old sites pick up new keys); anim: an animated strip, the still under reduced motion
+      const P = (DATA.zones.passages || {})[o.pid] || {}, still = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const base = !still && P.anim && has(P.anim) ? P.anim : (P.sprite && has(P.sprite) ? P.sprite : o.sprite);
+      return G.Zones.passageFound(o.pid) && has(base + "_open") ? base + "_open" : base;
+    }
     if (o.kind === "extract") return X.extractSprite(o, typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches);   // Slice 5 §D: the wreck burns (the still under reduced motion)
     if (o.kind === "exit") { const E = DATA.searchables.access.exit; return (E.styles[o.style] || E.styles[E.default]).sprite; }   // from data, so new art is a one-line swap
     if (o.kind === "wheel") { const k = `obj_wheel_${"abc"[o.idx] || "a"}_${["up", "right", "down", "left"][o.pos]}`; return has(k) ? k : o.sprite; }   // Slice 4 §B

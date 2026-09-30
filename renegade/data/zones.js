@@ -69,14 +69,15 @@ DATA.zones = {
     // Slice 5 §G. The brainstorm puts the Deer Trail at Hushwood's Fire Lookout; zone a has no Fire Lookout yet, so it
     // starts behind Hollow Creek (always on the map) until the Hushwood pass adds one.
     deer_trail: {
-      name: "Deer Trail", crossVerb: "follow", sprite: "obj_grate", examine: "[PLACEHOLDER] A narrow trail of hoofprints climbs into the hills. Something with horns uses it every day.", mapIcon: "map_passage",
+      name: "Deer Trail", crossVerb: "follow", sprite: "obj_passage_deer_trail", examine: "[PLACEHOLDER] A narrow trail of hoofprints climbs into the hills. Something with horns uses it every day.", mapIcon: "map_passage",
       ends: { a: { zone: "a", loc: "hollow_creek" }, greyback: { zone: "greyback", node: "gb1" } },
       hiddenAt: "a",
       spot: { skills: ["perception", "survival"], dc: 12 },
       crossHeat: 4
     },
     spillway: {
-      name: "Spillway Tunnel", crossVerb: "climb through", sprite: "obj_grate", examine: "[PLACEHOLDER] A concrete spillway tunnel, dripping. The dam is somewhere above.", mapIcon: "map_passage",
+      name: "Spillway Tunnel", crossVerb: "climb through", sprite: "obj_passage_spillway", anim: "obj_passage_spillway_trickle",   // anim (Vixie): the trickle; the still under reduced motion
+      examine: "[PLACEHOLDER] A concrete spillway tunnel, dripping. The dam is somewhere above.", mapIcon: "map_passage",
       ends: { greyback: { zone: "greyback", loc: "gb_dam" }, b: { zone: "b", loc: "b_cistern" } },
       hiddenAt: "b",                                     // hidden in the Cistern Pumphouse until spotted; always visible at the dam
       spot: { skills: ["perception", "engineering"], dc: 13 },

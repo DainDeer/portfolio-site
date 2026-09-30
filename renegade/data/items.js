@@ -41,6 +41,14 @@ DATA.items = {
     // Art: Smudge's 26801b2 (icons item_<id>, paper-doll layers in grunt_options.json under the same ids).
     patched_tunic: { name: "Patched Tunic",     slot: "body",     armor: 1, weight: 1.0, req: 0, dropWeight: 0, sprite: "item_patched_tunic" },
     wool_cap:      { name: "Wool Cap",          slot: "head",     armor: 1, weight: 0.4, req: 0, dropWeight: 3, sprite: "item_wool_cap" },
+    // Slice 5 §H silly outfits (Megan via Smudge) [DRAFT]: real gear with small stats, rare drops. Equipping one once
+    // unlocks its look as a cosmetic (DATA.gruntLook.cosmetics). Until Smudge's layers land under these keys, the doll
+    // draws the stand-in part named in gruntLook.items. Icons: [PLACEHOLDER] badges.
+    witch_hat:     { name: "Witch Hat",         slot: "head",     evasion: 1, weight: 0.3, req: 0, dropWeight: 0.3, silly: true },
+    horse_mask:    { name: "Horse Mask",        slot: "head",     armor: 1, weight: 0.6, req: 0, dropWeight: 0.3, silly: true },
+    wizard_robes:  { name: "Wizard Robes",      slot: "body",     armor: 1, evasion: 2, weight: 1.2, req: 0, dropWeight: 0.3, silly: true },
+    maid_outfit:   { name: "Maid Outfit",       slot: "body",     armor: 1, evasion: 2, weight: 1.0, req: 0, dropWeight: 0.3, silly: true },
+    lucky_boxers:  { name: "Lucky Boxers",      slot: "body",     evasion: 3, weight: 0.2, req: 0, dropWeight: 0.3, silly: true },
     hide_vest:     { name: "Hide Vest",         slot: "body",     armor: 2, weight: 3.5, req: 0, dropWeight: 3, sprite: "item_hide_vest" },
     // Slice 5 §E shields (the off hand: 1H weapon + shield). armor scales with ilvl like armour; blockPct = chance to stop
     // a hit from the front (config.battle.weaponSets.shield.blockArcDeg); moveSpeedPct = the cost. [DRAFT] numbers. Art: Smudge

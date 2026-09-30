@@ -132,6 +132,15 @@ DATA.sprites = {
   unit_pet_goat_strip2:  { file: "units/unit_pet_goat_strip2.png",  shape: "none",     color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
   corpse_pet_goat:       { file: "fx/corpse_pet_goat.png",          shape: "corpse",   color: "#5e4a30", size: 1.0, anchorY: 0.5 },
   item_pet_goat:         { file: "items/item_pet_goat.png",         shape: "badge",    color: "#46b8a4", size: 1, pad: 2 },
+  // Smudge's 7a9a20d Greyback room objects (assets/objects/greyback_objects_manifest.json)
+  obj_ex_cable_car:      { file: "objects/obj_ex_cable_car.png",      shape: "badge", color: "#862c1c", size: 1, text: "CAR" },    // 64x32, wide 2
+  obj_ex_goat_path:      { file: "objects/obj_ex_goat_path.png",      shape: "badge", color: "#4e5054", size: 1, text: "PATH" },
+  obj_passage_deer_trail:      { file: "objects/obj_passage_deer_trail.png",      shape: "badge", color: "#4a5636", size: 1, text: "⇄" },
+  obj_passage_deer_trail_open: { file: "objects/obj_passage_deer_trail_open.png", shape: "badge", color: "#4a5636", size: 1, text: "⇄" },
+  obj_passage_spillway:        { file: "objects/obj_passage_spillway.png",        shape: "badge", color: "#2a6a8a", size: 1, text: "⇄" },
+  obj_passage_spillway_open:   { file: "objects/obj_passage_spillway_open.png",   shape: "badge", color: "#2a6a8a", size: 1, text: "⇄" },
+  obj_passage_spillway_trickle:      { file: "objects/obj_passage_spillway_trickle.png",      shape: "none", color: "#2a6a8a", size: 1, frames: 4, fps: 6 },   // frame 0 = the still
+  obj_passage_spillway_trickle_open: { file: "objects/obj_passage_spillway_trickle_open.png", shape: "none", color: "#2a6a8a", size: 1, frames: 4, fps: 6 },
   map_bg_greyback:       { file: "map/map_bg_greyback.png",         shape: "none",     color: "#23241f", size: 1 },
   tile_floor_greyback:   { file: "tiles/tile_floor_greyback.png",   shape: "none",     color: "#5a574c", size: 1 },
   tile_floor_greyback_wet: { file: "tiles/tile_floor_greyback_wet.png", shape: "none", color: "#44504c", size: 1 },
@@ -435,6 +444,12 @@ DATA.sprites = {
   item_teeth:            { file: "items/item_teeth.png",         shape: "bar",    color: "#d4c8a0", size: 1, pad: 2 },
   item_pet_hound_pup:    { shape: "badge", color: "#7a5a3a", size: 1, text: "PUP" },
   item_pet_scout_drone:  { shape: "badge", color: "#3a5a6a", size: 1, text: "DRN" },
+  // Slice 5 §H silly outfits: [PLACEHOLDER] badges until Smudge's icons
+  item_witch_hat:        { shape: "badge", color: "#5a3a7a", size: 1, text: "HAT" },
+  item_horse_mask:       { shape: "badge", color: "#7a5a3a", size: 1, text: "NEI" },
+  item_wizard_robes:     { shape: "badge", color: "#3a4a8a", size: 1, text: "WIZ" },
+  item_maid_outfit:      { shape: "badge", color: "#3a3a3a", size: 1, text: "MAID" },
+  item_lucky_boxers:     { shape: "badge", color: "#a04a5a", size: 1, text: "BOX" },
   // Slice 5 §E shields: Smudge's icons (fbafb0b)
   item_wood_round_shield: { file: "items/item_wood_round_shield.png", shape: "circle", color: "#7a5a30", size: 1, pad: 2 },
   item_riot_shield:       { file: "items/item_riot_shield.png",       shape: "square", color: "#3a4a5a", size: 1, pad: 2 },

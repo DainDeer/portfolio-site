@@ -63,11 +63,12 @@
     const equipped = (gs, is) => g ? g.gear[gs] : (lo.gear[is] ? s.stash.items.find((i) => i.uid === lo.gear[is]) : null);
     const inRun = !!s.run, redraw = () => { if (after) after(); else UI.render(); };
     const getB = (k) => (lo.gear[k] ? s.stash.items.find((i) => i.uid === lo.gear[k]) : null), getT = (k) => (g ? g.gear[k] : getB(k));
+    const GG = G.GruntGear, unl = (ids) => { for (const c of ids || []) UI.toast(`New look unlocked: ${GG.cosDef(c).name}. Pick it under Outfit.`); };   // Slice 5 §H
     const act = (gs, is, uid) => {
-      if (g) { const e = G.State.equipGrunt(g.uid, gs, uid); if (e) return UI.fail(e); }
+      if (g) { G.State.cosUnlocked = null; const e = G.State.equipGrunt(g.uid, gs, uid); if (e) return UI.fail(e); unl(G.State.cosUnlocked); }
       else { const x = uid && s.stash.items.find((i) => i.uid === uid);
         if (x && I.isHandItem(x)) { const fit = I.handFit(is, x, getB); if (fit.why) return UI.fail(fit.why); for (const k of fit.clear) delete lo.gear[k]; }   // Slice 5 §E
-        if (uid) lo.gear[is] = uid; else delete lo.gear[is]; if ((lo.pouch || []).some((p) => p.uid === uid)) lo.pouch = []; G.State.save(); }
+        if (uid) lo.gear[is] = uid; else delete lo.gear[is]; if ((lo.pouch || []).some((p) => p.uid === uid)) lo.pouch = []; if (x) unl(GG.noteEquip(x)); G.State.save(); }
       if (G.Sfx) G.Sfx.play("sfx_ui_click");
       if (G.Touch && G.Touch.layout()) UI.hideTip();   // phones: the tap also opened the row's item tooltip, which stayed over the redrawn doll
       redraw();
@@ -86,6 +87,20 @@
       fig.appendChild(b);
     }
     box.appendChild(fig);
+    // Slice 5 §H: the Outfit row (Grunts only): any unlocked look over the real gear. Cosmetic, so it works mid-run too
+    if (g && GG.look(g)) {
+      const row = h("div", { class: "doll-cos", "data-cos": tid }, h("b", null, "Outfit"));
+      for (const sl of ["head", "body"]) {
+        const cur2 = (g.cosmetic && g.cosmetic[sl]) || "", looks = GG.cosList().filter((c) => c.slot === sl && GG.cosUnlocked(c.id));
+        const sel = h("select", { "data-cos-slot": sl, onchange: (e) => { const err = GG.setCosmetic(g, sl, e.target.value || null); if (err) return UI.fail(err); G.State.save(); if (G.Sfx) G.Sfx.play("sfx_ui_click"); redraw(); } },
+          h("option", { value: "" }, sl === "head" ? "Head: the gear's look" : "Body: the gear's look"), sl === "head" ? h("option", { value: "none", selected: cur2 === "none" }, "Head: bare") : null,
+          ...looks.map((c) => h("option", { value: c.id, selected: cur2 === c.id }, `${sl === "head" ? "Head" : "Body"}: ${c.name}${c.pending ? " (stand-in art)" : ""}`)));
+        row.appendChild(sel);
+      }
+      const n = GG.cosList().filter((c) => GG.cosUnlocked(c.id)).length;
+      row.appendChild(h("small", { class: "hint" }, n ? `${n} look${n === 1 ? "" : "s"} unlocked. Looks only: the gear underneath still counts.` : "Equip gear once to unlock its look here. Silly outfits drop now and then."));
+      box._cos = row;
+    }
     // the list for the chosen slot
     const [gs, is, label, accepts] = SLOTS.find((x) => x[0] === cur) || SLOTS[3], it = equipped(gs, is);
     const side = h("div", { class: "doll-list" });
@@ -107,6 +122,7 @@
     }
     side.appendChild(ul);
     box.appendChild(side);
+    if (box._cos) box.appendChild(box._cos);   // the Outfit row under the figure + list
     return box;
   };
   G.UI.showDoll = function (target) {

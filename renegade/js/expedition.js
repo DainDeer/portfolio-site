@@ -322,6 +322,7 @@
     if (r.gear[slot]) r.bag.items.push(r.gear[slot]);
     const oldMax = G.Battle.unitFromBody(X.body(), r.gear, {}).maxHp;
     r.gear[slot] = it;
+    if (G.GruntGear) for (const c of G.GruntGear.noteEquip(it)) X.log(`New look unlocked: ${G.GruntGear.cosDef(c).name}. Put it on a Grunt from the paper doll.`, "good");   // Slice 5 §H
     const newMax = G.Battle.unitFromBody(X.body(), r.gear, {}).maxHp;
     r.bodyHp = Math.max(1, Math.min(newMax, r.bodyHp + Math.max(0, newMax - oldMax)));
   };
@@ -583,7 +584,7 @@
     for (const qid of G.Quests.onKills(r.zone, deadEnemies.map((u) => ({ eid: u.eid, family: u.family })))) { const qh = G.Quests.objectiveHeat(qid); if (qh) X.addHeat(qh, "quest"); }
     // the fight stays here: the enemies still standing wait at this location (this run). A Hunter pack keeps its own state.
     const site = X.site(nid), left = b.units.filter((u) => u.side === 1 && (u.state === "alive" || u.state === "retreating"));
-    if (site && step.family !== "hunters") {
+    if (site && step.family !== "hunters" && !step.stall) {   // Vixie (7a9a20d): breaking away from the Cable Car stall fight resets the car: no fight waits, try it again
       const again = Object.assign(U.clone(Object.assign({}, step, { rival: null })), { rival: step.rival || null, why: "They're still here.", escapedFrom: true });
       if (step.family !== "rivals" && !step.defense) again.enemies = left.map((u) => u.eid).filter(Boolean);
       site.escaped = { run: G.state.runCount, step: again };

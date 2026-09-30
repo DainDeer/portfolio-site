@@ -70,11 +70,30 @@ DATA.gruntLook = {
   items: {
     // Vixie's starter / basic items (patched_tunic, hide_vest, wool_cap) need no entry: Smudge's layers (26801b2) are in
     // grunt_options.json under the item's own key, merged at load.
-    head: { militia_helmet: "militia_helmet", scav_hood: "scav_hood", scrap_helmet: "militia_helmet", hunter_mask: "scav_hood" },
-    body: { militia_vest: "militia_tabard", scav_poncho: "scav_coat", padded_vest: "quilted_jacket", hunter_coat: "scav_coat" },
+    head: { militia_helmet: "militia_helmet", scav_hood: "scav_hood", scrap_helmet: "militia_helmet", hunter_mask: "scav_hood",
+            witch_hat: "scav_hood", horse_mask: "scav_hood" },                              // Slice 5 §H stand-ins until Smudge's outfit layers
+    body: { militia_vest: "militia_tabard", scav_poncho: "scav_coat", padded_vest: "quilted_jacket", hunter_coat: "scav_coat",
+            wizard_robes: "scav_coat", maid_outfit: "starter_poncho" },                    // (lucky_boxers: cosmetics.outfits underwear)
     backpack: { school_bag: "school_bag", military_ruck: "military_ruck", scav_satchel: "school_bag" },
     weapon: { pipe_rifle: "pipe_rifle", militia_carbine: "militia_carbine", nat_shiv: "nat_shiv", bass_guitar: "bass_guitar" }
   },
   fallback: { head: "militia_helmet", body: "starter_poncho", backpack: "school_bag", weapon: null },
+  // Slice 5 §H cosmetics (Vixie's [DRAFT] single-player rule): equipping an item once unlocks its look for good
+  // (state.cosmetics.unlocked); the doll's Outfit row then lets a Grunt wear any unlocked look over its real gear (stats
+  // unchanged; g.cosmetic = { head, body }). Looks: the silly outfits below + every head / body gear look ("look_<part>",
+  // from an item with its own or a mapped part; the fallback doesn't count). Head "none" = bare head. Grunts only:
+  // your body and Veterans keep their sprites. No bind / trade rules (parked for the MMO).
+  //   outfits[id]: { name, slot, item (the item that unlocks it), underwear (body: nothing over the mannequin's underwear) }
+  //   The look is the item's own part once Smudge's layers are in grunt_options.json under the item key (outfitSlot
+  //   note there), else its stand-in (items map above); cosList() marks those pending.
+  cosmetics: {
+    outfits: {
+      witch_hat:    { name: "Witch hat",          slot: "head", item: "witch_hat" },
+      horse_mask:   { name: "Horse mask",         slot: "head", item: "horse_mask" },
+      wizard_robes: { name: "Wizard robes",       slot: "body", item: "wizard_robes" },
+      maid_outfit:  { name: "Maid outfit",        slot: "body", item: "maid_outfit" },
+      lucky_boxers: { name: "Just the underwear", slot: "body", item: "lucky_boxers", underwear: true }
+    }
+  },
   dollScale: 5             // the paper doll draws the stand frame at 5x
 };

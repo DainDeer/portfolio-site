@@ -170,9 +170,9 @@ DATA.searchables = {
         ex_tunnel:  { name: "Tunnel mouth",   sprite: "obj_ex_tunnel_mouth", examine: "[PLACEHOLDER] The tunnel home. Something always follows you into it." },
         ex_rooftop: { name: "Pickup radio",   sprite: "obj_radio",      examine: "[PLACEHOLDER] A radio wired to a flare. Call the pickup and it comes." },
         b_levee:    { name: "Boat launch",    sprite: "obj_ex_boat", wide: 2, examine: "[PLACEHOLDER] The boat comes when you call. Hold the ramp till it does." },
-        // Slice 5 §G: no object art for these yet; the map markers stand in (loc_cable_car / loc_goat_path)
-        gb_cable_car: { name: "Cable car",    sprite: "loc_cable_car", examine: "[PLACEHOLDER] A rusted gondola on a sagging cable. The motor box has a crank." },
-        gb_goat_path: { name: "Goat path",    sprite: "loc_goat_path", examine: "[PLACEHOLDER] A path only a goat would call a path. It goes down, eventually." }
+        // Slice 5 §G: Smudge's 7a9a20d room objects
+        gb_cable_car: { name: "Cable car",    sprite: "obj_ex_cable_car", wide: 2, examine: "[PLACEHOLDER] A rusted gondola on a sagging cable. The motor box has a crank." },
+        gb_goat_path: { name: "Goat path",    sprite: "obj_ex_goat_path", examine: "[PLACEHOLDER] A path only a goat would call a path. It goes down, eventually." }
       }
     }
   },
