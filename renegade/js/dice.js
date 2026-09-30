@@ -200,8 +200,12 @@ void main() {
     if (Dc.playing) return;
     if (!Dc.q.length) { Dc.played = 0; return Dc.flushWaiters(); }
     const i = Dc.q.findIndex((x) => x.hold), next = Dc.q.splice(i >= 0 ? i : 0, 1)[0], later = Dc.played > 0 && !next.hold, Q = C().queue || {};   // a batch's followers (scouting) play faster + quieter; a check you clicked never does   // holding checks first
+    if (!next.hold && !next.batch) {   // Vixie (Sep 30): only a scouting batch docks. A lone noHold roll (one new scouting read) gets the big panel (no shield)
+      const rest = Dc.q.filter((x) => !x.hold && x.kind === next.kind);
+      if (rest.length + 1 >= (Q.dockMin || 2)) for (const x of [next].concat(rest)) x.batch = true;
+    }
     Dc.playing = next; Dc.played = (Dc.played || 0) + 1;
-    Dc.show(next, Object.assign({ noShield: !next.hold, mini: !next.hold }, later ? { speed: Q.speed, holdMs: Q.holdMs, quiet: true } : {})).then(() => { Dc.playing = false; Dc.flushWaiters(); Dc.pump(); });
+    Dc.show(next, Object.assign({ noShield: !next.hold, mini: !!next.batch }, later ? { speed: Q.speed, holdMs: Q.holdMs, quiet: true } : {})).then(() => { Dc.playing = false; Dc.flushWaiters(); Dc.pump(); });
   };
   // sounds (config.dice.sfx; all behind the toggle, since no die = no capture)
   Dc.sfx = function (what) {
@@ -261,15 +265,17 @@ void main() {
       }).catch((e) => { Dc.error = String(e && e.message || e); still("error"); });
     });
   };
-  // ---- the docked batch die (Vixie, Sep 30): a batch of rolls that don't hold the screen (scouting a new neighbourhood)
+  // ---- the docked batch die (Vixie, Sep 30): a batch of rolls that don't hold the screen (scouting a new neighbourhood:
+  // config.dice.queue.dockMin or more noHold rolls of one kind queued together; a lone one and every holding check use the big panel)
   // rolls a small d20 in a 64 px box (config.dice.art.mini) docked in a corner (bottom-left first) instead of the big panel,
   // with no shield: the frame lets taps through (pointer-events: none) and only the die's body takes a tap, which skips.
   // Same plan (its length and wall hits time the roll + the bounce sounds), same thunk / stinger rule (pump's opts.quiet:
   // the stinger on a batch's first die only), same speeds as the big panel. It tumbles (the ember loop) with a small hop,
   // then shows face n in the grade's tint. Placement skips anything it would cover: the tutorial box / ring, the pods
-  // wheels' buttons, the phone battle buttons, a toast (then the next corner). Art: config.dice.art.mini (for now a
-  // placeholder = the big die's 40x41 resting strips at 1x until Smudge's 64 px strips land; if its files fail to load,
-  // those same strips stand in). Always a whole-number scale, pixelated.
+  // wheels' buttons, the phone battle buttons, the battlefield + its HUD (placement too), a toast; then, softer, map nodes
+  // and room objects (the next corner). A fight starting dismisses it (Dc.dismissMini). Art: config.dice.art.mini =
+  // Smudge's 64 px d20 strips (b7e795a); if its files fail to load, the big die's 40x41 resting strips stand in at 1x.
+  // Always a whole-number scale, pixelated.
   Dc.miniArt = function (tint) {
     const A = C().art, M = A.mini || {}, size = M.size || 64;
     const r = Dc.mini64 !== false && M.rest && M.rest[tint] ? M.rest : A.rest, fr = r.frame || [size, size];
@@ -279,10 +285,12 @@ void main() {
     const M = C().art.mini || {}; if (Dc.mini64 != null || !M.rest || typeof Image === "undefined") return;
     Dc.mini64 = null; const im = new Image(); im.onload = () => { Dc.mini64 = true; }; im.onerror = () => { Dc.mini64 = false; }; im.src = url(M.rest.ember.file);
   };
-  Dc.MINI_AVOID = ".tut-box, .tut-ring, .tut-arrow, .wheel-btn, .touch-ctl, .card-toast, #toast.show";
+  Dc.MINI_AVOID = ".tut-box, .tut-ring, .tut-arrow, .wheel-btn, .touch-ctl, .card-toast, #toast.show, .battle-canvas, .battle-hud";
+  Dc.MINI_SOFT = ".map-node, .site-obj";   // taps it would block; weighed 1/100 of the above (a corner clear of both wins)
   Dc.placeMini = function (el) {
-    const hit = [...document.querySelectorAll(Dc.MINI_AVOID)].map((e) => e.getBoundingClientRect()).filter((r) => r.width && r.height);
-    const over = (a) => hit.reduce((s, b) => s + Math.max(0, Math.min(a.right, b.right + 4) - Math.max(a.left, b.left - 4)) * Math.max(0, Math.min(a.bottom, b.bottom + 4) - Math.max(a.top, b.top - 4)), 0);
+    const rects = (sel, wt) => [...document.querySelectorAll(sel)].map((e) => e.getBoundingClientRect()).filter((r) => r.width && r.height).map((r) => ({ r, wt }));
+    const hit = rects(Dc.MINI_AVOID, 100).concat(rects(Dc.MINI_SOFT, 1));
+    const over = (a) => hit.reduce((s, { r: b, wt }) => s + wt * Math.max(0, Math.min(a.right, b.right + 4) - Math.max(a.left, b.left - 4)) * Math.max(0, Math.min(a.bottom, b.bottom + 4) - Math.max(a.top, b.top - 4)), 0);
     let best = null;
     for (const spot of ["bl", "br", "tl", "tr"]) {
       el.dataset.spot = spot; const c = over(el.getBoundingClientRect());
@@ -312,7 +320,7 @@ void main() {
       };
       setTumble(0);
       document.body.append(el); Dc.placeMini(el);
-      let done = false, raf = 0, landed = false, plan = null; const iv = setInterval(() => { if (!done) Dc.placeMini(el); }, 250);
+      let done = false, raf = 0, landed = false, plan = null; const iv = setInterval(() => { if (!done) { if (document.querySelector("#screen .battle-wrap")) return Dc.dismissMini(); Dc.placeMini(el); } }, 250);
       const finish = () => { if (done) return; done = true; cancelAnimationFrame(raf); clearInterval(iv); Dc.close(); resolve(roll); };
       const land = () => { if (landed) return; landed = true; cancelAnimationFrame(raf); Dc.sfx(opts.quiet ? "landQuiet" : "land");
         setFace(roll.d, tintEnd); el.dataset.dice = "landed"; el.dataset.face = String(roll.d); el.dataset.tint = tintEnd;
@@ -330,6 +338,14 @@ void main() {
         raf = requestAnimationFrame(tick);
       }).catch((e) => { Dc.error = String(e && e.message || e); Dc.mode = "still"; Dc.stillWhy = "error"; land(); });
     });
+  };
+  // a fight is starting (G.BattleView.mount) / showing: the docked die goes now, with the rest of its batch (they only
+  // show a result the map already has; nothing waits on them)
+  Dc.dismissMini = function () {
+    const had = !!(Dc.cur && Dc.cur.mini) || Dc.q.some((x) => x.batch);
+    Dc.q = Dc.q.filter((x) => !x.batch);
+    if (Dc.cur && Dc.cur.mini) Dc.cur.finish();
+    return had;
   };
   Dc.close = function () { if (typeof document === "undefined") return; for (const el of document.querySelectorAll(".dice-panel, .dice-shield, .dice-mini")) el.remove(); Dc.cur = null; };
 })(typeof window !== "undefined" ? window : globalThis);

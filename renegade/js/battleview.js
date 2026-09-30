@@ -9,6 +9,7 @@
     const c = C(), px = c.pxPerM, W = c.arenaW * px, H = c.arenaH * px;
     const v = { b, opts, px, W, H, speed: opts.speed || 1, floaters: [], tracers: [], gibs: [], booms: [], sparks: [], arcs: [], shake: 0, slowmo: 0, last: 0, raf: 0, drag: null, hover: null, mouse: null, corpseIdx: 0, done: false };
     container.innerHTML = "";
+    if (G.Dice && G.Dice.dismissMini) G.Dice.dismissMini();   // a docked scouting die never lingers into a fight
     const wrap = document.createElement("div"); wrap.className = "battle-wrap";
     const hud = document.createElement("div"); hud.className = "battle-hud";
     const canvas = document.createElement("canvas"); canvas.width = W; canvas.height = H; canvas.className = "battle-canvas";
@@ -655,9 +656,14 @@
     }
     // floating combat text
     ctx.textAlign = "center";
+    // phones: the arena is drawn at 0.27-0.42x there, so 13 px canvas text came out 3.5-5.5 css px (the goat's CHARGE! /
+    // KNOCKDOWN unreadable). On the phone layout, word floaters get at least DATA.config.battle.phoneFloatPx css px (numbers
+    // a bit less so a volley stays readable); desktop is unchanged.
+    const fk = G.Touch && G.Touch.layout() && v.canvas.clientWidth ? v.canvas.width / v.canvas.clientWidth : 0, fp = (DATA.config.battle || {}).phoneFloatPx || { word: 10, num: 8 };
     for (const f of v.floaters) {
       ctx.globalAlpha = U.clamp(f.life / f.max * 1.5, 0, 1);
-      ctx.font = f.big ? "bold 18px sans-serif" : "bold 13px sans-serif";
+      const fs0 = f.big ? 18 : 13, fs = fk ? Math.max(fs0, Math.round((/[A-Za-z]{2}/.test(f.text) ? fp.word : fp.num) * (f.big ? 1.3 : 1) * fk)) : fs0;
+      ctx.font = "bold " + fs + "px sans-serif";
       ctx.lineWidth = 3; ctx.strokeStyle = "rgba(0,0,0,.85)"; ctx.strokeText(f.text, f.x * px, f.y * px); ctx.fillStyle = f.color; ctx.fillText(f.text, f.x * px, f.y * px);
     }
     // XP floats (Slice 2 §10): small pale-cyan labels beside the unit, real-time fade, stacked upward

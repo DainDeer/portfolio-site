@@ -197,6 +197,7 @@ DATA.config = {
     hpMult: 1.5,                // global HP multiplier for every unit (both sides): longer, more readable fights (doc target 20-60 s)
     arenaW: 40, arenaH: 24,     // meters
     pxPerM: 32,                 // 32 px/m: a 32px sprite at texelScale 2 = 64 px = one 2 m grid cell
+    phoneFloatPx: { word: 10, num: 8 },   // phone layout only: floating combat text at least this many CSS px (words like CHARGE! / KNOCKDOWN, numbers); desktop draws 13 / 18 canvas px as before
     gridCell: 2,                // placement grid cell size (m)
     playerZoneCols: 6,          // columns of cells on the left available for placement
     enemyZoneFromX: 26,         // enemies spawn right of this x (m)
@@ -285,7 +286,7 @@ DATA.config = {
     // Break away (the one check inside a fight: the fight holds while the die rolls). Not "craft" (the Workbench's
     // quality roll lands on a timer, not at a click). The player can turn them off: settings.showDice.
     consumers: ["extract", "search", "event", "rival", "hunter", "spot", "scout", "breakaway"],
-    queue: { speed: 2, holdMs: 500, noHold: ["scout"] },   // noHold kinds never hold the screen (no shield: scouting rolls itself as you move); a batch of them (a new neighbourhood) plays x2 after the first, holds 0.5 s, thunk without the stinger
+    queue: { speed: 2, holdMs: 500, noHold: ["scout"], dockMin: 2 },   // noHold kinds never hold the screen (no shield: scouting rolls itself as you move); a batch of them (a new neighbourhood) plays x2 after the first, holds 0.5 s, thunk without the stinger; only such a batch (dockMin+ queued together) uses the docked die, a lone one the big panel
     // sounds (data/audio.js): a random tumble per wall bounce (up to maxBounces), then the thunk + Snare's stinger on the landing frame
     sfx: { bounce: ["sfx_dice_bounce_1", "sfx_dice_bounce_2", "sfx_dice_bounce_3"], maxBounces: 3, bounceMinSpeed: 0.5, land: "sfx_dice_land", stinger: "stinger_roll" },
     // Smudge 7ddb42d (assets/ui/dice/dice_manifest.json): the mesh + numbering, box, lantern, camera and light are in the
