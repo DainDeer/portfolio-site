@@ -48,6 +48,9 @@ DATA.items = {
     wood_round_shield: { name: "Wood Round Shield", slot: "shield", hands: "shield", armor: 1, blockPct: 15, moveSpeedPct: -2, weight: 2.5, req: 0, dropWeight: 3 },
     riot_shield:       { name: "Riot Shield",       slot: "shield", hands: "shield", armor: 2, blockPct: 25, moveSpeedPct: -6, weight: 5.0, req: 0, dropWeight: 1 },
     scrap_lid_shield:  { name: "Scrap Lid",         slot: "shield", hands: "shield", armor: 1, blockPct: 10, moveSpeedPct: -1, weight: 1.5, req: 0, dropWeight: 3 },
+    // Slice 5 §F pets (allies.pets): carried out of a run = unlocked. Not equippable, never random loot. [PLACEHOLDER] icons
+    pet_hound_pup:   { name: "Hound pup",      slot: "pet", pet: "hound_pup",   weight: 2, req: 0, dropWeight: 0, noScale: true, sprite: "item_pet_hound_pup" },
+    pet_scout_drone: { name: "Stray drone",    slot: "pet", pet: "scout_drone", weight: 2, req: 0, dropWeight: 0, noScale: true, sprite: "item_pet_scout_drone" },
     school_bag:    { name: "School Bag",        slot: "backpack", carryKg: 10, weight: 0.8, req: 0, dropWeight: 4, noScale: true },
     military_ruck: { name: "Military Ruck",     slot: "backpack", carryKg: 20, moveSpeedPct: -3, weight: 2.0, req: 0, dropWeight: 2, noScale: true },
     // Slice 3 §5 set pieces (data/sets.js). evasion / checkSkill are base stats like armor (evasion scales with ilvl).

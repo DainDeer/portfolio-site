@@ -26,7 +26,7 @@
     for (const o of site.objects) {
       if (!X.objVisible(o, site) || !X.roomOpen(site, o.room)) continue;   // rooms behind closed doors stay unseen
       const open = true, blockedWhy = X.objBlocked(o, site), acts = X.objActions(o);
-      const done = o.kind === "search" ? (o.searched && !X.hasLeft(o)) || o.blocked : o.kind === "extract" ? !!blockedWhy && !X.wrecked(X.node(site.nid)) : o.done;   // Slice 5 §D: closed by Heat = dim; the wreck isn't (its smoke says it)
+      const done = o.kind === "train" ? X.trainedNow(o) : o.kind === "search" ? (o.searched && !X.hasLeft(o)) || o.blocked : o.kind === "extract" ? !!blockedWhy && !X.wrecked(X.node(site.nid)) : o.done;   // Slice 5 §D: closed by Heat = dim; the wreck isn't (its smoke says it)
       const el = document.createElement("div");
       el.className = "site-obj" + (open ? "" : " dark") + (done ? " done" : "") + (o.kind !== "search" ? " " + o.kind : "") + (o.type === "door" ? " door" : "") + (o.fresh ? " corpse" : "") + (busy && busy.objId === o.id ? " busy" : "");
       el.dataset.obj = o.id; el.dataset.kind = o.kind; if (o.type) el.dataset.type = o.type;
@@ -74,7 +74,7 @@
     return wrap;
   };
 
-  SV.actionLabel = { leave: "Leave to the zone map ↩", extract: "Extract", search: "Search", pick: "Pick the lock", force: "Force it", kick: "Kick it", reopen: "Take what's left", use: "Interact", cross: "Crawl through", claim: "Claim the body", examine: "Examine" };
+  SV.actionLabel = { leave: "Leave to the zone map ↩", extract: "Extract", search: "Search", pick: "Pick the lock", force: "Force it", kick: "Kick it", reopen: "Take what's left", use: "Interact", cross: "Crawl through", claim: "Claim the body", examine: "Examine", train: "Train" };
   // Slice 4 §B: a wall wheel. Its arrow points at one of 4 positions. Click the left half to turn it counterclockwise,
   // the right half clockwise; on touch screens two small arrow buttons sit under it (css: .wheel-btns).
   SV.wheel = function (el, o, why, busy) {
@@ -110,7 +110,8 @@
       if (a === "extract") { t += `<br>${G.UI.extractLabel(X.extractionDef(X.node()))}`; continue; }   // Slice 5 §D: the same line as the panel button
       if (a === "leave" || a === "use" || a === "cross" || a === "reopen" || a === "claim" || a === "examine") { t += `<br>${SV.actionLabel[a]}`; continue; }
       const i = X.searchInfo(o.id, a);
-      t += `<br>${SV.actionLabel[a]}: <b>${U.fmt1(i.sec)} s</b> · disturbance <b>${U.fmt1(i.pct)}%</b>` + (i.heatGain ? ` · +${i.heatGain} Heat` : "") + (i.check ? ` · ${DATA.skills[i.check.skill].name} DC ${i.check.dc} ${Math.round(i.check.chance)}%` : "");
+      const TR = a === "train" && X.trainDef(o);   // Slice 5 §F
+      t += `<br>${TR ? TR.label || SV.actionLabel[a] : SV.actionLabel[a]}: <b>${U.fmt1(i.sec)} s</b>${TR ? ` · +${TR.xp} ${DATA.skills[TR.skill].name} XP` : ""} · disturbance <b>${U.fmt1(i.pct)}%</b>` + (i.heatGain ? ` · +${i.heatGain} Heat` : "") + (i.check ? ` · ${DATA.skills[i.check.skill].name} DC ${i.check.dc} ${Math.round(i.check.chance)}%` : "");
       if (G.Debug && G.Debug.rollMath) t += `<br><small>${i.math}</small>`;
     }
     return t;

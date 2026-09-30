@@ -140,6 +140,7 @@
   I.HAND_SLOTS = ["weapon", "offhand", "weapon2", "offhand2"];
   I.BACKUP_SLOTS = ["weapon2", "offhand2"];
   I.hands = (b) => (!b ? 0 : b.slot === "shield" ? "shield" : b.slot === "weapon" ? (b.hands === 2 ? 2 : 1) : 0);   // 2 | 1 | "shield" | 0
+  I.isPet = (item) => !!(item && (I.base(item.base) || {}).slot === "pet");   // Slice 5 §F: carried out = unlocked (G.Allies.unlockPet)
   I.isHandItem = (item) => !!(item && I.hands(I.base(item.base)));
   // Putting item in hand slot key: { why } if it can't go there, else { clear: [keys] } the slots it pushes out.
   // Rules: a shield only goes in an off hand, a 2H weapon only in a main hand (and empties that set's off hand);

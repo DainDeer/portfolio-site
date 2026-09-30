@@ -18,6 +18,9 @@ DATA.recipes = {
     military_ruck:{ name: "Military Ruck",    tier: 2, cost: { cloth: 8, scrap: 3, fuel: 1 },            sec: 90, out: { item: "military_ruck", quality: true } },
     scav_satchel:{ name: "Scav Satchel",      tier: 2, cost: { cloth: 6, scrap: 2, biomass: 1 },         sec: 90, out: { item: "scav_satchel", quality: true } },
     biogel:      { name: "Biogel med kits",   tier: 2, cost: { biomass: 1, chemicals: 1, cloth: 1 },     sec: 45, out: { res: { med: 2 } }, needs: { rep: { ilse: 2 } } },
+    // Slice 5 §F: the animal parts [DRAFT]
+    cure_fur:    { name: "Cure fur",          tier: 1, cost: { fur: 2 },                                 sec: 20, out: { res: { cloth: 3 } } },
+    tooth_loads: { name: "Tooth hand-loads",  tier: 1, cost: { teeth: 3, scrap: 1 },                     sec: 30, out: { ammo: "ammo_handload", n: 3 } },
     reforge:     { name: "Reforge",           tier: 2, cost: { relic: 1, electronics: 3 },               sec: 60, out: { reforge: true } }
   }
 };

@@ -82,6 +82,14 @@ DATA.enemies = {
     loot: { ilvlPlus: 3, rarityBonus: 10, garbPct: 12, shardPct: 20, relicPct: 8 },
     debuff: { enabled: true, id: "orbital_mark", name: "Marked by the Orbitals", runs: 2, startHeat: 25 }
   },
+  // Slice 5 §F: each family's own rare drops, rolled on each of its bodies when searched. [DRAFT %]
+  // { item, rarity, pct } | { res, n, pct } | { pet, pct } (the pet's item: DATA.allies.pets[pet].item). Rivals: their own gear.
+  familyDrops: {
+    outlaws:  [{ res: "fuel", n: 2, pct: 8 }, { item: "militia_carbine", rarity: "blue", pct: 2 }],
+    beasts:   [{ item: "hide_vest", rarity: "blue", pct: 3 }, { pet: "hound_pup", pct: 0.3 }],
+    machines: [{ res: "data_shards", n: 1, pct: 8 }, { pet: "scout_drone", pct: 0.3 }],
+    hunters:  [{ item: "hunter_longrifle", rarity: "blue", pct: 3 }]
+  },
   // "Tougher enemy compositions" at Marked+ heat (§12): one unit per battle becomes elite.
   elite: { prefix: "Elite ", hpMult: 1.6, dmgMult: 1.3, skillBonus: 6, count: 1 }
 };

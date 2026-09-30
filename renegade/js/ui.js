@@ -60,7 +60,8 @@
     if (G.Difficulty && !G.Difficulty.pending(s)) { const d = G.Difficulty.id(s); t.appendChild(h("span", { class: "diff-badge diff-" + d, "data-diff": d, title: `Difficulty: ${G.Difficulty.name(s)} (locked for this save). ${G.Difficulty.def(s).desc.replace(/^[^:]+: /, "")}` }, SP.icon("diff_" + d + "_hud", 32), G.Difficulty.name(s))); }   // Slice 4 §H
     const res = s.run ? s.run.bag.res : s.stash.res;
     const box = h("span", { class: "res" }, s.run ? "Bag: " : "Stockpile: ");
-    for (const k in DATA.items.resources) if (!DATA.items.resources[k].hidden) box.appendChild(h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " + (res[k] || 0)));
+    for (const k in DATA.items.resources) if (!DATA.items.resources[k].hidden && (!["meat", "fur", "teeth"].includes(k) || res[k] > 0)) box.appendChild(   // Slice 5 §F: the animal parts only once you have some
+h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " + (res[k] || 0)));
     t.appendChild(box);
     t.appendChild(h("span", null, `Character Lv ${G.Skills.charLevel(s)} · Runs ${s.runCount} · Extracted ${s.extractions} · Deaths ${s.deaths}`));
     t.appendChild(h("span", { class: "top-btns" }, h("button", { class: "settings-btn journal-btn", "data-act": "journal", title: "Journal (main objective, side quests)", onclick: () => UI.showJournal() }, "📖 Journal"),   // Slice 4 §B
@@ -153,7 +154,7 @@
 
   UI.panelStockpile = function (el) {
     const s = G.state, t = h("div", { class: "stockpile" });
-    for (const k in DATA.resources) { const R = DATA.resources[k]; if (R.hidden) continue; t.appendChild(h("div", { class: "sp-row", "data-res": k }, SP.icon(R.sprite, 24), h("span", { class: "sp-name" }, R.name), h("b", null, String(s.stash.res[k] || 0)), h("small", null, ` ${R.kgPerUnit} kg each`))); }
+    for (const k in DATA.resources) { const R = DATA.resources[k]; if (R.hidden || R.bagOnly) continue; t.appendChild(h("div", { class: "sp-row", "data-res": k }, SP.icon(R.sprite, 24), h("span", { class: "sp-name" }, R.name), h("b", null, String(s.stash.res[k] || 0)), h("small", null, ` ${R.kgPerUnit} kg each`))); }
     el.appendChild(t);
     el.appendChild(h("p", { class: "hint" }, "Everything you carry out goes here. No cap, no drain, no rot."));
   };
@@ -180,6 +181,13 @@
         h("div", { class: "hint" }, "Weapon: " + G.Items.base(g.weapon).name), btn));
     });
     if (!A.candidates().length) cards.appendChild(h("i", null, "Everyone here has signed on. New faces after your next run."));
+    for (const id of A.petsUnlocked()) {   // Slice 5 §F: pets you brought home
+      const P = DATA.allies.pets[id], pw = A.canHirePet(id), alive = A.petAlive(id);
+      const pb = h("button", { class: "primary", "data-act": "recruit-pet", "data-pet": id, ...(pw ? { disabled: "disabled", title: pw } : {}) }, alive ? "On the roster" : "Take it in");
+      pb.addEventListener("click", () => { const res = A.hirePet(id); if (res.error) UI.fail(res.error); else UI.toast(A.name(res.grunt) + " joins the roster."); UI.render(); });
+      cards.appendChild(h("div", { class: "cand-card pet-card", "data-pet": id }, SP.icon(P.sprite, 32), h("div", { class: "cand-name" }, P.name + " (pet)"), h("div", { class: "hint" }, P.desc),
+        h("div", { class: "hint" }, "Weapon: " + G.Items.base(P.weapons[0]).name + " · cost " + Object.entries(P.cost || {}).map(([r, n]) => n + " " + DATA.resources[r].name).join(" + ")), pb));
+    }
     el.appendChild(cards);
     el.appendChild(h("p", { class: "hint" }, "New candidates turn up after every run (extract or death), not when you reopen this."));
     const vets = s.grunts.filter(A.isVeteran);
@@ -340,7 +348,7 @@
       pouchSel.appendChild(h("option", { value: "" }, "(empty)"));
       const taken = lo.pouch.filter((p, j) => p && j !== si).map((p) => p.uid).filter(Boolean);
       for (const it of s.stash.items.filter((i) => !G.Items.isQuest(i) && !G.Workbench.isAmmo(i) && G.Items.weight(i) <= room + 1e-9 && !Object.values(lo.gear).includes(i.uid) && !taken.includes(i.uid))) pouchSel.appendChild(h("option", { value: it.uid, selected: curP.uid === it.uid }, `${G.Items.name(it)} (${G.Items.weight(it)} kg)`));
-      for (const k in DATA.resources) { if (DATA.resources[k].hidden) continue; const n = Math.min(s.stash.res[k] || 0, Math.floor((room + 1e-9) / DATA.resources[k].kgPerUnit)); if (n > 0) pouchSel.appendChild(h("option", { value: `res:${k}:${n}`, selected: curP.res === k }, `${n} × ${DATA.resources[k].name}`)); }
+      for (const k in DATA.resources) { if (DATA.resources[k].hidden || DATA.resources[k].bagOnly) continue; const n = Math.min(s.stash.res[k] || 0, Math.floor((room + 1e-9) / DATA.resources[k].kgPerUnit)); if (n > 0) pouchSel.appendChild(h("option", { value: `res:${k}:${n}`, selected: curP.res === k }, `${n} × ${DATA.resources[k].name}`)); }
       gsec.appendChild(h("div", { class: "gear-row" }, h("span", { class: "slot" }, `Secure Pouch ${slots > 1 ? si + 1 : ""}`), pouchSel, si === 0 ? h("small", null, ` ${slots} slot${slots > 1 ? "s" : ""}, ${pk} kg total — survives death`) : null));
     }
     // updates in place (no full re-render): a blur-triggered re-render would swallow the click on "Start"
@@ -586,6 +594,8 @@
       box.appendChild(h("p", null, "Brought home: " + (lr.items.map((i) => `${i.name} (${DATA.items.rarities[i.rarity].name} i${i.ilvl})`).join(", ") || "no new items")));
       const rs = Object.entries(lr.res).filter(([, n]) => n).map(([k, n]) => `${n} ${DATA.items.resources[k].name}`); if (rs.length) box.appendChild(h("p", null, "Resources: " + rs.join(", ")));
       if (lr.grunts.length) box.appendChild(h("p", null, `New recruits: ${lr.grunts.join(", ")}`));
+      if (lr.pets && lr.pets.length) box.appendChild(h("p", { class: "good", "data-result": "pets" }, `It followed you home: ${lr.pets.join(", ")}. Recruit it at the Recruitment lot.`));   // Slice 5 §F
+      if (lr.converted && Object.keys(lr.converted).length) box.appendChild(h("p", { class: "hint" }, Object.entries(lr.converted).map(([k, n]) => `${n} ${DATA.resources[k].name} → ${DATA.resources[DATA.resources[k].convertOnExtract.to].name}`).join(", ")));
       if ((lr.bounties || []).length) box.appendChild(h("p", { class: "good" }, `Bounty paid: ${lr.bounties.join(" · ")}`));
       if (lr.bodies.length) box.appendChild(h("p", null, `New bodies: ${lr.bodies.join("; ")}`));
       // Slice 3 §1: an ally who already had a nickname earned another: Keep / Take the new one
@@ -689,11 +699,11 @@
     }
     const wornSets = UI.setsEl(worn); if (wornSets) carry.appendChild(wornSets);
     carry.appendChild(h("h4", null, "Bag"));
-    for (const it of r.bag.items) carry.appendChild(UI.itemEl(it, G.Items.isQuest(it) ? [{ label: "Drop", fn: () => { X.dropItem(it.uid); UI.render(); } }] : [
+    for (const it of r.bag.items) carry.appendChild(UI.itemEl(it, G.Items.isQuest(it) || G.Items.isPet(it) ? [{ label: "Drop", fn: () => { X.dropItem(it.uid); UI.render(); } }] : [
       { label: "Equip", fn: () => { const e = X.equipFromBag(it.uid, "main"); if (e) UI.fail(e); UI.render(); } },
       ...(G.Items.isHandItem(it) ? [{ label: "Backup", fn: () => { const e = X.equipFromBag(it.uid, "backup"); if (e) UI.fail(e); UI.render(); } }] : []),
       { label: "Pouch", fn: () => { const e = X.toPouch(it.uid); if (e) UI.fail(e); UI.render(); } },
-      { label: "Drop", fn: () => { X.dropItem(it.uid); UI.render(); } }], G.Items.isQuest(it) ? "quest item" : null));
+      { label: "Drop", fn: () => { X.dropItem(it.uid); UI.render(); } }], G.Items.isQuest(it) ? "quest item" : G.Items.isPet(it) ? "pet: extract with it to keep it" : null));
     for (const k in r.bag.res) if (r.bag.res[k] > 0) carry.appendChild(h("div", { class: "item-row" }, SP.icon(DATA.items.resources[k].sprite, 20), h("span", { class: "item-name" }, `${r.bag.res[k]} × ${DATA.items.resources[k].name}`, h("small", null, ` ${U.fmt1(r.bag.res[k] * DATA.items.resources[k].kgPerUnit)} kg`)),
       h("span", { class: "item-acts" }, h("button", { onclick: () => { const e = X.resToPouch(k); if (e) UI.fail(e); UI.render(); } }, "Pouch"), h("button", { onclick: () => { X.dropRes(k, 1); UI.render(); } }, "Drop 1"))));
     carry.appendChild(h("h4", null, `Secure Pouch (${r.pouch.length}/${G.Outpost.pouchSlots()}, max ${G.Outpost.pouchMaxKg()} kg — survives death)`));

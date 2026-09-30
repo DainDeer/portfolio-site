@@ -16,7 +16,8 @@ DATA.searchables = {
                   table: [["food", 40, 1, 2], ["cloth", 35, 1, 2], ["med", 15, 1, 1], [null, 10]] },
     body_beast: { name: "Beast carcass", examine: "[PLACEHOLDER] Still warm. Something useful under the hide, maybe.", sprite: "corpse_beast", searchSec: 2, noise: 3, resRolls: 1,
                   table: [["chemicals", 35, 1, 1], ["food", 25, 1, 1], ["cloth", 15, 1, 1], ["biomass", 45, 1, 2], [null, 25]],
-                  extras: [{ res: "biomass", n: 1, chance: 70 }] },   // Slice 3 §11 tuning (milestone 5): Biomass 20 x1 -> 45 x1-2 + a 70% extra (target 1-3 per extracted run)
+                  extras: [{ res: "biomass", n: 1, chance: 70 },   // Slice 3 §11 tuning (milestone 5): Biomass 20 x1 -> 45 x1-2 + a 70% extra (target 1-3 per extracted run)
+                           { res: "meat", n: 1, chance: 100 }, { res: "fur", n: 1, chance: 30 }, { res: "teeth", n: 1, chance: 30 }] },   // Slice 5 §F animal parts [DRAFT]: meat always, fur / teeth uncommon
     crate:      { name: "Crate", examine: "[PLACEHOLDER] A battered crate. The lid's been pried at before.",         sprite: "obj_crate",  searchSec: 3, noise: 5, gearChance: 10, resRolls: 2,   // Slice 3 §11 tuning: Fuel 10 x1 -> 30 x1-2 + a 45% extra (target 2-4 per extracted run)
                   table: [["scrap", 40, 2, 4], ["food", 30, 2, 3], ["water", 30, 2, 3], ["fuel", 30, 1, 2]],
                   extras: [{ res: "fuel", n: 1, chance: 45 }],
@@ -53,9 +54,25 @@ DATA.searchables = {
     rival_pack: { name: "Rival's pack", examine: "[PLACEHOLDER] A pack left behind by another crew.",  sprite: "obj_rival_bag", searchSec: 3, noise: 3, resRolls: 2, gearRolls: 1, rarityBonus: 15,   // beaten rivals only (step 10)
                   table: [["scrap", 40, 2, 4], ["food", 30, 2, 3], ["water", 30, 2, 3], ["fuel", 10, 1, 1]],
                   extras: [{ res: "data_shards", n: 1, chance: 30 }, { res: "relic", n: 1, chance: 20 }] },
+    // Slice 5 §F training spots: action "train" (no loot): searchSec, then train.xp to train.skill (your body; mind skills
+    // to you), + train.heat, and the usual disturbance roll at `noise`. Once per run each (o.trainedRun). Where: training.
+    // Art: Smudge's obj_chop_stump / obj_fishing_spot (2c36080; the pond is in the sprite, wide 2); terminals keep obj_computer.
+    train_chop:     { name: "Chopping stump",   examine: "[PLACEHOLDER] A stump, an axe, a pile of rounds nobody split.", sprite: "obj_chop_stump", searchSec: 8, noise: 6,
+                      train: { skill: "hauling", xp: 400, heat: 1, label: "Chop wood", line: "[PLACEHOLDER] You split the pile. Your back will remember it." } },
+    train_fish:     { name: "Still water",      examine: "[PLACEHOLDER] Flat water, a rod on a forked stick. Something's biting.", sprite: "obj_fishing_spot", searchSec: 10, noise: 2, wide: 2,
+                      train: { skill: "survival", xp: 600, heat: 0, label: "Fish", line: "[PLACEHOLDER] You sit still long enough to learn the water." } },
+    train_terminal: { name: "Working terminal", examine: "[PLACEHOLDER] This one still boots. The login screen blinks at you.", sprite: "obj_computer", searchSec: 8, noise: 4,
+                      train: { skill: "hacking", xp: 600, heat: 1, label: "Practise", line: "[PLACEHOLDER] You poke at it until it stops fighting you." } },
     door:       { name: "Door", examine: "[PLACEHOLDER] A door. What's behind it is anyone's guess.",          sprite: "obj_door",   searchSec: 3, noise: 10, resRolls: 0, opensRoom: true,
                   stashChance: 10, stashAs: "crate",                                               // one crate roll behind it
                   lock: { chance: 30, check: { skill: "engineering", dc: 12 }, pickSec: 3, kick: { sec: 1 } } }  // kick: +forceNoise, +heat.kickDoor
+  },
+  // Slice 5 §F: where training spots are (one of each listed type, a fixed searchable): by location id or tag. [DRAFT]
+  // No Lumber Mill yet (Hushwood, part G): the chop is in the woodsy Zone A sites until then.
+  training: {
+    train_chop:     { locs: ["riverbed_camp", "rail_yard", "renegade_hollow"] },
+    train_fish:     { locs: ["toll_bridge", "pump_station", "b_culdesac", "b_outfall"] },
+    train_terminal: { tags: ["terminal"] }
   },
   // Sizes (Slice 2 §5). Searchable counts include doors (doors = rooms - 1) and generated old bodies; event objects,
   // survivors, quest objects, the passage grate and battle corpses are extra.

@@ -642,12 +642,16 @@
 
   X.extractSuccess = function () {
     const s = G.state, r = run();
-    const got = [];
+    const got = [], pets = [];
+    const keep = (it) => { if (G.Items.isPet(it)) { const p = G.Allies.unlockPet(it); if (p) pets.push(p); return; } s.stash.items.push(it); got.push(it); };   // Slice 5 §F: a pet carried out = unlocked
     for (const it of Object.values(r.gear)) if (it) s.stash.items.push(it);
-    for (const it of r.bag.items) { s.stash.items.push(it); got.push(it); }
-    for (const p of r.pouch) { if (p.item) { s.stash.items.push(p.item); got.push(p.item); } else s.stash.res[p.res] = (s.stash.res[p.res] || 0) + p.n; }
-    const resGot = {};
-    for (const k in r.bag.res) { if (!r.bag.res[k]) continue; s.stash.res[k] = (s.stash.res[k] || 0) + r.bag.res[k]; resGot[k] = r.bag.res[k]; }
+    for (const it of r.bag.items) keep(it);
+    const resGot = {}, conv = {};
+    // Slice 5 §F: convertOnExtract (Meat -> Food) as it reaches the stockpile
+    const addRes = (k, n) => { const R = DATA.resources[k] || {}, C = R.convertOnExtract; if (C) { conv[k] = (conv[k] || 0) + n; k = C.to; n = Math.floor(n * (C.per || 1)); } s.stash.res[k] = (s.stash.res[k] || 0) + n; return [k, n]; };
+    for (const p of r.pouch) { if (p.item) keep(p.item); else addRes(p.res, p.n); }
+    for (const k in r.bag.res) { if (!r.bag.res[k]) continue; const [k2, n2] = addRes(k, r.bag.res[k]); resGot[k2] = (resGot[k2] || 0) + n2; }
+    for (const k in conv) X.log(`${conv[k]} ${DATA.resources[k].name} → ${Math.floor(conv[k] * (DATA.resources[k].convertOnExtract.per || 1))} ${DATA.resources[DATA.resources[k].convertOnExtract.to].name} at the outpost.`, "good");
     if (r.ammo && r.ammo.n > 0 && G.Workbench) G.Workbench.addAmmo(r.ammo.base, r.ammo.n);   // leftover packs go back to the stash
     const bounties = G.Radio ? G.Radio.onExtract(r) : [];   // Slice 3 §10b: scouting bounties pay when you get back out
     for (const z of r.pendingUnlocks || []) s.zonesUnlocked[z] = true;
@@ -665,7 +669,8 @@
     // Slice 4 §B: the first extraction no longer rolls the human body offer; the working pod in the cryo annex does (G.Main.claim)
     s.lastResult = { kind: "extracted", items: got.map((i) => ({ name: G.Items.name(i), rarity: i.rarity, ilvl: i.ilvl })), res: resGot, grunts: newGrunts, bodies: r.claimedBodies.map((b) => G.State.bodyTitle(b)),
                      heat: r.heat, moves: r.moves, stats: r.stats, offer: !!offer, xp: r.xpTally || {}, zone: r.zone, nickOffers: s.nickOffers.map((o) => o.uid),
-                     ammo: r.ammo ? { base: r.ammo.base, used: r.ammo.used, left: r.ammo.n } : null, bounties: bounties.map((b) => G.Radio.text(b)) };
+                     ammo: r.ammo ? { base: r.ammo.base, used: r.ammo.used, left: r.ammo.n } : null, bounties: bounties.map((b) => G.Radio.text(b)),
+                     converted: conv, pets: pets.map((p) => p.name) };
     if (G.Tut) { const ml = G.Tut.onExtracted(); if (ml) s.lastResult.marta = ml; }   // Slice 4 §A1: "I've got this" + a successful extraction
     X.endRun();
   };

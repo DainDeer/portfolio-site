@@ -59,7 +59,7 @@
     const i = nm.indexOf(" ");
     return i < 0 ? `${nm} "${nick}"` : `${nm.slice(0, i)} "${nick}" ${nm.slice(i + 1)}`;
   };
-  A.rankName = (g) => (g.tplKey === "veteran" ? "Veteran" : g.rank === "core" ? "Core ally" : "Grunt");
+  A.rankName = (g) => (g.tplKey === "pet" ? ((D().pets || {})[g.petKey] || { name: "Pet" }).name : g.tplKey === "veteran" ? "Veteran" : g.rank === "core" ? "Core ally" : "Grunt");
   A.isVeteran = (g) => g.tplKey === "veteran";
 
   // ---------- history (newest first, capped) ----------
@@ -98,6 +98,32 @@
     S().grunts.push(g);
     G.log(`Recruited ${A.name(g)} (${Object.entries(cost).map(([r, n]) => n + " " + DATA.resources[r].name).join(" + ")}).`, "good");
     G.State.save();
+    return { grunt: g };
+  };
+
+  // ---------- Slice 5 §F: pets ----------
+  // extracting with a pet item unlocks its template for good (returns the pet def, or null if it already was)
+  A.unlockPet = function (it) {
+    const id = (G.Items.base(it.base) || {}).pet, P = (D().pets || {})[id]; if (!P) return null;
+    const s = S(); s.pets = s.pets || {}; const fresh = !s.pets[id];
+    if (fresh) { s.pets[id] = { run: s.runCount }; G.log(`${P.name}: it followed you home. Recruit it at the Recruitment lot.`, "good"); }
+    return fresh ? P : null;
+  };
+  A.petsUnlocked = () => Object.keys(S().pets || {}).filter((id) => (D().pets || {})[id]);
+  A.petAlive = (id) => S().grunts.some((g) => g.tplKey === "pet" && g.petKey === id && !g.dead);
+  A.canHirePet = function (id) {
+    const P = (D().pets || {})[id], s = S(); if (!P || !(s.pets || {})[id]) return "Not unlocked.";
+    if (s.run) return "Finish the expedition first.";
+    if (A.petAlive(id)) return `Your ${P.name.toLowerCase()} is already on the roster.`;
+    if (G.Outpost.gruntCount() >= DATA.config.grunts.rosterCap) return `Roster full (${DATA.config.grunts.rosterCap} Grunts).`;
+    const miss = Object.keys(P.cost || {}).filter((r) => (s.stash.res[r] || 0) < P.cost[r]);
+    return miss.length ? "Not enough " + miss.map((r) => DATA.resources[r].name).join(", ") + "." : null;
+  };
+  A.hirePet = function (id) {
+    const why = A.canHirePet(id); if (why) return { error: why };
+    const P = D().pets[id], s = S(); for (const r in P.cost || {}) s.stash.res[r] -= P.cost[r];
+    const g = G.State.makeGrunt(G.rng, Object.assign({ petKey: id }, P)); s.grunts.push(g);
+    G.log(`${A.name(g)} the ${P.name.toLowerCase()} joins the roster.`, "good"); G.State.save();
     return { grunt: g };
   };
 

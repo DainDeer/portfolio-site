@@ -184,6 +184,8 @@
       if (T.lock && rng.chance(T.lock.chance)) o.locked = true;
       place(site, o, rng.int(0, nRooms - 1), rng);
     }
+    // Slice 5 §F training spots: extra objects (kind "train": not searchables, so the size's count and restock ignore them)
+    for (const t in S.training || {}) if (X.trainHere(t, loc, node.loc)) place(site, mk(site, { type: t, kind: "train", name: S.types[t].name, sprite: S.types[t].sprite }), rng.int(0, nRooms - 1), rng);
     // event object (Slice 1 "Event %" = is there an event object here), survivor object
     const odds = X.odds(node);
     let ev = null;
@@ -206,6 +208,21 @@
       for (let i = 0; i < n; i++) { const p = R.free.length ? R.free.pop() : { x: R.x + 20 + rng() * (R.w - 40), y: R.y + 20 + rng() * (R.h - 40) }; site.props.push({ sprite: rng.pick(pool), x: Math.round(p.x), y: Math.round(p.y), room: R.i, rot: Math.round(rng() * 4) * 90 }); }
     }
     return site;
+  };
+
+  // ---------- Slice 5 §F: training spots ----------
+  X.trainHere = function (type, loc, locId) { const W = (SD().training || {})[type]; return !!W && SD().types[type] && ((W.locs || []).includes(locId) || (W.tags || []).some((t) => ((loc && loc.tags) || []).includes(t))); };
+  X.trainDef = (o) => { const T = o && o.type && SD().types[o.type]; return (T && T.train) || null; };
+  X.trainedNow = (o) => o.trainedRun != null && o.trainedRun === G.state.runCount;   // once per run
+  // Slice 5 §F: the family's own rare drops on a body (enemies.familyDrops) -> items / res (a pet = its item)
+  X.rollFamilyDrops = function (family, items, res, rng, ilvl, resOnly) {
+    for (const d of (DATA.enemies.familyDrops || {})[family] || []) {
+      if (!rng.chance(d.pct)) continue;
+      if (d.res) res[d.res] = (res[d.res] || 0) + (d.n || 1);
+      else if (resOnly) continue;
+      else if (d.item) items.push(G.Items.make(d.item, d.rarity || "white", ilvl, rng));
+      else if (d.pet && DATA.allies.pets[d.pet]) items.push(G.Items.make(DATA.allies.pets[d.pet].item, "white", 1, rng));
+    }
   };
 
   X.addEventObject = function (site, eventId, fields) {
@@ -263,6 +280,7 @@
     if (o.kind === "grate" || o.kind === "exit") return null;
     if (o.kind === "extract") { const node = X.node(site.nid); return X.extractionOpen(node) ? null : X.wrecked(node) ? `${CFG().extraction.crash.line} Find another way out.` : "Closed at this Heat level."; }   // Slice 5 §D
     if (o.kind === "mural") return null;   // Slice 4 §B pods room
+    if (X.trainDef(o)) return X.trainedNow(o) ? "Done for this run." : null;   // Slice 5 §F
     if (o.kind === "wheel") { const d = site.pods && X.obj(site.pods.door, site); return d && !d.sealed ? "Set. The door is open." : null; }
     if (o.kind === "pod") return o.done || (G.Main && G.Main.status("m1") === "done") ? DATA.main.pods.pod.claimed : null;
     if (o.sealed) return DATA.main.pods.door.blocked;
@@ -282,6 +300,7 @@
     if (o.kind === "wheel") return ["spin"];
     if (o.kind === "pod") return o.done ? [] : ["claim"];
     if (o.sealed) return [];
+    if (X.trainDef(o)) return X.trainedNow(o) ? [] : ["train"];   // Slice 5 §F
     if (o.searched) return X.hasLeft(o) ? ["reopen"] : [];
     if (o.blocked) return [];
     const T = X.typeDef(o);
@@ -310,7 +329,7 @@
     if (action === "pick" && T.lock && T.lock.pickSec) sec = T.lock.pickSec;
     if (action === "kick" && T.lock && T.lock.kick) sec = T.lock.kick.sec;
     const scav = X.bestSkill("scavenging");
-    sec = sec * Math.max(0, 1 - (C.scavTimePctPer10 / 100) * Math.floor(scav / 10));
+    if (action !== "train") sec = sec * Math.max(0, 1 - (C.scavTimePctPer10 / 100) * Math.floor(scav / 10));
     if (action === "search") sec *= Math.max(0, 1 - G.Items.setStat(X.gearItems(), "search_pct") / 100);   // Scav Kit (3): 15% faster
     const forced = action === "force" || action === "kick";
     const noise = (o.noise != null ? o.noise : T.noise || 0) + (forced ? C.forceNoise : 0);
@@ -320,7 +339,7 @@
     const raw = noise + H / C.hostilesDiv + heat + prior - stealth + loud;
     const tm = X.tutorialOn() && CFG().tutorial.disturbanceMult != null ? CFG().tutorial.disturbanceMult : 1;   // tutorial only
     const pct = Math.max(C.minPct, raw * tm);
-    const heatGain = action === "force" ? CFG().heat.forceLock : action === "kick" ? CFG().heat.kickDoor : 0;
+    const heatGain = action === "force" ? CFG().heat.forceLock : action === "kick" ? CFG().heat.kickDoor : action === "train" ? (T.train.heat || 0) : 0;
     let check = null;
     if (action === "pick" && T.lock) check = G.Checks.compute(T.lock.check.skill, T.lock.check.dc, X.members(), X.gearItems());
     if (action === "search" && o.heavy && T.heavy) check = G.Checks.compute(T.heavy.check.skill, T.heavy.check.dc, X.members(), X.gearItems());
@@ -353,6 +372,7 @@
       if (amt > 0) res[e[0]] = (res[e[0]] || 0) + amt;
     }
     X.rollExtras((T.extras || []).concat((o && o.extras) || []), res, rng);
+    if (o && o.famDrops) X.rollFamilyDrops(o.famDrops, items, res, rng, X.itemLevel(node), !!o.resOnly);   // Slice 5 §F
     return { items, res };
   };
 
@@ -423,7 +443,7 @@
     const info = X.searchInfo(objId, action), T = X.typeDef(o), texts = [];
     let roll = null, loot = null;
     site.visitSearches++; site.searches++; r.stats.searches = (r.stats.searches || 0) + 1;
-    G.XP.at({ obj: o.id }, () => G.State.giveXp({ kind: "body", body: X.body() }, "scavenging", CFG().leveling.xp.search));
+    if (action !== "train") G.XP.at({ obj: o.id }, () => G.State.giveXp({ kind: "body", body: X.body() }, "scavenging", CFG().leveling.xp.search));
     const openDoor = () => {
       site.rooms[o.opens].open = true; o.searched = true; texts.push("The door opens.");
       if (T.stashChance && G.rng.chance(T.stashChance)) { loot = X.rollObjectLoot(node, T.stashAs, { rarityBonus: CFG().search.doorStashRarityBonus }); texts.push("A stash was hidden behind it!"); }
@@ -433,6 +453,11 @@
       roll = check(T.lock.check);
       if (G.Checks.isSuccess(roll.grade)) { o.locked = false; texts.push("Lock picked."); if (o.type === "door") openDoor(); else { loot = X.rollObjectLoot(node, o.type, o); o.searched = true; } }
       else { o.jammed = true; texts.push(o.type === "door" ? "The lock jams. You'll have to kick it." : "The lock jams. You'll have to force it."); }
+    } else if (action === "train") {   // Slice 5 §F: time -> skill XP, a little Heat; the disturbance roll below is the risk
+      const TR = T.train; o.trainedRun = G.state.runCount; r.stats.trained = (r.stats.trained || 0) + 1;
+      G.XP.at({ obj: o.id }, () => G.State.giveXp({ kind: "body", body: X.body() }, TR.skill, TR.xp));
+      if (info.heatGain) { X.addHeat(info.heatGain, "train"); texts.push(`+${info.heatGain} Heat`); }
+      texts.unshift(TR.line); X.log(`${TR.label || "Train"} at ${o.name}: +${TR.xp} ${DATA.skills[TR.skill].name} XP.`, "good");
     } else if (action === "force" || action === "kick") {
       if (info.heatGain) { X.addHeat(info.heatGain, action); texts.push(`+${info.heatGain} Heat`); }
       o.locked = false;
@@ -503,6 +528,7 @@
       if (u.elite && SD().eliteExtras && X.tierAtLeast("Marked")) o.extras = SD().eliteExtras.filter((x) => !x.minTier || X.tierAtLeast(x.minTier));   // Relic Tech on Elites at Marked+
       const ud = DATA.enemies.units[u.eid] || {};
       if (ud.relicPct) o.extras = (o.extras || []).concat([{ res: "relic", n: 1, chance: ud.relicPct }]);   // Warden: 10% Relic Tech
+      if ((DATA.enemies.familyDrops || {})[u.family]) o.famDrops = u.family;   // Slice 5 §F: the family's rare table
       if (u.family === "hunters") {   // Slice 3 §4b Hunter loot: gear at iLvl +3 / +10 rarity, 12% Hunter's Garb, Data Shard 20%, Relic 8% (Captain: always 1)
         const HL = DATA.enemies.hunters.loot; o.hunter = true; o.bonusItems = 1;
         o.extras = (o.extras || []).concat([{ res: "data_shards", n: 1, chance: HL.shardPct }, ud.relicAlways ? { res: "relic", n: ud.relicAlways, chance: 100 } : { res: "relic", n: 1, chance: HL.relicPct }]);

@@ -63,6 +63,22 @@ DATA.allies = {
     slots: { weapon: ["weapon"], offhand: ["weapon", "shield"], head: ["head"], body: ["body"], pack: ["backpack"] }
   },
 
+  // ---- Slice 5 §F pets ----
+  // [DRAFT Vixie call] a super-rare find (enemies.familyDrops) that you carry out: extracting with it unlocks the pet
+  // for good, and it becomes a recruitable ally at the Recruitment lot (cost below, one of each alive at a time).
+  // A pet fights with its own natural weapon, has no gear slots, rolls traits like a Grunt and can't be promoted.
+  // Greyback goat: with zone G (Smudge's art).
+  pets: {
+    hound_pup:   { name: "Hound", item: "pet_hound_pup", sprite: "enemy_beast_hound", ai: "melee", deployCost: 1, rank: "grunt",
+                   stats: { max_hp: 60, armor: 0, evasion: 6, move_speed: 5.0, crit_chance: 5, crit_damage: 150 },
+                   skills: { feral: 6, athletics: 5, acrobatics: 5, endurance: 3 }, weapons: ["bone_claws"], cost: { food: 4 },
+                   names: ["Biscuit", "Tick", "Scraps", "Mutt", "Ruin", "Pip"], desc: "[PLACEHOLDER] It followed you home. It bites what you point at." },
+    scout_drone: { name: "Drone", item: "pet_scout_drone", sprite: "enemy_ai_drone", ai: "ranged", deployCost: 1, rank: "grunt",
+                   stats: { max_hp: 45, armor: 1, evasion: 8, move_speed: 4.6, crit_chance: 5, crit_damage: 150 },
+                   skills: { marksmanship: 6, acrobatics: 4 }, weapons: ["drone_zapper"], cost: { electronics: 3 },
+                   names: ["Blink", "Whirr", "Dot", "Hum"], desc: "[PLACEHOLDER] Somebody's scout, re-taught. It buzzes when it's happy." }
+  },
+
   // ---- history log ----
   history: { max: 10, extractedEvery: 5, multiKill: 4 },
 

@@ -58,6 +58,7 @@
   // target: { grunt: g } or { body: true } (the deploy loadout: items stay in the stash until you deploy)
   G.UI.dollEl = function (target, after) {
     const UI = G.UI, h = UI.h, s = G.state, g = target.grunt, lo = s.loadout, I = G.Items;
+    if (g && !Object.keys(G.State.gruntSlots(g)).length) return h("div", { class: "doll" }, UI.gruntIcon(g, 96, "doll-art"), h("p", { class: "hint" }, `${G.Allies.rankName(g)}s don't wear gear. It fights with its ${I.base(g.weapon).name}.`));   // Slice 5 §F pets
     const tid = g ? g.uid : "body", cur = GL.sel[tid] || "weapon"; GL.sel[tid] = cur;
     const equipped = (gs, is) => g ? g.gear[gs] : (lo.gear[is] ? s.stash.items.find((i) => i.uid === lo.gear[is]) : null);
     const inRun = !!s.run, redraw = () => { if (after) after(); else UI.render(); };

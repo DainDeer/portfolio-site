@@ -402,6 +402,14 @@ DATA.sprites = {
   item_patched_tunic:    { file: "items/item_patched_tunic.png",    shape: "square",   color: "#b49e70", size: 1, pad: 2 },   // Vixie's starter kit (Smudge 26801b2)
   item_hide_vest:        { file: "items/item_hide_vest.png",        shape: "square",   color: "#5e4a30", size: 1, pad: 2 },
   item_wool_cap:         { file: "items/item_wool_cap.png",         shape: "circle",   color: "#4a5636", size: 1, pad: 2 },
+  // Slice 5 §F: Smudge's training spots + animal parts (2c36080; slice5_f_manifest.json). Pets: placeholders.
+  obj_chop_stump:        { file: "objects/obj_chop_stump.png",   shape: "badge",  color: "#5e4a30", size: 1, text: "CHOP" },
+  obj_fishing_spot:      { file: "objects/obj_fishing_spot.png", shape: "badge",  color: "#1c7470", size: 1, text: "FISH" },
+  item_meat:             { file: "items/item_meat.png",          shape: "circle", color: "#a81c18", size: 1, pad: 2 },
+  item_fur:              { file: "items/item_fur.png",           shape: "bar",    color: "#96784c", size: 1, pad: 2 },
+  item_teeth:            { file: "items/item_teeth.png",         shape: "bar",    color: "#d4c8a0", size: 1, pad: 2 },
+  item_pet_hound_pup:    { shape: "badge", color: "#7a5a3a", size: 1, text: "PUP" },
+  item_pet_scout_drone:  { shape: "badge", color: "#3a5a6a", size: 1, text: "DRN" },
   // Slice 5 §E shields: Smudge's icons (fbafb0b)
   item_wood_round_shield: { file: "items/item_wood_round_shield.png", shape: "circle", color: "#7a5a30", size: 1, pad: 2 },
   item_riot_shield:       { file: "items/item_riot_shield.png",       shape: "square", color: "#3a4a5a", size: 1, pad: 2 },

@@ -18,7 +18,13 @@ DATA.resources = {
   fuel:        { name: "Fuel",         sprite: "res_fuel",        kgPerUnit: 2 },
   biomass:     { name: "Biomass",      sprite: "res_biomass",     kgPerUnit: 1 },
   data_shards: { name: "Data Shards",  sprite: "res_data_shards", kgPerUnit: 0.1, tag: "data" },
-  relic:       { name: "Relic Tech",   sprite: "res_relic_tech",  kgPerUnit: 2, heatPerMove: 1 }
+  relic:       { name: "Relic Tech",   sprite: "res_relic_tech",  kgPerUnit: 2, heatPerMove: 1 },
+  // Slice 5 §F animal parts: every beast carcass has them (searchables.types.body_beast.extras). [DRAFT Rivet call] Meat
+  // is carried like any resource and turns into Food when you extract (convertOnExtract: 2 Meat = 1 Food, by weight); it never sits in the
+  // stockpile (bagOnly). Fur and Teeth go to the stockpile for the Workbench (Cure fur, Tooth hand-loads). Icons: Smudge (2c36080).
+  meat:        { name: "Meat",         sprite: "item_meat",       kgPerUnit: 0.5, bagOnly: true, convertOnExtract: { to: "food", per: 0.5 } },
+  fur:         { name: "Fur",          sprite: "item_fur",        kgPerUnit: 0.5 },
+  teeth:       { name: "Teeth",        sprite: "item_teeth",      kgPerUnit: 0.1 }
 };
 // Slice 1 save migration: resource ids that were renamed
 DATA.resourceRenames = { circuits: "electronics" };
