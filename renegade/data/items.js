@@ -111,5 +111,5 @@ DATA.items = {
   // resources: defined in data/resources.js (Slice 2: 7 resources); aliased here so existing paths keep working
   resources: DATA.resources,
   startingStash: { resources: { food: 0, water: 0, scrap: 0, cloth: 0, electronics: 0, chemicals: 0, med: 10 }, items: [] },   // Megan's playtest: new saves start with 10 Med kits (was 2)
-  startingGear: { weapon: { base: "pipe_rifle", rarity: "white", ilvl: 1 } } // "starter gear" for the Basic body (§3.5)
+  startingGear: { weapon: { base: "zip_gun", rarity: "white", ilvl: 1 } } // "starter gear" for the Basic body (§3.5). Vixie (Slice 4): the white Zip Gun, a real lootable pistol from the §C flood
 };

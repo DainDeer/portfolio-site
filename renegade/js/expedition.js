@@ -119,6 +119,7 @@
     zone = zone || lo.zone || "a";
     if (!G.Zones.unlocked(zone)) return "That zone is still locked.";
     const err = X.validateLoadout(lo); if (err) return err;
+    if (G.Main) G.Main.clampAnnex(s);   // Vixie: annex rows while Main 1 isn't done (also after a debug reseed)
     const snapshot = JSON.stringify(s);
     seed = seed == null ? U.randomSeed() : seed;
     G.rng = U.makeRng(seed);
@@ -663,6 +664,7 @@
       const sg = DATA.items.startingGear;
       for (const slot in sg) if (!s.stash.items.some((i) => G.Items.base(i.base).slot === slot)) { const it = G.Items.make(sg[slot].base, sg[slot].rarity, sg[slot].ilvl, G.rng); s.stash.items.push(it); s.loadout.gear[slot] = it.uid; }
     }
+    if (s.tutorialEnds) { s.tutorialDone = true; delete s.tutorialEnds; G.log(`Tutorial complete. Deploy score is now ${G.State.deployScore()}. Recruit more Grunts at the Recruitment lot.`, "good"); }   // Vixie: after the claim run's top-ups / re-issue
     G.Allies.rerollCandidates();   // Slice 3 §1: the Recruitment lot's 3 candidates reroll after every run
     if (G.Injuries) G.Injuries.onRunEnd();   // Slice 3 §10a: untreated injuries heal after 3 runs (Infirmary L2: 2)
     if (G.Radio) G.Radio.onRunEnd();         // Slice 3 §10b: the bounty board refreshes every 2 runs
@@ -678,9 +680,12 @@
 
   X.chooseHumanBody = function (idx) {
     const s = G.state; if (!s.humanOffer) return;
-    const b = s.humanOffer[idx]; s.bodies.push(b); s.humanOffer = null; s.tutorialDone = true;
+    const b = s.humanOffer[idx]; s.bodies.push(b); s.humanOffer = null;
     s.loadout.bodyId = b.uid;
-    G.log(`Tutorial complete. New body: ${G.State.bodyTitle(b)}. Deploy score is now ${G.State.deployScore()}. Recruit more Grunts at the Recruitment lot.`, "good");
+    // Vixie: the tutorial's protections stay on until the run the pod was claimed in ends (extraction or death):
+    // s.tutorialEnds is set by G.Main.claim, X.endRun turns it into tutorialDone. Outside a run it ends right away.
+    if (s.run) { s.tutorialEnds = true; G.log(`New body: ${G.State.bodyTitle(b)}. The tutorial ends when this expedition does.`, "good"); }
+    else { s.tutorialDone = true; delete s.tutorialEnds; G.log(`Tutorial complete. New body: ${G.State.bodyTitle(b)}. Deploy score is now ${G.State.deployScore()}. Recruit more Grunts at the Recruitment lot.`, "good"); }
     G.State.save();
   };
 

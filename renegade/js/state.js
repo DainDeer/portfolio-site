@@ -136,6 +136,7 @@
     s.buildings = G.Outpost.freshState();
     G.state = s;
     s.loadout.grunts = s.grunts.slice(0, DATA.config.deploy.startingGrunts).map((g) => g.uid);
+    if (G.Main) G.Main.clampAnnex(s);   // Vixie: the annex sits in rows 2-3 while Main 1 isn't done
     return s;
   };
 
@@ -288,7 +289,7 @@
     for (const k in DATA.resources) if (s.stash.res[k] == null && !DATA.resources[k].hidden) s.stash.res[k] = 0;
     s.settings = Object.assign(St.defaultSettings(), s.settings || {});
     if (G.Tut) { s.tut = Object.assign(G.Tut.fresh(), s.tut || {}); s.tut.steps = s.tut.steps || {}; }   // Slice 4 §A: tutorial flags + Marta's choice
-    if (G.Main) { const prev = G.state; G.state = s; G.Main.st(); G.state = prev; }   // Slice 4 §B
+    if (G.Main) { const prev = G.state; G.state = s; G.Main.st(); G.state = prev; G.Main.clampAnnex(s); }   // Slice 4 §B (+ Vixie's annex rows)
     s.lore = s.lore || []; s.bodies = s.bodies && s.bodies.length ? s.bodies : [St.makeBasicBody()];
     s.grunts = s.grunts || []; s.fallenGrunts = s.fallenGrunts || []; s.perks = s.perks || {};   // Slice 3 §3: picks are derived from the level, so old saves get theirs
     // older saves: Grunts named "Grunt #NN" (or unnamed) get a random name; missing record fields are filled in

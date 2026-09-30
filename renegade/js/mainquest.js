@@ -88,6 +88,21 @@
     G.State.save();
     return { pos: o.pos, opened };
   };
+  // Vixie: while Main 1 isn't done, keep the Cryo Ward Annex in pods.activeRows of Zone A. An annex outside them swaps
+  // locations with the topmost pool node (not fixed / guaranteed) in the nearest allowed row that has one (row 4+ ->
+  // row 3, then 2; a row-1 roll -> row 2). No rng. Both nodes' saved site state is dropped (they rebuild on the next visit). Never mid-run.
+  M.clampAnnex = function (s) {
+    s = s || G.state; const rows = P().activeRows, map = s && s.maps && s.maps[P().zone];
+    if (!rows || !rows.length || !map || s.run) return false;
+    const prev = G.state; G.state = s; const done = M.status("m1") === "done"; G.state = prev; if (done) return false;
+    const an = Object.values(map.nodes).find((n) => n.loc === P().loc); if (!an || rows.includes(an.row)) return false;
+    const D = DATA.map, ok = (n) => n.loc && !D.fixed[n.loc] && !(D.guaranteed || {})[n.loc] && D.locations[n.loc] && !D.locations[n.loc].zone;
+    let to = null; for (const r of rows.slice().sort((a, b) => Math.abs(a - an.row) - Math.abs(b - an.row) || a - b)) { to = Object.values(map.nodes).filter((n) => n.row === r && ok(n)).sort((a, b) => a.y - b.y)[0]; if (to) break; }
+    if (!to) return false;
+    an.loc = to.loc; to.loc = P().loc;
+    if (s.world && s.world.sites) { delete s.world.sites[an.id]; delete s.world.sites[to.id]; }
+    return true;
+  };
   // claim the body in the working pod: completes Main 1 and rolls the human body offer (the pick is the same as before;
   // it sets tutorialDone). Loot still has to be extracted.
   M.claim = function (objId) {
@@ -96,6 +111,7 @@
     if (o.done || M.status("m1") === "done") { o.done = true; return { error: P().pod.claimed }; }
     o.done = true; site.squadAt = o.id;
     if (!s.tutorialDone && !s.humanOffer) s.humanOffer = G.State.rollHumanOffer(G.rng);
+    if (!s.tutorialDone) s.tutorialEnds = true;   // Vixie: the tutorial ends with this run (X.endRun), even if the pick waits
     M.complete("m1");
     X.log(P().claimText, "good");
     if (s.humanOffer) X.push({ type: "bodyoffer" });   // the pick (UI.showBodyOffer; headless: tests/lib/game.js)

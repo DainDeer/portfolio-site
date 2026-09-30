@@ -19,6 +19,9 @@ DATA.main = {
   martaHint: "The pods are behind a door with three wheels. Somebody painted the answer on the wall, because of course they did.",
   pods: {
     loc: "cryo_annex", zone: "a",
+    // Vixie: while Main 1 isn't done, the annex sits in these Zone A map rows. A deeper roll is moved shallower (a
+    // deterministic swap with a pool location in the nearest allowed row; a row-1 roll goes to row 2; G.Main.clampAnnex). null = off.
+    activeRows: [2, 3],
     wheels: 3, positions: 4,
     arrows: ["↑", "→", "↓", "←"],
     wheel: { name: "Wall wheel", examine: "[PLACEHOLDER] A heavy iron wheel set into the wall, with an arrow on its rim.", px: 56 },
