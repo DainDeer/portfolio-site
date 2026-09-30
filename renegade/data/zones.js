@@ -16,6 +16,10 @@ DATA.zones = {
       name: "The Drowned Suburbs", size: "Small", tierLabel: "Tier 2", familyMix: "85% Bio-beasts / 15% Outlaws",
       startUnlocked: false, lockedLabel: "??? – find the way in",
       insertion: "b1", resourceMult: 1.25, dcBonus: 0, tier: 2,
+      enemyBudgetMult: 1.08,   // every fight in the zone (Slice 3 §11 lever 2, "Zone B enemy budgets"): fresh-starter deaths 52% at 1, 52.9% at 1.06, 60.0% at 1.1
+      // design call (milestone 3): zone-wide events added to every location's pool that has events (weight vs 1 per
+      // location event), rolled on the location's Event %
+      eventPool: { drone_patrol: 0.5 },
       // handcrafted nodes in the 1000x600 map space. hiddenUntilAdjacent: never shown as an "Unscouted" marker
       nodes: {
         b1: { loc: "b_outfall",  x: 110, y: 300 },

@@ -2,13 +2,22 @@
 // Tags follow the design doc: most numbers are [DRAFT] (design doc v0.4, Slice 2).
 window.DATA = window.DATA || {};
 DATA.config = {
-  version: 2,               // save format. Slice 1 saves (version 1) are migrated on load (js/state.js St.migrate)
+  version: 3,               // save format. Slice 1 saves (version 1) and Slice 2 saves (version 2) are migrated on load (js/state.js St.migrate / St.migrate3)
   saveKey: "renegade_slice1_save",      // same key as Slice 1 so an existing save is found and migrated
   overridesKey: "renegade_slice1_tuning",
   // Megan, for now: a new build (window.BUILD_ID from js/build_id.js, the commit hash in packaged builds) wipes the saved
   // progression once, so every build starts at the introduction. Set resetOnNewBuild: false to keep saves across builds.
   // BUILD_ID "dev" (running from the repo) never resets.
   save: { resetOnNewBuild: true, buildIdKey: "renegade_build_id" },
+  // Slice 3 §2 / §8: player settings (Settings panel, saved with the game). Audio defaults are in data/audio.js.
+  // aimMode: "slowmo" (the battle runs at abilities.aimTimeScale while you aim) | "pause" (open question 1: both work)
+  settings: { aimMode: "slowmo" },
+  // Slice 3 §12: world restocking (replaces expedition.restockEachRun). Sites persist between runs in state.world.sites.
+  // A site is picked over once you search an object there or win a battle there (restock level 0). The level rises one
+  // step per run (any run, any zone): runsBySize runs to 100%. First entry of a later run: each searched object refills
+  // with chance = level (rolled once per run, shown in the log); Hostiles % = original x (hostileFloor + (1 - hostileFloor) x level).
+  // At 100% everything refills and oldBodies [min, max] new old bodies are placed (ASSUMPTION: the spec gives no count).
+  world: { restock: { runsBySize: { S: 1, M: 2, L: 3 }, hostileFloor: 0.35, oldBodies: [1, 2] } },
 
   // §7.3 Deployment score by progression stage. Tutorial = Basic body(1) + 2 Grunts.
   deploy: {
@@ -18,14 +27,21 @@ DATA.config = {
     startingGrunts: 2,
     tutorialReissueStarterGear: true, // ASSUMPTION: lost starter Pipe Rifle is re-issued while still in the tutorial
     // Design call on ff17090: deploying with no weapon equipped -> the outpost issues this one for free (unlimited, one per deploy)
-    fallbackWeapon: { base: "pipe_rifle", rarity: "white", ilvl: 1 }
+    fallbackWeapon: { base: "pipe_rifle", rarity: "white", ilvl: 1 },
+    // Megan's playtest: every run starts with a basic backpack. No backpack picked -> a School Bag from the stash is
+    // put on if you have one (no duplicates), otherwise the outpost issues this one free. Kept if you extract.
+    freeBackpack: { base: "school_bag", rarity: "white", ilvl: 1 }
   },
   // Grunt recruiting (design call on b00ebee, replaces the old free refill; v0.4 §9.1/§11.3: recruits cost Food + Water).
   // During the tutorial the roster is topped up to deploy.startingGrunts for free. After it, dead Grunts are gone until
   // you recruit more at the Recruitment lot (town view) for recruitCost from the stockpile, up to rosterCap Grunts.
   grunts: {
     recruitCost: { food: 3, water: 3 },
-    rosterCap: 5
+    rosterCap: 5,
+    // Megan's playtest: each Grunt has a weapon slot and one gear slot (armour or a pack), equipped from the Vault stash
+    // at the outpost (Recruitment lot -> Equip). Gear on a Grunt that dies in battle stays on its body in the location.
+    slots: { weapon: ["weapon"], gear: ["head", "body", "backpack"] },
+    nameMaxLen: 28           // "First Last" (Slice 3 §1; the nickname is shown separately)
   },
 
   // §2.4 carry weight
@@ -39,15 +55,18 @@ DATA.config = {
     pouchMaxKg: 1
   },
 
-  // §12 Heat
+  // §12 Heat. Megan's Slice 2 playtest: Heat is rarer but comes in bigger chunks. Searching gives none, battles a
+  // little (+2, +4 if long), and most of it comes from the big-reward choices: answering a distress call, risky
+  // skill-check options (option-level `heat` in data/events.js, shown in the option text) and completing a quest
+  // objective in the field (DATA.quests.objectiveHeat). Thresholds and tier effects unchanged.
   heat: {
     max: 100,
-    perMove: 2,                 // every move, including to a revisited location
+    perMove: 1,                 // every move, including to a revisited location (design answer on Part A: was 2)
     passageCross: 5,            // crossing a passage into another zone (Slice 2 §3)
-    kickDoor: 3,                // loud searches (Slice 2 §4)
-    forceLock: 5,
-    perBattle: 5,
-    longBattleExtra: 3,
+    kickDoor: 0,                // searching gives no Heat (was 3)
+    forceLock: 0,               // (was 5)
+    perBattle: 2,               // (was 5)
+    longBattleExtra: 2,         // (was 3) -> a battle gives +2, or +4 if it runs past longBattleSeconds
     longBattleSeconds: 30,
     thresholds: [
       // min heat, name, enemy budget mult, hostiles-odds bonus (pp), loot rarity bonus (%), extra flags.
@@ -146,21 +165,47 @@ DATA.config = {
     unitRadius: 0.6,
     separationForce: 3,
     kiteRangeFrac: 0.45,        // gunners back off if an enemy is closer than range*frac
+    flank: { enabled: true, extraDeg: 30 },   // design call (milestone 3): your units attacking a shielded unit (Warden) from inside its front arc move to its side (arc/2 + extraDeg off its facing)
     medicHangBackM: 6,
     projectileSpeed: 45,        // m/s visual only; hit is rolled at fire time
     corpseLimit: 60,
     decalLimit: 400,
     gibOverkillPct: 40,         // overkill >= this % of max HP -> gibs
-    maxDurationSec: 120,        // safety: draw -> treated as a loss for the side with less HP% (ASSUMPTION)
+    maxDurationSec: 120,
+    // Megan's playtest: your body doesn't die at 0 HP in battle. It goes DOWNED (enemies ignore it, AoE skips it)
+    // while the others fight on. Win -> the run continues at downedReviveHp HP. No ally left standing -> normal death.
+    downedEnabled: true,
+    downedReviveHp: 10,        // safety: draw -> treated as a loss for the side with less HP% (ASSUMPTION)
     speeds: [1, 2, 4],
-    slowMoOnKill: 0.35, slowMoSec: 0.25, shakeOnCrit: 4
+    slowMoOnKill: 0.35, slowMoSec: 0.25, shakeOnCrit: 4,
+    // Tactical pause (Megan, Sep 29): Space / the Pause button freezes the fight. While paused you aim abilities and use
+    // carried Med kits on your units; they queue and run in queue order when you resume. Each item use channels for
+    // channelSec once the fight runs again (the unit does nothing else meanwhile; the item is spent when queued,
+    // refunded if you cancel while paused). Med kit: the field heal roll (Medicine) at the end of the channel.
+    tacticalPause: { enabled: true, key: " ", channelSec: { med: 1.5 },   // TODO: special-ammo swaps dropped from the pause (milestone 5)
+      // Megan (milestone 5): after a Med kit is used on a unit, that unit can't take another for
+      // max(minSec, baseSec - perMedicine x the user's Medicine level) seconds of combat time (the user = your body)
+      medCooldown: { baseSec: 20, perMedicine: 1, minSec: 8 } },
+    // Break away (Megan, milestone 5): a repeatable escape check in battle (button / B, or queued in the tactical pause).
+    // channelSec on your body (cancelled if it goes down; not usable while it's downed), then the best Acrobatics of your
+    // standing units: d20 + floor(skill / 4) vs dc + perEnemy per living enemy beyond freeEnemies, + hunterPack if a
+    // Marked / Manhunt pack is there, + machines vs machines. Nat 20 passes, nat 1 fails.
+    // Success: every standing unit leaves, downed allies are left behind and die ("Left behind at X"), no loot, +heat Heat
+    // (instead of the battle's own), back to the location you came from; the enemies stay there (this run).
+    // Fail: stumbleSec of free attacks for the enemy (your units don't act), then the cooldown (combat time) starts.
+    breakAway: { enabled: true, key: "b", skill: "acrobatics", channelSec: 1.0, dc: 12, freeEnemies: 2, perEnemy: 1,
+                 hunterPack: 3, hunterPacks: ["Marked", "Manhunt"], machines: 2, cooldownSec: 12, stumbleSec: 2, heat: 5 }
   },
 
   // Enemy budgets (§7.3 "enemies build from the same kind of budget, scaled by location tier and Heat")
   enemies: {
     budgetByTier: [0, 1, 2, 3.5, 5],
     budgetPerDepth: 0.3,
-    eliteBudgetMult: 1.0
+    eliteBudgetMult: 1.0,
+    // Slice 3 §11 (geared lever): bigger squads meet bigger groups. Budget x (1 + perExtra x (squad size - base)), squad
+    // size = body + Grunts deployed this run (fixed at the start; allies lost mid-run don't shrink it). Off in the tutorial,
+    // only in `zones` (Zone B: in Zone A it made the econ bot die and re-recruit, Vault L2 median run 7 -> 9).
+    squadScale: { base: 3, perExtra: 0.55, zones: ["b"] }   // 0.55: geared deaths 8% -> ~22-25% (target 20-25%)
   },
 
   // ======================= TUTORIAL OVERRIDES =======================
@@ -178,7 +223,7 @@ DATA.config = {
       ex_tunnel: 0.6,    // Tunnel Home defense waves x0.6
       ex_rooftop: 0.75   // Rooftop Pickup fights x0.75
     },
-    enemyBudgetMult: 0.85,                     // every other tutorial fight x0.85 (target: Deep sweep 35-45% deaths)...
+    enemyBudgetMult: 0.9,                      // every other tutorial fight x0.9 (was 0.85; Slice 3 §11: with Break away and battle Med kits the deep sweep fell to 35%, target 42-48; 0.95 slowed the econ Vault)...
     enemyBudgetMultBelowTier: "Hunted",        // ...but only while heat is below this heat tier (name from heat.thresholds)
     enemyBudgetMultAtOrAbove: 1.0,             // at that tier or higher, other tutorial fights use this instead
     disturbanceMult: 0.5                       // search disturbance chance x0.5 while the tutorial is on (floor search.minPct still applies)
@@ -190,7 +235,6 @@ DATA.config = {
     distressTriggerAfterMoves: 2,  // a crackling radio object appears in the location you reach after this many moves (while the call is pending)
     distressDetourHeat: 4,         // "detour 2 locations (+Heat)" = 2 moves x 2
     distressExpiresAfterRuns: 1,   // ASSUMPTION: world sim is per-run (§16 Q3 open)
-    restockEachRun: true,          // looted/cleared locations reset between runs (aftermath states persist)
     fogPersistsBetweenRuns: true,  // locations you have ever seen stay revealed (dimmed)
     hpPersistsInRun: true,         // ASSUMPTION: HP carries between battles within a run
     fullHealAtOutpost: true,

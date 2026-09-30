@@ -17,7 +17,7 @@ DATA.sprites = {
   // left/right by heading (the delivered art). "rotate": art faces east and is rotated.
   facingMode: "flip",
   // Keys whose art isn't delivered yet: never requested, placeholder badges only (no 404s). Remove a prefix when its art lands.
-  pendingArt: ["bld_", "skill_", "stat_", "dmg_"],   // prefixes not delivered yet: drawn as placeholders, never requested (all Slice 2 art has landed except bld_*)
+  pendingArt: ["skill_", "stat_", "dmg_", "map_rival", "ui_break_away"],   // prefixes not delivered yet: drawn as placeholders, never requested (bld_* and quest_available landed in Slice 3 batch 1)
   pixelArt: true,      // nearest-neighbour scaling for image sprites (crisp pixel art)
   // Battle canvas: every image sprite is drawn at (native px x texelScale), so a 32px unit = 64 canvas px = 2 m at pxPerM 32.
   texelScale: 2,
@@ -28,13 +28,19 @@ DATA.sprites = {
   corpseVariants: {
     // byUnit (by unit sprite key) wins over the human/beast default
     domed: { human: "corpse_human_domed", beast: "corpse_beast_domed",          // Domed roll on a core ally
-             byUnit: { enemy_beast_hound: "corpse_beast_hound_domed", enemy_beast_spitter: "corpse_beast_spitter_domed", enemy_beast_maw: "corpse_beast_maw_domed" } },
+             byUnit: { unit_grunt: "corpse_grunt_domed", unit_veteran: "corpse_veteran_domed", enemy_beast_hound: "corpse_beast_hound_domed", enemy_beast_spitter: "corpse_beast_spitter_domed", enemy_beast_maw: "corpse_beast_maw_domed", enemy_hunter_stalker: "corpse_hunter_stalker_domed", enemy_hunter_marksman: "corpse_hunter_marksman_domed", enemy_hunter_captain: "corpse_hunter_captain_domed" } },
     gore:  { human: "corpse_human_dismembered", beast: "corpse_beast_domed",    // gibbed kill (overkill / crit / Butcher finisher)
-             byUnit: { enemy_beast_hound: "corpse_beast_hound_domed", enemy_beast_spitter: "corpse_beast_spitter_domed", enemy_beast_maw: "corpse_beast_maw_domed" } }
+             byUnit: { unit_grunt: "corpse_grunt_dismembered", unit_veteran: "corpse_veteran_dismembered", enemy_beast_hound: "corpse_beast_hound_domed", enemy_beast_spitter: "corpse_beast_spitter_domed", enemy_beast_maw: "corpse_beast_maw_domed" , enemy_hunter_stalker: "corpse_hunter_stalker_dismembered", enemy_hunter_marksman: "corpse_hunter_marksman_dismembered", enemy_hunter_captain: "corpse_hunter_captain_dismembered" } }
   },
+  // Downed main body (Part A2): the pool strip is drawn first, then the unit's `downed:` strip, where the corpse would be
+  // (same rotation / anchor as the corpses). Missing art -> the unit's corpse sprite + a canvas pool.
+  downedPool: "fx_downed_pool_strip2",
   beastFamilies: ["beasts"],
   // Gibs flung on a gore kill, by corpse kind (fx_gib_8 is mutant hide, 4 hand / 7 boot are human-only)
-  gibs: { human: [1, 2, 3, 4, 5, 6, 7], beast: [1, 2, 3, 5, 6, 8] },
+  gibs: { human: [1, 2, 3, 4, 5, 6, 7], beast: [1, 2, 3, 5, 6, 8], machine: [1, 2, 3] },   // machine -> fx_metal_gib_N (Slice 3 §4a)
+  gibPrefix: { machine: "fx_metal_gib_" },
+  // machines (corpseKind "machine"): sparks instead of blood (short-lived, not decals), oil instead of the blood pool
+  machineFx: { sparks: ["fx_spark_1", "fx_spark_2", "fx_spark_3"], pool: "fx_oil_pool" },
   // Blood decals by hit size: < small -> fx_blood_1, < medium -> fx_blood_2, else fx_blood_3
   bloodBySize: { small: 0.6, medium: 1.0 },
   bloodOnCrit: "fx_blood_spray",     // arterial spurt, oriented along the shot, stamped on crits
@@ -42,12 +48,56 @@ DATA.sprites = {
   acidPoolOn: { projectile: "fx_acid", decal: "fx_acid_pool" },   // where an acid glob lands (hit or miss)
   healIcon: "item_med_kit",          // shown on Med Supply heal buttons (field heal / critical care)
   // ---- units (32x32, 3/4 top-down, facing SOUTH; mirrored for left/right) ----
-  unit_basic:            { file: "units/unit_basic.png",            shape: "circle",   color: "#9a9a9a", size: 0.9, anchorY: 0.75, feetY: 0.97, walk: "unit_basic_strip2", corpse: "corpse_basic" },
-  unit_vanguard:         { file: "units/unit_vanguard.png",         shape: "square",   color: "#4f7fd6", size: 1.0, anchorY: 0.75, feetY: 0.97, walk: "unit_vanguard_strip2", corpse: "corpse_vanguard" },
-  unit_striker:          { file: "units/unit_striker.png",          shape: "triangle", color: "#d6a44f", size: 0.9, anchorY: 0.75, feetY: 0.97, walk: "unit_striker_strip2", corpse: "corpse_striker" },
-  unit_gunner:           { file: "units/unit_gunner.png",           shape: "circle",   color: "#58c46a", size: 0.9, anchorY: 0.75, feetY: 0.97, walk: "unit_gunner_strip2", corpse: "corpse_gunner" },
-  unit_medic:            { file: "units/unit_medic.png",            shape: "cross",    color: "#f0f0f0", size: 0.9, anchorY: 0.75, feetY: 0.97, walk: "unit_medic_strip2", corpse: "corpse_medic" },
+  // ---- Slice 3 §4 machines + Hunters ----
+  enemy_ai_drone:        { file: "units/enemy_ai_drone.png",        shape: "diamond",  color: "#d8d0b0", size: 0.7, anchorY: 0.75, feetY: 0.97, walk: "enemy_ai_drone_strip2", corpse: "corpse_ai_drone", hover: true },
+  enemy_ai_crawler:      { file: "units/enemy_ai_crawler.png",      shape: "circle",   color: "#c8b060", size: 0.65, anchorY: 0.75, feetY: 0.97, walk: "enemy_ai_crawler_strip2", corpse: "corpse_ai_crawler" },
+  enemy_ai_sentry:       { file: "units/enemy_ai_sentry.png",       shape: "square",   color: "#8a8a70", size: 0.95, anchorY: 0.75, feetY: 0.97, corpse: "corpse_ai_sentry", gun: "enemy_ai_sentry_gun" },
+  enemy_ai_sentry_gun:   { file: "units/enemy_ai_sentry_gun.png",   shape: "bar",      color: "#5a5a50", size: 0.8 },
+  enemy_ai_warden:       { file: "units/enemy_ai_warden.png",       shape: "square",   color: "#d0c8a8", size: 1.2, anchorY: 0.75, feetY: 0.97, imgScale: 1.25, walk: "enemy_ai_warden_strip2", corpse: "corpse_ai_warden" },
+  enemy_hunter_stalker:  { file: "units/enemy_hunter_stalker.png",  shape: "triangle", color: "#4a4a55", size: 0.85, anchorY: 0.75, feetY: 0.97, walk: "enemy_hunter_stalker_strip2", corpse: "corpse_hunter_stalker" },
+  enemy_hunter_marksman: { file: "units/enemy_hunter_marksman.png", shape: "diamond",  color: "#4a4a60", size: 0.85, anchorY: 0.75, feetY: 0.97, walk: "enemy_hunter_marksman_strip2", corpse: "corpse_hunter_marksman" },
+  enemy_hunter_captain:  { file: "units/enemy_hunter_captain.png",  shape: "square",   color: "#6a3040", size: 1.0, anchorY: 0.75, feetY: 0.97, imgScale: 1.15, walk: "enemy_hunter_captain_strip2", corpse: "corpse_hunter_captain" },
+  enemy_ai_drone_strip2: { file: "units/enemy_ai_drone_strip2.png", shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
+  enemy_ai_crawler_strip2: { file: "units/enemy_ai_crawler_strip2.png", shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
+  enemy_ai_warden_strip2: { file: "units/enemy_ai_warden_strip2.png", shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
+  enemy_hunter_stalker_strip2: { file: "units/enemy_hunter_stalker_strip2.png", shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
+  enemy_hunter_marksman_strip2: { file: "units/enemy_hunter_marksman_strip2.png", shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
+  enemy_hunter_captain_strip2: { file: "units/enemy_hunter_captain_strip2.png", shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
+  corpse_ai_drone: { file: "fx/corpse_ai_drone.png", shape: "corpse", color: "#4a4a55", size: 1.0, anchorY: 0.5 },
+  corpse_ai_sentry: { file: "fx/corpse_ai_sentry.png", shape: "corpse", color: "#4a4a55", size: 1.0, anchorY: 0.5 },
+  corpse_ai_warden: { file: "fx/corpse_ai_warden.png", shape: "corpse", color: "#4a4a55", size: 1.0, anchorY: 0.5 },
+  corpse_ai_crawler: { file: "fx/corpse_ai_crawler.png", shape: "corpse", color: "#4a4a55", size: 1.0, anchorY: 0.5 },
+  corpse_hunter_stalker: { file: "fx/corpse_hunter_stalker.png", shape: "corpse", color: "#4a4a55", size: 1.0, anchorY: 0.5 },
+  corpse_hunter_stalker_domed: { file: "fx/corpse_hunter_stalker_domed.png", shape: "corpse", color: "#4a4a55", size: 1.0, anchorY: 0.5 },
+  corpse_hunter_stalker_dismembered: { file: "fx/corpse_hunter_stalker_dismembered.png", shape: "corpse", color: "#4a4a55", size: 1.0, anchorY: 0.5 },
+  corpse_hunter_marksman: { file: "fx/corpse_hunter_marksman.png", shape: "corpse", color: "#4a4a55", size: 1.0, anchorY: 0.5 },
+  corpse_hunter_marksman_domed: { file: "fx/corpse_hunter_marksman_domed.png", shape: "corpse", color: "#4a4a55", size: 1.0, anchorY: 0.5 },
+  corpse_hunter_marksman_dismembered: { file: "fx/corpse_hunter_marksman_dismembered.png", shape: "corpse", color: "#4a4a55", size: 1.0, anchorY: 0.5 },
+  corpse_hunter_captain: { file: "fx/corpse_hunter_captain.png", shape: "corpse", color: "#4a4a55", size: 1.0, anchorY: 0.5 },
+  corpse_hunter_captain_domed: { file: "fx/corpse_hunter_captain_domed.png", shape: "corpse", color: "#4a4a55", size: 1.0, anchorY: 0.5 },
+  corpse_hunter_captain_dismembered: { file: "fx/corpse_hunter_captain_dismembered.png", shape: "corpse", color: "#4a4a55", size: 1.0, anchorY: 0.5 },
+  fx_spark_1:            { file: "fx/fx_spark_1.png",   shape: "dot",   color: "#ffe070", size: 0.4 },
+  fx_spark_2:            { file: "fx/fx_spark_2.png",   shape: "dot",   color: "#ffe070", size: 0.5 },
+  fx_spark_3:            { file: "fx/fx_spark_3.png",   shape: "dot",   color: "#fff0a0", size: 0.6 },
+  fx_oil_pool:           { file: "fx/fx_oil_pool.png",  shape: "splat", color: "#15151a", size: 1.6 },
+  fx_metal_gib_1:        { file: "fx/fx_metal_gib_1.png", shape: "gib", color: "#8a8a80", size: 0.3 },
+  fx_metal_gib_2:        { file: "fx/fx_metal_gib_2.png", shape: "gib", color: "#8a8a80", size: 0.3 },
+  fx_metal_gib_3:        { file: "fx/fx_metal_gib_3.png", shape: "gib", color: "#8a8a80", size: 0.3 },
+  fx_drone_bolt:         { file: "fx/fx_drone_bolt.png", shape: "dot",  color: "#80d0ff", size: 0.2 },
+  fx_mark:               { file: "fx/fx_mark.png",      shape: "frame", color: "#ff3030", size: 1 },
+  fx_shield_arc:         { file: "fx/fx_shield_arc.png", shape: "none", color: "#a0e0ff", size: 1.5 },
+  map_hunter_pack:       { file: "map/map_hunter_pack.png",   shape: "badge", color: "#c02020", size: 1, text: "H" },
+  map_rival:             { file: "map/map_rival.png",         shape: "badge", color: "#2ab8c8", size: 1, text: "R" },
+  ui_break_away:         { file: "ui/ui_break_away.png",      shape: "badge", color: "#3a6a8a", size: 1, text: "B" },   // milestone 5 Break away (queued icon; no art yet: pendingArt)   // Slice 3 §7 Radio L2 rival mark (no art yet: pendingArt)
+  map_hunter_tracks:     { file: "map/map_hunter_tracks.png", shape: "dot",   color: "#c04040", size: 0.5 },
+
+  unit_basic:            { file: "units/unit_basic.png",            shape: "circle",   color: "#9a9a9a", size: 0.9, anchorY: 0.75, feetY: 0.97, walk: "unit_basic_strip2", corpse: "corpse_basic", downed: "unit_basic_downed_strip2" },
+  unit_vanguard:         { file: "units/unit_vanguard.png",         shape: "square",   color: "#4f7fd6", size: 1.0, anchorY: 0.75, feetY: 0.97, walk: "unit_vanguard_strip2", corpse: "corpse_vanguard", downed: "unit_vanguard_downed_strip2" },
+  unit_striker:          { file: "units/unit_striker.png",          shape: "triangle", color: "#d6a44f", size: 0.9, anchorY: 0.75, feetY: 0.97, walk: "unit_striker_strip2", corpse: "corpse_striker", downed: "unit_striker_downed_strip2" },
+  unit_gunner:           { file: "units/unit_gunner.png",           shape: "circle",   color: "#58c46a", size: 0.9, anchorY: 0.75, feetY: 0.97, walk: "unit_gunner_strip2", corpse: "corpse_gunner", downed: "unit_gunner_downed_strip2" },
+  unit_medic:            { file: "units/unit_medic.png",            shape: "cross",    color: "#f0f0f0", size: 0.9, anchorY: 0.75, feetY: 0.97, walk: "unit_medic_strip2", corpse: "corpse_medic", downed: "unit_medic_downed_strip2" },
   unit_grunt:            { file: "units/unit_grunt.png",            shape: "circle",   color: "#6d8a9e", size: 0.75, anchorY: 0.75, feetY: 0.97, walk: "unit_grunt_strip2", corpse: "corpse_grunt" },
+  unit_veteran:          { file: "units/unit_veteran.png",          shape: "circle",   color: "#8a9e6d", size: 0.85, anchorY: 0.75, feetY: 0.97, walk: "unit_veteran_strip2", corpse: "corpse_veteran", downed: "unit_veteran_downed_strip2" },   // Slice 3 §1 promoted Grunt
   enemy_outlaw_raider:   { file: "units/enemy_outlaw_raider.png",   shape: "circle",   color: "#c0503a", size: 0.8, anchorY: 0.75, feetY: 0.97, walk: "enemy_outlaw_raider_strip2", corpse: "corpse_outlaw_raider" },
   enemy_outlaw_gunman:   { file: "units/enemy_outlaw_gunman.png",   shape: "diamond",  color: "#d8683a", size: 0.85, anchorY: 0.75, feetY: 0.97, walk: "enemy_outlaw_gunman_strip2", corpse: "corpse_outlaw_gunman" },
   enemy_outlaw_brute:    { file: "units/enemy_outlaw_brute.png",    shape: "square",   color: "#8f2f22", size: 1.1, anchorY: 0.75, feetY: 0.97, walk: "enemy_outlaw_brute_strip2", corpse: "corpse_outlaw_brute" },
@@ -58,6 +108,8 @@ DATA.sprites = {
   corpse_human:          { file: "fx/corpse_human.png",             shape: "corpse",   color: "#5a2a22", size: 1.0 },
   corpse_beast:          { file: "fx/corpse_beast.png",             shape: "corpse",   color: "#3e2450", size: 1.0 },
   corpse_human_searched: { file: "fx/corpse_human_searched.png",    shape: "corpse",   color: "#4a2a22", size: 1.0 },   // a body once looted (site view)
+  corpse_grunt_searched: { file: "fx/corpse_grunt_searched.png",    shape: "corpse",   color: "#4a2a22", size: 1.0 },
+  corpse_veteran_searched: { file: "fx/corpse_veteran_searched.png", shape: "corpse",  color: "#4a2a22", size: 1.0 },   // a fallen Veteran's body once looted   // a fallen Grunt's body once looted (site view)
   corpse_beast_searched: { file: "fx/corpse_beast_searched.png",    shape: "corpse",   color: "#2e2440", size: 1.0 },
   // ---- 2-frame walk strips (64x32 = 2 x 32x32, left->right) ----
   unit_basic_strip2:       { file: "units/unit_basic_strip2.png",                   shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
@@ -66,12 +118,27 @@ DATA.sprites = {
   unit_gunner_strip2:      { file: "units/unit_gunner_strip2.png",                  shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
   unit_medic_strip2:       { file: "units/unit_medic_strip2.png",                   shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
   unit_grunt_strip2:       { file: "units/unit_grunt_strip2.png",                   shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
+  unit_veteran_strip2:     { file: "units/unit_veteran_strip2.png",                 shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
   enemy_outlaw_raider_strip2: { file: "units/enemy_outlaw_raider_strip2.png",          shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
   enemy_outlaw_gunman_strip2: { file: "units/enemy_outlaw_gunman_strip2.png",          shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
   enemy_outlaw_brute_strip2: { file: "units/enemy_outlaw_brute_strip2.png",           shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
   enemy_beast_hound_strip2: { file: "units/enemy_beast_hound_strip2.png",            shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
   enemy_beast_spitter_strip2: { file: "units/enemy_beast_spitter_strip2.png",          shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
   enemy_beast_maw_strip2:  { file: "units/enemy_beast_maw_strip2.png",              shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97, imgScale: 1.5 },
+  // downed bodies (Slice 3 batch 1): 32x32 still + 2-frame strip (64x32, ~2 fps), laid out like the corpses (head left, anchorY 0.5)
+  unit_basic_downed:        { file: "units/unit_basic_downed.png",          shape: "corpse", color: "#7a2a22", size: 1.0, anchorY: 0.5 },
+  unit_vanguard_downed:     { file: "units/unit_vanguard_downed.png",       shape: "corpse", color: "#7a2a22", size: 1.0, anchorY: 0.5 },
+  unit_striker_downed:      { file: "units/unit_striker_downed.png",        shape: "corpse", color: "#7a2a22", size: 1.0, anchorY: 0.5 },
+  unit_gunner_downed:       { file: "units/unit_gunner_downed.png",         shape: "corpse", color: "#7a2a22", size: 1.0, anchorY: 0.5 },
+  unit_medic_downed:        { file: "units/unit_medic_downed.png",          shape: "corpse", color: "#7a2a22", size: 1.0, anchorY: 0.5 },
+  unit_veteran_downed:      { file: "units/unit_veteran_downed.png",        shape: "corpse", color: "#7a2a22", size: 1.0, anchorY: 0.5 },
+  unit_basic_downed_strip2:    { file: "units/unit_basic_downed_strip2.png",    shape: "corpse", color: "#7a2a22", size: 1.0, frames: 2, fps: 2, anchorY: 0.5 },
+  unit_vanguard_downed_strip2: { file: "units/unit_vanguard_downed_strip2.png", shape: "corpse", color: "#7a2a22", size: 1.0, frames: 2, fps: 2, anchorY: 0.5 },
+  unit_striker_downed_strip2:  { file: "units/unit_striker_downed_strip2.png",  shape: "corpse", color: "#7a2a22", size: 1.0, frames: 2, fps: 2, anchorY: 0.5 },
+  unit_gunner_downed_strip2:   { file: "units/unit_gunner_downed_strip2.png",   shape: "corpse", color: "#7a2a22", size: 1.0, frames: 2, fps: 2, anchorY: 0.5 },
+  unit_medic_downed_strip2:    { file: "units/unit_medic_downed_strip2.png",    shape: "corpse", color: "#7a2a22", size: 1.0, frames: 2, fps: 2, anchorY: 0.5 },
+  unit_veteran_downed_strip2:  { file: "units/unit_veteran_downed_strip2.png",  shape: "corpse", color: "#7a2a22", size: 1.0, frames: 2, fps: 2, anchorY: 0.5 },
+  fx_downed_pool_strip2:    { file: "fx/fx_downed_pool_strip2.png",         shape: "splat",  color: "#4e0505", size: 1.4, frames: 2, fps: 2, anchorY: 0.5 },
   corpse_basic:           { file: "fx/corpse_basic.png",             shape: "corpse",   color: "#5a2a22", size: 1.0, anchorY: 0.5 },
   corpse_vanguard:        { file: "fx/corpse_vanguard.png",          shape: "corpse",   color: "#5a2a22", size: 1.0, anchorY: 0.5 },
   corpse_striker:         { file: "fx/corpse_striker.png",           shape: "corpse",   color: "#5a2a22", size: 1.0, anchorY: 0.5 },
@@ -84,6 +151,11 @@ DATA.sprites = {
   corpse_beast_hound:     { file: "fx/corpse_beast_hound.png",       shape: "corpse",   color: "#3e2450", size: 1.0, anchorY: 0.5 },
   corpse_beast_spitter:   { file: "fx/corpse_beast_spitter.png",     shape: "corpse",   color: "#3e2450", size: 1.0, anchorY: 0.5 },
   corpse_beast_maw:       { file: "fx/corpse_beast_maw.png",         shape: "corpse",   color: "#3e2450", size: 1.0, anchorY: 0.5, imgScale: 1.5 },
+  corpse_grunt_domed:     { file: "fx/corpse_grunt_domed.png",       shape: "corpse",   color: "#5a2a22", size: 1.0, anchorY: 0.5 },
+  corpse_grunt_dismembered: { file: "fx/corpse_grunt_dismembered.png", shape: "corpse",  color: "#5a2a22", size: 1.0, anchorY: 0.5 },
+  corpse_veteran:         { file: "fx/corpse_veteran.png",           shape: "corpse",   color: "#5a2a22", size: 1.0, anchorY: 0.5 },
+  corpse_veteran_domed:   { file: "fx/corpse_veteran_domed.png",     shape: "corpse",   color: "#5a2a22", size: 1.0, anchorY: 0.5 },
+  corpse_veteran_dismembered: { file: "fx/corpse_veteran_dismembered.png", shape: "corpse", color: "#5a2a22", size: 1.0, anchorY: 0.5 },
   corpse_human_domed:     { file: "fx/corpse_human_domed.png",       shape: "corpse",   color: "#5a2a22", size: 1.0, anchorY: 0.5 },
   corpse_human_dismembered: { file: "fx/corpse_human_dismembered.png",  shape: "corpse",   color: "#5a2a22", size: 1.0, anchorY: 0.5 },
   corpse_beast_domed:     { file: "fx/corpse_beast_domed.png",       shape: "corpse",   color: "#3e2450", size: 1.0, anchorY: 0.5 },
@@ -106,6 +178,7 @@ DATA.sprites = {
   fx_blood_spray:        { file: "fx/fx_blood_spray.png",           shape: "splat",    color: "#8a0c0c", size: 0.8 },
   fx_blood_drag:         { file: "fx/fx_blood_drag.png",            shape: "splat",    color: "#5a0707", size: 1.2 },
   fx_acid_pool:          { file: "fx/fx_acid_pool.png",             shape: "splat",    color: "#6a9a2a", size: 0.8 },
+  fx_fire:               { file: "fx/fx_fire.png",                  shape: "dot",      color: "#ff8030", size: 0.6 },   // Slice 3 §9 burn (drawn on burning units)
   fx_bullet:             { file: "fx/fx_bullet.png",                shape: "dot",      color: "#ffe9a0", size: 0.15 },
   fx_acid:               { file: "fx/fx_acid.png",                  shape: "dot",      color: "#8cff3a", size: 0.25 },
   fx_muzzle:             { file: "fx/fx_muzzle.png",                shape: "dot",      color: "#fff3b0", size: 0.3 },
@@ -128,6 +201,7 @@ DATA.sprites = {
   loc_outpost:           { file: "map/loc_outpost.png",             shape: "star",     color: "#f0d040", size: 1 },
   loc_aftermath:         { file: "map/loc_aftermath.png",           shape: "triangle", color: "#602020", size: 1 },
   loc_bunker:            { file: "map/loc_bunker.png",              shape: "square",   color: "#6a6a5a", size: 1 },
+  quest_available:       { file: "ui/quest_available.png",          shape: "diamond",  color: "#ffd84a", size: 1 },   // town: "quest to pick up" marker, 32x32 (DATA.town.questMarker); CSS placeholder if missing
   loc_distress:          { file: "map/loc_distress.png",            shape: "diamond",  color: "#ff6040", size: 1 },
   loc_den:               { file: "map/loc_den.png",                 shape: "circle",   color: "#4a6a2a", size: 1 },
   loc_unknown:           { file: "map/loc_unknown.png",             shape: "badge",    color: "#444",    size: 1, text: "?" },
@@ -152,6 +226,8 @@ DATA.sprites = {
   town_stockpile:        { file: "town/town_stockpile.png",         shape: "square",   color: "#5a6a3a", size: 1 },
   town_workshop:         { file: "town/town_workshop.png",          shape: "square",   color: "#4a4038", size: 1 },
   town_lot_recruit:      { file: "town/town_lot_recruit.png",       shape: "square",   color: "#3a3830", size: 1 },
+  town_memorial:         { file: "town/town_memorial.png",          shape: "square",   color: "#4a4a50", size: 1 },   // Slice 3 §1 Memorial Wall hotspot
+  ui_memorial_plaque:    { file: "ui/ui_memorial_plaque.png",       shape: "square",   color: "#3a3a3a", size: 1 },   // 320x96 plaque (12 px border when stretched)
   town_lot_comms:        { file: "town/town_lot_comms.png",         shape: "square",   color: "#3a3830", size: 1 },
   town_trapdoor_open:    { file: "town/town_trapdoor_open.png",     shape: "none",     color: "#1a120a", size: 1 },
   // hotspot overlays drawn at the positions in DATA.townArt (outline = hl, lit building + outline = hover)
@@ -268,7 +344,19 @@ DATA.sprites = {
   item_bone_claws:       { file: "items/item_bone_claws.png",       shape: "bar",      color: "#d0c0a0", size: 1, pad: 2 },
   item_acid_gland:       { file: "items/item_acid_gland.png",       shape: "circle",   color: "#8cff3a", size: 1, pad: 2 },
   item_scrap_smg:        { file: "items/item_smg.png",              shape: "bar",      color: "#6a6a5a", size: 1, pad: 2 },
+  item_scav_hood:         { file: "items/item_scav_hood.png",             shape: "circle",    color: "#8a7a5a", size: 1, pad: 2 },   // set piece (Slice 3 §5)
+  item_scav_poncho:       { file: "items/item_scav_poncho.png",           shape: "square",    color: "#8a7a5a", size: 1, pad: 2 },   // set piece (Slice 3 §5)
+  item_scav_satchel:      { file: "items/item_scav_satchel.png",          shape: "square",    color: "#8a7a5a", size: 1, pad: 2 },   // set piece (Slice 3 §5)
+  item_militia_helmet:    { file: "items/item_militia_helmet.png",        shape: "circle",    color: "#5a6a3a", size: 1, pad: 2 },   // set piece (Slice 3 §5)
+  item_militia_vest:      { file: "items/item_militia_vest.png",          shape: "square",    color: "#5a6a3a", size: 1, pad: 2 },   // set piece (Slice 3 §5)
+  item_militia_carbine:   { file: "items/item_militia_carbine.png",       shape: "bar",       color: "#5a6a3a", size: 1, pad: 2 },   // set piece (Slice 3 §5)
+  item_hunter_mask:       { file: "items/item_hunter_mask.png",           shape: "circle",    color: "#4a4a55", size: 1, pad: 2 },   // set piece (Slice 3 §5)
+  item_hunter_coat:       { file: "items/item_hunter_coat.png",           shape: "square",    color: "#4a4a55", size: 1, pad: 2 },   // set piece (Slice 3 §5)
+  item_hunter_longrifle:  { file: "items/item_hunter_longrifle.png",      shape: "bar",       color: "#4a4a55", size: 1, pad: 2 },   // set piece (Slice 3 §5)
   item_med_kit:          { file: "items/item_med_kit.png",          shape: "cross",    color: "#e04040", size: 1, pad: 2 },
+  item_ammo_handload:    { file: "items/item_ammo_handload.png",    shape: "square",   color: "#c0a060", size: 1, pad: 2 },   // Slice 3 §9 ammo packs
+  item_ammo_ap:          { file: "items/item_ammo_ap.png",          shape: "square",   color: "#8090a0", size: 1, pad: 2 },
+  item_ammo_incendiary:  { file: "items/item_ammo_incendiary.png",  shape: "square",   color: "#e06030", size: 1, pad: 2 },
   item_quest_valve:      { file: "items/item_quest_valve.png",      shape: "badge",    color: "#b08a3a", size: 1, pad: 2, text: "V" },
   item_quest_ledger:     { file: "items/item_quest_ledger.png",     shape: "badge",    color: "#b08a3a", size: 1, pad: 2, text: "L" },
   // ---- resource icons (32x32) ----
@@ -279,18 +367,79 @@ DATA.sprites = {
   res_electronics:       { file: "icons/res_electronics.png",         shape: "diamond",  color: "#40a0e0", size: 1 },
   res_chemicals:         { file: "icons/res_chemicals.png",         shape: "badge",    color: "#80c040", size: 1, text: "Ch" },
   res_med:               { file: "icons/res_med.png",               shape: "cross",    color: "#e04040", size: 1 },
-  res_biomass:           { file: "icons/res_biomass.png",           shape: "circle",   color: "#60c040", size: 1 },   // deferred resource (hidden)
+  res_biomass:           { file: "icons/res_biomass.png",           shape: "circle",   color: "#60c040", size: 1 },
+  // Slice 3 §11 resources (pending art: badge placeholders)
+  res_fuel:              { file: "icons/res_fuel.png",              shape: "badge",    color: "#b07030", size: 1, text: "Fu" },
+  res_data_shards:       { file: "icons/res_data_shards.png",       shape: "badge",    color: "#4ab0c0", size: 1, text: "DS" },
+  res_relic_tech:        { file: "icons/res_relic_tech.png",        shape: "badge",    color: "#c0a040", size: 1, text: "RT" },
+  // Terminal searchable (design, Slice 3): the assets bot's old CRT computer (a separate key from obj_terminal, the relay console)
+  obj_computer:          { file: "objects/obj_computer.png",          shape: "badge", color: "#2a5a6a", size: 1, text: "PC" },
+  obj_computer_open:     { file: "objects/obj_computer_open.png",     shape: "badge", color: "#2a5a6a", size: 1, text: "PC" },
+  obj_computer_searched: { file: "objects/obj_computer_searched.png", shape: "badge", color: "#1a3a4a", size: 1, text: "PC" },
+  // Grunt equip panel slot icons (Slice 3 batch 2; 32x32, shown at 20 px)
+  slot_weapon:           { file: "icons/slot_weapon.png",           shape: "badge",    color: "#6a6a6a", size: 1, text: "W" },
+  slot_gear:             { file: "icons/slot_gear.png",             shape: "badge",    color: "#6a6a6a", size: 1, text: "G" },
+  slot_head:             { file: "icons/slot_head.png",             shape: "badge",    color: "#6a6a6a", size: 1, text: "H" },   // Veteran slots (Slice 3 §1)
+  slot_body:             { file: "icons/slot_body.png",             shape: "badge",    color: "#6a6a6a", size: 1, text: "B" },
+  slot_pack:             { file: "icons/slot_pack.png",             shape: "badge",    color: "#6a6a6a", size: 1, text: "P" },
+  // Slice 3 §11 searchables (obj_vehicle is 64x32 native: wide)
+  obj_vehicle:           { file: "objects/obj_vehicle.png",         shape: "badge",    color: "#6a5a4a", size: 1, text: "CAR" },
+  obj_vehicle_searched:  { file: "objects/obj_vehicle_searched.png", shape: "badge",   color: "#4a3a2a", size: 1, text: "CAR" },
+  obj_growth:            { file: "objects/obj_growth.png",          shape: "badge",    color: "#5a8a3a", size: 1, text: "GR" },
+  obj_growth_searched:   { file: "objects/obj_growth_searched.png", shape: "badge",    color: "#3a5a2a", size: 1, text: "GR" },
+  obj_rival_bag:         { file: "objects/obj_rival_bag.png",       shape: "badge",    color: "#3a8a9a", size: 1, text: "RP" },
+  obj_rival_bag_searched: { file: "objects/obj_rival_bag_searched.png", shape: "badge", color: "#2a5a6a", size: 1, text: "RP" },
+  corpse_machine:        { file: "fx/corpse_machine.png",           shape: "corpse",   color: "#4a4a55", size: 1.0, anchorY: 0.5 },   // generic wreck (per-unit ones come with step 8)
+  corpse_machine_searched: { file: "fx/corpse_machine_searched.png", shape: "corpse",  color: "#33333a", size: 1.0 },
+  // Slice 3 §3 perk icons (32x32; bronze medallion, Keystones on a gold octagon)
+  // Slice 3 §2 abilities: bar icons, aim reticle, Frag / Smoke FX
+  abl_shove:             { file: "icons/abl_shove.png",       shape: "badge", color: "#5a5a6a", size: 1, text: "SH" },
+  abl_taunt:             { file: "icons/abl_taunt.png",       shape: "badge", color: "#5a5a6a", size: 1, text: "TA" },
+  abl_dash:              { file: "icons/abl_dash.png",        shape: "badge", color: "#5a5a6a", size: 1, text: "DA" },
+  abl_frag:              { file: "icons/abl_frag.png",        shape: "badge", color: "#5a5a6a", size: 1, text: "FR" },
+  abl_smoke:             { file: "icons/abl_smoke.png",       shape: "badge", color: "#5a5a6a", size: 1, text: "SM" },
+  abl_brace:             { file: "icons/abl_brace.png",       shape: "badge", color: "#5a5a6a", size: 1, text: "BR" },
+  abl_charge:            { file: "icons/abl_charge.png",      shape: "badge", color: "#5a5a6a", size: 1, text: "CH" },
+  abl_rend:              { file: "icons/abl_rend.png",        shape: "badge", color: "#5a5a6a", size: 1, text: "RE" },
+  abl_riposte:           { file: "icons/abl_riposte.png",     shape: "badge", color: "#5a5a6a", size: 1, text: "RI" },
+  abl_called_shot:       { file: "icons/abl_called_shot.png", shape: "badge", color: "#5a5a6a", size: 1, text: "CS" },
+  abl_suppress:          { file: "icons/abl_suppress.png",    shape: "badge", color: "#5a5a6a", size: 1, text: "SU" },
+  abl_heal:              { file: "icons/abl_heal.png",        shape: "badge", color: "#5a5a6a", size: 1, text: "HE" },
+  abl_stim:              { file: "icons/abl_stim.png",        shape: "badge", color: "#5a5a6a", size: 1, text: "ST" },
+  ui_aim_reticle:        { file: "ui/ui_aim_reticle.png",     shape: "frame", color: "#ffe080", size: 1 },
+  fx_grenade:            { file: "fx/fx_grenade.png",         shape: "dot",   color: "#4a5a3a", size: 0.4 },
+  fx_explosion:          { file: "fx/fx_explosion.png",       shape: "splat", color: "#ff9030", size: 1, frames: 4, fps: 12 },
+  fx_smoke_cloud:        { file: "fx/fx_smoke_cloud.png",     shape: "dot",   color: "#9aa0a0", size: 1 },
+  perk_scav_eye:         { file: "icons/perk_scav_eye.png", shape: "badge", color: "#6a5a3a", size: 1, text: "SC" },
+  perk_thick_skin:       { file: "icons/perk_thick_skin.png", shape: "badge", color: "#6a5a3a", size: 1, text: "TH" },
+  perk_quick_hands:      { file: "icons/perk_quick_hands.png", shape: "badge", color: "#6a5a3a", size: 1, text: "QU" },
+  perk_mule:             { file: "icons/perk_mule.png", shape: "badge", color: "#6a5a3a", size: 1, text: "MU" },
+  perk_gun_nut:          { file: "icons/perk_gun_nut.png", shape: "badge", color: "#6a5a3a", size: 1, text: "GU" },
+  perk_helping_hand:     { file: "icons/perk_helping_hand.png", shape: "badge", color: "#6a5a3a", size: 1, text: "HE" },
+  perk_squad_leader:     { file: "icons/perk_squad_leader.png", shape: "badge", color: "#6a5a3a", size: 1, text: "SQ" },
+  perk_quick_recovery:   { file: "icons/perk_quick_recovery.png", shape: "badge", color: "#6a5a3a", size: 1, text: "QU" },
+  perk_glass_mind:       { file: "icons/perk_glass_mind.png", shape: "badge", color: "#8a6a2a", size: 1, text: "GL" },
+  perk_iron_will:        { file: "icons/perk_iron_will.png", shape: "badge", color: "#8a6a2a", size: 1, text: "IR" },
+  perk_expendables:      { file: "icons/perk_expendables.png", shape: "badge", color: "#8a6a2a", size: 1, text: "EX" },
+  perk_ghost_protocol:   { file: "icons/perk_ghost_protocol.png", shape: "badge", color: "#8a6a2a", size: 1, text: "GH" },
   // ---- rarity frames (36x36, 2px border, transparent centre; drawn over the 36x36 item icon) ----
   frame_grey:            { file: "ui/frame_grey.png",               shape: "frame",    color: "#777",    size: 1, pad: 2 },
   frame_white:           { file: "ui/frame_white.png",              shape: "frame",    color: "#e8e8e8", size: 1, pad: 2 },
   frame_blue:            { file: "ui/frame_blue.png",               shape: "frame",    color: "#4a8cff", size: 1, pad: 2 },
   frame_yellow:          { file: "ui/frame_yellow.png",             shape: "frame",    color: "#ffd84a", size: 1, pad: 2 },
+  frame_purple:          { file: "ui/frame_purple.png",             shape: "frame",    color: "#b060ff", size: 1, pad: 2 },   // Slice 3 §6
+  frame_orange:          { file: "ui/frame_orange.png",             shape: "frame",    color: "#ff8a30", size: 1, pad: 2 },
+  frame_set:             { file: "ui/frame_set.png",                shape: "frame",    color: "#40d060", size: 1, pad: 2 },   // set tab, drawn over the rarity frame
   // ---- building icons (64x64) ----
   bld_command_post:      { file: "buildings/bld_command_post.png",  shape: "square",   color: "#8a7a5a", size: 1 },
   bld_vault:             { file: "buildings/bld_vault.png",         shape: "square",   color: "#7a7a8a", size: 1 },
   bld_body_lab:          { file: "buildings/bld_body_lab.png",      shape: "square",   color: "#5a8a8a", size: 1 },
   bld_workshop:          { file: "buildings/bld_workshop.png",      shape: "square",   color: "#8a6a4a", size: 1 },
-  bld_infirmary:         { file: "buildings/bld_infirmary.png",     shape: "square",   color: "#aa5a5a", size: 1 }
+  bld_infirmary:         { file: "buildings/bld_infirmary.png",     shape: "square",   color: "#aa5a5a", size: 1 },
+  // Slice 3 buildings (registered now; nothing uses them until Part B step 9). 64x64.
+  bld_workbench:         { file: "buildings/bld_workbench.png",     shape: "square",   color: "#8a6a3a", size: 1 },
+  bld_radio:             { file: "buildings/bld_radio.png",         shape: "square",   color: "#5a7a6a", size: 1 },
+  bld_still:             { file: "buildings/bld_still.png",         shape: "square",   color: "#4a7a9a", size: 1 }
 };
 // Skill icons (32x32) are keyed skill_<skillId>; stat icons stat_<statId>; damage types dmg_<type>.
 // They are auto-registered from DATA.skills / DATA.stats in js/sprites.js with a text-badge placeholder.

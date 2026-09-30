@@ -3,9 +3,9 @@
   const G = root.G, U = G.Util;
   const D = G.Debug = { on: false, rollMath: false, fastSearch: false, overrides: {}, section: "config.battle" };
   const h = (...a) => G.UI.h(...a);
-  const SECTIONS = ["config.tutorial", "config.deploy", "config.carry", "config.heat", "config.rolls", "config.checks", "config.battle", "config.enemies", "config.expedition", "config.loot", "config.leveling", "config.restore", "config.grunts", "config.search", "config.revisit", "config.xpFloat",
+  const SECTIONS = ["config.tutorial", "config.deploy", "config.carry", "config.heat", "config.rolls", "config.checks", "config.battle", "config.enemies", "config.expedition", "config.world", "config.loot", "config.leveling", "config.restore", "config.grunts", "config.search", "config.revisit", "config.xpFloat",
     "bodies.families", "bodies.basicBody", "bodies.classes", "bodies.specialties", "bodies.grunt", "bodies.criticalCare", "enemies.units", "enemies.elite", "items.rarities", "items.bases", "items.affixes", "items.tags", "resources", "map.locations", "events",
-    "searchables", "zones", "quests", "outpost", "town"];
+    "searchables", "zones", "quests", "outpost", "town", "abilities", "allies", "perks", "audio"];
 
   D.toggle = function () { D.on = !D.on; document.getElementById("debug").classList.toggle("hidden", !D.on); if (D.on) D.render(); if (G.BattleView.active) G.BattleView.renderHud(G.BattleView.active); };
 
@@ -27,7 +27,7 @@
     hs.appendChild(btn("Fast-forward 10 min", () => { G.clockOffset += 600000; G.Outpost.tick(); return "Clock +10 min (restore + Vault timers)"; }));
     hs.appendChild(h("label", { class: "dbg-check" }, h("input", { type: "checkbox", checked: D.rollMath, onchange: (e) => { D.rollMath = e.target.checked; if (G.UI.battle) G.UI.battle.b.rollMath = D.rollMath; if (!G.UI.battle) G.UI.render(); } }), " Show roll math (checks, floating text, disturbance math in object tooltips)"));
     hs.appendChild(h("label", { class: "dbg-check" }, h("input", { type: "checkbox", checked: D.fastSearch, onchange: (e) => { D.fastSearch = e.target.checked; } }), " Instant searches (skip the progress bar wait)"));
-    hs.appendChild(h("label", { class: "dbg-check" }, h("input", { type: "checkbox", checked: G.Sfx.enabled, onchange: (e) => { G.Sfx.enabled = e.target.checked; } }), " SFX (plays assets/sfx/*.mp3 if present)"));
+    hs.appendChild(h("label", { class: "dbg-check" }, h("input", { type: "checkbox", checked: G.Sfx.enabled, onchange: (e) => { G.Sfx.enabled = e.target.checked; } }), " Audio on (assets/sfx/*.mp3, assets/amb/*)"));
     el.appendChild(hs);
     // give item
     const gi = h("div", { class: "dbg-sec" }, h("h4", null, "Give item" + (r ? " (to bag)" : " (to stash)")));
@@ -36,13 +36,46 @@
     const iIn = h("input", { type: "number", value: 5, min: 1, style: "width:50px" });
     gi.appendChild(h("div", null, bSel, rSel, iIn, btn("Give", () => { const it = G.Items.make(bSel.value, rSel.value, +iIn.value); (r ? r.bag.items : s.stash.items).push(it); return "Gave " + G.Items.name(it); })));
     gi.appendChild(btn("Give 3 random loot", () => { for (let i = 0; i < 3; i++) (r ? r.bag.items : s.stash.items).push(G.Items.rollLoot(G.rng, +iIn.value, 0)); }));
+    // Slice 3 §6: rarity shares at the iLvl above (no rarity bonus) vs the data weights; Purple needs iLvl 3, Orange 6
+    const rs = h("div", { class: "dbg-out", "data-out": "roll10k" });
+    gi.appendChild(btn("Roll 10,000 items", () => {
+      const st = G.Items.rollStats(10000, +iIn.value, 0), R = DATA.items.rarities;
+      rs.textContent = `iLvl ${st.ilvl}: ` + Object.keys(R).filter((k) => R[k].enabled).map((k) => `${R[k].name} ${((st.by[k] || 0) / 100).toFixed(1)}%` + (st.expected[k] != null ? ` (weight ${st.expected[k].toFixed(1)}%)` : "")).join(" · ") + ` | set pieces ${(st.sets / 100).toFixed(1)}% · Complex lines ${st.cx}`;
+      return "Rolled 10,000";
+    }));
+    gi.appendChild(rs);
     el.appendChild(gi);
+    // Slice 3 §8: play-all list with each key's load status (ok / missing / pending)
+    const au = h("div", { class: "dbg-sec" }, h("h4", null, "Audio: play all"));
+    for (const k of Object.keys(DATA.audio.sfx).concat(Object.keys(DATA.audio.loops))) {
+      const loop = !!DATA.audio.loops[k];
+      au.appendChild(h("div", { class: "dbg-audio" }, btn(k, () => { G.Sfx.unlock(); if (loop) { G.Sfx.wantLoop = k; G.Sfx.setScreen(Object.keys(DATA.audio.screens).find((x) => DATA.audio.screens[x] === k)); } else G.Sfx.play(k); setTimeout(() => D.render(), 400); return k + ": " + G.Sfx.status(k); }), h("small", null, " " + G.Sfx.status(k))));
+    }
+    el.appendChild(au);
+    // Slice 3 §11: roll 1,000 searches of a type here (or at the first Zone A location) and compare with the table
+    const lr = h("div", { class: "dbg-sec" }, h("h4", null, "Loot readout")), tSel = h("select"), out = h("pre", { class: "dbg-pre" });
+    for (const k in DATA.searchables.types) if ((DATA.searchables.types[k].table || []).length) tSel.appendChild(h("option", { value: k }, k));
+    lr.appendChild(h("div", null, tSel, btn("Roll 1,000 searches", () => { const x = G.Exp.lootReadout(tSel.value, 1000);
+      out.textContent = `${x.type} at ${x.loc}, ${x.resRolls} roll(s) each\n` + x.rows.map((r) => `${r.res.padEnd(12)} weight ${r.weightPct == null ? "extra" : r.weightPct.toFixed(1) + "%"}${r.hitPct == null ? "" : ` · found in ${r.hitPct.toFixed(1)}% · avg ${r.avg.toFixed(2)}`}`).join("\n"); })), out);
+    el.appendChild(lr);
     // skills
     const sk = h("div", { class: "dbg-sec" }, h("h4", null, "XP (worn/selected body + mind)"));
     const sSel = h("select"); for (const k in DATA.skills) sSel.appendChild(h("option", { value: k }, DATA.skills[k].name + " (" + DATA.skills[k].kind + ")"));
     const xIn = h("input", { type: "number", value: 500, style: "width:60px" });
     sk.appendChild(h("div", null, sSel, xIn, btn("Add XP", () => { const b = G.State.body(r ? r.bodyUid : s.loadout.bodyId); G.State.giveXp({ kind: "body", body: b }, sSel.value, +xIn.value / (DATA.skills[sSel.value].kind === "mind" ? DATA.config.leveling.mindXpSourceMult : 1)); })));
     el.appendChild(sk);
+    // Slice 3 §7: rival snapshots: export the current squad, import one, force a rival at the next location
+    if (G.Rivals) {
+      const RV = G.Rivals, rst = RV.st(), rv = h("div", { class: "dbg-sec", "data-dbg": "rivals" }, h("h4", null, `Rivals (defeated ${rst.defeated}, met ${rst.met}, echoes ${rst.echoes.length}, imported ${rst.imported.length})`));
+      const ta = h("textarea", { class: "dbg-export", "data-dbg": "rival-json", placeholder: "rival snapshot JSON" });
+      const rSel2 = h("select", { "data-dbg": "rival-pick" }, h("option", { value: "" }, "(closest match)")); for (const x of RV.all()) rSel2.appendChild(h("option", { value: x.id }, `${x.handle} [${x.source}, zone ${x.zone}, score ${x.deployScore}]`));
+      rv.appendChild(h("div", null, btn("Export current squad", () => { ta.value = JSON.stringify(RV.exportCurrent(), null, 1); setTimeout(() => { const t = document.querySelector('[data-dbg="rival-json"]'); if (t) t.value = ta.value; }, 0); return "Exported to the box below."; }),
+        btn("Import JSON", () => { const t = document.querySelector('[data-dbg="rival-json"]'); const res = RV.importSnap(t ? t.value : ta.value); return res.error || `Imported ${res.snap.handle}.`; })));
+      rv.appendChild(ta);
+      rv.appendChild(h("div", null, rSel2, btn("Force rival at next location", () => { RV.forceNext(rSel2.value || null); return "The next location you enter has a rival squad."; })));
+      if (rst.next) rv.appendChild(h("div", { class: "dbg-small" }, `Next run's pre-roll: ${(RV.byId(rst.next.id) || {}).handle || rst.next.id} in zone ${rst.next.zone} at ${rst.next.nid || "-"}${rst.force ? " · FORCED next" : ""}`));
+      el.appendChild(rv);
+    }
     // Slice 2: zones / passage, quests + rep, outpost
     const zs = h("div", { class: "dbg-sec" }, h("h4", null, "Zones & passage"));
     for (const z of DATA.zones.order) zs.appendChild(h("label", { class: "dbg-check" }, h("input", { type: "checkbox", checked: !!s.zonesUnlocked[z], onchange: (e) => { s.zonesUnlocked[z] = e.target.checked; G.State.save(); if (!G.UI.battle) G.UI.render(); } }), ` ${DATA.zones.list[z].name} unlocked`));
@@ -58,11 +91,28 @@
     for (const g in DATA.quests.givers) { const rIn = h("input", { type: "number", value: G.Quests.st().rep[g] || 0, style: "width:40px" }); qs.appendChild(h("div", null, `${DATA.quests.givers[g].name} rep (L${G.Quests.repLevel(g)}) `, rIn, btn("Set", () => { const before = G.Quests.repLevel(g); G.Quests.st().rep[g] = Math.max(0, +rIn.value); const after = G.Quests.repLevel(g); for (let l = before + 1; l <= after; l++) G.Quests.onRepLevel(g, l); }))); }
     qs.appendChild(h("div", { class: "dbg-small" }, `Ilse medic flag: ${G.Quests.st().flags.medicPick ? "armed" : "off"}`));
     el.appendChild(qs);
-    const os = h("div", { class: "dbg-sec" }, h("h4", null, `Outpost: Vault L${G.Outpost.st("vault").level}${G.Outpost.st("vault").upgrading ? " (upgrading, " + U.fmtTime(G.Outpost.remainingMs("vault")) + ")" : ""}`));
+    // Slice 3 §9-10: every building (level, timers), the build crew, Workbench jobs, production
+    const O = G.Outpost, os = h("div", { class: "dbg-sec" }, h("h4", null, "Outpost buildings" + (O.crewBusy() ? " (crew busy)" : "")));
+    for (const k of O.ids()) {
+      const st = O.st(k), lvIn = h("input", { type: "number", min: 0, max: O.def(k).maxLevel, value: st.level, style: "width:40px" });
+      os.appendChild(h("div", { "data-dbg-building": k }, `${O.def(k).name} L${st.level}` + (st.upgrading ? ` → L${st.upgrading.to} in ${U.fmtTime(O.remainingMs(k))}` : "") + " ", lvIn,
+        btn("Set", () => { st.level = U.clamp(+lvIn.value || 0, 0, O.def(k).maxLevel); st.upgrading = null; O.startProduction(k); return `${O.def(k).name} set to L${st.level}.`; }),
+        btn("Finish", () => { const u = st.upgrading; if (!u) return "Not building."; G.clockOffset += Math.max(0, u.until - G.now()) + 10; O.tick(); return `${O.def(k).name} done.`; })));
+    }
     os.appendChild(btn("Finish Vault build", () => { const u = G.Outpost.st("vault").upgrading; if (!u) return "Not building."; G.clockOffset += Math.max(0, u.until - G.now()) + 10; G.Outpost.tick(); return "Vault done."; }));
     os.appendChild(btn("Reset Vault to L1", () => { const st = G.Outpost.st("vault"); st.level = 1; st.upgrading = null; }));
+    if (G.Workbench) { const q = G.Workbench.st().queue; os.appendChild(h("div", { class: "dbg-small" }, `Workbench queue: ${q.map((j) => DATA.recipes.list[j.id].name + " " + U.fmtTime(G.Workbench.remainingMs(j))).join(", ") || "idle"} · Blue chance ${U.fmt1(G.Workbench.blueChance())}%`));
+      os.appendChild(btn("Finish crafting", () => { const q2 = G.Workbench.st().queue; if (!q2.length) return "Nothing queued."; G.clockOffset += Math.max(0, q2[q2.length - 1].until - G.now()) + 10; O.tick(); return "Crafting done."; }));
+      os.appendChild(btn("+3 of each ammo", () => { for (const k of G.Workbench.ammoTypes()) G.Workbench.addAmmo(k, 3); return "Ammo added to the stash."; })); }
+    os.appendChild(h("label", { class: "dbg-check" }, h("input", { type: "checkbox", checked: !!DATA.outpost.productionEnabled, onchange: (e) => { DATA.outpost.productionEnabled = e.target.checked; G.UI.render(); D.render(); } }), " productionEnabled (Water Still lot + production)"));
     os.appendChild(h("div", { class: "dbg-small" }, `Stash ${G.Outpost.stashCount()}/${G.Outpost.stashCap()} · pouch ${G.Outpost.pouchSlots()} slot(s), ${G.Outpost.pouchMaxKg()} kg`));
     el.appendChild(os);
+    // Slice 3 §12: world restocking
+    { const ws = s.world.sites || {}, picked = Object.values(ws).filter((x) => x.pickedOver);
+      const wr = h("div", { class: "dbg-sec" }, h("h4", null, "World (restocking)"), h("div", null, `${Object.keys(ws).length} sites remembered, ${picked.length} picked over` + (picked.length ? ": " + picked.map((x) => `${G.Map.loc(G.Zones.node(x.nid)).name} ${x.restock || 0}/${G.Exp.restockSteps(x)}`).join(", ") : "")));
+      wr.appendChild(btn("Advance the world 1 run", () => { G.Exp.debugAdvanceWorld(); return "World advanced 1 run (restock +1 step, battle bodies and gore removed)."; }, "Same as a run ending, without the expedition: picked-over places restock one step"));
+      wr.appendChild(btn("Restock everything", () => { G.Exp.debugRestockAll(); return "Every place is back to 100% (refills on its next entry)."; }));
+      el.appendChild(wr); }
     // expedition
     const ex = h("div", { class: "dbg-sec" }, h("h4", null, "Expedition"));
     if (r) {
@@ -83,13 +133,35 @@
       }
       ex.appendChild(h("div", { class: "dbg-small" }, `Run seed ${r.seed} · last battle seed ${G.UI.battle ? G.UI.battle.b.seed : "—"}`));
     } else {
-      ex.appendChild(btn("Recruit a Grunt (pays the cost)", () => { const r = G.Outpost.recruit(); return r.error || "Recruited " + r.grunt.name; }));
-      ex.appendChild(btn("Add a free Grunt", () => { const g = G.State.makeGrunt(G.rng); s.grunts.push(g); return "Added " + g.name; }));
+      ex.appendChild(btn("Hire candidate 1 (pays the cost)", () => { const r = G.Outpost.recruit(); return r.error || "Recruited " + G.Allies.name(r.grunt); }));
+      ex.appendChild(btn("Add a free Grunt", () => { const g = G.State.makeGrunt(G.rng); s.grunts.push(g); return "Added " + G.Allies.name(g); }));
       ex.appendChild(btn("Add test core ally (Critical/Domed)", () => { const g = G.State.makeGrunt(G.rng, DATA.bodies.coreAllyTest); s.grunts.push(g); return "Added " + g.name + " (deploy cost 3)"; }));
       ex.appendChild(btn(s.humanOffer ? "Reroll body offer" : "Roll a body offer now", () => { s.humanOffer = G.State.rollHumanOffer(G.rng); }));
       ex.appendChild(btn("Give random human body", () => { s.bodies.push(G.State.rollHumanBody(G.rng)); s.tutorialDone = true; }));
     }
     el.appendChild(ex);
+    // Slice 3 §1 allies: give / remove any trait on any ally, nickname moments, extractions (promotion), candidates
+    { const A = G.Allies, al = h("div", { class: "dbg-sec" }, h("h4", null, "Allies (traits / nicknames / promotion)"));
+      const gs = s.grunts; const gSel = h("select", null, ...gs.map((g) => h("option", { value: g.uid }, A.name(g))));
+      const tSel = h("select", null, ...Object.keys(DATA.allies.traits).map((t) => h("option", { value: t }, `${A.trait(t).name} (${A.kind(t)})`)));
+      const nSel = h("select", null, ...Object.keys(DATA.allies.nicknames).map((k) => h("option", { value: k }, k)));
+      const cur = () => gs.find((g) => g.uid === gSel.value);
+      if (gs.length) {
+        al.appendChild(h("div", null, "Ally ", gSel)); al.appendChild(h("div", null, "Trait ", tSel));
+        al.appendChild(btn("Give trait", () => { const g = cur(); if (!g) return "No ally."; if (g.traits.includes(tSel.value)) return "Already has it."; g.traits.push(tSel.value); G.State.save(); return `${A.name(g)}: +${A.trait(tSel.value).name}`; }));
+        al.appendChild(btn("Remove trait", () => { const g = cur(); if (!g) return "No ally."; g.traits = g.traits.filter((t) => t !== tSel.value); G.State.save(); return `${A.name(g)}: -${A.trait(tSel.value).name}`; }));
+        al.appendChild(h("div", null, "Nickname moment ", nSel));
+        al.appendChild(btn("Fire nickname moment", () => { const g = cur(); if (!g) return "No ally."; const res = A.earn(g, nSel.value); G.State.save(); return res.applied ? `Nickname "${res.applied}"` : `Offered "${res.offered}" (Keep / Take on the next extraction summary)`; }));
+        al.appendChild(btn("+1 extraction", () => { const g = cur(); if (!g) return "No ally."; g.extractions = (g.extractions || 0) + 1; G.State.save(); return `${A.name(g)}: ${g.extractions} extractions`; }));
+        al.appendChild(h("div", { class: "dbg-small" }, cur() ? `Traits: ${cur().traits.join(", ") || "none"}` : ""));
+      } else al.appendChild(h("div", { class: "dbg-small" }, "No allies."));
+      if (!r) al.appendChild(btn("Reroll recruit candidates", () => { A.rerollCandidates(); G.State.save(); }));
+      el.appendChild(al); }
+    // Slice 3 §3 perks: level up for testing, reset (there's no respec in the game)
+    { const P = G.Perks, pk = h("div", { class: "dbg-sec" }, h("h4", null, `Perks: Lv ${P.level()}, unspent ${P.unspent().normal} + ${P.unspent().keystone} Keystone`));
+      pk.appendChild(btn("+1 character level", () => { const lv = P.level() + 1, before = P.level(); s.lifetimeXp = Math.max(s.lifetimeXp, lv * lv * DATA.config.leveling.charLevelDivisor); P.checkReady(before); G.State.save(); return "Character Lv " + P.level(); }));
+      pk.appendChild(btn("Reset perks", () => { P.reset(); return "Perks reset."; }));
+      el.appendChild(pk); }
     // seeds
     const sd = h("div", { class: "dbg-sec" }, h("h4", null, `Zone A map seed: ${s.maps.a.seed}`));
     const seedIn = h("input", { type: "number", value: s.maps.a.seed, style: "width:110px" });

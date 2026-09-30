@@ -7,21 +7,35 @@
   I.base = (id) => DATA.items.bases[id];
   I.scale = (ilvl) => 1 + LC().statScalePerIlvl * (ilvl - 1);
 
-  I.rollRarity = function (rng, rarityBonusPct) {
+  // ilvl (Slice 3 §6): a rarity with minIlvl above the source item level drops to the next enabled tier down
+  I.rollRarity = function (rng, rarityBonusPct, ilvl) {
     const R = DATA.items.rarities;
     const ids = Object.keys(R).filter((k) => R[k].enabled && R[k].weight > 0);
     const b = 1 + (rarityBonusPct || 0) / 100;
-    return rng.weighted(ids, (k) => (k === "white" ? R[k].weight : R[k].weight * b));
+    return I.capRarity(rng.weighted(ids, (k) => (k === "white" ? R[k].weight : R[k].weight * b)), ilvl);
+  };
+  I.capRarity = function (r, ilvl) {
+    if (ilvl == null) return r;
+    const R = DATA.items.rarities, order = Object.keys(R);
+    let i = order.indexOf(r);
+    while (i > 0 && (!R[order[i]].enabled || (R[order[i]].minIlvl || 0) > ilvl)) i--;
+    return order[i];
+  };
+  I.isRare = (item) => !!(item && DATA.items.rarities[item.rarity] && DATA.items.rarities[item.rarity].rare);
+
+  // opts.setMult { setId: x } (Militia x2 from Gunmen). hunterOnly pieces never come from here: I.rollHunterPiece (Hunter bodies)
+  I.rollBase = function (rng, opts) {
+    const B = DATA.items.bases, sm = (opts && opts.setMult) || {};
+    const ids = Object.keys(B).filter((k) => !B[k].natural && (B[k].dropWeight || 0) > 0 && !B[k].hunterOnly);
+    return rng.weighted(ids, (k) => B[k].dropWeight * (B[k].set && sm[B[k].set] ? sm[B[k].set] : 1));
   };
 
-  I.rollBase = function (rng) {
-    const B = DATA.items.bases;
-    const ids = Object.keys(B).filter((k) => !B[k].natural && (B[k].dropWeight || 0) > 0);
-    return rng.weighted(ids, (k) => B[k].dropWeight);
-  };
-
+  // tier: basic | advanced | complex, or advanced_top (the top half of the range, Orange) / complex_or_advanced (Purple's 4th line)
   I.rollAffix = function (rng, base, tier, ilvl, taken) {
     const A = DATA.items.affixes;
+    let top = false;
+    if (tier === "complex_or_advanced") tier = rng() * 100 < (DATA.items.complexChancePct != null ? DATA.items.complexChancePct : 50) ? "complex" : "advanced";
+    if (tier === "advanced_top") { tier = "advanced"; top = true; }
     const ids = Object.keys(A).filter((k) => {
       const a = A[k];
       if (a.tier !== tier || taken.includes(k)) return false;
@@ -31,7 +45,8 @@
     });
     if (!ids.length) return null;
     const id = rng.pick(ids), a = A[id];
-    let v = rng.int(a.min, a.max);
+    if (a.tier === "complex") return { id, v: 1 };
+    let v = rng.int(top ? Math.ceil((a.min + a.max) / 2) : a.min, a.max);
     if (a.scales) v = Math.max(1, Math.round(v * I.scale(ilvl)));
     const aff = { id, v };
     if (a.skills) aff.skill = rng.pick(a.skills);
@@ -49,15 +64,62 @@
     const tiers = DATA.items.rarityAffixTiers[item.rarity] || [];
     const taken = [];
     for (const t of tiers) {
-      const a = I.rollAffix(rng, base, t, ilvl, taken) || I.rollAffix(rng, base, "basic", ilvl, taken);
+      const a = I.rollAffix(rng, base, t, ilvl, taken) || (t !== "basic" ? I.rollAffix(rng, base, t === "advanced_top" ? "advanced_top" : "advanced", ilvl, taken) : null) || I.rollAffix(rng, base, "basic", ilvl, taken);
       if (a) { item.affixes.push(a); taken.push(a.id); }
     }
     if (base.slot === "weapon" && base.req) item.req = Math.max(base.req, Math.round(ilvl * LC().reqPerIlvl));
     return item;
   };
 
-  I.rollLoot = function (rng, ilvl, rarityBonus) {
-    return I.make(I.rollBase(rng), I.rollRarity(rng, rarityBonus), ilvl, rng);
+  I.rollLoot = function (rng, ilvl, rarityBonus, opts) {
+    return I.make(I.rollBase(rng, opts), I.rollRarity(rng, rarityBonus, ilvl), ilvl, rng);
+  };
+  // Hunter's Garb piece (Slice 3 §5): only Hunter bodies roll this (DATA.enemies.hunters.loot.garbPct per body)
+  I.rollHunterPiece = (rng, ilvl, rarityBonus) => I.make(rng.pick(DATA.sets.list.hunter.pieces), I.rollRarity(rng, rarityBonus, ilvl), ilvl, rng);
+
+  // "item level still wins" (Slice 3 §6): raw DPS for weapons (dmg x Damage% x Attack Speed% x expected crit at 5% / 150%),
+  // Armor for armour (base scaled + flat affixes)
+  I.rawPower = function (item) {
+    const b = I.base(item.base);
+    if (b.slot === "weapon") {
+      const w = I.weaponStats(item), cc = 5 + I.affixSum([item], "crit_chance");
+      return w.dmg * (1 + I.affixSum([item], "damage_pct") / 100) * (1 + I.affixSum([item], "attack_speed") / 100) / w.interval * (1 + cc / 100 * 0.5);
+    }
+    return Math.round((b.armor || 0) * (b.noScale ? 1 : I.scale(item.ilvl))) + I.affixSum([item], "armor");
+  };
+
+  // debug "roll 10,000 items" readout (Slice 3 §6 acceptance 1): shares by rarity, set pieces, Complex lines
+  I.rollStats = function (n, ilvl, rarityBonus, rng) {
+    rng = rng || G.rng; const by = {}; let sets = 0, cx = 0;
+    for (let i = 0; i < n; i++) { const it = I.rollLoot(rng, ilvl, rarityBonus || 0); by[it.rarity] = (by[it.rarity] || 0) + 1; if (I.setOf(it)) sets++; cx += it.affixes.filter((a) => DATA.items.affixes[a.id].tier === "complex").length; }
+    const R = DATA.items.rarities, en = Object.keys(R).filter((k) => R[k].enabled && R[k].weight > 0), tot = en.reduce((s, k) => s + R[k].weight, 0);
+    return { n, ilvl, by, sets, cx, expected: Object.fromEntries(en.map((k) => [k, R[k].weight / tot * 100])) };
+  };
+
+  // ---- Slice 3 §5 sets: pieces counted per unit (the item list you pass is one unit's) ----
+  I.setOf = (item) => { const b = item && I.base(item.base); return b && b.set ? DATA.sets.list[b.set] : null; };
+  // [{ id, def, n, on: [2, 3] }] for the sets present in items
+  I.sets = function (items) {
+    const out = {};
+    for (const it of items || []) { if (!it) continue; const b = I.base(it.base); if (!b || !b.set) continue; (out[b.set] = out[b.set] || new Set()).add(it.base); }
+    return Object.keys(out).map((id) => { const def = DATA.sets.list[id], n = out[id].size; return { id, def, n, on: Object.keys(def.bonuses).map(Number).filter((k) => n >= k) }; });
+  };
+  I.setStat = function (items, stat, skill) {
+    let s = 0;
+    for (const st of I.sets(items)) for (const k of st.on) { const bo = st.def.bonuses[k]; if (stat === "check_skill") { if (bo.checks && skill) s += bo.checks[skill] || 0; } else if (bo.stats && bo.stats[stat]) s += bo.stats[stat]; }
+    return s;
+  };
+  I.setFlag = function (items, flag) { for (const st of I.sets(items)) for (const k of st.on) { const f = st.def.bonuses[k].flags; if (f && f[flag]) return f[flag]; } return null; };
+  // base-level stats that aren't armor (set pieces): evasion (scales like armor), checkSkill
+  I.baseEvasion = (items) => (items || []).reduce((s, it) => { if (!it) return s; const b = I.base(it.base); return s + (b.evasion ? Math.round(b.evasion * (b.noScale ? 1 : I.scale(it.ilvl))) : 0); }, 0);
+  I.baseCheck = (items, skill) => (items || []).reduce((s, it) => { const b = it && I.base(it.base); return s + (b && b.checkSkill && b.checkSkill[skill] || 0); }, 0);
+  // everything a unit's items give to a check / evasion beyond affixes (base stats + set bonuses)
+  I.checkBonus = (items, skill) => I.affixSum(items || [], "check_skill", skill) + I.baseCheck(items, skill) + I.setStat(items, "check_skill", skill);
+  // Complex affixes (Slice 3 §6) on one unit's items: { cx_id: its cx numbers }
+  I.complexes = function (items) {
+    const out = {};
+    for (const it of items || []) if (it) for (const a of it.affixes) { const d = DATA.items.affixes[a.id]; if (d && d.tier === "complex") out[a.id] = d.cx || {}; }
+    return out;
   };
 
   I.name = (item) => I.base(item.base).name;
@@ -104,7 +166,7 @@
     return w;
   };
 
-  I.describe = function (item) {
+  I.describe = function (item, ctx) {
     const b = I.base(item.base);
     const lines = [];
     const sc = b.noScale ? 1 : I.scale(item.ilvl);
@@ -116,11 +178,20 @@
       lines.push(`Skill: ${DATA.skills[w.skill].name}` + (item.req ? ` (req ${item.req}${LC().enforceRequirements ? "" : ", not enforced"})` : ""));
     }
     if (b.armor) lines.push(`+${Math.round(b.armor * sc)} Armor`);
+    if (b.evasion) lines.push(`+${Math.round(b.evasion * sc)} Evasion`);
+    if (b.checkSkill) for (const k in b.checkSkill) lines.push(`+${b.checkSkill[k]} ${DATA.skills[k].name} (checks)`);
     if (b.domedBonus) lines.push(`-${b.domedBonus}% Domed chance`);
     if (b.carryKg) lines.push(`+${b.carryKg} kg carry`);
     if (b.moveSpeedPct) lines.push(`${b.moveSpeedPct}% Move Speed`);
-    for (const a of item.affixes) lines.push("◆ " + I.affixText(a));
+    for (const a of item.affixes) lines.push((DATA.items.affixes[a.id] && DATA.items.affixes[a.id].tier === "complex" ? "✦ " : "◆ ") + I.affixText(a));
     lines.push(`${b.weight} kg · iLvl ${item.ilvl} · ${DATA.items.rarities[item.rarity].name}`);
+    // set line (green) + its bonuses; ctx = the items on the same unit (lit when that many pieces are on)
+    const set = I.setOf(item);
+    if (set) {
+      const n = ctx ? (I.sets(ctx).find((x) => x.def === set) || { n: 0 }).n : null;
+      lines.push(`<span class="set-line">${set.name}${n != null ? ` (${n}/${set.pieces.length})` : ` (set, ${set.pieces.length} pieces)`}</span>`);
+      for (const k of Object.keys(set.bonuses)) lines.push(`<span class="set-bonus${n != null && n >= +k ? " on" : ""}">(${k}) ${set.bonuses[k].text}</span>`);
+    }
     return lines;
   };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -67,19 +67,22 @@
       if (cd > 0) { const b = document.createElement("div"); b.className = "mn-countdown"; b.textContent = `⏳ ${cd}`; b.title = `Hollow Creek holds for ${cd} more move${cd === 1 ? "" : "s"}. Arrive in time to defend it.`; el.appendChild(b); el.classList.add("distress"); }
       const name = document.createElement("div"); name.className = "mn-name"; name.textContent = G.Map.label(n); el.appendChild(name);
       if (loc && isVis && r) {
-        const o = G.Exp.odds(n), revisit = r.visited[nid] && nid !== r.loc, rv = revisit ? G.Exp.revisitInfo(n) : null, site = G.Exp.site(nid);
+        const o = G.Exp.odds(n), revisit = r.visited[nid] && nid !== r.loc, rv = revisit ? G.Exp.revisitInfo(n) : null, site = G.Exp.site(nid), eh = G.Exp.entryHostiles(n);
+        o.hostiles = Math.round(eh.pct * 10) / 10;   // Slice 3 §12: a picked-over place has fewer Hostiles on the first entry of a run
         const odds = document.createElement("div"); odds.className = "mn-odds";
         odds.innerHTML = revisit ? `<span class="h">↺⚔${Math.round(rv.pct * 10) / 10}%</span>` + (site ? ` <span class="c">▣${site.objects.filter((x) => x.kind === "search" && !x.searched && !x.blocked).length} left</span>` : "")
           : `<span class="h">⚔${o.hostiles}%</span> <span class="e">?${o.event}%</span> <span class="s">☺${o.survivors}%</span>`;
         el.appendChild(odds);
+        if (!loc.extraction) { const lr = document.createElement("div"); const read = G.Exp.lootRead(nid); lr.className = "mn-loot" + (/^Picked/.test(read) ? " picked" : ""); lr.dataset.lootRead = read; lr.textContent = read; el.appendChild(lr); }
         const tags = [];
         if (loc.extraction) { const ex = G.Exp.extractionDef(n); tags.push(G.Exp.extractionOpen(n) ? `EXTRACT (${ex.type === "check" ? DATA.skills[ex.skill].name + " DC " + ex.dc : ex.type})` : "EXTRACT CLOSED"); }
         const wo = G.Exp.worldOverride(n); if (wo) tags.push(wo.label);
         if (r.visited[nid] && nid !== r.loc) tags.push("visited");
         if (loc.size) tags.push(loc.size);
-        tags.push("T" + n.tier + " · " + DATA.enemies.families[loc.family].name);
+        const scoutHid = G.Scout && G.Scout.hidden(nid);
+        tags.push("T" + n.tier + " · " + (scoutHid ? "Unscouted" : DATA.enemies.families[loc.family].name));
         const tg = document.createElement("div"); tg.className = "mn-tags"; tg.textContent = tags.join(" · "); el.appendChild(tg);
-        el.addEventListener("mouseenter", (e) => G.UI.showTip(`<b>${loc.name}</b> (${loc.size || "M"})<br>` + (revisit ? `Revisit: ${rv.text}<br>Events and searched objects stay as you left them.` : `Hostiles ${o.hostiles}% · Event ${o.event}% · Survivors ${o.survivors}%<br><i>Odds are independent (they don't sum to 100). Event % = is there an event object inside.</i>`) + `<br>Tier ${n.tier}, ${DATA.enemies.families[loc.family].name}; resources: ${(loc.tags || []).map((t) => (DATA.resources[t] ? DATA.resources[t].name : t)).join(", ") || "–"}` + (r.loc === nid ? "<br><b>Click to go back inside.</b>" : ""), e.clientX, e.clientY));
+        el.addEventListener("mouseenter", (e) => G.UI.showTip(`<b>${loc.name}</b> (${loc.size || "M"})<br>` + (revisit ? `Revisit: ${rv.text}<br>Events and searched objects stay as you left them.` : `${eh.level < 1 ? eh.text + "<br>" : ""}Hostiles ${o.hostiles}% · Event ${o.event}% · Survivors ${o.survivors}%<br>` + (!loc.extraction ? `Loot: ${G.Exp.lootRead(nid)}${site && site.pickedOver ? ` (restocks 1 step per run, ${G.Exp.restockSteps(site)} to full)` : ""}<br>` : "") + `<i>Odds are independent (they don't sum to 100). Event % = is there an event object inside.</i>`) + (G.Scout ? G.Scout.tipHtml(nid) : "") + (scoutHid ? `Tier ${n.tier}; enemies, resources: <span class="unscouted">Unscouted</span>` : `Tier ${n.tier}, ${DATA.enemies.families[loc.family].name}; resources: ${(loc.tags || []).map((t) => DATA.resources[t] || Object.values(DATA.resources).find((r) => r.tag === t)).filter(Boolean).map((r) => r.name).join(", ") || "–"}${(loc.tags || []).some((t) => t === "terminal" || t === "office") ? " · terminals" : ""}`) + (r.loc === nid ? "<br><b>Click to go back inside.</b>" : ""), e.clientX, e.clientY));
         el.addEventListener("mouseleave", () => G.UI.hideTip());
       } else if (loc && !isVis) {
         const tg = document.createElement("div"); tg.className = "mn-tags"; tg.textContent = cd > 0 ? `Distress call · holds ${cd} more move${cd === 1 ? "" : "s"}` : "(remembered — fogged)"; el.appendChild(tg);
@@ -87,6 +90,33 @@
       if (r && G.Exp.canMoveTo(nid)) { el.classList.add("reachable"); el.addEventListener("click", () => onPick(nid)); }
       else if (r && r.loc === nid && loc && !r.queue.length) { el.classList.add("enterable"); el.addEventListener("click", () => onPick(nid)); }
       wrap.appendChild(el);
+    }
+    // Slice 3 §4b: the Hunter pack token (visible through fog) + its last tracks; "You're being tracked" banner once
+    const hp = r && r.hunt && r.hunt.pack;
+    if (hp && (hp.zone || "a") === (map.zone || "a") && map.nodes[hp.nid]) {
+      const n = map.nodes[hp.nid], path = (hp.trail || []).concat([hp.nid]);
+      for (let i = 0; i < path.length - 1; i++) {
+        const a = map.nodes[path[i]], c = map.nodes[path[i + 1]]; if (!a || !c || a === c) continue;
+        const tk = SP.icon("map_hunter_tracks", 16, "map-hunter-tracks"); tk.style.left = ((a.x + c.x) / 2 / 10) + "%"; tk.style.top = ((a.y + c.y) / 2 / 6) + "%";
+        tk.style.transform = `translate(-50%,-50%) rotate(${Math.atan2(c.y - a.y, c.x - a.x) + Math.PI / 4}rad)`; wrap.appendChild(tk);
+      }
+      const tok = document.createElement("div"); tok.className = "map-hunter" + (hp.lostFor > 0 ? " lost" : ""); tok.dataset.hunterAt = hp.nid;
+      tok.style.left = (n.x / 10) + "%"; tok.style.top = (n.y / 6) + "%"; tok.appendChild(SP.icon("map_hunter_pack", 32));
+      tok.title = `Hunter pack (${hp.tier}): moves 1 node toward you after each of your moves${G.Hunters.slowEvery() > 1 ? " (every 2nd move: Hunter's Garb)" : ""}${hp.lostFor > 0 ? `. Lost your trail for ${hp.lostFor} more moves` : ""}. Crossing a passage shakes them off.`;
+      wrap.appendChild(tok);
+    }
+    // Slice 3 §7 / §10b: Radio L2 marks where the next rival squad was last seen (drawn through fog)
+    const rvn = r && G.Rivals && G.Rivals.markedNode();
+    if (rvn && map.nodes[rvn]) {
+      const n = map.nodes[rvn], nx = G.Rivals.st().next, snap = G.Rivals.byId(nx.id);
+      const tok = document.createElement("div"); tok.className = "map-rival"; tok.dataset.rivalAt = rvn;
+      tok.style.left = (n.x / 10) + "%"; tok.style.top = (n.y / 6) + "%"; tok.appendChild(SP.icon("map_rival", 26));
+      tok.title = `Rival squad${snap ? " " + snap.handle : ""} last seen here (Radio). You'll meet them if you enter.`;
+      wrap.appendChild(tok);
+    }
+    if (r && r.hunt && r.hunt.banner && !r.hunt.banner.shown) {
+      r.hunt.banner.shown = true; G.Sfx.play("sfx_hunter_alert");
+      const bn = document.createElement("div"); bn.className = "map-banner hunter"; bn.textContent = "⚠ " + r.hunt.banner.text; wrap.appendChild(bn); setTimeout(() => bn.remove(), 3500);
     }
     container.appendChild(wrap);
     wrap.dataset.zone = map.zone || "a";

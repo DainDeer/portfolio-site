@@ -9,6 +9,7 @@
   XP.emit = function (ev) {
     const r = G.state && G.state.run;
     if (r && ev.n) { r.xpTally = r.xpTally || {}; r.xpTally[ev.label] = (r.xpTally[ev.label] || 0) + ev.n; }
+    if (ev.levelUp && G.Sfx) G.Sfx.play("sfx_level_up");
     if (!XP.listeners.length) return;
     ev.anchor = ev.anchor || XP.anchor;
     for (const f of XP.listeners) { try { f(ev); } catch (e) { /* presentation errors never break game logic */ } }

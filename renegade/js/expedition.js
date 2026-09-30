@@ -9,6 +9,12 @@
   // ---------- derived values ----------
   X.body = () => G.State.body(run().bodyUid);
   X.gearItems = () => Object.values(run().gear).filter(Boolean);
+  // Heat per move from carried resources with heatPerMove (Relic Tech), bag + pouch
+  X.carriedResHeat = function () {
+    const r = run(); if (!r) return 0; let h = 0;
+    for (const k in DATA.resources) { const per = DATA.resources[k].heatPerMove; if (!per) continue; let n = (r.bag.res[k] || 0); for (const p of r.pouch || []) if (p.res === k) n += p.n; h += n * per; }
+    return h;
+  };
   X.heatTier = function (heat) {
     const th = CFG().heat.thresholds; let t = th[0];
     for (const x of th) if ((heat == null ? run().heat : heat) >= x.min) t = x;
@@ -20,7 +26,11 @@
     let cap = c.baseKg + G.Skills.level(body.skills, "hauling") * c.kgPerHaulingLevel;
     for (const q of body.quirks) { const qd = DATA.bodies.quirks[q]; if (qd.effect === "carry_base") cap += qd.value; }
     for (const it of gearItems) cap += G.Items.base(it.base).carryKg || 0;
-    cap += G.Items.affixSum(gearItems, "carry_kg");
+    cap += G.Items.affixSum(gearItems, "carry_kg") + G.Items.setStat(gearItems, "carry_kg");   // + Scav Kit (2)
+    // a pack on a standing Grunt adds its carry capacity to the squad's (Grunt gear doesn't count toward your carried kg)
+    if (G.Allies) cap += G.Allies.squadSum(r, "carryKg");
+    cap += G.Perks.carryKg();   // Mule (Slice 3 §3)   // Pack Rat (Slice 3 §1), standing deployed allies
+    for (const m of (r && r.squad) || []) { if (m.hp <= 0) continue; const pk = G.State.gruntPack(m.g); if (pk) cap += (G.Items.base(pk.base).carryKg || 0) + G.Items.affixSum([pk], "carry_kg"); if (G.State.gruntItems) cap += G.Items.setStat(G.State.gruntItems(m.g), "carry_kg"); }
     return cap;
   };
   X.carried = function (r) {
@@ -31,6 +41,7 @@
     for (const k in r.bag.res) kg += (r.bag.res[k] || 0) * DATA.items.resources[k].kgPerUnit;
     for (const p of r.pouch) kg += X.pouchEntryKg(p);
     kg += r.carriedCritical.length * DATA.bodies.criticalCare.carryKg;
+    if (r.ammo && r.ammo.n > 0) kg += r.ammo.n * G.Items.base(r.ammo.base).weight;   // Slice 3 §9 ammo packs (0.3 kg each)
     return kg;
   };
   X.pouchEntryKg = (p) => (p.item ? G.Items.weight(p.item) : p.n * DATA.items.resources[p.res].kgPerUnit);
@@ -45,7 +56,7 @@
     const L = CFG().loot, r = run();
     return Math.max(1, (L.ilvlByTier[node.tier] || 1) + r.moves * L.ilvlPerDepth + Math.floor(r.heat / L.heatPerIlvl) + G.rng.int(-L.ilvlVariance, L.ilvlVariance));
   };
-  X.rarityBonus = () => X.heatTier().lootBonus + G.Skills.level(G.state.mind.skills, "scavenging") * CFG().loot.scavengingRarityPerLevel;
+  X.rarityBonus = () => X.heatTier().lootBonus + G.Skills.level(G.state.mind.skills, "scavenging") * CFG().loot.scavengingRarityPerLevel + G.Perks.rarityBonus();   // + Scavenger's Eye (Slice 3 §3)
   X.odds = function (node) {
     const loc = G.Map.loc(node); if (!loc) return null;
     const o = Object.assign({}, loc.odds);
@@ -71,7 +82,7 @@
   };
   X.visible = function (nid) {
     const r = run(); if (!r) return !!G.state.everSeen[nid];
-    if (r.visited[nid]) return true;
+    if (r.visited[nid] || (r.revealed && r.revealed[nid])) return true;   // revealed: fog lifted by an event (Signal peace)
     const map = G.Zones.map(G.Zones.zoneOf(nid));
     return G.Map.neighbors(map, nid).some((n) => r.visited[n]) || nid === map.insertion;
   };
@@ -96,6 +107,9 @@
     for (const p of lo.pouch || []) { if (p.uid) { const it = s.stash.items.find((i) => i.uid === p.uid); if (it) pk += G.Items.weight(it); } else pk += p.n * DATA.items.resources[p.res].kgPerUnit; }
     if ((lo.pouch || []).length > G.Outpost.pouchSlots() || pk > G.Outpost.pouchMaxKg() + 1e-9) return "Secure Pouch is over its slot/kg limit.";
     if ((lo.pouch || []).some((p) => p.uid && G.Items.isQuest(s.stash.items.find((i) => i.uid === p.uid)))) return "Quest items can't go in the Secure Pouch.";
+    if (G.Injuries && G.Injuries.busy(lo.bodyId)) return `${G.State.bodyTitle(body)} is in the Infirmary.`;
+    { const inBed = lo.grunts.map((id) => s.grunts.find((x) => x.uid === id)).find((g) => g && G.Injuries && G.Injuries.busy(g.uid)); if (inBed) return `${G.Allies.name(inBed)} is in the Infirmary.`; }
+    if (lo.ammo && lo.ammo.base && lo.ammo.n > 0 && (!G.Workbench || G.Workbench.ammoCount(lo.ammo.base) < lo.ammo.n)) return "Not enough ammo packs in the stash.";
     if (G.Outpost.stashOver() > 0) return `The Vault stash is over its limit (${G.Outpost.stashCount()}/${G.Outpost.stashCap()}). Discard some gear first.`;
     return null;
   };
@@ -114,12 +128,18 @@
     // no weapon equipped -> free fallback weapon from the outpost (config.deploy.fallbackWeapon), one per deploy
     const FW = CFG().deploy.fallbackWeapon; let fallback = null;
     if (!gear.weapon && FW) { gear.weapon = fallback = G.Items.make(FW.base, FW.rarity, FW.ilvl, G.rng); }
+    // every run starts with a basic backpack (config.deploy.freeBackpack): none picked -> one from the stash, else a free one
+    const FB = CFG().deploy.freeBackpack; let freePack = null;
+    if (!gear.backpack && FB) { const own = s.stash.items.find((i) => i.base === FB.base); if (own) gear.backpack = take(own.uid); else gear.backpack = freePack = G.Items.make(FB.base, FB.rarity, FB.ilvl, G.rng); }
     const pouch = [];
     for (const p of lo.pouch || []) {
       if (p.uid) { const it = take(p.uid); if (it) pouch.push({ item: it }); }
       else if (p.res && (s.stash.res[p.res] || 0) >= p.n) { s.stash.res[p.res] -= p.n; pouch.push({ res: p.res, n: p.n }); }
     }
     const bag = { items: [], res: {} };
+    // Slice 3 §9: the ammo type picked on the deploy screen and how many packs to carry (1 used per battle)
+    let ammo = null;
+    if (lo.ammo && lo.ammo.base && lo.ammo.n > 0 && G.Workbench) { const n = G.Workbench.takeAmmo(lo.ammo.base, lo.ammo.n); if (n) ammo = { base: lo.ammo.base, n, used: 0 }; }
     const med = Math.min(lo.med || 0, s.stash.res.med || 0);
     if (med) { s.stash.res.med -= med; bag.res.med = med; }
     const squad = [];
@@ -129,15 +149,20 @@
     for (const z in s.maps) extractOrder[z] = G.rng.shuffle(Object.values(s.maps[z].nodes).filter((n) => G.Map.loc(n) && G.Map.loc(n).extraction).map((n) => n.id));
     const ins = s.maps[zone].insertion;
     s.run = {
-      seed, snapshot, zone, loc: ins, view: "map", sites: {}, moves: 0, heat: 0, visited: { [ins]: true }, bodyUid: body.uid, gear, bag, pouch, squad,
+      seed, snapshot, zone, loc: ins, view: "map", moves: 0, heat: 0, visited: { [ins]: true }, bodyUid: body.uid, gear, bag, pouch, squad,
       bodyHp: null, queue: [], log: [], gruntsJoin: 0, claimedBodies: [], lore: [], done: {}, distressFired: false, xpTally: {},
-      stats: { battles: 0, kills: 0, searches: 0, events: 0 }, carriedCritical: [], extractOrder, pendingUnlocks: []
+      stats: { battles: 0, kills: 0, searches: 0, events: 0 }, carriedCritical: [], extractOrder, pendingUnlocks: [], ammo
     };
     s.run.bodyHp = G.Battle.unitFromBody(body, gear, {}).maxHp;
+    if (G.Hunters) G.Hunters.onRunStart(s.run);   // Slice 3 §4b: "Marked by the Orbitals" (Heat 25 start)
+    if (G.Radio) G.Radio.fogReveal(s.run, zone);   // Slice 3 §10b: Radio L2 lifts the fog 1 ring further around the insertion point
+    if (G.Rivals) { G.Rivals.next(); G.Rivals.draftAtStart(s.run); }   // Slice 3 §7: this run's pre-rolled rival; the echo draft of the deployed squad
     s.runCount++;
     s.loadout = U.clone(lo); s.loadout.zone = zone;
     X.markSeen();
     X.log(`Expedition ${s.runCount} begins in ${G.State.bodyTitle(body)}, ${DATA.zones.list[zone].name}. Seed ${seed}.`);
+    if (freePack) { s.run.freeBackpack = freePack.uid; X.log(`No backpack: the outpost hands you a ${DATA.items.bases[freePack.base].name} (free).`, "good"); }
+    else if (gear.backpack && !(lo.gear || {}).backpack) X.log(`You grab your ${DATA.items.bases[gear.backpack.base].name} from the stash.`);
     if (fallback) { s.run.fallbackWeapon = fallback.uid; X.log(`No weapon equipped: the outpost hands you a ${G.Items.displayName ? G.Items.displayName(fallback) : DATA.items.bases[fallback.base].name} (free, one per deploy).`, "good"); }
     // a zone whose insertion point is a location (Zone B: B1) rolls its arrival there (ASSUMPTION)
     const insNode = s.maps[zone].nodes[ins];
@@ -147,7 +172,7 @@
   };
 
   X.log = function (msg, cls) { if (run()) { run().log.push(msg); if (run().log.length > 200) run().log.shift(); } G.log(msg, cls); };
-  X.markSeen = function () { const m = G.Zones.map(); for (const nid in m.nodes) if (X.visible(nid)) G.state.everSeen[nid] = true; };
+  X.markSeen = function () { const m = G.Zones.map(); for (const nid in m.nodes) if (X.visible(nid)) G.state.everSeen[nid] = true; if (G.Scout) G.Scout.around(); };   // Addendum A2: scouting rolls
   X.current = () => (run() ? run().queue[0] : null);
   X.push = (step, front) => { if (front) run().queue.unshift(step); else run().queue.push(step); };
   X.next = function () { run().queue.shift(); G.State.save(); };
@@ -169,8 +194,10 @@
   // A move (map click) or a passage crossing (opts.noMoveHeat: the crossing's own Heat was already added)
   X.enterNode = function (nid, opts) {
     const r = run(), node = G.Zones.node(nid);
+    r.prevLoc = { zone: r.zone, nid: r.loc };   // Break away returns you here
     r.moves++; r.loc = nid; r.view = "map";
     if (!opts.noMoveHeat) X.addHeat(CFG().heat.perMove, "move");
+    if (!opts.noMoveHeat) { const ch = X.carriedResHeat(); if (ch) X.addHeat(ch, "relic"); }   // Slice 3 §11: Relic Tech +1 per move per unit
     // XP: Athletics per move, Hauling per kg carried
     const bref = { kind: "body", body: X.body() };
     G.State.giveXp(bref, "athletics", CFG().leveling.xp.athleticsPerMove);
@@ -191,10 +218,11 @@
       }
     }
     X.arrive(node, !first);
+    if (G.Hunters && run()) G.Hunters.afterMove({ passage: !!opts.passage });   // Slice 3 §4b: spawn roll / the pack moves 1 node
     // radio: the distress call is a "Crackling radio" object in the location you reach (Zone A only)
     if (G.state.world.hollow_creek === "pending" && !r.distressFired && r.moves >= CFG().expedition.distressTriggerAfterMoves && r.zone === "a" && X.site(nid)) {
       r.distressFired = true;
-      X.addEventObject(X.site(nid), "distress_hollow_creek", { room: 0 });
+      X.addEventObject(X.site(nid), "distress_hollow_creek", { room: 0, perRun: true });
       X.log("📻 A radio crackles somewhere in here: a distress call from Hollow Creek!", "radio");
     }
     G.State.save();
@@ -202,8 +230,9 @@
   };
 
   X.addHeat = function (n, why) {
-    const r = run(); const before = X.heatTier(r.heat).name;
+    const r = run(); const before = X.heatTier(r.heat).name, h0 = r.heat;
     r.heat = U.clamp(r.heat + n, 0, CFG().heat.max);
+    if (r.heat !== h0) { r.heatBy = r.heatBy || {}; r.heatBy[why || "other"] = (r.heatBy[why || "other"] || 0) + (r.heat - h0); }
     const after = X.heatTier(r.heat).name;
     if (after !== before) X.log(`Heat ${r.heat}: now ${after}!`, "heat");
   };
@@ -228,7 +257,10 @@
       }
     }
     const locMult = (G.Map.loc(node) || {}).enemyBudgetMult ?? 1;   // per-location, always (not a tutorial value)
-    return ((E.budgetByTier[node.tier] || 3) + r.moves * E.budgetPerDepth) * X.heatTier().budgetMult * (mult || 1) * tut * locMult;
+    const sq = E.squadScale, extra = sq && !T && (!sq.zones || sq.zones.includes(r.zone || "a")) ? 1 + (r.squad || []).length - (sq.base ?? 3) : 0;
+    const squadMult = extra > 0 ? 1 + (sq.perExtra || 0) * extra : 1;   // Slice 3 §11: bigger squads, bigger fights
+    const zoneMult = (DATA.zones.list[r.zone || "a"] || {}).enemyBudgetMult ?? 1;   // Slice 3 §11: Zone B enemy budgets
+    return ((E.budgetByTier[node.tier] || 3) + r.moves * E.budgetPerDepth) * X.heatTier().budgetMult * (mult || 1) * tut * locMult * squadMult * zoneMult;
   };
 
   // X.arrive, sites, searches: js/site.js
@@ -288,7 +320,7 @@
     G.State.giveXp({ kind: "body", body: X.body() }, "medicine", CFG().leveling.xp.fieldHeal);
     let max, name;
     if (target === "body") { max = X.maxBodyHp(); name = X.body().name; }
-    else { const s = r.squad[target]; max = G.Battle.unitFromGrunt(s.g).maxHp; name = s.g.name; }
+    else { const s = r.squad[target]; max = G.Battle.unitFromGrunt(s.g).maxHp; name = G.Allies.name(s.g); }
     const amt = max * CFG().expedition.medHealPct / 100 * (ok ? 1 : R.fieldHealFailMult);
     if (target === "body") r.bodyHp = Math.min(max, r.bodyHp + amt); else { const s = r.squad[target]; if (s.hp <= 0) return "They're dead."; s.hp = Math.min(max, s.hp + amt); }
     const msg = `Field heal on ${name}: ${ok ? "success" : "fumbled"} (${Math.round(chance)}% chance), +${Math.round(amt)} HP.`;
@@ -299,12 +331,15 @@
     const r = run(); const alive = r.squad.filter((s) => s.hp > 0);
     if (!alive.length) return "No Grunt to send.";
     const s = alive[0];
-    if (G.rng.chance(DATA.map.gruntSpendDeathChance)) { s.hp = 0; X.log(`${s.g.name} went ahead and didn't come back.`, "bad"); return `${s.g.name} auto-passed the check but died doing it.`; }
-    return `${s.g.name} auto-passed the check and made it back.`;
+    const nm = G.Allies.name(s.g);
+    if (G.rng.chance(DATA.map.gruntSpendDeathChance)) { s.hp = 0; s.died = { where: r.loc, cause: "scout" }; X.log(`${nm} went ahead and didn't come back.`, "bad"); return `${nm} auto-passed the check but died doing it.`; }
+    return `${nm} auto-passed the check and made it back.`;
   };
 
   // ---------- events ----------
   X.eventDef = (step) => DATA.events[step.eventId];
+  // option text with its up-front Heat (option-level `heat`, Megan's playtest) so the player takes it knowingly
+  X.optionLabel = (opt) => opt.label + (opt.heat && !/Heat/.test(opt.label) ? ` (+${opt.heat} Heat)` : "");
   X.optionChance = function (opt) {
     if (!opt.check) return null;
     return G.Checks.compute(opt.check.skill, opt.check.dc, X.members(), X.gearItems());
@@ -314,6 +349,7 @@
     const ev = X.eventDef(step), opt = ev.options[optIdx], r = run();
     r.stats.events++;
     let effects, roll = null, texts = [];
+    if (opt.heat) { X.addHeat(opt.heat, "bigEvent"); texts.push(`+${opt.heat} Heat`); }
     if (opt.check) {
       if (useGrunt && opt.gruntSpendable) { texts.push(X.spendGrunt()); effects = opt.outcomes.success; roll = { grade: "success", text: "Grunt sent ahead: automatic success." }; }
       else {
@@ -336,7 +372,7 @@
       const e = effects[i];
       if (!run() || G.state.run !== r) break; // died
       if (e.text) texts.push(e.text);
-      if (e.heat) { X.addHeat(e.heat, "event"); texts.push(`${e.heat > 0 ? "+" : ""}${e.heat} Heat`); }
+      if (e.heat) { X.addHeat(e.heat, e.heat >= 10 ? "bigEvent" : "event"); texts.push(`${e.heat > 0 ? "+" : ""}${e.heat} Heat`); }
       if (e.res) { for (const k in e.res) { r.bag.res[k] = (r.bag.res[k] || 0) + e.res[k]; texts.push(`+${e.res[k]} ${DATA.items.resources[k].name}`); } }
       if (e.lore) { if (!G.state.lore.includes(e.lore)) G.state.lore.push(e.lore); texts.push("Lore: " + DATA.lore[e.lore]); }
       if (e.damagePct) X.damageBody(e.damagePct);
@@ -350,6 +386,7 @@
       }
       if (e.hiddenContainer) { const site = X.site(); if (site) { X.addSearchObject(site, "crate", { name: "Hidden stash" }); texts.push("A hidden stash is now searchable here."); } }
       if (e.payKg) texts.push(X.payKg(e.payKg));
+      if (e.revealFog) texts.push(X.revealFog(e.revealFog));
       if (e.loot) {
         const n = X.node(); const ilvl = X.itemLevel(G.Map.loc(n) ? n : { tier: 1 });
         const items = []; for (let k = 0; k < e.loot.rolls; k++) items.push(G.Items.rollLoot(G.rng, ilvl, X.rarityBonus() + (e.loot.rarityBonus || 0)));
@@ -367,6 +404,16 @@
     return { texts };
   };
 
+  // lift the fog on the n nearest unseen locations (graph distance from you)
+  X.revealFog = function (n) {
+    const r = run(), map = G.Zones.map(), dist = { [r.loc]: 0 }, q = [r.loc], got = [];
+    while (q.length && got.length < n) {
+      const x = q.shift();
+      for (const y of G.Map.neighbors(map, x)) if (dist[y] == null) { dist[y] = dist[x] + 1; q.push(y); if (!X.visible(y) && G.Map.loc(map.nodes[y])) got.push(y); if (got.length >= n) break; }
+    }
+    r.revealed = r.revealed || {}; for (const y of got) r.revealed[y] = true; X.markSeen();
+    return got.length ? `Fog lifted on ${got.map((y) => G.Map.label(map.nodes[y])).join(", ")}.` : "Nothing new to see.";
+  };
   X.payKg = function (kg) {
     const r = run(); let paid = 0; const taken = [];
     // outlaws take the most valuable-looking items first (rarity, then ilvl) — ASSUMPTION
@@ -394,60 +441,117 @@
       setup.mode = "defense"; setup.surviveSec = ex.surviveSec;
       setup.enemies = G.Battle.buildEnemyGroup(G.rng, step.family, budget * ex.waveBudgetMult, elites);
       setup.waves = []; for (let w = 0; w < ex.waves - 1; w++) setup.waves.push(G.Battle.buildEnemyGroup(G.rng, step.family, budget * ex.waveBudgetMult, 0));
-    } else setup.enemies = G.Battle.buildEnemyGroup(G.rng, step.family, budget, elites);
-    return G.Battle.create(setup);
+    } else if (step.family === "rivals" && step.rival && G.Rivals) { setup.enemies = []; setup.enemyUnits = G.Rivals.units(step.rival); if (step.freeze) setup.freeze = step.freeze; }   // Slice 3 §7 snapshot
+    else if (step.family === "hunters" && G.Hunters) { setup.enemies = G.Hunters.packUnits(step.pack || "Hunted"); setup.ambush = !!step.ambush; }   // fixed packs
+    else if (step.enemies) setup.enemies = step.enemies.map((id) => ({ id }));   // debug / screenshots: an explicit unit list
+    else setup.enemies = G.Battle.buildEnemyGroup(G.rng, step.family, budget, elites);
+    const b = G.Battle.create(setup);
+    b.escapable = true; b.pack = step.pack || null; b.nid = step.nid || r.loc;   // Break away (js/escape.js)
+    const used = G.Workbench ? G.Workbench.applyAmmo(r, b.units) : null;   // Slice 3 §9: 1 pack per battle, every gun in the squad
+    if (used) { b.ammoUsed = used; b.log.push(`${G.Items.base(used).name}: ${G.Items.base(used).desc} (${r.ammo.n} pack${r.ammo.n === 1 ? "" : "s"} left)`); X.log(`Loaded ${G.Items.base(used).name} (${r.ammo.n} left).`); }
+    return b;
   };
 
   // result: battle object after it ended
   X.finishBattle = function (step, b) {
     const r = run();
     r.stats.battles++;
-    X.addHeat(CFG().heat.perBattle + (b.t > CFG().heat.longBattleSeconds ? CFG().heat.longBattleExtra : 0), "battle");
-    const body = b.units.find((u) => u.rank === "body");
+    if (G.Rivals) G.Rivals.noteLayout(b);   // Slice 3 §7: your placement becomes your echo's layout
+    const body = b.units.find((u) => u.rank === "body" && u.side === 0);
+    if (b.result === "escape") return X.afterEscape(step, b, body);
+    // Ghost Protocol (Slice 3 §3): a battle won with nobody on your side down, Critical or dead gives 0 Heat
+    const ghost = G.Perks.ghostProtocol() && b.result === "win" && b.units.every((u) => u.side !== 0 || u.state === "alive");
+    if (ghost) X.log("Ghost Protocol: a clean win, no Heat.", "heat");
+    else X.addHeat(CFG().heat.perBattle + (b.t > CFG().heat.longBattleSeconds ? CFG().heat.longBattleExtra : 0), "battle");
+    if (body.ironWillFired) r.ironWillUsed = true;   // Iron Will: once per expedition
     r.bodyHp = Math.max(0, body.hp);
-    const criticals = [];
+    const downed = body.state === "downed";
+    if (downed && b.result === "win") { r.bodyHp = Math.min(body.maxHp, CFG().battle.downedReviveHp); X.log(`You were downed, but your squad won. You get back up with ${r.bodyHp} HP.`, "bad"); if (G.Injuries) G.Injuries.add(X.body(), "downed"); }   // Slice 3 §10a
+    const criticals = [], deadGrunts = [];
     for (const u of b.units) {
       if (u.side !== 0 || u.squadIdx == null) continue;
       const s = r.squad[u.squadIdx];
       s.hp = u.state === "alive" ? Math.max(1, u.hp) : 0;
       if (u.state === "critical") criticals.push(u.squadIdx);
-      if (u.state === "dead") X.log(`${s.g.name} died.`, "bad");
+      if (u.state === "dead") { X.log(`${G.Allies.name(s.g)} died.`, "bad"); s.died = { where: X.node(step.nid || r.loc).id, cause: "battle", corpse: u.corpseSprite, gibbed: !!u.gibbed, killer: u.killedBy ? u.killedBy.name : null }; deadGrunts.push(s); }
+      if (u.state === "critical") s.died = { where: X.node(step.nid || r.loc).id, cause: "critical" };   // only used if they're lost
     }
+    G.Allies.afterBattle(step, b, r);   // Slice 3 §1: kills, history, nickname moments, Field Dresser
     const deadEnemies = b.units.filter((u) => u.side === 1 && u.state === "dead");
     r.stats.kills += deadEnemies.length;
     // kill quests count at the kill, before death is handled (Slice 2 §9)
-    G.Quests.onKills(r.zone, deadEnemies.map((u) => ({ eid: u.eid, family: u.family })));
+    for (const qid of G.Quests.onKills(r.zone, deadEnemies.map((u) => ({ eid: u.eid, family: u.family })))) {
+      const qh = G.Quests.objectiveHeat(qid); if (qh) { X.addHeat(qh, "quest"); X.log(`Quest objective done: ${G.Quests.def(qid).name}. +${qh} Heat`, "heat"); }
+    }
+    if (G.Radio) for (const bt of G.Radio.onKills(r.zone, deadEnemies.map((u) => ({ eid: u.eid, family: u.family })))) X.log(`Bounty complete: ${G.Radio.text(bt)} Paid to the stockpile.`, "good");   // Slice 3 §10b
     X.next();
     if (b.result !== "win") {
       // carried Critical allies die if your side loses (§9.4)
       if (r.carriedCritical.length) { X.log("The Critical allies you carried didn't make it.", "bad"); r.carriedCritical = []; }
-      X.die(body.hp <= 0 ? "Your body was killed in battle." : "Your squad was wiped out.");
+      X.die(downed ? "You were downed and nobody was left standing to win the fight." : body.hp <= 0 ? "Your body was killed in battle." : "Your squad was wiped out.");
       return "loss";
     }
     X.log(`Victory in ${Math.round(b.t)} s.`, "good");
+    if (G.Hunters) G.Hunters.afterBattle(step, b);   // the pack is beaten; a dead Captain sets the debuff
     if (step.extraction) { X.extractSuccess(); return "win"; }
+    { const ws = X.site(step.nid || r.loc); if (ws) { X.markPicked(ws); ws.everPicked = true; } }   // Slice 3 §12: a won battle picks a place over
     const front = [];
     for (const idx of criticals) front.push({ type: "critical", squadIdx: idx });
+    X.addGruntBodies(step.nid || r.loc, deadGrunts);   // a Grunt killed in battle leaves a lootable body holding its gear
     if (step.after) { // continue deferred event effects (e.g. "battle, then loot")
       for (let k = front.length - 1; k >= 0; k--) X.push(front[k], true);
       X.applyEffects(step.after, step);
       return "win";
     }
     // Slice 2: no spoils screen. Every killed enemy is a searchable body; the battle's gear drops sit in human bodies.
-    X.addBattleBodies(step.nid || r.loc, deadEnemies);
+    if (step.family === "rivals" && step.rival && G.Rivals) G.Rivals.afterWin(step, b);   // Slice 3 §7: bodies with their gear + the Rival's pack
+    else X.addBattleBodies(step.nid || r.loc, deadEnemies);
     for (let k = front.length - 1; k >= 0; k--) X.push(front[k], true);
     G.State.save();
     return "win";
+  };
+
+  // Break away (Megan, milestone 5): standing units leave; downed allies are left behind and die; no loot, no corpses;
+  // +heat Heat; back to the location you came from; the fight's enemies stay there for the rest of the run
+  X.afterEscape = function (step, b, body) {
+    const r = run(), BA = CFG().battle.breakAway, nid = step.nid || r.loc, here = X.node(nid), label = G.Map.label(here);
+    X.addHeat(BA.heat, "escape");
+    r.bodyHp = Math.max(1, body.hp);
+    for (const u of b.units) {
+      if (u.side !== 0 || u.squadIdx == null) continue;
+      const s = r.squad[u.squadIdx];
+      if (u.state === "alive") { s.hp = Math.max(1, u.hp); continue; }
+      s.hp = 0;
+      if (u.state === "dead") { X.log(`${G.Allies.name(s.g)} died.`, "bad"); s.died = { where: here.id, cause: "battle", killer: u.killedBy ? u.killedBy.name : null }; }
+      else { s.died = { where: here.id, cause: "left_behind" }; X.log(`${G.Allies.name(s.g)} is left behind at ${label}.`, "bad"); }
+    }
+    G.Allies.afterBattle(step, b, r);
+    const deadEnemies = b.units.filter((u) => u.side === 1 && u.state === "dead"); r.stats.kills += deadEnemies.length;
+    for (const qid of G.Quests.onKills(r.zone, deadEnemies.map((u) => ({ eid: u.eid, family: u.family })))) { const qh = G.Quests.objectiveHeat(qid); if (qh) X.addHeat(qh, "quest"); }
+    // the fight stays here: the enemies still standing wait at this location (this run). A Hunter pack keeps its own state.
+    const site = X.site(nid), left = b.units.filter((u) => u.side === 1 && (u.state === "alive" || u.state === "retreating"));
+    if (site && step.family !== "hunters") {
+      const again = Object.assign(U.clone(Object.assign({}, step, { rival: null })), { rival: step.rival || null, why: "They're still here.", escapedFrom: true });
+      if (step.family !== "rivals" && !step.defense) again.enemies = left.map((u) => u.eid).filter(Boolean);
+      site.escaped = { run: G.state.runCount, step: again };
+    }
+    r.queue = [];   // whatever was waiting in there stays there
+    r.stats.escapes = (r.stats.escapes || 0) + 1;
+    const back = r.prevLoc && G.state.maps[r.prevLoc.zone] && G.state.maps[r.prevLoc.zone].nodes[r.prevLoc.nid] ? r.prevLoc : { zone: r.zone, nid: r.loc };
+    r.zone = back.zone; r.loc = back.nid; r.view = "map";
+    X.log(`You broke away from ${label} and fell back to ${G.Map.label(X.node(r.loc))}. +${BA.heat} Heat. No loot.`, "bad");
+    G.State.save();
+    return "escape";
   };
 
   // §9.4 Critical ally choice: heal / stabilize / carry / leave
   X.resolveCritical = function (step, choice) {
     const r = run(), s = r.squad[step.squadIdx], cc = DATA.bodies.criticalCare, max = G.Battle.unitFromGrunt(s.g).maxHp;
     const med = r.bag.res.med || 0;
-    if (choice === "heal") { if (med < cc.healMed) return "Not enough Med Supplies."; r.bag.res.med -= cc.healMed; s.hp = max * cc.healHpPct / 100; X.log(`${s.g.name} is back in action.`); }
-    else if (choice === "stabilize") { if (med < cc.stabilizeMed) return "Not enough Med Supplies."; r.bag.res.med -= cc.stabilizeMed; s.hp = max * cc.stabilizeHpPct / 100; X.log(`${s.g.name} is stabilized.`); }
-    else if (choice === "carry") { s.hp = 0; r.carriedCritical.push(s.g.uid); X.log(`You carry ${s.g.name} (${cc.carryKg} kg).`); }
-    else { s.hp = 0; s.left = true; X.log(`You leave ${s.g.name} behind.`, "bad"); }
+    if (choice === "heal") { if (med < cc.healMed) return "Not enough Med Supplies."; r.bag.res.med -= cc.healMed; s.hp = max * cc.healHpPct / 100; X.log(`${G.Allies.name(s.g)} is back in action.`); }
+    else if (choice === "stabilize") { if (med < cc.stabilizeMed) return "Not enough Med Supplies."; r.bag.res.med -= cc.stabilizeMed; s.hp = max * cc.stabilizeHpPct / 100; X.log(`${G.Allies.name(s.g)} is stabilized.`); if (G.Injuries) G.Injuries.add(s.g, "stabilized"); }   // Slice 3 §10a: stabilized, not healed
+    else if (choice === "carry") { s.hp = 0; s.carried = true; r.carriedCritical.push(s.g.uid); X.log(`You carry ${G.Allies.name(s.g)} (${cc.carryKg} kg).`); }
+    else { s.hp = 0; s.left = true; X.log(`You leave ${G.Allies.name(s.g)} behind.`, "bad"); }
     X.next(); return null;
   };
 
@@ -479,17 +583,24 @@
     for (const p of r.pouch) { if (p.item) { s.stash.items.push(p.item); got.push(p.item); } else s.stash.res[p.res] = (s.stash.res[p.res] || 0) + p.n; }
     const resGot = {};
     for (const k in r.bag.res) { if (!r.bag.res[k]) continue; s.stash.res[k] = (s.stash.res[k] || 0) + r.bag.res[k]; resGot[k] = r.bag.res[k]; }
+    if (r.ammo && r.ammo.n > 0 && G.Workbench) G.Workbench.addAmmo(r.ammo.base, r.ammo.n);   // leftover packs go back to the stash
+    const bounties = G.Radio ? G.Radio.onExtract(r) : [];   // Slice 3 §10b: scouting bounties pay when you get back out
     for (const z of r.pendingUnlocks || []) s.zonesUnlocked[z] = true;
-    // squad: dead grunts removed; carried critical allies make it home
+    // squad: dead grunts removed; carried critical allies make it home (Slice 3 §10a: with an injury)
+    if (G.Injuries) for (const uid of r.carriedCritical) { const m = r.squad.find((x) => x.g.uid === uid); if (m) G.Injuries.add(m.g, "carried"); }
+    if (G.Rivals) G.Rivals.recordEcho(r, "extracted");   // Slice 3 §7: an echo of this squad
     X.settleSquad(true);
     const newGrunts = [];
-    for (let i = 0; i < r.gruntsJoin; i++) { const g = G.State.makeGrunt(G.rng); s.grunts.push(g); newGrunts.push(g.name); }
+    for (let i = 0; i < r.gruntsJoin; i++) { const g = G.State.makeGrunt(G.rng); s.grunts.push(g); newGrunts.push(G.Allies.name(g)); }
+    // nickname offers for allies who already had one: Keep / Take the new one on the summary
+    s.nickOffers = (s.nickOffers || []).concat((r.nickOffers || []).filter((o) => s.grunts.some((g) => g.uid === o.uid))); r.nickOffers = [];
     for (const b of r.claimedBodies) s.bodies.push(b);
     s.extractions++;
     let offer = null;
     if (!s.tutorialDone && !s.humanOffer) { offer = G.State.rollHumanOffer(G.rng); s.humanOffer = offer; }
     s.lastResult = { kind: "extracted", items: got.map((i) => ({ name: G.Items.name(i), rarity: i.rarity, ilvl: i.ilvl })), res: resGot, grunts: newGrunts, bodies: r.claimedBodies.map((b) => G.State.bodyTitle(b)),
-                     heat: r.heat, moves: r.moves, stats: r.stats, offer: !!offer, xp: r.xpTally || {}, zone: r.zone };
+                     heat: r.heat, moves: r.moves, stats: r.stats, offer: !!offer, xp: r.xpTally || {}, zone: r.zone, nickOffers: s.nickOffers.map((o) => o.uid),
+                     ammo: r.ammo ? { base: r.ammo.base, used: r.ammo.used, left: r.ammo.n } : null, bounties: bounties.map((b) => G.Radio.text(b)) };
     X.endRun();
   };
 
@@ -503,23 +614,38 @@
     const ms = G.State.restoreMs(body);
     body.restoreUntil = ms ? G.now() + ms : 0;
     // survivors head home; each carried Critical ally makes a Survival check (party best) or dies — simplified: they die (carried allies lost with the body)
+    if (G.Rivals) G.Rivals.recordEcho(r, "died");
     X.settleSquad(false);
     s.deaths++;
-    s.lastResult = { kind: "death", why, lost, kept, restoreMs: ms, body: body.name, heat: r.heat, moves: r.moves, stats: r.stats, xp: r.xpTally || {}, zone: r.zone };
+    s.lastResult = { kind: "death", why, lost, kept, restoreMs: ms, body: body.name, heat: r.heat, moves: r.moves, stats: r.stats, xp: r.xpTally || {}, zone: r.zone,
+                     ammo: r.ammo ? { base: r.ammo.base, used: r.ammo.used, left: 0, lost: r.ammo.n } : null };
     X.log("☠ " + why, "bad");
     X.endRun();
   };
 
+  // Dead Grunts stay dead: their records move to state.fallenGrunts (dead: true, with where / when) for a later memorial.
+  // A Grunt's gear is on its body in the location if it fell in battle, otherwise it's lost with it.
   X.settleSquad = function (extracted) {
     const s = G.state, r = run();
-    const deadIds = r.squad.filter((x) => x.hp <= 0 && !(extracted && r.carriedCritical.includes(x.g.uid))).map((x) => x.g.uid);
+    const dead = r.squad.filter((x) => x.hp <= 0 && !(extracted && r.carriedCritical.includes(x.g.uid)));
+    for (const m of dead) {
+      const g = s.grunts.find((x) => x.uid === m.g.uid) || m.g; if (!s.grunts.includes(g) && s.fallenGrunts.some((x) => x.uid === g.uid)) continue;
+      G.State.repairGrunt(g, s.runCount);
+      g.dead = true; g.diedRun = s.runCount; g.diedAt = m.died ? G.Map.label(G.Zones.node(m.died.where)) : G.Map.label(X.node(r.loc)); g.gear = G.State.emptyGear(g);
+      g.deathCause = G.Allies.causeText(m, extracted);   // Memorial Wall: "Killed by an Elite Hound at Hound Warrens, run 12"
+      G.Allies.log(g, "died", g.deathCause + ".", { where: g.diedAt, cause: (m.died && m.died.cause) || (m.left ? "left behind" : "lost") });
+      s.fallenGrunts.push(g);
+    }
+    const deadIds = dead.map((x) => x.g.uid);
     s.grunts = s.grunts.filter((g) => !deadIds.includes(g.uid));
+    G.Allies.afterRun(extracted, r.squad.map((m) => s.grunts.find((g) => g.uid === m.g.uid)).filter(Boolean));   // runs / extractions / old_hand
   };
 
   X.endRun = function () {
     const s = G.state;
     // world moves on between runs (§2.3)
     const w = s.world;
+    X.worldTick();   // Slice 3 §12: restock clock, battle bodies and gore removed
     if (w.hollow_creek === "ignored" || w.hollow_creek === "fallen") w.hollow_creek = "aftermath"; // world advances per run (unchanged)
     else if (w.hollow_creek === "saved" || w.hollow_creek === "allied_visited") w.hollow_creek = "allied";
     // tutorial Grunts are free: top the roster up to the starting count while the tutorial is on. After it, dead Grunts
@@ -530,6 +656,10 @@
       const sg = DATA.items.startingGear;
       for (const slot in sg) if (!s.stash.items.some((i) => G.Items.base(i.base).slot === slot)) { const it = G.Items.make(sg[slot].base, sg[slot].rarity, sg[slot].ilvl, G.rng); s.stash.items.push(it); s.loadout.gear[slot] = it.uid; }
     }
+    G.Allies.rerollCandidates();   // Slice 3 §1: the Recruitment lot's 3 candidates reroll after every run
+    if (G.Injuries) G.Injuries.onRunEnd();   // Slice 3 §10a: untreated injuries heal after 3 runs (Infirmary L2: 2)
+    if (G.Radio) G.Radio.onRunEnd();         // Slice 3 §10b: the bounty board refreshes every 2 runs
+    if (G.Rivals) G.Rivals.onRunEnd();       // Slice 3 §7: the next run's rival is pre-rolled (Radio intel reads it)
     s.run = null;
     // prune loadout references that no longer exist
     const lo = s.loadout;

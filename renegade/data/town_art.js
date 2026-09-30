@@ -12,7 +12,7 @@ DATA.townArt = {
  ],
  "scale": 2,
  "background": "town/town_bg.png",
- "notes": "rects are the slice-2.md draft hotspots on the 1000x600 canvas; outline/hover/open overlays are drawn at (x, y) over town_bg.png; hover = building lit one ramp step + outline (drop-in over the bg)",
+ "notes": "rects are the slice-2.md draft hotspots on the 1000x600 canvas (Slice 3 adds memorial + lot_still); outline/hover/open overlays are drawn at (x, y) over town_bg.png; hover = building lit one ramp step + outline (drop-in over the bg). built (Slice 3): once the building exists, draw built.sprite (opaque, replaces the old building) at its x,y, then use built.outline / built.hover instead of outline / hover",
  "hotspots": [
   {
    "id": "trapdoor",
@@ -187,6 +187,24 @@ DATA.townArt = {
     "file": "town/town_ilse_tent.png",
     "x": 760,
     "y": 250
+   },
+   "built": {
+    "label": "Infirmary",
+    "sprite": {
+     "file": "town/town_ilse_tent_built.png",
+     "x": 752,
+     "y": 244
+    },
+    "outline": {
+     "file": "town/town_hl_ilse_tent_built.png",
+     "x": 756,
+     "y": 248
+    },
+    "hover": {
+     "file": "town/town_hover_ilse_tent_built.png",
+     "x": 756,
+     "y": 248
+    }
    }
   },
   {
@@ -255,6 +273,24 @@ DATA.townArt = {
     "file": "town/town_workshop.png",
     "x": 90,
     "y": 430
+   },
+   "built": {
+    "label": "Workbench",
+    "sprite": {
+     "file": "town/town_workshop_built.png",
+     "x": 82,
+     "y": 422
+    },
+    "outline": {
+     "file": "town/town_hl_workshop_built.png",
+     "x": 86,
+     "y": 426
+    },
+    "hover": {
+     "file": "town/town_hover_workshop_built.png",
+     "x": 86,
+     "y": 426
+    }
    }
   },
   {
@@ -323,6 +359,110 @@ DATA.townArt = {
     "file": "town/town_lot_comms.png",
     "x": 820,
     "y": 60
+   },
+   "built": {
+    "label": "Radio",
+    "sprite": {
+     "file": "town/town_lot_comms_built.png",
+     "x": 814,
+     "y": 52
+    },
+    "outline": {
+     "file": "town/town_hl_lot_comms_built.png",
+     "x": 818,
+     "y": 56
+    },
+    "hover": {
+     "file": "town/town_hover_lot_comms_built.png",
+     "x": 818,
+     "y": 56
+    }
+   }
+  },
+  {
+   "id": "memorial",
+   "label": "Memorial Wall",
+   "state": "active",
+   "rect": [
+    660,
+    64,
+    130,
+    64
+   ],
+   "outline": {
+    "file": "town/town_hl_memorial.png",
+    "x": 658,
+    "y": 62
+   },
+   "hover": {
+    "file": "town/town_hover_memorial.png",
+    "x": 658,
+    "y": 62
+   },
+   "labelAnchor": [
+    725,
+    58
+   ],
+   "badgeAnchor": [
+    776,
+    74
+   ],
+   "sprite": {
+    "file": "town/town_memorial.png",
+    "x": 660,
+    "y": 64
+   }
+  },
+  {
+   "id": "lot_still",
+   "label": "Empty lot (Water Still)",
+   "state": "scaffolding",
+   "rect": [
+    460,
+    300,
+    120,
+    80
+   ],
+   "outline": {
+    "file": "town/town_hl_lot_still.png",
+    "x": 460,
+    "y": 304
+   },
+   "hover": {
+    "file": "town/town_hover_lot_still.png",
+    "x": 460,
+    "y": 304
+   },
+   "labelAnchor": [
+    520,
+    294
+   ],
+   "badgeAnchor": [
+    566,
+    310
+   ],
+   "sprite": {
+    "file": "town/town_lot_still.png",
+    "x": 460,
+    "y": 300
+   },
+   "built": {
+    "label": "Water Still",
+    "sprite": {
+     "file": "town/town_lot_still_built.png",
+     "x": 456,
+     "y": 294
+    },
+    "outline": {
+     "file": "town/town_hl_lot_still_built.png",
+     "x": 462,
+     "y": 298
+    },
+    "hover": {
+     "file": "town/town_hover_lot_still_built.png",
+     "x": 462,
+     "y": 298
+    }
    }
   }
  ]

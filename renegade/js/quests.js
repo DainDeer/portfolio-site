@@ -17,6 +17,20 @@
   };
   Q.take = function (id) { const why = Q.canTake(id); if (why) return why; Q.st().active[id] = { progress: 0 }; G.log(`Quest taken: ${Q.def(id).name}.`); return null; };
   Q.abandon = function (id) { delete Q.st().active[id]; };
+  // Megan (milestone 5): a giver's shop (Dunn's Stores: Med kits), paid from the stockpile, no stock limit
+  Q.shop = (g) => (D().givers[g] && D().givers[g].shop) || null;
+  Q.canBuy = function (g, key, n) {
+    n = n || 1; const sh = Q.shop(g), it = sh && sh[key]; if (!it) return "Not sold here.";
+    const res = G.state.stash.res; for (const r in it.price) if ((res[r] || 0) < it.price[r] * n) return `Needs ${it.price[r] * n} ${DATA.resources[r].name}.`;
+    return null;
+  };
+  Q.buy = function (g, key, n) {
+    n = n || 1; const why = Q.canBuy(g, key, n); if (why) return why;
+    const it = Q.shop(g)[key], res = G.state.stash.res;
+    for (const r in it.price) res[r] -= it.price[r] * n;
+    res[key] = (res[key] || 0) + n;
+    G.log(`Bought ${n} × ${DATA.resources[key].name} from ${D().givers[g].name}.`); G.State.save(); return null;
+  };
   // quest item somewhere the player owns it (stash, or the current run's bag)
   Q.ownsItem = function (base) {
     const s = G.state, has = (arr) => (arr || []).some((it) => it && it.base === base);
@@ -35,6 +49,9 @@
     const p = Q.progress(id); return p.have >= p.need;
   };
   Q.anyTurnIn = (giver) => Q.ofGiver(giver).some((id) => Q.canTurnIn(id));
+  // quests this giver offers that you can take right now (the existing Q.canTake rules: available, not active, not
+  // done, under the active-quest cap). Drives the town view's floating "!" marker over the giver's building.
+  Q.availableAt = (giver) => Q.ofGiver(giver).filter((id) => !Q.canTake(id));
   Q.rewardText = function (rw) {
     const out = [];
     for (const r in rw.res || {}) out.push(`${rw.res[r]} ${DATA.resources[r].name}`);
@@ -83,13 +100,18 @@
   };
   Q.consumeMedicPick = function () { const st = G.state && G.state.quests; if (!st || !st.flags.medicPick) return false; st.flags.medicPick = false; return true; };
   // kills: [{ eid, family }] made in zone
+  // returns the ids whose kill objective was completed by these kills (the caller adds DATA.quests.objectiveHeat)
   Q.onKills = function (zone, kills) {
+    const completed = [];
     for (const id of Q.activeIds()) {
       const q = Q.def(id), o = q.objective; if (q.type !== "kill" || o.zone !== zone) continue;
       const n = kills.filter((k) => (o.family ? k.family === o.family : o.units.includes(k.eid))).length;
-      if (n) { const a = Q.st().active[id], was = a.progress; a.progress = Math.min(o.n, a.progress + n); if (a.progress > was) G.log(`Quest ${q.name}: ${a.progress}/${o.n}.`); }
+      if (n) { const a = Q.st().active[id], was = a.progress; a.progress = Math.min(o.n, a.progress + n); if (a.progress > was) G.log(`Quest ${q.name}: ${a.progress}/${o.n}.`); if (was < o.n && a.progress >= o.n) completed.push(id); }
     }
+    return completed;
   };
+  // Heat for completing this quest's objective in the field (kill / find; a turn-in is paid at the outpost: none)
+  Q.objectiveHeat = (id) => (Q.def(id).type === "turnin" ? 0 : D().objectiveHeat || 0);
   // find-quest objects at a location (always placed), and whether they currently hold the item
   Q.findObjectsAt = (zone, locId) => Object.keys(D().list).filter((id) => { const q = D().list[id]; return q.type === "find" && q.objective.zone === zone && q.objective.loc === locId; });
   Q.itemAvailable = (id) => Q.status(id) === "active" && !Q.ownsItem(Q.def(id).objective.item);

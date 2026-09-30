@@ -21,7 +21,7 @@
       el.className = "site-obj" + (open ? "" : " dark") + (done ? " done" : "") + (o.kind !== "search" ? " " + o.kind : "") + (o.type === "door" ? " door" : "") + (o.fresh ? " corpse" : "") + (busy && busy.objId === o.id ? " busy" : "");
       el.dataset.obj = o.id; el.dataset.kind = o.kind; if (o.type) el.dataset.type = o.type;
       el.style.left = (o.x / W * 100) + "%"; el.style.top = (o.y / H * 100) + "%";
-      const V = DATA.searchables.view, px = o.type === "door" ? V.doorPx : V.objPx;
+      const V = DATA.searchables.view, px = o.type === "door" ? V.doorPx : V.objPx * ((DATA.searchables.types[o.type] || {}).wide || 1);   // the car is wide (2 slots)
       el.style.width = (px / W * 100) + "%";           // scales with the view (objects are 32 native x2 on the 1000 px canvas)
       const spr = SV.spriteFor(o, site); el.dataset.sprite = spr;
       el.appendChild(SP.icon(spr, px, "site-art"));
@@ -86,12 +86,13 @@
     }
     if (o.kind === "grate") return G.Zones.passageFound(o.pid) && has(o.sprite + "_open") ? o.sprite + "_open" : o.sprite;
     if (o.kind !== "search") return o.sprite;
-    if (o.type === "body_human" || o.type === "body_beast") {
+    if (o.type === "body_human" || o.type === "body_beast" || o.type === "body_machine" || o.type === "machine_dormant") {
       if (!o.searched) return o.sprite;
-      const k = o.type === "body_beast" ? "corpse_beast_searched" : "corpse_human_searched"; return X.hasLeft(o) ? o.sprite : (has(k) ? k : o.sprite);
+      const k = o.gruntBody ? (o.vet ? "corpse_veteran_searched" : "corpse_grunt_searched") : o.type === "body_beast" ? "corpse_beast_searched" : o.type === "body_machine" || o.type === "machine_dormant" ? "corpse_machine_searched" : "corpse_human_searched"; return X.hasLeft(o) ? o.sprite : (has(k) ? k : o.sprite);
     }
     const base = o.heavy && has(o.sprite + "_heavy") ? o.sprite + "_heavy" : o.sprite;
-    const st = !o.searched ? "" : X.hasLeft(o) ? "_open" : "_searched";
+    const busy = G.UI && G.UI.search && G.UI.search.objId === o.id;   // the _open state also shows during the search bar (assets README)
+    const st = busy ? "_open" : !o.searched ? "" : X.hasLeft(o) ? "_open" : "_searched";
     return st && has(base + st) ? base + st : base;
   };
   // "searched" overlay: event objects once dealt with (containers + bodies have their own searched art)

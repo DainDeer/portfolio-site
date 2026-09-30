@@ -11,9 +11,10 @@
     lv.sort((a, b) => b.lvl - a.lvl);
     const best = lv[0] || { m: null, lvl: 0 };
     let helpers = 0;
-    if (def.kind === "body") for (const x of lv.slice(1)) if (x.lvl >= C().helperMinSkill) helpers += C().helperBonusEach;
-    helpers = Math.min(C().helperMax, helpers);
-    const gear = G.Items.affixSum(gearItems || [], "check_skill", skill);
+    const each = G.Perks ? G.Perks.helperEach(C().helperBonusEach) : C().helperBonusEach;   // Helping Hand: +2 each
+    if (def.kind === "body") for (const x of lv.slice(1)) if (x.lvl >= C().helperMinSkill) helpers += each;
+    helpers = Math.min(C().helperMax * each / C().helperBonusEach, helpers);   // helperMax counts helpers (3), so the cap scales with the bonus
+    const gear = G.Items.checkBonus(gearItems || [], skill);   // affixes + base checkSkill + set bonuses (Hunter's Garb)
     const mod = Math.floor(best.lvl / C().skillDiv) + helpers + gear;
     const effDc = dc + (C().zoneDcBonus || 0);
     let succ = 0;

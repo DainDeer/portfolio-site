@@ -25,23 +25,23 @@ DATA.bodies = {
                 stats: { max_hp: 128, armor: 1, evasion: 4, move_speed: 4.6, crit_chance: 5, crit_damage: 150 },
                 specialties: ["field_surgeon", "chemist"] }
   },
-  // Each specialty = its doc-described trick (§3.2). Slice 1 implements ONE ability per specialty (auto only).
+  // Each specialty = its doc-described trick (§3.2). Passives here; the actives (Slice 3 §2) are in data/abilities.js (bySpec).
   specialties: {
     bulwark:       { name: "Bulwark",       desc: "Takes hits for nearby allies.", passive: { type: "intercept", radiusM: 3, pct: 30 },
                      skills: { brawling: 14, endurance: 14, hauling: 10, acrobatics: 4 } },
-    breacher:      { name: "Breacher",      desc: "Charges and knocks down.", active: { type: "charge", triggerRangeM: 8, speedMult: 3, knockdownSec: 1.2, bonusDmgPct: 50, cooldownSec: 8 },
+    breacher:      { name: "Breacher",      desc: "Charges and knocks down.",
                      skills: { brawling: 20, endurance: 15, hauling: 12 } },
     butcher:       { name: "Butcher",       desc: "Bleeds, gore finishers.", passive: { type: "bleed", pctOfHit: 30, durationSec: 3, finisherGib: true },
                      skills: { blades: 18, athletics: 12, endurance: 8 } },
     duelist:       { name: "Duelist",       desc: "Parries melee attacks (contested Blades vs attacker weapon skill).", passive: { type: "parry" },
                      skills: { blades: 20, acrobatics: 14, athletics: 8 } },
-    marksman:      { name: "Marksman",      desc: "Called headshots on the highest-value target.", active: { type: "called_shot", cooldownSec: 6, critChanceBonus: 100, accuracyBonus: 10 },
+    marksman:      { name: "Marksman",      desc: "Called headshots on the highest-value target.",
                      skills: { marksmanship: 18, perception: 12, athletics: 8 } },
     suppressor:    { name: "Suppressor",    desc: "Slows targets under fire.", passive: { type: "slow", pct: 30, durationSec: 2 },
                      skills: { marksmanship: 16, endurance: 10, hauling: 10 } },
-    field_surgeon: { name: "Field Surgeon", desc: "Heals allies below 40% (Field heal roll); stabilizes Critical allies.", active: { type: "heal", belowPct: 40, healPctOfMax: 35, rangeM: 10, cooldownSec: 5, stabilize: true },
+    field_surgeon: { name: "Field Surgeon", desc: "Heals allies below 40% (Field heal roll); stabilizes Critical allies.",
                      skills: { endurance: 10, perception: 10, blades: 6, marksmanship: 6 } },
-    chemist:       { name: "Chemist",       desc: "Combat stims: +Attack Speed to an ally.", active: { type: "stim", attackSpeedPct: 30, durationSec: 5, rangeM: 10, cooldownSec: 7 },
+    chemist:       { name: "Chemist",       desc: "Combat stims: +Attack Speed to an ally.",
                      skills: { endurance: 8, perception: 8, marksmanship: 10, acrobatics: 6 } }
   },
   // §3.3 example quirks (Slice 1 pool). Human bodies roll quirksPerBody.
@@ -65,8 +65,11 @@ DATA.bodies = {
     name: "Grunt", sprite: "unit_grunt", ai: "auto", deployCost: 1, rank: "grunt",
     stats: { max_hp: 75, armor: 0, evasion: 2, move_speed: 4.2, crit_chance: 5, crit_damage: 150 },
     skills: { marksmanship: 5, blades: 4, athletics: 3, acrobatics: 3, endurance: 3 },
-    weapons: ["pipe_rifle", "rust_machete"],  // random pick at recruit
-    names: ["Grunt"]
+    weapons: ["pipe_rifle", "rust_machete"],  // random pick at recruit: the Grunt's own weapon when nothing is equipped
+    // Megan's playtest: every Grunt gets a random name at recruit (renameable from the roster). [PLACEHOLDER] list.
+    names: ["Rust", "Ash", "Moss", "Tallow", "Grit", "Nails", "Jinx", "Scab", "Dutch", "Mags", "Cinder", "Wick", "Bones",
+            "Lark", "Hatch", "Rivet", "Sprocket", "Patch", "Tully", "Marrow", "Crow", "Dace", "Nettle", "Sloan", "Kestrel",
+            "Hobb", "Ivy", "Brick", "Fen", "Rook", "Tarn", "Slate", "Vee", "Quill", "Bram", "Juniper", "Knox", "Skiv", "Pike", "Ember"]
   }
 };
 // Core allies are "later" in Slice 1, but Critical/Domed (§9.4) is implemented for rank "core".

@@ -2,12 +2,16 @@
 // Objective types: turnin { res, n } (paid from the stockpile) · find { item, zone, loc, object } · kill { zone, n, family | units }
 window.DATA = window.DATA || {};
 DATA.quests = {
-  maxActive: 5,
+  maxActive: 10,              // Megan (milestone 5): 10 active quests at once (was 5)
   repLevels: [0, 2],          // rep needed for L1, L2 (reputation above L2 is deferred)
   repPerQuest: 1,
+  objectiveHeat: 20,          // Megan's playtest: completing a quest objective in the field (last kill / finding the item) = +20 Heat
   givers: {
     dunn: { name: "Dunn", title: "the Quartermaster", hotspot: "dunn_stores", portrait: "npc_dunn",
-            perks: { 2: { type: "upgradeCostMult", res: ["food", "water"], mult: 0.8, desc: "Upgrades cost 20% less Food and Water." } } },
+            perks: { 2: { type: "upgradeCostMult", res: ["food", "water"], mult: 0.8, desc: "Upgrades cost 20% less Food and Water." } },
+            // Megan (milestone 5): Dunn's Stores sells Med kits, no stock limit. There's no town currency yet, so the price is in
+            // Scrap (what Dunn pays out for the Dry Stores turn-in)
+            shop: { med: { price: { scrap: 15 } } } },
     ilse: { name: "Doc Ilse", title: "runs the Infirmary", hotspot: "ilse_tent", portrait: "npc_ilse", journal: true,
             perks: { 2: { type: "medicNextPick", desc: "A Medic is guaranteed in your next human body pick (one-shot)." } } }
   },

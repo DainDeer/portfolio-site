@@ -8,7 +8,9 @@
   const f1 = (n) => (Math.round(n * 10) / 10).toString();
 
   X.node = (nid) => G.Zones.node(nid || run().loc);
-  X.site = (nid) => (run() && run().sites ? run().sites[nid || run().loc] : null);
+  // Slice 3 §12: sites live in the world state (state.world.sites, by node id) and persist between runs
+  const sites = () => { const w = G.state.world; w.sites = w.sites || {}; return w.sites; };
+  X.site = (nid) => (nid || run() ? sites()[nid || run().loc] || null : null);
   X.inSite = () => !!run() && run().view === "site" && !!X.site();
   X.leaveSite = function () { const r = run(); if (r && !r.queue.length) r.view = "map"; };
   X.enterSite = function () { const r = run(); if (r && X.site()) r.view = "site"; };
@@ -17,9 +19,76 @@
 
   // ---------- generation ----------
   X.ensureSite = function (node) {
-    const r = run(); r.sites = r.sites || {};
-    if (!r.sites[node.id]) r.sites[node.id] = X.generateSite(node);
-    return r.sites[node.id];
+    const S = sites(), rc = G.state.runCount, loc = G.Map.loc(node);
+    let site = S[node.id];
+    // a world-event location whose state moved on since the site was built (Hollow Creek -> aftermath) is rebuilt
+    if (site && loc && loc.worldEvent && site.enteredRun !== rc && site.world !== G.state.world.hollow_creek) site = null;   // the one world event (same key as X.worldOverride)
+    if (!site) { site = S[node.id] = X.generateSite(node); site.enteredRun = rc; site.entry = { run: rc, level: 1, mult: 1, fresh: true }; return site; }
+    if (site.enteredRun !== rc) X.restockOnEntry(site, node);
+    return site;
+  };
+
+  // ---------- Slice 3 §12: restocking ----------
+  const RS = () => CFG().world.restock;
+  X.restockSteps = (site) => RS().runsBySize[site.size || "M"] || 1;
+  X.restockLevel = (site) => (!site || !site.pickedOver ? 1 : Math.min(1, (site.restock || 0) / X.restockSteps(site)));
+  X.restockMult = (level) => RS().hostileFloor + (1 - RS().hostileFloor) * level;
+  X.markPicked = function (site) { if (!site) return; if (!site.pickedOver) X.log(`${G.Map.loc(X.node(site.nid)).name} is picked over now.`); site.pickedOver = true; site.restock = 0; };
+  // map / tooltip text: "Unsearched" (never picked over), "Picked over (1/2)", "Normal" (restocked)
+  X.lootRead = function (nid) {
+    const site = X.site(nid); if (!site) return "Unsearched";
+    if (site.pickedOver) return `Picked over (${site.restock || 0}/${X.restockSteps(site)})`;
+    return site.everPicked ? "Normal" : "Unsearched";
+  };
+  // Hostiles % on arriving (not an in-run revisit): original x the restock multiplier of this run's first entry
+  X.entryHostiles = function (node) {
+    const o = X.odds(node), site = X.site(node.id), rc = G.state.runCount;
+    const lvl = site && site.entry && site.entry.run === rc ? site.entry.level : X.restockLevel(site), mult = X.restockMult(lvl);
+    const pct = U.clamp(o.hostiles * mult, 0, 100);
+    return { base: o.hostiles, level: lvl, mult, pct, text: lvl < 1 ? `Hostiles ${f1(o.hostiles)}% × (${RS().hostileFloor} + ${+(1 - RS().hostileFloor).toFixed(3)} × restock ${Math.round(lvl * 100)}% = ${Math.round(mult * 1000) / 1000}) = ${f1(pct)}%` : `Hostiles ${f1(pct)}%` };
+  };
+  X.refillObject = function (o) {
+    o.searched = false; o.left = null; o.jammed = false;
+    if (o.guaranteed && o.guaranteed.once !== false) delete o.guaranteed;   // one-time finds stay found
+    return o;
+  };
+  // first entry of a later run: refill rolls, and at 100% old bodies; quests taken since the site was built get their object
+  X.restockOnEntry = function (site, node) {
+    const rc = G.state.runCount, loc = G.Map.loc(node), lvl = X.restockLevel(site), was = !!site.pickedOver;
+    site.enteredRun = rc; site.visits = 0;
+    site.entry = { run: rc, level: lvl, mult: X.restockMult(lvl), refilled: 0, rolls: [], pickedOver: was };
+    if (was) {
+      const searched = site.objects.filter((o) => o.kind === "search" && o.type !== "door" && o.searched && !o.salvage);
+      for (const o of searched) {
+        const d = G.rng() * 100, hit = lvl >= 1 || d < lvl * 100;
+        site.entry.rolls.push({ obj: o.id, name: o.name, roll: lvl >= 1 ? null : Math.floor(d), hit });
+        if (hit) { X.refillObject(o); site.entry.refilled++; }
+      }
+      X.log(`${loc.name}: restock ${Math.round(lvl * 100)}% (${site.restock || 0}/${X.restockSteps(site)}). ` + (searched.length ? site.entry.rolls.map((x) => `${x.name} ${x.roll == null ? "100%" : "rolled " + x.roll + " vs " + Math.round(lvl * 100)}: ${x.hit ? "refilled" : "still empty"}`).join("; ") : "Nothing was searched.") + ".", "roll");
+      if (lvl >= 1) {
+        const [a, b] = RS().oldBodies, n = G.rng.int(a, b), rooms = site.rooms.filter((R) => R.open), type = loc.family === "beasts" ? "body_beast" : "body_human";
+        for (let i = 0; i < n; i++) { const T = SD().types[type]; place(site, mk(site, { type, name: T.name, sprite: T.sprite, rot: Math.round(G.rng() * 360) }), G.rng.pick(rooms.length ? rooms : site.rooms).i, G.rng); }
+        site.pickedOver = false; site.restock = 0;
+      }
+    }
+    // a quest object whose item is still to be found (lost on death, quest re-taken) refills every run, as in Slice 2
+    for (const o of site.objects) if (o.questId && o.searched && G.Quests.itemAvailable(o.questId)) X.refillObject(o);
+    for (const qid of G.Quests.findObjectsAt(site.zone, node.loc)) if (!site.objects.some((o) => o.questId === qid)) {
+      const q = G.Quests.def(qid).objective.object; X.addSearchObject(site, q.type, { name: q.name, sprite: q.sprite || SD().types[q.type].sprite, searchSec: q.searchSec, noise: q.noise, questId: qid });
+    }
+  };
+  // debug: the world clock without an expedition; "Restock everything" puts every picked-over place at 100% and makes
+  // its next entry (this run too) a fresh first entry
+  X.debugAdvanceWorld = function () { X.worldTick(); for (const nid in sites()) if (run() && nid !== run().loc) sites()[nid].enteredRun = -1; G.State.save(); };
+  X.debugRestockAll = function () { for (const nid in sites()) { const st = sites()[nid]; if (st.pickedOver) st.restock = X.restockSteps(st); if (!run() || nid !== run().loc) st.enteredRun = -1; } G.State.save(); };
+  // run end (extraction or death): battle bodies and gore go, per-run objects go, picked-over sites restock one step
+  X.worldTick = function () {
+    for (const nid in sites()) {
+      const site = sites()[nid];
+      site.objects = site.objects.filter((o) => !o.fresh && !o.perRun);
+      site.decals = [];
+      if (site.pickedOver) site.restock = Math.min(X.restockSteps(site), (site.restock || 0) + 1);
+    }
   };
 
   function floorFor(loc) {
@@ -31,9 +100,12 @@
     for (const t of tags) if ((F.byTagLow || {})[t]) return F.byTagLow[t];
     return F.default;
   }
-  function objectWeights(loc) {
-    const W = SD().objectWeights, w = Object.assign({}, W.base);
-    for (const t of loc.tags || []) for (const k in W.byTag[t] || {}) w[k] = (w[k] || 0) + W.byTag[t][k];
+  X.objectWeights = (loc, zone) => objectWeights(loc, zone);   // Addendum A2 supply reads
+  function objectWeights(loc, zone) {
+    const W = SD().objectWeights, w = Object.assign({}, W.base), tags = loc.tags || [];
+    for (const t of tags) for (const k in W.byTag[t] || {}) w[k] = (w[k] || 0) + W.byTag[t][k];
+    for (const k in (W.byZone || {})[zone] || {}) w[k] = (w[k] || 0) + W.byZone[zone][k];
+    for (const k in W.anyOf || {}) { const c = W.anyOf[k]; if ((c.tags || []).some((t) => tags.includes(t)) || (c.zones || []).includes(zone)) w[k] = (w[k] || 0) + c.weight; }
     for (const k in loc.objectWeights || {}) w[k] = (w[k] || 0) + loc.objectWeights[k];
     return w;
   }
@@ -49,6 +121,15 @@
     let R = site.rooms[roomIdx];
     if (!R.free.length) { const alt = site.rooms.filter((q) => q.free.length); if (alt.length) R = rng.pick(alt); }
     o.room = R.i;
+    const T = o.type && SD().types[o.type];
+    if (T && T.wide > 1) {   // Slice 3: the car takes two side-by-side slots (centred between them)
+      const s = SD().view.slot, rooms = [R].concat(site.rooms.filter((q) => q !== R));
+      for (const Q of rooms) for (let i = 0; i < Q.free.length; i++) {
+        const p = Q.free[i], j = Q.free.findIndex((q) => q.y === p.y && q.x === p.x + s);
+        if (j < 0) continue;
+        const q = Q.free[j]; Q.free = Q.free.filter((f) => f !== p && f !== q); o.room = Q.i; o.x = Math.round((p.x + q.x) / 2); o.y = p.y; return o;
+      }
+    }
     if (R.free.length) { const p = R.free.pop(); o.x = p.x; o.y = p.y; }
     else { o.x = Math.round(R.x + 30 + rng() * (R.w - 60)); o.y = Math.round(R.y + 30 + rng() * (R.h - 60)); }
     return o;
@@ -66,7 +147,8 @@
       rooms.push({ i, col: c, row: rw, parent: p, open: i === 0, x: Math.round(V.x + c * cw + V.wall / 2), y: Math.round(V.y + rw * ch + V.wall / 2), w: Math.round(cw - V.wall), h: Math.round(ch - V.wall) });
     }
     for (const R of rooms) R.free = roomSlots(R, rng);
-    const site = { nid: node.id, loc: node.loc, zone: node.zone || "a", size, rooms, objects: [], props: [], decals: [], floor: floorFor(loc), visits: 0, visitSearches: 0, searches: 0, nextId: 1 };
+    const site = { nid: node.id, loc: node.loc, zone: node.zone || "a", size, rooms, objects: [], props: [], decals: [], floor: floorFor(loc), visits: 0, visitSearches: 0, searches: 0, nextId: 1,
+      pickedOver: false, restock: 0, world: loc.worldEvent ? G.state.world.hollow_creek : undefined };
     // doors: each room after the first sits behind a door in the wall it shares with its parent (the door belongs to the parent)
     const D = S.types.door;
     for (let i = 1; i < nRooms; i++) {
@@ -82,8 +164,9 @@
     if (gl && !(gl.once !== false && G.state.locFlags[node.loc + "_gl"])) fixed.push({ type: gl.object.type, name: gl.object.name, guaranteed: gl });
     const wo = X.worldOverride(node);
     if (wo && wo.container) fixed.push({ type: wo.container.type, name: wo.container.name, bonusItems: wo.container.bonusItems, rarityBonus: wo.container.rarityBonus, salvage: true });
+    for (const t in S.objectWeights.fixedByTag || {}) if ((loc.tags || []).includes(t)) for (const type of S.objectWeights.fixedByTag[t]) fixed.push({ type });
     for (const qid of G.Quests.findObjectsAt(site.zone, node.loc)) { const o = G.Quests.def(qid).objective.object; fixed.push({ type: o.type, name: o.name, sprite: o.sprite, searchSec: o.searchSec, noise: o.noise, questId: qid }); }
-    const w = objectWeights(loc), keys = Object.keys(w).filter((k) => w[k] > 0);
+    const w = objectWeights(loc, node.zone || "a"), keys = Object.keys(w).filter((k) => w[k] > 0);
     const nGen = Math.max(0, nSearch - (nRooms - 1) - fixed.length);
     const list = fixed.slice();
     for (let i = 0; i < nGen; i++) { let t = rng.weighted(keys, (k) => w[k]); if (t === "body") t = loc.family === "beasts" ? "body_beast" : "body_human"; list.push({ type: t }); }
@@ -100,7 +183,11 @@
     const odds = X.odds(node);
     let ev = null;
     if (wo && wo.event) ev = wo.event;
-    else if ((loc.events || []).length && rng.chance(odds.event)) ev = rng.pick(loc.events);
+    else if ((loc.events || []).length && rng.chance(odds.event)) {
+      const zp = (DATA.zones.list[site.zone] || {}).eventPool;   // zone-wide pool (Zone B drone patrol), weighted vs 1 per location event
+      if (zp && Object.keys(zp).length) { const ids = loc.events.concat(Object.keys(zp).filter((k) => !loc.events.includes(k))); ev = rng.weighted(ids, (k) => (zp[k] != null ? zp[k] : 1)); }
+      else ev = rng.pick(loc.events);
+    }
     if (ev) X.addEventObject(site, ev);
     if (rng.chance(odds.survivors || 0)) { const so = S.survivorObject; place(site, mk(site, { kind: "survivor", name: so.name, sprite: so.sprite }), rng.int(0, nRooms - 1), rng); }
     // the passage grate (always in the first room); hidden at the Zone A end until spotted
@@ -181,38 +268,73 @@
     if (action === "kick" && T.lock && T.lock.kick) sec = T.lock.kick.sec;
     const scav = X.bestSkill("scavenging");
     sec = sec * Math.max(0, 1 - (C.scavTimePctPer10 / 100) * Math.floor(scav / 10));
+    if (action === "search") sec *= Math.max(0, 1 - G.Items.setStat(X.gearItems(), "search_pct") / 100);   // Scav Kit (3): 15% faster
     const forced = action === "force" || action === "kick";
     const noise = (o.noise != null ? o.noise : T.noise || 0) + (forced ? C.forceNoise : 0);
     const H = X.baseHostiles(node), heat = X.heatTier().siteBonus || 0, prior = site.visitSearches * C.perSearchPct;
     const stealth = Math.floor(X.bestSkill("stealth") / 10) * C.stealthPer10;
-    const raw = noise + H / C.hostilesDiv + heat + prior - stealth;
+    const loud = G.Allies ? G.Allies.squadSum(run(), "disturbPct") : 0;   // Loudmouth (Slice 3 §1): +2% per deployed standing ally with it
+    const raw = noise + H / C.hostilesDiv + heat + prior - stealth + loud;
     const tm = X.tutorialOn() && CFG().tutorial.disturbanceMult != null ? CFG().tutorial.disturbanceMult : 1;   // tutorial only
     const pct = Math.max(C.minPct, raw * tm);
     const heatGain = action === "force" ? CFG().heat.forceLock : action === "kick" ? CFG().heat.kickDoor : 0;
     let check = null;
     if (action === "pick" && T.lock) check = G.Checks.compute(T.lock.check.skill, T.lock.check.dc, X.members(), X.gearItems());
     if (action === "search" && o.heavy && T.heavy) check = G.Checks.compute(T.heavy.check.skill, T.heavy.check.dc, X.members(), X.gearItems());
-    const math = `noise ${noise}${forced ? " (forced)" : ""} + Hostiles ${H}/${C.hostilesDiv} = ${f1(H / C.hostilesDiv)} + Heat ${heat} + searches ${prior} − Stealth ${stealth}${tm !== 1 ? ` = ${f1(raw)} × tutorial ${tm}` : ""} = ${f1(pct)}%`;
-    return { action, sec, noise, H, heat, prior, stealth, pct, tutorialMult: tm, heatGain, check, math };
+    const math = `noise ${noise}${forced ? " (forced)" : ""} + Hostiles ${H}/${C.hostilesDiv} = ${f1(H / C.hostilesDiv)} + Heat ${heat} + searches ${prior} − Stealth ${stealth}${loud ? ` + Loudmouth ${loud}` : ""}${tm !== 1 ? ` = ${f1(raw)} × tutorial ${tm}` : ""} = ${f1(pct)}%`;
+    return { action, sec, noise, H, heat, prior, stealth, loud, pct, tutorialMult: tm, heatGain, check, math };
   };
 
   // ---------- loot ----------
   X.rollObjectLoot = function (node, type, o) {
+    if (o && o.fixedLoot) return { items: o.fixedLoot.items.slice(), res: Object.assign({}, o.fixedLoot.res) };   // a fallen Grunt's body
     const T = SD().types[type], rng = G.rng, zone = DATA.zones.list[node.zone || "a"], loc = G.Map.loc(node);
     const items = [], res = {};
-    const ilvl = X.itemLevel(node), rb = X.rarityBonus() + (T.rarityBonus || 0) + ((o && o.rarityBonus) || 0);
-    let n = (T.gearRolls || 0) + (T.gearChance && rng.chance(T.gearChance) ? 1 : 0) + (T.bonusItems || 0) + ((o && o.bonusItems) || 0) + (o && o.heavy && T.heavy ? T.heavy.bonusItems : 0);
-    for (let i = 0; i < n; i++) items.push(G.Items.rollLoot(rng, ilvl, rb));
-    if (o && o.dropWeapon) items.push(G.Items.make(o.dropWeapon, G.Items.rollRarity(rng, X.rarityBonus()), ilvl, rng));
+    if (!(o && o.resOnly)) {   // resOnly: the debug loot readout (works at the outpost, no gear rolls)
+      const HL = o && o.hunter ? DATA.enemies.hunters.loot : null;   // Hunter bodies: iLvl +3, +10 rarity, 12% Hunter's Garb
+      const ilvl = X.itemLevel(node) + (HL ? HL.ilvlPlus : 0), rb = X.rarityBonus() + (T.rarityBonus || 0) + ((o && o.rarityBonus) || 0) + (HL ? HL.rarityBonus : 0);
+      if (HL && rng.chance(HL.garbPct)) items.push(G.Items.rollHunterPiece(rng, ilvl, rb));
+      let n = (T.gearRolls || 0) + (T.gearChance && rng.chance(T.gearChance) ? 1 : 0) + (T.bonusItems || 0) + ((o && o.bonusItems) || 0) + (o && o.heavy && T.heavy ? T.heavy.bonusItems : 0);
+      // Slice 3 §5: Militia Issue pieces x2 in Outlaw Gunman bodies
+      const lo = o && o.unit && DATA.sets && DATA.sets.gunmanMult && o.unit === "gunman" ? { setMult: DATA.sets.gunmanMult } : null;
+      for (let i = 0; i < n; i++) items.push(G.Items.rollLoot(rng, ilvl, rb, lo));
+      if (o && o.dropWeapon) items.push(G.Items.make(o.dropWeapon, G.Items.rollRarity(rng, X.rarityBonus(), ilvl), ilvl, rng));
+    }
     const tags = loc.tags || [], mult = SD().tagWeightMult;
     for (let k = 0; k < (T.resRolls || 0); k++) {
-      const e = rng.weighted(T.table, (x) => x[1] * (x[0] && tags.includes(x[0]) ? mult : 1));
+      const medK = (SD().medWeightByKind || {})[loc.kind] ?? 1;   // Med Supplies by location kind (medical / industrial)
+      const e = rng.weighted(T.table, (x) => x[1] * (x[0] && tags.includes((DATA.resources[x[0]] && DATA.resources[x[0]].tag) || x[0]) ? mult : 1) * (x[0] === "med" ? medK : 1));
       if (!e[0] || DATA.resources[e[0]].hidden) continue;
       const m = (zone.resourceMult || 1) * (DATA.resources[e[0]].dropMult || 1);   // zone x resource drop multiplier, randomly rounded
       const amt = Math.floor(rng.int(e[2], e[3]) * m + (m !== 1 ? rng() : 0));
       if (amt > 0) res[e[0]] = (res[e[0]] || 0) + amt;
     }
+    X.rollExtras((T.extras || []).concat((o && o.extras) || []), res, rng);
     return { items, res };
+  };
+
+  // Slice 3 §11: independent bonus rolls [{ res, n, chance %, minTier }] (safe Relic Tech at Marked+, Rival's pack, Elites)
+  X.tierAtLeast = function (name, heat) { const th = CFG().heat.thresholds, i = th.findIndex((t) => t.name === name); return i < 0 || th.indexOf(X.heatTier(heat)) >= i; };
+  X.rollExtras = function (extras, res, rng) {
+    for (const x of extras || []) {
+      if (x.minTier && !(G.state.run && X.tierAtLeast(x.minTier))) continue;
+      if (rng.chance(x.chance)) res[x.res] = (res[x.res] || 0) + (x.n || 1);
+    }
+    return res;
+  };
+
+  // Debug / tests (Slice 3 §11 acceptance 1): roll a searchable's loot n times at a location and compare with its table.
+  // Returns { n, type, loc, rows: [{ res, weightPct, hitPct, avg }] } (weightPct = the entry's share after tag / med mults).
+  X.lootReadout = function (type, n, node) {
+    node = node || (G.state.run && G.state.maps[G.state.run.zone].nodes[G.state.run.loc]) || Object.values(G.state.maps.a.nodes).find((x) => x.loc && G.Map.loc(x) && !G.Map.loc(x).extraction);
+    const T = SD().types[type], loc = G.Map.loc(node), tags = loc.tags || [], rng = G.Util.makeRng(12345), hits = {}, sum = {};
+    const saved = G.rng; G.rng = rng;
+    try { for (let i = 0; i < n; i++) { const l = X.rollObjectLoot(node, type, { resOnly: true }); for (const k in l.res) { hits[k] = (hits[k] || 0) + 1; sum[k] = (sum[k] || 0) + l.res[k]; } } } finally { G.rng = saved; }
+    const medK = (SD().medWeightByKind || {})[loc.kind] ?? 1, wOf = (x) => x[1] * (x[0] && tags.includes((DATA.resources[x[0]] && DATA.resources[x[0]].tag) || x[0]) ? SD().tagWeightMult : 1) * (x[0] === "med" ? medK : 1);
+    const tot = (T.table || []).reduce((a, x) => a + wOf(x), 0), rows = [];
+    for (const x of T.table || []) rows.push({ res: x[0] || "nothing", weightPct: tot ? 100 * wOf(x) / tot : 0, hitPct: x[0] ? 100 * (hits[x[0]] || 0) / n : null, avg: x[0] ? (sum[x[0]] || 0) / n : null });
+    for (const k in hits) if (!rows.some((r) => r.res === k)) rows.push({ res: k, weightPct: null, hitPct: 100 * hits[k] / n, avg: sum[k] / n, extra: true });
+    return { n, type, loc: loc.name, resRolls: T.resRolls || 0, rows };
   };
 
   // ---------- doing things ----------
@@ -254,7 +376,7 @@
       if (G.Checks.isSuccess(roll.grade)) { o.locked = false; texts.push("Lock picked."); if (o.type === "door") openDoor(); else { loot = X.rollObjectLoot(node, o.type, o); o.searched = true; } }
       else { o.jammed = true; texts.push(o.type === "door" ? "The lock jams. You'll have to kick it." : "The lock jams. You'll have to force it."); }
     } else if (action === "force" || action === "kick") {
-      X.addHeat(info.heatGain, action); texts.push(`+${info.heatGain} Heat`);
+      if (info.heatGain) { X.addHeat(info.heatGain, action); texts.push(`+${info.heatGain} Heat`); }
       o.locked = false;
       if (o.type === "door") { o.broken = true; openDoor(); } else { loot = X.rollObjectLoot(node, o.type, o); o.searched = true; texts.push("Forced open."); }
     } else {
@@ -277,17 +399,26 @@
       }
     }
     // quest item: only while the quest is active and you don't already have one
-    if (o.questId && (o.searched || !loot) && !o.blocked && G.Quests.itemAvailable(o.questId)) { loot = loot || { items: [], res: {} }; loot.items.push(G.Items.makeQuest(G.Quests.def(o.questId).objective.item)); texts.push("Found what you came for."); }
+    if (o.questId && (o.searched || !loot) && !o.blocked && G.Quests.itemAvailable(o.questId)) { loot = loot || { items: [], res: {} }; loot.items.push(G.Items.makeQuest(G.Quests.def(o.questId).objective.item)); texts.push("Found what you came for.");
+      const qh = G.Quests.objectiveHeat(o.questId); if (qh) { X.addHeat(qh, "quest"); texts.push(`+${qh} Heat`); } }
     // disturbance
     const dr = G.rng() * 100, hit = dr < info.pct;
     X.log(`Disturbance ${o.name}: ${info.math} → rolled ${Math.floor(dr)}: ${hit ? "something heard you!" : "quiet."}`, "roll");
     const loc = G.Map.loc(node);
     if (hit) X.push({ type: "battle", family: loc.family, budgetMult: CFG().search.battleBudgetMult, nid: site.nid, why: "Disturbance! Something heard you." });
+    // Slice 3: a terminal can trip a drone alarm (a machine fight); off until its enemy family exists (step 8)
+    const al = T.alarm; let alarm = null;
+    if (al && o.searched && !hit && DATA.enemies.families[al.family]) {
+      const ar = G.rng() * 100; alarm = { pct: al.chance, roll: ar, hit: ar < al.chance };
+      X.log(`Alarm ${o.name}: ${al.chance}% → rolled ${Math.floor(ar)}: ${alarm.hit ? "a drone answers!" : "quiet."}`, "roll");
+      if (alarm.hit) X.push({ type: "battle", family: al.family, budgetMult: al.budgetMult, nid: site.nid, why: al.why });
+    }
+    if (o.searched && o.type !== "door") { X.markPicked(site); site.everPicked = true; }   // Slice 3 §12
     const empty = !loot || (!loot.items.length && !Object.keys(loot.res).length);
     if (!empty) X.push({ type: "container", items: loot.items, res: loot.res, opened: true, nid: site.nid, objId: o.id, title: o.name, def: { id: o.type, name: o.name } });
     else if (o.searched && o.type !== "door") texts.push("Nothing useful.");
     G.State.save();
-    return { texts, roll, disturb: { pct: info.pct, roll: dr, hit, math: info.math }, empty };
+    return { texts, roll, disturb: { pct: info.pct, roll: dr, hit, math: info.math }, alarm, empty };
   };
 
   // leftovers stay in the object
@@ -307,18 +438,51 @@
     const bodies = [];
     const openRooms = site.rooms.filter((R) => R.open);
     for (const u of dead) {
-      const beast = u.family === "beasts" || (DATA.sprites.beastFamilies || []).includes(u.family);
-      const type = beast ? "body_beast" : "body_human";
-      const o = mk(site, { type, name: (beast ? "Dead " : "Body: ") + u.name, sprite: u.corpseSprite || u.corpse || SD().types[type].sprite, fresh: true, gibbed: !!u.gibbed, unit: u.eid, rot: Math.round(G.rng() * 360) });
+      const beast = u.family === "beasts" || (DATA.sprites.beastFamilies || []).includes(u.family), machine = !!u.metal;
+      const type = machine ? "body_machine" : beast ? "body_beast" : "body_human";   // Slice 3 §4a: a killed machine is a wreck
+      const o = mk(site, { type, name: (machine ? "Wreck: " : beast ? "Dead " : "Body: ") + u.name, sprite: u.corpseSprite || u.corpse || SD().types[type].sprite, fresh: true, gibbed: !!u.gibbed, unit: u.eid, rot: Math.round(G.rng() * 360) });
+      if (u.elite && SD().eliteExtras && X.tierAtLeast("Marked")) o.extras = SD().eliteExtras.filter((x) => !x.minTier || X.tierAtLeast(x.minTier));   // Relic Tech on Elites at Marked+
+      const ud = DATA.enemies.units[u.eid] || {};
+      if (ud.relicPct) o.extras = (o.extras || []).concat([{ res: "relic", n: 1, chance: ud.relicPct }]);   // Warden: 10% Relic Tech
+      if (u.family === "hunters") {   // Slice 3 §4b Hunter loot: gear at iLvl +3 / +10 rarity, 12% Hunter's Garb, Data Shard 20%, Relic 8% (Captain: always 1)
+        const HL = DATA.enemies.hunters.loot; o.hunter = true; o.bonusItems = 1;
+        o.extras = (o.extras || []).concat([{ res: "data_shards", n: 1, chance: HL.shardPct }, ud.relicAlways ? { res: "relic", n: ud.relicAlways, chance: 100 } : { res: "relic", n: 1, chance: HL.relicPct }]);
+      }
       place(site, o, G.rng.pick(openRooms).i, G.rng);
-      site.decals.push({ sprite: "fx_blood_pool", x: o.x, y: o.y + 6, room: o.room });
+      site.decals.push({ sprite: machine ? ((DATA.sprites.machineFx || {}).pool || "fx_oil_pool") : "fx_blood_pool", x: o.x, y: o.y + 6, room: o.room });
       const wb = u.weaponBase && DATA.items.bases[u.weaponBase];
-      if (!beast && wb && !wb.natural) bodies.push(o);   // beasts carry no gear
+      if (!beast && !machine && wb && !wb.natural) bodies.push(o);   // beasts and machines carry no gear
     }
     const human = bodies;
     for (let k = 0; k < CFG().expedition.battleLootRolls && human.length; k++) {
       const o = human.splice(G.rng.int(0, human.length - 1), 1)[0];
       o.dropWeapon = DATA.enemies.units[o.unit].weapon;
+    }
+  };
+
+  // Slice 3 §7: beaten rivals: a body per unit holding its gear (G.Rivals.lootFor chances / item level cap) + a Rival's pack
+  X.addRivalBodies = function (nid, dead, snap) {
+    const site = X.site(nid); if (!site) return;
+    const openRooms = site.rooms.filter((R) => R.open), node = X.node(nid);
+    for (const u of dead) {
+      const su = u.snapUnit || snap.units[u.rivalIdx] || {}, items = G.Rivals.lootFor(su, node, G.rng);
+      const o = mk(site, { type: "body_human", name: "Body: " + u.name + " (ghost)", sprite: u.corpseSprite || u.corpse || SD().types.body_human.sprite, fresh: true, gibbed: !!u.gibbed, rivalBody: snap.id, fixedLoot: { items, res: {} }, rot: Math.round(G.rng() * 360) });
+      place(site, o, G.rng.pick(openRooms).i, G.rng);
+      site.decals.push({ sprite: "fx_blood_pool", x: o.x, y: o.y + 6, room: o.room });
+    }
+    X.addSearchObject(site, "rival_pack", { name: `${snap.handle}'s pack`, rival: snap.id });
+  };
+
+  // Megan's playtest: a Grunt killed in battle leaves a body you can search, holding exactly the gear it had equipped.
+  X.addGruntBodies = function (nid, dead) {
+    const site = X.site(nid); if (!site || !dead.length) return;
+    const openRooms = site.rooms.filter((R) => R.open);
+    for (const m of dead) {
+      const items = G.State.gruntItems(m.g).map((it) => U.clone(it));
+      const o = mk(site, { type: "body_human", name: "Body: " + G.Allies.name(m.g), sprite: (m.died && m.died.corpse) || (G.Allies.isVeteran(m.g) ? "corpse_veteran" : SD().types.body_human.sprite), fresh: true, gibbed: !!(m.died && m.died.gibbed), gruntBody: m.g.uid, vet: G.Allies.isVeteran(m.g) || undefined, fixedLoot: { items, res: {} }, rot: Math.round(G.rng() * 360) });
+      place(site, o, G.rng.pick(openRooms).i, G.rng);
+      site.decals.push({ sprite: "fx_blood_pool", x: o.x, y: o.y + 6, room: o.room });
+      if (m.g.gear) m.g.gear = G.State.emptyGear(m.g);   // the gear is on the body now
     }
   };
 
@@ -335,12 +499,18 @@
     site.visitSearches = 0; site.visits++;
     r.view = "site";
     const t = X.heatTier();
+    // Break away: the enemies you ran from are still here (this run only)
+    if (site.escaped) { if (site.escaped.run === G.state.runCount) { const again = site.escaped.step; site.escaped = null; X.log(`${loc.name}: the fight you broke away from is still here.`, "bad"); X.push(again); return; } site.escaped = null; }
+    // Slice 3 §7: a rival squad instead of the normal Hostiles roll (first entry only; Manhunt's forced battle wins)
+    if (!revisit && !t.forcedBattle && G.Rivals && G.Rivals.onArrive(node)) { if (loc.passage && !G.Zones.passageVisible(loc.passage, site.zone)) X.push({ type: "spot", pid: loc.passage, nid: node.id }); return; }
     let pct, text;
     if (revisit) { const rv = X.revisitInfo(node); pct = rv.pct; text = rv.text; }
-    else { pct = X.odds(node).hostiles; text = `Hostiles ${f1(pct)}%`; }
+    else { const eh = X.entryHostiles(node); pct = eh.pct; text = eh.text; }   // Slice 3 §12: x restock multiplier on a picked-over site
     const dr = G.rng() * 100, hit = dr < pct || !!t.forcedBattle;
     X.log(`${loc.name}: ${text} → rolled ${Math.floor(dr)}${t.forcedBattle ? " (Manhunt: forced)" : ""}: ${hit ? "hostiles!" : "quiet."}`, "roll");
-    if (hit) X.push({ type: "battle", family: loc.family, budgetMult: t.forcedBattle ? 1.5 : 1, nid: node.id, why: t.forcedBattle ? "A hunter strike team intercepts you!" : revisit ? "They were waiting for you." : "Hostiles!" });
+    // Slice 3 §4b: at Manhunt the forced battle is a Hunter strike team (the Marked pack + 1 Marksman)
+    if (hit && t.forcedBattle && G.Hunters) X.push({ type: "battle", family: "hunters", pack: "Manhunt", hunters: true, nid: node.id, why: "A hunter strike team intercepts you!" });
+    else if (hit) X.push({ type: "battle", family: loc.family, budgetMult: t.forcedBattle ? 1.5 : 1, nid: node.id, why: t.forcedBattle ? "A hunter strike team intercepts you!" : revisit ? "They were waiting for you." : "Hostiles!" });
     if (loc.passage && !G.Zones.passageVisible(loc.passage, site.zone)) X.push({ type: "spot", pid: loc.passage, nid: node.id });
   };
 
@@ -386,7 +556,7 @@
     r.zone = to;
     X.addHeat(P.crossHeat != null ? P.crossHeat : CFG().heat.passageCross, "passage");
     X.log(`You squeeze through the ${P.name || "passage"} into ${DATA.zones.list[to].name}. +${P.crossHeat} Heat.`);
-    X.enterNode(nid, { noMoveHeat: true });
+    X.enterNode(nid, { noMoveHeat: true, passage: true });
     return null;
   };
 })(typeof window !== "undefined" ? window : globalThis);

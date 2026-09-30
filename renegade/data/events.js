@@ -1,5 +1,8 @@
 // §8 Events with D&D-style checks. Text is [PLACEHOLDER].
 // Option: { label, check:{skill,dc}, gruntSpendable, outcomes:{crit,success,fail,badFail} } or { label, effects:[...] }
+// Option-level `heat: N` (Megan's playtest: Heat comes in big chunks from big-reward choices) is added the moment you
+// pick the option, whatever the roll, and the UI appends "(+N Heat)" to the label. Risky skill checks = a check whose
+// success pays out (loot, a hidden stash, a body, a recruit) and whose failure can hurt or start a fight: +15.
 // Effects: heat, loot{rolls,rarityBonus}, res{...}, battle{family,budgetMult}, lore, damagePct, revealFog, payKg,
 //          claimBody, gruntsJoin, hiddenContainer (Slice 2: adds a crate to the location view), text, setWorld{key:value},
 //          distressCountdown: locId (start that location's same-run distress countdown, see DATA.map.locations[locId].distress)
@@ -14,7 +17,7 @@ DATA.events = {
           success: [{ text: "You climb over cleanly." }],
           fail:    [{ text: "You slip and gash your leg on rebar." }, { damagePct: 10 }],
           badFail: [{ text: "The slope shifts and buries you for a moment. The noise carries." }, { damagePct: 25 }, { heat: 5 }] } },
-      { label: "Shore it up and dig", check: { skill: "engineering", dc: 16 }, outcomes: {
+      { label: "Shore it up and dig", heat: 15, check: { skill: "engineering", dc: 16 }, outcomes: {
           success: [{ text: "You brace the roof and uncover a hidden container." }, { hiddenContainer: true }],
           fail:    [{ text: "It won't hold. Wasted time." }, { heat: 3 }],
           badFail: [{ text: "Part of the roof collapses on you." }, { damagePct: 20 }, { heat: 3 }] } },
@@ -43,16 +46,43 @@ DATA.events = {
     title: "Cryo Ward",
     text: "Rows of frosted pods. One still hums, its occupant perfectly preserved.",
     options: [
-      { label: "Claim the dormant body", check: { skill: "transference", dc: 16 }, outcomes: {
+      { label: "Claim the dormant body", heat: 15, check: { skill: "transference", dc: 16 }, outcomes: {
           success: [{ text: "You imprint the sleeper. Their body will wait for you at the Body Lab if you extract." }, { claimBody: true }],
           fail:    [{ text: "The link won't take." }],
-          badFail: [{ text: "The pod's defence system wakes up!" }, { battle: { family: "beasts", budgetMult: 0.8 } }] } },  // ASSUMPTION: doc says "defense drones" (Low-tech AI is later) — uses beasts for now
-      { label: "Scavenge supplies", check: { skill: "scavenging", dc: 12 }, outcomes: {
+          badFail: [{ text: "The pod's defence system wakes up!" }, { battle: { family: "machines", budgetMult: 0.8 } }] } },  // Slice 3 §4a: the defence drones are machines now
+      { label: "Scavenge supplies", heat: 15, check: { skill: "scavenging", dc: 12 }, outcomes: {
           crit:    [{ text: "A full trauma kit." }, { res: { med: 3 } }],
           success: [{ text: "You find Med Supplies." }, { res: { med: 2 } }],
           fail:    [{ text: "Mostly expired. One usable pack." }, { res: { med: 1 } }],
-          badFail: [{ text: "The pod's defence system wakes up!" }, { battle: { family: "beasts", budgetMult: 0.8 } }] } },
+          badFail: [{ text: "The pod's defence system wakes up!" }, { battle: { family: "machines", budgetMult: 0.8 } }] } },
       { label: "Walk away", effects: [{ text: "You leave them sleeping." }] }
+    ]
+  },
+  // design call (milestone 3): machines in Zone B. Text [PLACEHOLDER]. In Zone B's event pool (DATA.zones.list.b.eventPool)
+  drone_patrol: {
+    title: "Drone Patrol",
+    text: "Two old patrol drones drift down the flooded street, humming, lights sweeping the water. They haven't found you yet.",
+    options: [
+      { label: "Lie low", check: { skill: "stealth", dc: 14 }, outcomes: {
+          success: [{ text: "You sink into the reeds until the hum fades." }],
+          fail:    [{ text: "A light swings onto you. The drones whistle for backup." }, { battle: { family: "machines", budgetMult: 0.8 } }] } },
+      { label: "Shoot them down (battle, +15 Heat)", heat: 15, effects: [{ battle: { family: "machines", budgetMult: 1.0 } }, { text: "You pull the drones out of the water." }, { res: { electronics: 2, data_shards: 1 } }, { loot: { rolls: 1, rarityBonus: 10 } }] },
+      { label: "Back off", effects: [{ text: "You let them pass." }] }
+    ]
+  },
+  // Slice 3 §4a (doc §8.3 #5), text [PLACEHOLDER]. Relay Tower 7 + Pylon Field pools.
+  ai_perimeter_drone: {
+    title: "Perimeter Drone",
+    text: "A pre-fall security drone hangs over the road, sweeping a red beam across the rubble. It hasn't seen you yet.",
+    options: [
+      { label: "Slip past", check: { skill: "stealth", dc: 15 }, outcomes: {
+          success: [{ text: "You wait for the beam to pass and slip by." }],
+          fail:    [{ text: "The beam catches you. It whistles for friends." }, { battle: { family: "machines", budgetMult: 1.0 } }] } },
+      { label: "Signal peace", check: { skill: "persuasion", dc: 18 }, outcomes: {
+          success: [{ text: "You flash the old maintenance code. The drone dips, and shares its map." }, { revealFog: 3 }],
+          fail:    [{ text: "It doesn't understand. It keeps its distance and watches." }, { heat: 3 }] } },
+      { label: "Take it down (battle, +15 Heat)", heat: 15, effects: [{ battle: { family: "machines", budgetMult: 1.2 } }, { text: "You strip the wreck." }, { res: { data_shards: 2 } }, { loot: { rolls: 1, rarityBonus: 10 } }] },
+      { label: "Walk away", effects: [{ text: "You back off the road and let it pass." }] }
     ]
   },
   toll_gate: {
@@ -80,12 +110,12 @@ DATA.events = {
           success: [{ text: "Fragments of another life flood in." }, { lore: "renegade_memory" }],
           fail:    [{ text: "Static." }],
           badFail: [{ text: "Feedback. Your head splits." }, { damagePct: 15 }] } },
-      { label: "Loot it properly", check: { skill: "scavenging", dc: 12 }, outcomes: {
+      { label: "Loot it properly", heat: 15, check: { skill: "scavenging", dc: 12 }, outcomes: {
           crit:    [{ text: "A false bottom!" }, { loot: { rolls: 2, rarityBonus: 20 } }],
           success: [{ text: "You go through it carefully." }, { loot: { rolls: 1, rarityBonus: 10 } }],
           fail:    [{ text: "You grab what's on top." }, { loot: { rolls: 1 } }],
           badFail: [{ text: "Booby-trapped!" }, { damagePct: 20 }] } },
-      { label: "Check for traps first", check: { skill: "perception", dc: 14 }, gruntSpendable: true, outcomes: {
+      { label: "Check for traps first", heat: 15, check: { skill: "perception", dc: 14 }, gruntSpendable: true, outcomes: {
           success: [{ text: "You disarm a tripwire and loot at leisure." }, { loot: { rolls: 2 } }],
           fail:    [{ text: "You can't tell. You leave it." }],
           badFail: [{ text: "Click." }, { damagePct: 25 }] } }
@@ -96,7 +126,7 @@ DATA.events = {
     title: "Survivor on a Roof",
     text: "Someone waves a rag from a half-sunk roof. The water around the house is moving.",
     options: [
-      { label: "Wade out and help them down", check: { skill: "athletics", dc: 12 }, outcomes: {
+      { label: "Wade out and help them down", heat: 15, check: { skill: "athletics", dc: 12 }, outcomes: {
           success: [{ text: "You get them down. They want to come with you." }, { gruntsJoin: 1 }],
           fail:    [{ text: "The current drags you under a fence before you reach them." }, { damagePct: 10 }],
           badFail: [{ text: "You go under, and the splashing draws the hounds." }, { damagePct: 10 }, { battle: { family: "beasts", budgetMult: 0.8 } }] } },
@@ -113,10 +143,10 @@ DATA.events = {
     radio: true,
     text: "*crackle* \"Raiders at the wall, anyone out there? Hollow Creek, anyone!\"",
     options: [
-      { label: "Go now (detour, +4 Heat, defense battle)", effects: [{ heat: 4 }, { travelTo: "hollow_creek" }, { battle: { family: "outlaws", budgetMult: 1.3, defense: true } }, { setWorld: { hollow_creek: "saved" } }, { gruntsJoin: 2 }, { loot: { rolls: 1, rarityBonus: 10 } }, { text: "Hollow Creek holds. Two of their people want to join your outpost." }] },
-      { label: "Find a shortcut, then go", check: { skill: "survival", dc: 14 }, outcomes: {
-          success: [{ text: "You know a dry gully. No extra Heat." }, { travelTo: "hollow_creek" }, { battle: { family: "outlaws", budgetMult: 1.3, defense: true } }, { setWorld: { hollow_creek: "saved" } }, { gruntsJoin: 2 }, { loot: { rolls: 1, rarityBonus: 10 } }],
-          fail:    [{ text: "No shortcut. You take the long way." }, { heat: 4 }, { travelTo: "hollow_creek" }, { battle: { family: "outlaws", budgetMult: 1.3, defense: true } }, { setWorld: { hollow_creek: "saved" } }, { gruntsJoin: 2 }, { loot: { rolls: 1, rarityBonus: 10 } }] } },
+      { label: "Go now (detour, defense battle)", heat: 20, effects: [ { travelTo: "hollow_creek" }, { battle: { family: "outlaws", budgetMult: 1.3, defense: true } }, { setWorld: { hollow_creek: "saved" } }, { gruntsJoin: 2 }, { loot: { rolls: 1, rarityBonus: 10 } }, { text: "Hollow Creek holds. Two of their people want to join your outpost." }] },
+      { label: "Find a shortcut, then go (+15 Heat, +25 if it fails)", check: { skill: "survival", dc: 14 }, outcomes: {
+          success: [{ text: "You know a dry gully. Less noise on the way." }, { heat: 15 }, { travelTo: "hollow_creek" }, { battle: { family: "outlaws", budgetMult: 1.3, defense: true } }, { setWorld: { hollow_creek: "saved" } }, { gruntsJoin: 2 }, { loot: { rolls: 1, rarityBonus: 10 } }],
+          fail:    [{ text: "No shortcut. You take the long way." }, { heat: 25 }, { travelTo: "hollow_creek" }, { battle: { family: "outlaws", budgetMult: 1.3, defense: true } }, { setWorld: { hollow_creek: "saved" } }, { gruntsJoin: 2 }, { loot: { rolls: 1, rarityBonus: 10 } }] } },
       { label: "Ignore it (they can hold a few more moves)", effects: [{ text: "The radio goes quiet. Hollow Creek won't hold for long." }, { setWorld: { hollow_creek: "ignored" } }, { distressCountdown: "hollow_creek" }] }
     ]
   },
@@ -126,7 +156,7 @@ DATA.events = {
     title: "Hollow Creek: still holding",
     text: "Smoke over the wall, but the gate is still shut. Raiders are regrouping for another push.",
     options: [
-      { label: "Defend the town (defense battle)", effects: [{ battle: { family: "outlaws", budgetMult: 1.5, defense: true } }, { setWorld: { hollow_creek: "saved" } }, { gruntsJoin: 2 }, { loot: { rolls: 1, rarityBonus: 10 } }, { text: "Hollow Creek holds. Two of their people want to join your outpost." }] },
+      { label: "Defend the town (defense battle)", heat: 20, effects: [{ battle: { family: "outlaws", budgetMult: 1.5, defense: true } }, { setWorld: { hollow_creek: "saved" } }, { gruntsJoin: 2 }, { loot: { rolls: 1, rarityBonus: 10 } }, { text: "Hollow Creek holds. Two of their people want to join your outpost." }] },
       { label: "Slip away", effects: [{ text: "You leave them to it." }] }
     ]
   },
@@ -135,7 +165,7 @@ DATA.events = {
     text: "Burned walls. A raider camp squats in the ruins. A few survivors watch you from a cellar door. They remember who didn't come.",
     options: [
       { label: "Clear the raider camp", effects: [{ battle: { family: "outlaws", budgetMult: 1.2 } }, { loot: { rolls: 2, rarityBonus: 10 } }, { lore: "hollow_creek_aftermath" }, { setWorld: { hollow_creek: "aftermath_cleared" } }] },
-      { label: "Search the ruins quietly", check: { skill: "stealth", dc: 14 }, gruntSpendable: true, outcomes: {
+      { label: "Search the ruins quietly", heat: 15, check: { skill: "stealth", dc: 14 }, gruntSpendable: true, outcomes: {
           success: [{ text: "You slip in and out." }, { loot: { rolls: 1 } }, { lore: "hollow_creek_aftermath" }],
           fail:    [{ text: "Spotted!" }, { battle: { family: "outlaws", budgetMult: 1.2 } }] } },
       { label: "Leave", effects: [{ text: "You leave the survivors to their cellar." }] }

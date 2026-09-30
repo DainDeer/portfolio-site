@@ -16,7 +16,7 @@ DATA.skills = {
   medicine:     { name: "Medicine",     kind: "mind", active: true,  desc: "Field heal: 60 + Medicine/2." },
   genetics:     { name: "Genetics",     kind: "mind", active: false, desc: "Beasts, Biomass." },
   piloting:     { name: "Piloting",     kind: "mind", active: true,  desc: "Transports at extraction (checks)." },
-  tactics:      { name: "Tactics",      kind: "mind", active: false, desc: "Routes, ambushes." },
+  tactics:      { name: "Tactics",      kind: "mind", active: true,  desc: "Routes, ambushes. Smoke (Medic) trains it." },
   leadership:   { name: "Leadership",   kind: "mind", active: false, desc: "Rally (later)." },
   persuasion:   { name: "Persuasion",   kind: "mind", active: true,  desc: "Talking past guards (checks)." },
   survival:     { name: "Survival",     kind: "mind", active: true,  desc: "Navigation, shortcuts (checks)." },

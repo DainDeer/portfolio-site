@@ -43,15 +43,69 @@
     return out;
   };
 
-  St.makeGrunt = function (rng, tpl) {
-    tpl = tpl || DATA.bodies.grunt;
+  // Grunt record (Megan's playtest, extended in Slice 3 §1): stable uid, "First Last" name (DATA.bodies.grunt.names +
+  // DATA.allies.surnames, renameable), nickname (shown First "Nick" Last), 2 traits, history (newest first, 10 lines),
+  // runs / extractions / kills, gear { weapon, gear } (a Veteran: weapon / head / body / pack) equipped from the stash.
+  // Dead allies move to state.fallenGrunts with dead: true (never deleted): the Memorial Wall lists them.
+  St.pickGruntName = function (rng) {
+    const s = G.state, names = DATA.bodies.grunt.names || ["Grunt"], sur = (DATA.allies && DATA.allies.surnames) || [];
+    const used = new Set(((s && s.grunts) || []).concat((s && s.fallenGrunts) || [], (s && s.recruitCands) || []).map((g) => g.name));
+    const usedFirst = new Set([...used].map((n) => n.split(" ")[0]));
+    const firsts = names.filter((n) => !usedFirst.has(n)), first = rng.pick(firsts.length ? firsts : names);
+    if (!sur.length) return first;
+    for (let i = 0; i < 20; i++) { const n = first + " " + rng.pick(sur); if (!used.has(n)) return n; }
+    return first + " " + rng.pick(sur) + " " + rng.int(2, 99);
+  };
+  // opts: { noNegative (default: while the tutorial is on, its free Grunts never roll a negative trait), candidate }
+  St.makeGrunt = function (rng, tpl, opts) {
+    tpl = tpl || DATA.bodies.grunt; opts = opts || {};
     const skills = {};
     for (const k in tpl.skills) skills[k] = S.make(tpl.skills[k]);
-    return { uid: U.uid("grunt"), name: (tpl.rank === "core" ? tpl.name : "Grunt #" + rng.int(10, 99)), rank: tpl.rank || "grunt", tplKey: tpl === DATA.bodies.coreAllyTest ? "core" : "grunt",
-             weapon: rng.pick(tpl.weapons), skills, hp: null };
+    const g = { uid: U.uid("grunt"), name: (tpl.rank === "core" ? tpl.name : St.pickGruntName(rng)), rank: tpl.rank || "grunt", tplKey: tpl === DATA.bodies.coreAllyTest ? "core" : "grunt",
+             weapon: rng.pick(tpl.weapons), skills, hp: null, runs: 0, extractions: 0, kills: 0, history: [], s3: true };
+    const noNeg = opts.noNegative != null ? opts.noNegative : !!(DATA.allies.tutorialNoNegative && G.state && !G.state.tutorialDone);
+    g.traits = G.Allies.rollTraits(rng, DATA.allies.recruitTraits, { noNegative: noNeg });
+    if (opts.candidate) g.candidate = true; else G.Allies.log(g, "recruited", "Recruited.");
+    return St.repairGrunt(g, G.state ? G.state.runCount : 0);
   };
-  St.gruntTpl = (g) => (g.tplKey === "core" ? DATA.bodies.coreAllyTest : DATA.bodies.grunt);
+  St.repairGrunt = function (g, run) {
+    g.nickname = g.nickname || null; g.traits = g.traits || []; g.history = g.history || [{ run: run || 0, what: "recruited", text: `Run ${run || 0}: Recruited.` }];
+    g.gear = g.gear || St.emptyGear(g); g.dead = !!g.dead; g.tplKey = g.tplKey || (g.rank === "core" ? "core" : "grunt");
+    g.runs = g.runs || 0; g.extractions = g.extractions || 0; g.kills = g.kills || 0;
+    return g;
+  };
+  St.grunt = (uid) => G.state.grunts.find((g) => g.uid === uid);
+  St.renameGrunt = function (uid, name) {
+    const g = St.grunt(uid); if (!g) return "No such Grunt.";
+    name = String(name || "").replace(/\s+/g, " ").trim().slice(0, DATA.config.grunts.nameMaxLen);
+    if (!name) return "A name can't be empty.";
+    const from = g.name; g.name = name; G.Allies.log(g, "renamed", `Renamed (was ${from}).`, { from }); St.save(); return null;
+  };
+  // equip slots: a Grunt has config.grunts.slots (weapon + one gear slot), a Veteran DATA.allies.veteran.slots
+  St.gruntSlots = (g) => (g && g.tplKey === "veteran" ? DATA.allies.veteran.slots : DATA.config.grunts.slots);
+  St.emptyGear = (g) => { const o = {}; for (const k in St.gruntSlots(g)) o[k] = null; return o; };
+  St.gruntSlotOk = (slot, item, g) => (St.gruntSlots(g)[slot] || []).includes(G.Items.base(item.base).slot);
+  St.gruntPack = (g) => St.gruntItems(g).find((it) => G.Items.base(it.base).slot === "backpack") || null;
+  // equip a stash item on a Grunt / Veteran (slot from St.gruntSlots), or itemUid null to unequip (back to the stash). Outpost only.
+  St.equipGrunt = function (uid, slot, itemUid) {
+    const s = G.state, g = St.grunt(uid); if (!g) return "No such Grunt.";
+    if (s.run) return "Equip Grunts at the outpost, not during a run.";
+    if (!St.gruntSlots(g)[slot]) return "Unknown slot.";
+    let it = null;
+    if (itemUid) {
+      it = s.stash.items.find((i) => i.uid === itemUid); if (!it) return "That item isn't in the stash.";
+      if (G.Items.isQuest(it) || !St.gruntSlotOk(slot, it, g)) return `${G.Allies.rankName(g)}s can't use that in the ${slot} slot.`;
+      s.stash.items.splice(s.stash.items.indexOf(it), 1);
+      for (const k in s.loadout.gear) if (s.loadout.gear[k] === itemUid) delete s.loadout.gear[k];
+    }
+    if (g.gear[slot]) s.stash.items.push(g.gear[slot]);
+    g.gear[slot] = it; St.save(); return null;
+  };
+  St.gruntItems = (g) => Object.values((g && g.gear) || {}).filter(Boolean);
+  // template: Grunt, Veteran (the Grunt template with DATA.allies.veteran over it) or the debug core ally
+  St.gruntTpl = (g) => (g.tplKey === "core" ? DATA.bodies.coreAllyTest : g.tplKey === "veteran" ? Object.assign({}, DATA.bodies.grunt, DATA.allies.veteran) : DATA.bodies.grunt);
 
+  St.defaultSettings = () => Object.assign({}, DATA.audio.defaults, DATA.config.settings);
   St.newGame = function (seed) {
     seed = seed == null ? U.randomSeed() : seed >>> 0;
     const rng = U.makeRng(seed);
@@ -59,16 +113,17 @@
     for (const k of MIND_SKILLS()) mind.skills[k] = S.make(DATA.startingMind[k] || 1);
     const s = {
       version: DATA.config.version, seed, created: Date.now(),
-      maps: null, world: { hollow_creek: "pending" }, everSeen: {}, locFlags: {},
+      maps: null, world: { hollow_creek: "pending", sites: {} }, everSeen: {}, locFlags: {},
       zonesUnlocked: {}, passages: {}, quests: null, buildings: null, journal: [],
       mind, lifetimeXp: 0,
       bodies: [St.makeBasicBody()],
-      grunts: [], stash: { items: [], res: U.clone(DATA.items.startingStash.resources) },
+      grunts: [], fallenGrunts: [], perks: {}, stash: { items: [], res: U.clone(DATA.items.startingStash.resources) },
       loadout: { bodyId: "body_basic", gear: {}, pouch: [], grunts: [] },
       tutorialDone: false, humanOffer: null, runCount: 0, extractions: 0, deaths: 0, lore: [],
-      run: null, lastResult: null
+      run: null, lastResult: null, settings: St.defaultSettings()
     };
-    for (let i = 0; i < DATA.config.deploy.startingGrunts; i++) s.grunts.push(St.makeGrunt(rng));
+    { const prev = G.state; G.state = s; for (let i = 0; i < DATA.config.deploy.startingGrunts; i++) s.grunts.push(St.makeGrunt(rng)); G.state = prev; }
+    for (const k in DATA.resources) if (!DATA.resources[k].hidden && s.stash.res[k] == null) s.stash.res[k] = 0;   // every stockpile resource shows (Slice 3: 11)
     const sg = DATA.items.startingGear;
     for (const slot in sg) { const it = G.Items.make(sg[slot].base, sg[slot].rarity, sg[slot].ilvl, rng); s.stash.items.push(it); s.loadout.gear[slot] = it.uid; }
     for (const it of DATA.items.startingStash.items) s.stash.items.push(G.Items.make(it.base, it.rarity, it.ilvl, rng));
@@ -81,7 +136,7 @@
     return s;
   };
 
-  St.deployScore = () => (G.state.tutorialDone ? DATA.config.deploy.earlyScore : DATA.config.deploy.tutorialScore);
+  St.deployScore = () => (G.state.tutorialDone ? DATA.config.deploy.earlyScore : DATA.config.deploy.tutorialScore) + (G.Perks ? G.Perks.deployScore() : 0);   // + Squad Leader
   St.body = (uid) => G.state.bodies.find((b) => b.uid === uid);
   St.bodyCost = (b) => DATA.bodies.families[b.family].deployCost;
   St.bodyReady = (b) => !b.restoreUntil || b.restoreUntil <= G.now();
@@ -104,7 +159,7 @@
     const def = DATA.skills[skillId];
     const s = G.state, E = G.XP ? G.XP.emit : () => {};
     const charBefore = S.charLevel(s);
-    const charAfter = () => { const c = S.charLevel(s); if (c > charBefore) E({ levelUp: `Character ${c}!` }); };
+    const charAfter = () => { const c = S.charLevel(s); if (c > charBefore) { E({ levelUp: `Character ${c}!` }); if (G.Perks) G.Perks.checkReady(charBefore); } };
     if (def.kind === "mind") {
       if (ref.kind !== "body") return; // only the consciousness has mind skills
       const got = amount * DATA.config.leveling.mindXpSourceMult;
@@ -170,7 +225,8 @@
       if (!o || !o.s) throw new Error("no state");
       let st = o.s;
       if (st.version === 1) { st = St.migrate(st); St.loadNotice = "Your Slice 1 save was carried over to Slice 2" + (St.migrateNotes.length ? ": " + St.migrateNotes.join(" ") : "."); }
-      else if (st.version !== DATA.config.version) throw new Error("unknown save version " + st.version);
+      if (st.version === 2) { st = St.migrate3(st); St.loadNotice = (St.loadNotice ? St.loadNotice + " " : "") + "Your save was carried over to Slice 3: locations now remember what you searched (every place starts fully stocked)."; }
+      if (st.version !== DATA.config.version) throw new Error("unknown save version " + st.version);
       St.repair(st);
       G.state = st; G.clockOffset = o.clockOffset || 0;
       return true;
@@ -203,22 +259,48 @@
     return s;
   };
 
+  // Slice 2 (version 2) -> Slice 3 (version 3): sites move from the run into the world state. Every place starts fresh
+  // (100% stocked); an expedition in progress keeps the sites it has built this run.
+  St.migrate3 = function (s) {
+    s.world = s.world || { hollow_creek: "pending" };
+    s.world.sites = {};
+    if (s.run && s.run.sites) { for (const nid in s.run.sites) { const site = s.run.sites[nid]; site.enteredRun = s.runCount; site.pickedOver = false; site.restock = 0; s.world.sites[nid] = site; } delete s.run.sites; }
+    s.version = 3;
+    return s;
+  };
+
   // Fill any Slice 2 fields a save is missing (also used after migration). Never throws on partial saves.
   St.repair = function (s) {
     if (!s.maps || !s.maps.a) s.maps = G.Zones.buildAll((s.seed >>> 0) || 1);
     if (!s.maps.b) s.maps.b = G.Zones.build("b");
-    s.world = s.world || { hollow_creek: "pending" };
+    s.world = s.world || { hollow_creek: "pending" }; s.world.sites = s.world.sites || {};
     s.everSeen = s.everSeen || {}; s.locFlags = s.locFlags || {};
     s.zonesUnlocked = s.zonesUnlocked || {};
     for (const z of DATA.zones.order) if (DATA.zones.list[z].startUnlocked) s.zonesUnlocked[z] = true;
-    s.passages = s.passages || {};
+    s.passages = s.passages || {}; s.debuffs = s.debuffs || {};   // Slice 3 §4b debuffs (Marked by the Orbitals: runs left)
     s.quests = Object.assign(G.Quests.freshState(), s.quests || {});
     s.buildings = Object.assign(G.Outpost.freshState(), s.buildings || {});
     s.journal = s.journal || [];
     s.stash = s.stash || { items: [], res: {} }; s.stash.items = s.stash.items || []; s.stash.res = s.stash.res || {};
     for (const k in DATA.resources) if (s.stash.res[k] == null && !DATA.resources[k].hidden) s.stash.res[k] = 0;
+    s.settings = Object.assign(St.defaultSettings(), s.settings || {});
     s.lore = s.lore || []; s.bodies = s.bodies && s.bodies.length ? s.bodies : [St.makeBasicBody()];
-    s.grunts = s.grunts || []; s.loadout = s.loadout || { bodyId: "body_basic", gear: {}, pouch: [], grunts: [] };
+    s.grunts = s.grunts || []; s.fallenGrunts = s.fallenGrunts || []; s.perks = s.perks || {};   // Slice 3 §3: picks are derived from the level, so old saves get theirs
+    // older saves: Grunts named "Grunt #NN" (or unnamed) get a random name; missing record fields are filled in
+    { const rng = U.makeRng(((s.seed >>> 0) || 1) + 7331), prev = G.state; G.state = s;
+      for (const g of s.grunts.concat(s.fallenGrunts)) { St.repairGrunt(g, 0); if (g.rank !== "core" && (!g.name || /^Grunt( #\d+)?$/.test(g.name))) g.name = St.pickGruntName(rng); }
+      // Slice 3 §1: older Grunts get a surname (a default single first name only), 2 traits (no negative) and a
+      // newest-first history; a run in progress points its squad back at the roster records (JSON breaks the link)
+      const sur = DATA.allies.surnames;
+      for (const g of s.grunts.concat(s.fallenGrunts)) {
+        if (g.s3) continue; g.s3 = true;
+        if (g.tplKey === "grunt" && DATA.bodies.grunt.names.includes(g.name)) g.name = g.name + " " + rng.pick(sur);
+        if (!g.traits.length && g.tplKey !== "core") g.traits = G.Allies.rollTraits(rng, DATA.allies.recruitTraits, { noNegative: true });
+        g.history = g.history.slice().reverse().map((h) => (h.text ? h : Object.assign({}, h, { text: G.Allies.lineText(h) })));
+      }
+      if (s.run && s.run.squad) for (const m of s.run.squad) { const g = s.grunts.find((x) => x.uid === m.g.uid); if (g) m.g = g; }
+      G.state = prev; }
+    s.loadout = s.loadout || { bodyId: "body_basic", gear: {}, pouch: [], grunts: [] };
     s.loadout.gear = s.loadout.gear || {}; s.loadout.pouch = s.loadout.pouch || []; s.loadout.grunts = s.loadout.grunts || [];
     return s;
   };
