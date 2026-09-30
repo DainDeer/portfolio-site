@@ -205,7 +205,7 @@ DATA.config = {
     // Slice 3 §11 (geared lever): bigger squads meet bigger groups. Budget x (1 + perExtra x (squad size - base)), squad
     // size = body + Grunts deployed this run (fixed at the start; allies lost mid-run don't shrink it). Off in the tutorial,
     // only in `zones` (Zone B: in Zone A it made the econ bot die and re-recruit, Vault L2 median run 7 -> 9).
-    squadScale: { base: 3, perExtra: 0.55, zones: ["b"] }   // 0.55: geared deaths 8% -> ~22-25% (target 20-25%)
+    squadScale: { base: 3, perExtra: 0.55, maxMult: 2.0, zones: ["b"] }   // follow-up (Vixie): never more than x2.0 in total   // 0.55: geared deaths 8% -> ~22-25% (target 20-25%)
   },
 
   // ======================= TUTORIAL OVERRIDES =======================

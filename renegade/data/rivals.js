@@ -12,6 +12,7 @@ DATA.rivals = {
   version: 1,
   enabled: true,
   // encounter: entering a new location (not the insertion point, an extraction or Hollow Creek), at most 1 per run, never in the tutorial
+  zones: ["b"],        // follow-up (Vixie): no rivals in Zone A at all (they slowed the early town too much)
   minExtractions: 3,   // natural rivals (and Radio-marked ones) only once you've extracted this many times; debug / sim forcing ignores it
   encounterPct: 7,   // Slice 3 §11 tuning (milestone 5): 2.5 -> 7, target "about 1 per 7 runs" (5 gave 1 per 9.8 Zone B runs)
   echoes: { keep: 10, fromRun: 6, sharePct: 40, prefix: "Echo of " },

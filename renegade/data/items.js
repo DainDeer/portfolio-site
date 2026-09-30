@@ -9,8 +9,8 @@ DATA.items = {
     blue:   { name: "Tuned",    color: "#4a8cff", affixes: 2, tiers: ["basic", "advanced"],  weight: 14,  enabled: true },
     yellow: { name: "Advanced", color: "#ffd84a", affixes: 3, tiers: ["basic", "advanced"],  weight: 4.5, enabled: true },
     // Slice 3 §6: Purple sits between Yellow and Orange (open question 2). minIlvl: below it the roll drops a tier.
-    purple: { name: "Masterwork", color: "#b060ff", affixes: 4, tiers: ["basic", "advanced", "complex"], weight: 1.2, enabled: true, minIlvl: 3, rare: true },
-    orange: { name: "Prototype",  color: "#ff8a30", affixes: 4, tiers: ["basic", "advanced", "complex"], weight: 0.3, enabled: true, minIlvl: 6, rare: true }
+    purple: { name: "Masterwork", color: "#b060ff", affixes: 4, tiers: ["basic", "advanced", "complex"], weight: 10, enabled: true, minIlvl: 3, rare: true },   // follow-up (Vixie): ~1 per 15 runs (was 1.2)
+    orange: { name: "Prototype",  color: "#ff8a30", affixes: 4, tiers: ["basic", "advanced", "complex"], weight: 3.5, enabled: true, minIlvl: 6, rare: true }   // ~1 per 120 runs (was 0.3)
   },
   // First tier listed = basic slot, rest advanced (blue: 1 basic + 1 advanced, yellow: 1 basic + 2 advanced) — ASSUMPTION
   rarityAffixTiers: { white: ["basic"], blue: ["basic", "advanced"], yellow: ["basic", "advanced", "advanced"],

@@ -258,7 +258,7 @@
     }
     const locMult = (G.Map.loc(node) || {}).enemyBudgetMult ?? 1;   // per-location, always (not a tutorial value)
     const sq = E.squadScale, extra = sq && !T && (!sq.zones || sq.zones.includes(r.zone || "a")) ? 1 + (r.squad || []).length - (sq.base ?? 3) : 0;
-    const squadMult = extra > 0 ? 1 + (sq.perExtra || 0) * extra : 1;   // Slice 3 §11: bigger squads, bigger fights
+    const squadMult = extra > 0 ? Math.min(sq.maxMult ?? Infinity, 1 + (sq.perExtra || 0) * extra) : 1;   // capped (follow-up: max x2.0)   // Slice 3 §11: bigger squads, bigger fights
     const zoneMult = (DATA.zones.list[r.zone || "a"] || {}).enemyBudgetMult ?? 1;   // Slice 3 §11: Zone B enemy budgets
     return ((E.budgetByTier[node.tier] || 3) + r.moves * E.budgetPerDepth) * X.heatTier().budgetMult * (mult || 1) * tut * locMult * squadMult * zoneMult;
   };
@@ -526,6 +526,7 @@
       else { s.died = { where: here.id, cause: "left_behind" }; X.log(`${G.Allies.name(s.g)} is left behind at ${label}.`, "bad"); }
     }
     G.Allies.afterBattle(step, b, r);
+    if (G.Hunters && G.Hunters.captainMark) G.Hunters.captainMark(b);   // a Captain you killed before breaking away still marks you
     const deadEnemies = b.units.filter((u) => u.side === 1 && u.state === "dead"); r.stats.kills += deadEnemies.length;
     for (const qid of G.Quests.onKills(r.zone, deadEnemies.map((u) => ({ eid: u.eid, family: u.family })))) { const qh = G.Quests.objectiveHeat(qid); if (qh) X.addHeat(qh, "quest"); }
     // the fight stays here: the enemies still standing wait at this location (this run). A Hunter pack keeps its own state.

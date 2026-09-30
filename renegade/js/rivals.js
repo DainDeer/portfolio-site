@@ -34,6 +34,7 @@
     return rng.pick(pool.filter((x) => dist(x) === best));
   };
   // eligible map nodes: locations, not the insertion point, an extraction or Hollow Creek
+  RV.zoneOk = (z) => !D().zones || D().zones.includes(z);   // follow-up (Vixie): rivals only in these zones (Zone B)
   RV.eligibleNode = function (map, n) {
     const loc = G.Map.loc(n); if (!loc) return false;
     return n.id !== map.insertion && !loc.extraction && n.loc !== "hollow_creek";
@@ -41,7 +42,7 @@
   // before each run: the next run's rival, pre-rolled for one unlocked zone (the Radio can read it), with a location
   RV.rollNext = function (rng) {
     rng = rng || G.rng; const s = G.state, st = RV.st();
-    const zones = Object.keys(DATA.zones.list).filter((z) => G.Zones.unlocked(z) && s.maps[z] && (RV.pool(z, "seeded").length || RV.pool(z, "own").length));
+    const zones = Object.keys(DATA.zones.list).filter((z) => RV.zoneOk(z) && G.Zones.unlocked(z) && s.maps[z] && (RV.pool(z, "seeded").length || RV.pool(z, "own").length));
     if (!zones.length) { st.next = null; return null; }
     const zone = rng.pick(zones), snap = RV.pick(zone, rng); if (!snap) { st.next = null; return null; }
     const map = s.maps[zone], nodes = Object.values(map.nodes).filter((n) => RV.eligibleNode(map, n));
@@ -72,6 +73,7 @@
   RV.onArrive = function (node) {
     const r = run(), map = G.Zones.map(), st = RV.st();
     if (!D().enabled || !r || r.rivalMet || X().tutorialOn() || !RV.eligibleNode(map, node)) return false;
+    if (!RV.zoneOk(r.zone) && !st.force) return false;   // no rivals outside rivals.zones (only the debug force ignores it)
     const nx = RV.next(), marked = RV.markOn() && nx && nx.zone === r.zone && nx.nid === node.id;
     let snap = null, why;
     if (st.force) { snap = st.force === true ? null : RV.byId(st.force); why = "forced (debug)"; }

@@ -112,10 +112,14 @@
   H.afterBattle = function (step, b) {
     const r = run(); if (!r) return;
     if (step.hunters || step.family === "hunters") { const h = H.state(r); h.pack = null; h.cooldown = D().cooldownMoves; }
-    if (b.captainKilled && D().debuff.enabled) {
-      const d = D().debuff; G.state.debuffs = G.state.debuffs || {}; G.state.debuffs[d.id] = d.runs;
-      X().log(`${d.name}: your next ${d.runs} runs start at Heat ${d.startHeat}.`, "bad");
-    }
+    H.captainMark(b);
+  };
+  // killing a Captain sets "Marked by the Orbitals", won or not (follow-up fix: also when the squad breaks away afterwards)
+  H.captainMark = function (b) {
+    if (!b.captainKilled || !D().debuff.enabled) return false;
+    const d = D().debuff; G.state.debuffs = G.state.debuffs || {}; G.state.debuffs[d.id] = d.runs;
+    X().log(`${d.name}: your next ${d.runs} runs start at Heat ${d.startHeat}.`, "bad");
+    return true;
   };
   // X.start: "Marked by the Orbitals" makes the run start at Heat 25 and uses one charge
   H.onRunStart = function (r) {
