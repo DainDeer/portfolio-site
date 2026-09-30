@@ -29,7 +29,7 @@ DATA.rivals = {
   intelMult: 2,
   // rival units' damage / max HP multipliers (1 = the snapshot as recorded; their better gear stays: it's the loot draw).
   // Design call (milestone 5): 0.45 / 0.65 (sweep: 0.5 / 0.7 -> 35.0% of matched-rival fights lost, 0.35 / 0.6 -> 22.6%)
-  scale: { dmg: 0.75, hp: 0.95 },   // milestone 5: 0.45 / 0.65 -> 0.75 / 0.95 (Break away + battle Med kits dropped matched-rival losses to 13%; target 25-35%)
+  scale: { dmg: 0.65, hp: 0.85 },   // follow-up (Vixie): 0.75 / 0.95 -> 0.65 / 0.85, not re-swept; milestone 5: 0.45 / 0.65 -> 0.75 / 0.95 (Break away + battle Med kits dropped matched-rival losses to 13%; target 25-35%)
   seeded: [
     { version: 1, id: "r_sable9", handle: "SABLE-9", source: "seeded", zone: "a", tier: 1, heat: 22, deployScore: 5, createdRun: 0,
       units: [

@@ -1,0 +1,159 @@
+/* Phones (touch). Everything here sits behind (pointer: coarse) media queries, so desktop (mouse) layout is untouched.
+   "Phone" = a coarse pointer and a small screen: narrow (portrait, <= 940 px wide) or short (landscape, <= 500 px tall).
+   Landscape is the main target; portrait only needs to be usable. js/touch.js has the tap behaviour (tooltips). */
+
+/* the on-screen battle buttons (js/battleview.js) exist on every screen size but only show on phones */
+.touch-ctl { display: none; }
+
+/* ---------- any touch device: no pinch / double-tap zoom, no long-press callouts on game art ---------- */
+@media (pointer: coarse) {
+  html, body { touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; overscroll-behavior: none; }
+  body { -webkit-tap-highlight-color: transparent; }
+  canvas, img, .map-node, .site-obj, .town-hs, .abl-btn, button { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+  .battle-canvas { touch-action: none; }   /* placement drag + aim taps go to the game, not the page */
+}
+
+/* ---------- phones: portrait and landscape ---------- */
+@media (pointer: coarse) and (max-width: 940px), (pointer: coarse) and (max-height: 500px) {
+  #app { height: 100vh; height: 100dvh; }
+
+  /* compact top bar: one row that scrolls sideways; the debug hint (keyboard only) and the subtitle go */
+  #topbar { flex-wrap: nowrap; overflow-x: auto; gap: 10px; padding: 0 8px; padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); white-space: nowrap; scrollbar-width: none; font-size: 12px; }
+  #topbar::-webkit-scrollbar { display: none; }
+  #topbar > * { flex: none; }
+  #topbar .brand small, #topbar > .hint { display: none; }
+  #topbar .res-i { margin-right: 5px; }
+  #topbar .settings-btn { margin-left: auto; position: sticky; right: 0; }   /* stays reachable when the bar scrolls */
+  #screen { padding: 6px; padding-left: max(6px, env(safe-area-inset-left)); padding-right: max(6px, env(safe-area-inset-right)); padding-bottom: max(6px, env(safe-area-inset-bottom)); -webkit-overflow-scrolling: touch; }
+
+  /* tap targets: 44 px minimum */
+  button, select { min-height: 44px; min-width: 44px; }
+  button { padding: 6px 12px; }
+  select, input[type=number], input[type=text] { min-height: 44px; font-size: 16px; }
+  input[type=checkbox], input[type=radio] { width: 22px; height: 22px; margin: 0 8px 0 0; vertical-align: middle; }
+  input[type=range] { min-height: 44px; }
+  .grunt-row, .dbg-check { display: flex; align-items: center; min-height: 44px; }
+  label:has(> input[type=checkbox]) { display: inline-flex; align-items: center; min-height: 44px; }
+  .item-acts button, .tp-q button, .rr-row button { padding: 6px 10px; font-size: 13px; }
+  .tp-close { min-width: 48px; font-size: 20px; }
+  .card, .perk-card, .cand-card { min-height: 44px; }
+  /* small markers keep their size and get an invisible 44 px hit area */
+  .trait-chip, .perk-chip, .inj-chip { position: relative; }   /* (.abl-auto, .map-hunter, .map-rival, .site-obj are already absolute) */
+  .town-hs::after, .abl-auto::after, .map-hunter::after, .map-rival::after, .site-obj::after, .trait-chip::after, .inj-chip::after, .perk-chip::after { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%); }
+  .trait-chip, .inj-chip, .perk-chip { display: inline-block; margin: 2px 3px; }
+
+  /* nav tabs: one row that scrolls sideways */
+  .tabs { display: flex; overflow-x: auto; scrollbar-width: none; gap: 2px; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs button { flex: none; }
+
+  /* town: the stage fits the screen; outpost panels become full-screen sheets */
+  .town-wrap { width: min(100%, calc((100dvh - 118px) * 1000 / 600)); margin: 6px auto 0; }
+  .town-panel { position: fixed; inset: 0; border-radius: 0; border: 0; z-index: 40; background: #1b1a14; padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+  .tp-head { padding: 2px 8px; }
+  .tp-head h2 { font-size: 16px; }
+  .panel-body { padding: 8px; -webkit-overflow-scrolling: touch; }
+  .panel { padding: 8px; }
+  .cards { gap: 6px; }
+  .zone-card { width: min(300px, 100%); }
+  .gear-row .slot { width: 80px; }
+  .gear-row select, .grunt-slot select { max-width: calc(100% - 90px); }
+  .skill-grid { grid-template-columns: repeat(auto-fill, minmax(min(290px, 100%), 1fr)); }
+  .char-col { flex-basis: 300px; }
+  .settings .set-row { flex-wrap: wrap; }
+  .settings .set-row input[type=range] { width: min(220px, 100%); }
+
+  /* modals and the tooltip stay inside the screen */
+  .modal, .modal.wide { max-width: calc(100vw - 12px); max-height: calc(100dvh - 12px); padding: 10px 12px; }
+  .modal h2 { font-size: 18px; margin: 2px 0 6px; }
+  #tooltip { max-width: min(360px, calc(100vw - 16px)); max-height: calc(100dvh - 16px); overflow: hidden; font-size: 11px; line-height: 1.3; }
+  #tooltip .scout-read { margin: 3px 0; padding: 2px 5px; }
+  #toast { max-width: calc(100vw - 24px); bottom: max(16px, env(safe-area-inset-bottom)); }
+  #debug { width: min(380px, 100vw); }
+
+  /* expedition (zone map / location view + side panel) */
+  .exp-layout { gap: 6px; }
+  .exp-map { min-width: 0; }
+  .exp-head { padding: 0 2px 4px; flex-wrap: wrap; }
+  .exp-head button { padding: 4px 10px; }
+  /* the zone map keeps a readable size and scrolls inside its box (js/touch.js centres it on where you are) */
+  .exp-map:has(> .map-wrap) { overflow: auto; overscroll-behavior: contain; }
+  .exp-map > .map-wrap { min-height: 600px; min-width: 760px; }
+  .map-node { width: 112px; }
+  .mn-name { font-size: 11px; } .mn-odds { font-size: 10px; } .mn-tags, .mn-loot { font-size: 9px; }
+  .exp-side { -webkit-overflow-scrolling: touch; }
+  .exp-side .panel { margin-bottom: 6px; }
+  .sq-row .sq-name { width: auto; flex: 1 1 60px; min-width: 0; } .sq-row .bar { flex: 0 1 90px; min-width: 50px; }
+  .sq-row button { font-size: 0; padding: 0; } .sq-row button .btn-icon { margin: 0 !important; }   /* icon-only Heal (44 px) */
+  .item-row { flex-wrap: wrap; }
+  .site-progress { width: 150px; height: 22px; } .site-progress span { line-height: 20px; }
+  .site-progress .sp-cancel { top: -12px; padding: 4px 8px; }
+
+  /* battle: bigger buttons, the keyboard badges go (1 / 2 / B), the on-screen Pause / Break away show */
+  .battle-hud { flex-wrap: wrap; gap: 6px; padding: 0 0 4px; }
+  .bh-title { font-size: 12px; } .bh-timer { min-width: 56px; }
+  .bh-speeds button { min-width: 44px; padding: 4px 8px; }
+  .bh-pause, .abl-btn.esc-btn { display: none; }   /* replaced by .touch-ctl */
+  .abl-key { display: none; }
+  .ability-bar { flex-wrap: wrap; gap: 6px; padding: 4px 0; }
+  .abl-btn { min-height: 48px; min-width: 0; flex: 1 1 140px; padding-right: 52px; }
+  .abl-auto { width: 32px; height: 32px; right: 6px; font-size: 12px; }
+  .combat-feed { flex: 1 1 100%; min-width: 0; max-height: 72px; }
+  .tp-panel { max-width: none; }
+  .tp-panel .tp-head { font-size: 11px; display: block; padding: 0; border: 0; }
+  .touch-ctl { display: flex; gap: 8px; }
+  .tc-btn { flex: 1 1 0; min-height: 52px; margin: 0; font-size: 15px; font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.2; }
+  .tc-btn small { font-weight: normal; font-size: 11px; color: #9fb8c8; }
+  .tc-pause { background: #23384a; border-color: #4c7090; } .tc-pause.on { background: #2e5a7a; border-color: #6ab0e0; }
+  .tc-esc { background: #1c2a36; border-color: #4a6a80; color: #bfe4ff; }
+  .tc-esc.ready { border-color: #c8b060; box-shadow: 0 0 6px #c8b06066; }
+  .tc-esc.queued { outline: 2px solid #ffe080; }
+  .tc-esc.disabled { opacity: .45; }
+  .tc-cancel { background: #4a1c1c; border-color: #d06050; color: #ffd8d0; }   /* shown only while aiming (BV.updateTouch) */
+}
+
+/* ---------- landscape phones (main target) ---------- */
+@media (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
+  /* town: nav tabs become a column on the left, the town fills the height */
+  #screen:has(> .town-wrap) { display: flex; gap: 8px; align-items: flex-start; }
+  #screen:has(> .town-wrap) > .tabs { flex-direction: column; overflow-x: hidden; overflow-y: auto; max-height: 100%; flex: none; width: 118px; }
+  #screen:has(> .town-wrap) > .tabs button { width: 100%; text-align: left; margin: 0 0 2px; }
+  .town-wrap { width: min(100%, calc((100dvh - 60px) * 1000 / 600)); margin: 0 auto; }
+
+  /* expedition: map / location view on the left at full height, side panel scrolls on the right */
+  #screen:has(> .exp-layout) { overflow: hidden; }
+  .exp-layout { height: 100%; }
+  .exp-map { flex: none; width: min(calc(100% - 250px), calc((100dvh - 60px) * 1000 / 600)); }
+  .exp-map:has(> .map-wrap) { width: calc(100% - 256px); }
+  .exp-side { flex: 1 1 auto; width: auto; min-width: 230px; }
+
+  /* battle: the canvas on the left at full height (the top bar goes), controls on the right */
+  #app:has(.battle-wrap) #topbar { display: none; }
+  #screen:has(> .battle-wrap) { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-auto-rows: min-content; column-gap: 8px; align-content: start; }
+  #screen:has(> .battle-wrap) > .battle-wrap { grid-column: 1; grid-row: 1 / span 6; width: auto; }
+  #screen:has(> .battle-wrap) > :not(.battle-wrap) { grid-column: 2; }
+  .battle-canvas { width: auto; height: calc(100dvh - 70px); max-width: calc(100vw - 280px); max-height: calc((100vw - 280px) * 24 / 40); }
+  .battle-wrap .battle-hud { max-width: calc((100dvh - 70px) * 40 / 24); }
+  #screen > .touch-ctl { grid-row: 1; flex-wrap: wrap; }
+  #screen > .touch-ctl .tc-cancel { flex-basis: 100%; order: -1; }   /* its own row, on top, while aiming */
+  .ability-bar { padding-top: 0; }
+  .abl-btn { flex-basis: 100%; }
+  .tp-panel { max-height: 45dvh; overflow-y: auto; }
+}
+
+/* ---------- portrait phones: usable, stacked ---------- */
+@media (pointer: coarse) and (max-width: 940px) and (orientation: portrait) {
+  #topbar { flex-wrap: wrap; white-space: normal; overflow: visible; row-gap: 0; padding-top: 2px; padding-bottom: 2px; }
+  #topbar .settings-btn { position: static; }
+  #topbar > * { flex: 0 1 auto; min-width: 0; }
+  .tabs { flex-wrap: wrap; overflow: visible; }
+  .exp-layout { flex-direction: column; height: auto; }
+  .exp-map { flex: none; }
+  .exp-map:has(> .map-wrap) { height: min(62dvh, 520px); }
+  .exp-side { width: 100%; overflow: visible; }
+  .battle-canvas { width: 100%; }
+  /* Pause / Break away stay at the bottom of the screen, under the thumbs */
+  #screen:has(> .touch-ctl) { padding-bottom: 76px; }
+  #screen > .touch-ctl { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 8px; padding-bottom: max(8px, env(safe-area-inset-bottom)); background: #0c0c09f0; border-top: 1px solid #333; }
+  #screen > .touch-ctl:empty { display: none; }
+}

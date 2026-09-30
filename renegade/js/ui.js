@@ -3,6 +3,7 @@
   const G = root.G, U = G.Util, SP = G.Sprites;
   const UI = G.UI = { panel: null, zone: "a", battle: null, battleSpeed: 1, modalLock: false, search: null };
   const $ = (sel) => document.querySelector(sel);
+  const TL = () => !!(G.Touch && G.Touch.layout());   // phone layout (js/touch.js): "tap" wording; desktop text unchanged
   const healIco = () => DATA.sprites.healIcon ? SP.icon(DATA.sprites.healIcon, 16, "btn-icon") : null;
 
   // ---------- helpers ----------
@@ -19,8 +20,8 @@
   UI.h = h;
   UI.fail = function (msg) { G.Sfx.play("sfx_ui_error"); UI.toast(msg); };   // a refused action: toast + error sound
   UI.toast = function (msg) { const t = $("#toast"); t.textContent = msg; t.onclick = null; t.classList.remove("clickable"); t.classList.add("show"); clearTimeout(UI._tt); UI._tt = setTimeout(() => t.classList.remove("show"), 2600); };
-  UI.showTip = function (html, x, y) { const t = $("#tooltip"); t.innerHTML = html; t.classList.remove("hidden"); const w = t.offsetWidth, hh = t.offsetHeight; t.style.left = Math.min(window.innerWidth - w - 8, x + 14) + "px"; t.style.top = Math.min(window.innerHeight - hh - 8, y + 14) + "px"; };
-  UI.hideTip = function () { $("#tooltip").classList.add("hidden"); };
+  UI.showTip = function (html, x, y) { UI.tipAt = performance.now(); const t = $("#tooltip"); t.innerHTML = html; t.classList.remove("hidden"); const w = t.offsetWidth, hh = t.offsetHeight; t.style.left = Math.min(window.innerWidth - w - 8, x + 14) + "px"; t.style.top = Math.min(window.innerHeight - hh - 8, y + 14) + "px"; };
+  UI.hideTip = function () { UI.tipArmed = null; $("#tooltip").classList.add("hidden"); };   // tipAt / tipArmed: tap-to-show on touch (js/touch.js)
   const tipOn = UI.tipOn = (el, fn) => { el.addEventListener("mousemove", (e) => UI.showTip(typeof fn === "function" ? fn() : fn, e.clientX, e.clientY)); el.addEventListener("mouseleave", UI.hideTip); return el; };
   UI.modal = function (content, cls) { const root = $("#modal-root"); root.innerHTML = ""; const m = h("div", { class: "modal " + (cls || "") }, content); root.appendChild(h("div", { class: "modal-back" }, m)); return m; };
   UI.closeModal = function () { $("#modal-root").innerHTML = ""; UI.hideTip(); };
@@ -384,7 +385,7 @@
 
   UI.tabVault = function (el) {
     const s = G.state, O = G.Outpost, over = O.stashOver();
-    const p = h("section", { class: "panel" }, h("h3", null, `Stash — ${O.stashCount()} / ${O.stashCap()} gear (quest items don't count; hover for stats)`));
+    const p = h("section", { class: "panel" }, h("h3", null, `Stash — ${O.stashCount()} / ${O.stashCap()} gear (quest items don't count; ${TL() ? "tap" : "hover"} for stats)`));
     if (over > 0) p.appendChild(h("p", { class: "warn" }, `Over the limit by ${over}. Discard gear before your next deploy.`));
     const sorted = s.stash.items.slice().sort((a, b) => (G.Items.isQuest(b) - G.Items.isQuest(a)) || G.Items.base(a.base).slot.localeCompare(G.Items.base(b.base).slot) || b.ilvl - a.ilvl);
     for (const it of sorted) p.appendChild(UI.itemEl(it, G.Items.isQuest(it) ? [] : [{ label: "Discard", fn: () => { if (!confirm(`Discard ${G.Items.name(it)}? It's gone for good.`)) return; s.stash.items = s.stash.items.filter((x) => x !== it); G.State.save(); UI.render(); } }], G.Items.isQuest(it) ? "quest item" : G.Items.base(it.base).slot));
@@ -435,7 +436,7 @@
   // Slice 3 §3: "Perk pick ready" toast; clicking it opens the Character screen (at the outpost; on a run it just informs)
   UI.perkReadyToast = function () {
     const t = $("#toast"), run = !!G.state.run;
-    UI.toast(run ? "Perk pick ready (spend it at the outpost)" : "Perk pick ready: click to open the Character screen");
+    UI.toast(run ? "Perk pick ready (spend it at the outpost)" : `Perk pick ready: ${TL() ? "tap" : "click"} to open the Character screen`);
     t.onclick = run ? null : () => { t.onclick = null; t.classList.remove("show"); UI.openPanel("character"); };
     t.classList.toggle("clickable", !run);
   };
@@ -616,7 +617,7 @@
       const ex = X.extractionDef(node), open = X.extractionOpen(node);
       let label = ex.type === "free" ? "Extract (free)" : ex.type === "check" ? (() => { const c = G.Checks.compute(ex.skill, ex.dc, X.members(), X.gearItems()); return `Extract: ${DATA.skills[ex.skill].name} DC ${ex.dc} — ${Math.round(c.chance)}%`; })() : `Extract: hold out ${ex.surviveSec} s (defense battle)`;
       side.appendChild(h("section", { class: "panel extract" }, h("h3", null, "Extraction point: " + loc.name), open ? h("button", { class: "primary big", "data-act": "extract", disabled: !X.canExtract(), onclick: () => { const res = X.extract(); UI.toast(res.text); UI.render(); } }, label) : h("div", { class: "warn" }, "Closed at this Heat level.")));
-    } else side.appendChild(h("section", { class: "panel" }, h("small", null, inSite ? "Click an object to search it. The tooltip shows the time and the disturbance chance. Leave to the map to move on." : `Click a highlighted neighbouring location to move (+${DATA.config.heat.perMove} Heat). Click where you are to go back inside. The outpost is hidden: extraction is the only way home.`)));
+    } else side.appendChild(h("section", { class: "panel" }, h("small", null, inSite ? (TL() ? "Tap" : "Click") + " an object to search it. The tooltip shows the time and the disturbance chance. Leave to the map to move on." : `${TL() ? "Tap" : "Click"} a highlighted neighbouring location to move (+${DATA.config.heat.perMove} Heat). ${TL() ? "Tap" : "Click"} where you are to go back inside. The outpost is hidden: extraction is the only way home.`)));
     // log
     const lg = h("section", { class: "panel log" }, h("h3", null, "Log"));
     for (const line of r.log.slice(-14).reverse()) lg.appendChild(h("div", null, line));

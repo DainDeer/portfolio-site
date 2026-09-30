@@ -3,6 +3,7 @@
   const G = root.G, U = G.Util, SP = G.Sprites;
   const BV = G.BattleView = {};
   const C = () => DATA.config.battle;
+  const TL = () => !!(G.Touch && G.Touch.layout());   // phone layout (js/touch.js): touch wording instead of keys; desktop text unchanged
 
   BV.mount = function (container, b, opts) {
     const c = C(), px = c.pxPerM, W = c.arenaW * px, H = c.arenaH * px;
@@ -17,6 +18,7 @@
     wrap.appendChild(hud); wrap.appendChild(canvas); container.appendChild(wrap);
     const bar = document.createElement("div"); bar.className = "ability-bar"; container.appendChild(bar); v.bar = bar; BV.renderBar(v);   // Slice 3 §2
     const bottom = document.createElement("div"); bottom.className = "battle-bottom"; container.appendChild(bottom); v.bottom = bottom;
+    const tc = document.createElement("div"); tc.className = "touch-ctl"; container.appendChild(tc); v.touchEl = tc;   // on-screen Pause / Break away (phones only, css/mobile.css)
     BV.renderHud(v);
     canvas.addEventListener("mousedown", (e) => BV.onDown(v, e));
     canvas.addEventListener("mousemove", (e) => BV.onMove(v, e));
@@ -24,6 +26,12 @@
     canvas.addEventListener("mouseleave", () => { v.hover = null; v.mouse = null; G.UI.hideTip(); });
     canvas.addEventListener("contextmenu", (e) => { if (v.b.itemAim) { e.preventDefault(); BV.itemCancel(v); } else if (v.b.aim) { e.preventDefault(); BV.cancelAim(v); } });   // right click cancels aiming
     window.addEventListener("keydown", v.onKey = (e) => BV.onKey(v, e));
+    // touch: one finger drives the same handlers as the mouse (tap = hover + press, drag = placement drag); no gestures
+    const tp = (e) => { const t = e.changedTouches[0]; return { clientX: t.clientX, clientY: t.clientY, button: 0 }; };
+    canvas.addEventListener("touchstart", (e) => { e.preventDefault(); if (e.touches.length > 1) return; const p = tp(e); BV.onMove(v, p); BV.onDown(v, p); }, { passive: false });
+    canvas.addEventListener("touchmove", (e) => { e.preventDefault(); if (v.drag) { BV.onMove(v, tp(e)); G.UI.hideTip(); } }, { passive: false });
+    canvas.addEventListener("touchend", (e) => { e.preventDefault(); if (v.drag) { BV.onUp(v, tp(e)); G.UI.hideTip(); } }, { passive: false });
+    canvas.addEventListener("touchcancel", () => { if (v.drag) { G.Battle.placeAt(v.b, v.drag, v.drag.cell.cx, v.drag.cell.cy); v.drag = null; } });
     v.last = performance.now();
     const loop = (t) => { if (v.done) return; BV.frame(v, t); v.raf = requestAnimationFrame(loop); };
     v.raf = requestAnimationFrame(loop);
@@ -55,12 +63,35 @@
       const go = document.createElement("button"); go.className = "primary"; go.textContent = "Fight!"; go.onclick = () => { G.Battle.start(b); BV.renderHud(v); };
       v.hud.appendChild(go);
     }
+    BV.renderTouch(v);
     if (G.Debug && G.Debug.on) {
       const ar = document.createElement("button"); ar.textContent = "Auto-resolve"; ar.onclick = () => { if (b.phase === "place") G.Battle.start(b); while (!b.over) { G.Battle.step(b, 1 / 30); } BV.renderHud(v); };
       v.hud.appendChild(ar);
     }
   };
 
+  // On-screen Pause / Break away for touch (shown on phones only by css/mobile.css). They call exactly what the
+  // Space and B keys call in BV.onKey: BV.togglePause / BV.pressEscape.
+  BV.renderTouch = function (v) {
+    const el = v.touchEl, b = v.b; if (!el) return;
+    el.innerHTML = ""; v.touchEsc = null; v.touchCancel = null;
+    if (b.phase !== "fight") return;
+    const TP = DATA.config.battle.tacticalPause;
+    if (TP && TP.enabled && G.Tactical && G.Tactical.on()) {
+      const pb = document.createElement("button"); pb.className = "tc-btn tc-pause" + (b.paused ? " on" : ""); pb.dataset.act = "touch-pause";
+      pb.textContent = b.paused ? "▶ Resume" : "⏸ Pause"; pb.onclick = () => { pb.blur(); BV.togglePause(v); }; el.appendChild(pb);
+    }
+    if (G.Escape && G.Escape.on(b)) {
+      const eb = document.createElement("button"); eb.className = "tc-btn tc-esc"; eb.dataset.act = "touch-break-away";
+      eb.innerHTML = '⇠ Break away<small class="tc-odds"></small>'; eb.onclick = () => { eb.blur(); BV.pressEscape(v); }; el.appendChild(eb);
+      v.touchEsc = { btn: eb, odds: eb.querySelector(".tc-odds") };
+    }
+    // Cancel aim: shown only while an ability or a Med kit is being aimed (BV.updateTouch); the same calls as Esc / right click
+    const cb = document.createElement("button"); cb.className = "tc-btn tc-cancel hidden"; cb.dataset.act = "touch-cancel-aim"; cb.textContent = "✕ Cancel aim";
+    cb.onclick = () => { cb.blur(); if (v.b.itemAim) BV.itemCancel(v); else if (v.b.aim) BV.cancelAim(v); BV.updateTouch(v); };
+    el.appendChild(cb); v.touchCancel = cb;
+  };
+  BV.updateTouch = function (v) { if (v.touchCancel) v.touchCancel.classList.toggle("hidden", !(v.b.aim || v.b.itemAim)); };
   const toPx = (v, m) => m * v.px;
   function mouseM(v, e) { const r = v.canvas.getBoundingClientRect(); return { x: ((e.clientX - r.left) / r.width) * v.W / v.px, y: ((e.clientY - r.top) / r.height) * v.H / v.px, cx: e.clientX, cy: e.clientY }; }
   // art units stand on (x,y) with the body drawn above it, so hit-test around the torso
@@ -108,7 +139,7 @@
       pip.onclick = (e) => { e.stopPropagation(); AB().setAuto(u, i, !s.auto); G.State.save(); BV.updateBar(v); G.Sfx.play("sfx_ui_click"); };
       btn.appendChild(icw); btn.appendChild(nm); btn.appendChild(pip);
       btn.onclick = () => BV.press(v, i);
-      btn.onmouseenter = (e) => G.UI.showTip(`<b>${d.name}</b> <small>[${key}] · ${d.source} · ${U.fmt1(s.max)} s cooldown</small><br>${d.desc}<br><i>Auto (${s.auto ? "on" : "off"}): ${d.autoDesc}.</i><br><small>Click or press ${key} to aim; left click fires, right click / Esc / ${key} again cancels.</small>`, e.clientX, e.clientY - 120);
+      btn.onmouseenter = (e) => G.UI.showTip(`<b>${d.name}</b> <small>${TL() ? "" : `[${key}] · `}${d.source} · ${U.fmt1(s.max)} s cooldown</small><br>${d.desc}<br><i>Auto (${s.auto ? "on" : "off"}): ${d.autoDesc}.</i><br><small>${TL() ? "Tap to aim, then tap a target; tap Cancel aim (or this button again) to cancel." : `Click or press ${key} to aim; left click fires, right click / Esc / ${key} again cancels.`}</small>`, e.clientX, e.clientY - 120);
       btn.onmouseleave = () => G.UI.hideTip();
       bar.appendChild(btn); v.barEls.push({ btn, ring, cdt, pip, s });
     });
@@ -120,7 +151,7 @@
       const hk = document.createElement("span"); hk.className = "abl-key"; hk.textContent = BA.key.toUpperCase(); icw.appendChild(hk);
       const nm = document.createElement("div"); nm.className = "abl-name"; nm.innerHTML = 'Break away<br><small class="esc-odds"></small>';
       btn.appendChild(icw); btn.appendChild(nm); btn.onclick = () => BV.pressEscape(v);
-      btn.onmouseenter = (e) => { const i = G.Escape.info(v.b); G.UI.showTip(`<b>Break away</b> <small>[${BA.key.toUpperCase()}] · ${U.fmt1(BA.channelSec)} s channel · ${BA.cooldownSec} s cooldown after a fail</small><br>Your body calls the retreat: best ${DATA.skills[BA.skill].name} of your standing units (skill ${i.best}, +${i.mod}) d20 vs ${i.dc} [${i.why}] — ${Math.round(i.chance)}%.<br><b>Success:</b> everyone standing gets out, downed allies are left behind and die. No loot, +${BA.heat} Heat, back where you came from; the enemies stay here.<br><b>Fail:</b> you stumble: ${BA.stumbleSec} s of free attacks.`, e.clientX, e.clientY - 140); };
+      btn.onmouseenter = (e) => { const i = G.Escape.info(v.b); G.UI.showTip(`<b>Break away</b> <small>${TL() ? "" : `[${BA.key.toUpperCase()}] · `}${U.fmt1(BA.channelSec)} s channel · ${BA.cooldownSec} s cooldown after a fail</small><br>Your body calls the retreat: best ${DATA.skills[BA.skill].name} of your standing units (skill ${i.best}, +${i.mod}) d20 vs ${i.dc} [${i.why}] — ${Math.round(i.chance)}%.<br><b>Success:</b> everyone standing gets out, downed allies are left behind and die. No loot, +${BA.heat} Heat, back where you came from; the enemies stay here.<br><b>Fail:</b> you stumble: ${BA.stumbleSec} s of free attacks.`, e.clientX, e.clientY - 140); };
       btn.onmouseleave = () => G.UI.hideTip();
       bar.appendChild(btn); v.escEl = { btn, ring, cdt, odds: nm.querySelector(".esc-odds") };
     }
@@ -138,6 +169,8 @@
       const inf = G.Escape.info(v.b);
       E.odds.textContent = ch ? "breaking away…" : qd ? "queued" : down ? "you're down" : `${Math.round(inf.chance)}% · DC ${inf.dc}`;
       E.btn.classList.toggle("ready", !why); E.btn.classList.toggle("disabled", !!why && !ch && !qd); E.btn.classList.toggle("queued", qd);
+      const TE = v.touchEsc;   // the touch Break away button mirrors it
+      if (TE) { const cd = E.cdt.textContent; TE.odds.textContent = E.odds.textContent + (cd === "!" ? " · stumbling" : cd ? ` · ${cd} s` : ""); TE.btn.classList.toggle("ready", !why); TE.btn.classList.toggle("disabled", !!why && !ch && !qd); TE.btn.classList.toggle("queued", qd); }
     }
     if (v.feedEl) { const fd = v.b.feed || []; if (fd.length !== v.feedN) { v.feedN = fd.length; v.feedEl.innerHTML = fd.slice(-5).map((l) => `<div class="cf-${l.kind || "info"}">${l.text}</div>`).join(""); v.feedEl.style.display = fd.length ? "" : "none"; } }
     for (let i = 0; i < v.barEls.length; i++) {
@@ -208,7 +241,7 @@
     if (!b.paused) { if (el) el.style.display = "none"; return; }
     if (!el) { el = v.pausePanel = document.createElement("div"); el.className = "tp-panel"; v.bar.parentNode.insertBefore(el, v.bar.nextSibling); }
     el.style.display = ""; el.innerHTML = "";
-    const head = document.createElement("div"); head.className = "tp-head"; head.innerHTML = "<b>TACTICAL PAUSE</b> · aim ready abilities (1/2), queue Break away (B) and use carried Med kits on your units; they run in this order when you resume (Space). A Med kit channels " + DATA.config.battle.tacticalPause.channelSec.med + " s after the resume, then that unit can't take another for " + G.Tactical.medCooldown(b) + " s."; el.appendChild(head);
+    const head = document.createElement("div"); head.className = "tp-head"; head.innerHTML = (TL() ? "<b>TACTICAL PAUSE</b> · tap a ready ability to aim it, tap Break away to queue it, and use carried Med kits on your units; they run in this order when you tap Resume. A Med kit" : "<b>TACTICAL PAUSE</b> · aim ready abilities (1/2), queue Break away (B) and use carried Med kits on your units; they run in this order when you resume (Space). A Med kit") + " channels " + DATA.config.battle.tacticalPause.channelSec.med + " s after the resume, then that unit can't take another for " + G.Tactical.medCooldown(b) + " s."; el.appendChild(head);
     const items = document.createElement("div"); items.className = "tp-items";
     for (const it of T.items()) {
       const btn = document.createElement("button"); btn.className = "tp-item" + (b.itemAim && b.itemAim.kind === it.kind ? " on" : ""); btn.dataset.item = it.kind; btn.disabled = !(it.n > 0);
@@ -262,7 +295,8 @@
     if (b.paused) {
       ctx.fillStyle = "rgba(20,40,70,.3)"; ctx.fillRect(0, 0, v.W, v.H); ctx.strokeStyle = "rgba(120,190,255,.8)"; ctx.lineWidth = 4; ctx.strokeRect(2, 2, v.W - 4, v.H - 4);
       ctx.font = "bold 22px sans-serif"; ctx.textAlign = "center"; ctx.lineWidth = 4; ctx.strokeStyle = "#000";
-      const t = b.itemAim ? `MED KIT: click one of your units · right click / Esc cancels` : "⏸ TACTICAL PAUSE · Space resumes";
+      const t = TL() ? (b.itemAim ? "MED KIT: tap one of your units · tap Cancel aim" : "⏸ TACTICAL PAUSE · tap Resume")
+        : b.itemAim ? `MED KIT: click one of your units · right click / Esc cancels` : "⏸ TACTICAL PAUSE · Space resumes";
       if (!b.aim) { ctx.strokeText(t, v.W / 2, 36); ctx.fillStyle = "#bfe4ff"; ctx.fillText(t, v.W / 2, 36); }
       if (b.itemAim) for (const u of b.units) if (u.side === 0 && u.state === "alive") { const ok = !G.Tactical.itemBlock(b, b.itemAim.kind, u); ctx.beginPath(); ctx.ellipse(u.x * px, u.y * px, px * 0.95, px * 0.45, 0, 0, Math.PI * 2); ctx.strokeStyle = ok ? "rgba(96,255,144,.9)" : "rgba(150,150,150,.6)"; ctx.lineWidth = 3; ctx.stroke();
         if (!ok) { ctx.fillStyle = "rgba(90,90,90,.55)"; ctx.beginPath(); ctx.ellipse(u.x * px, (u.y - lift) * px, px * 0.75, px * 0.95, 0, 0, Math.PI * 2); ctx.fill(); }   // greyed out: on cooldown / full HP / already has one coming
@@ -291,7 +325,8 @@
     }
     ctx.font = "bold 14px sans-serif"; ctx.textAlign = "center"; ctx.lineWidth = 3; ctx.strokeStyle = "#000";
     const mode = b.paused ? "TACTICAL PAUSE: it queues" : (G.state.settings && G.state.settings.aimMode) === "pause" ? "PAUSED" : "SLOW-MO 25%";
-    const hint = `${d.name.toUpperCase()}: left click ${d.target === "ground" ? "a spot" : "a target"} · right click / Esc cancels · ${mode}`;
+    const hint = TL() ? `${d.name.toUpperCase()}: tap ${d.target === "ground" ? "a spot" : "a target"} · tap Cancel aim · ${mode}`
+      : `${d.name.toUpperCase()}: left click ${d.target === "ground" ? "a spot" : "a target"} · right click / Esc cancels · ${mode}`;
     ctx.strokeText(hint, v.W / 2, 22); ctx.fillStyle = "#ffe080"; ctx.fillText(hint, v.W / 2, 22);
     ctx.restore();
   };
@@ -385,6 +420,7 @@
     for (const e of v.booms) e.age += dt; v.booms = v.booms.filter((e) => e.age < 0.4);
     BV.drainFx(v);
     if (v.barEls) BV.updateBar(v);
+    if (v.touchCancel) BV.updateTouch(v);
     BV.updateParticles(v, dt * Math.max(1, v.speed * timeScale));
     BV.draw(v);
     if (v.timerEl) v.timerEl.textContent = b.phase === "fight" || b.phase === "over" ? (b.mode === "defense" ? `Hold: ${Math.max(0, Math.ceil(b.surviveSec - b.t))} s` : `${b.t.toFixed(1)} s`) : "";
