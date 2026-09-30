@@ -73,8 +73,9 @@
     if (G.State.loadNotice) { const n = G.State.loadNotice; G.State.loadNotice = null; setTimeout(() => UI.modal(h("div", null, h("h2", null, "Save"), h("p", null, n), h("button", { class: "primary", onclick: () => UI.render() }, "OK"))), 0); }
     UI.renderTop();
     const s = G.state, scr = $("#screen");
-    G.Sfx.setScreen(s.run || UI.battle ? "run" : "outpost");   // ambient loop per screen (crossfades)
-    if (G.Music) G.Music.set(UI.battle ? "battle" : s.run ? "run" : "outpost", s.run ? s.run.zone : null);   // music state (js/music.js)
+    const title = !!(G.Title && G.Title.open);   // Slice 4 §G: the title screen is up (music_title, the camp's ambience)
+    G.Sfx.setScreen(title ? "title" : s.run || UI.battle ? "run" : "outpost");   // ambient loop per screen (crossfades)
+    if (G.Music) G.Music.set(title ? "title" : UI.battle ? "battle" : s.run ? "run" : "outpost", title ? null : s.run ? s.run.zone : null);   // music state (js/music.js)
     if (UI.battle) return; // battle view owns the screen
     if (s.run) { UI.renderExpedition(scr); if (!UI.search) UI.renderStep(); return; }
     UI.renderOutpost(scr);

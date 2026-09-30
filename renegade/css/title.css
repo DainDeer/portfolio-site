@@ -1,0 +1,49 @@
+/* Slice 4 §G: the title / login screen (js/title.js, data/title.js; art assets/ui/login, native pixels at x2 / x3) */
+body.title-open { overflow: hidden; }
+#title { position: fixed; inset: 0; z-index: 900; background: #0c0d10; overflow: hidden; user-select: none; -webkit-user-select: none;
+  font-family: inherit; color: #d4c8a0; }
+#title img, #title canvas, #title .title-logo, #title .title-panel, #title .title-play-art, #title .title-sound { image-rendering: pixelated; image-rendering: crisp-edges; }
+#title .title-still { position: absolute; inset: 0; background: var(--t-still-d) 50% 50% / cover no-repeat; image-rendering: pixelated; }
+#title.phone .title-still { background-image: var(--t-still-p); background-size: auto; }
+@media (min-width: 431px) { #title.phone .title-still { background-size: cover; } }
+#title .title-gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity .6s; }
+#title.gl .title-gl { opacity: 1; }
+#title.gl .title-still { opacity: 0; transition: opacity .6s .3s; }
+/* a little darkening behind the panel so the fields read */
+#title .title-shade { position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to bottom, rgba(12,13,16,0) 45%, rgba(12,13,16,.35) 100%); }
+/* logo: 175x39 strip of 4 at x3 (desktop) / x2 (phone), ember flicker steps(4) ~6 fps */
+#title .title-logo { position: absolute; left: 50%; top: 22px; margin: 0; width: 525px; height: 117px; transform: translateX(-50%);
+  background: var(--t-logo) 0 0 / 2100px 117px no-repeat; animation: t-logo .667s steps(4) infinite; }
+@keyframes t-logo { from { background-position: 0 0; } to { background-position: -2100px 0; } }
+#title.phone .title-logo { top: max(16px, env(safe-area-inset-top)); width: 350px; height: 78px; background-size: 1400px 78px; animation-name: t-logo-p; }
+@keyframes t-logo-p { from { background-position: 0 0; } to { background-position: -1400px 0; } }
+/* panel: 9-slice 12 / 24px, 336 wide desktop, 352 phone (344 at 360) */
+#title .title-panel { position: absolute; left: 50%; bottom: 32px; transform: translateX(-50%); width: 336px; box-sizing: border-box;
+  border: 24px solid transparent; border-image: var(--t-panel) 12 fill / 24px repeat; padding: 6px 6px 4px; }
+#title.phone .title-panel { width: 352px; bottom: max(64px, calc(env(safe-area-inset-bottom) + 56px)); }
+@media (max-width: 370px) { #title.phone .title-panel { width: 344px; } }
+@media (max-height: 560px) and (orientation: landscape) { #title .title-logo { top: 8px; transform: translateX(-50%) scale(.67); transform-origin: 50% 0; } #title .title-panel { bottom: 8px; } }
+#title .title-row { margin-bottom: 8px; }
+#title .title-label { display: block; height: 20px; margin: 0 0 4px 2px; }
+#title .title-label img { width: 100px; height: 20px; display: block; }   /* 50x10 native at x2 */
+#title .title-field { position: relative; height: 32px; }
+#title .title-field input { width: 100%; height: 32px; box-sizing: border-box; border: 10px solid transparent; border-image: var(--t-field) 5 fill / 10px repeat;
+  background: transparent; color: #8e8e8c; padding: 0 22px 0 0; font: inherit; cursor: not-allowed; opacity: 1; }
+#title .title-lock { position: absolute; right: 26px; top: 6px; width: 18px; height: 22px; pointer-events: none; }
+#title .title-divider { height: 12px; margin: 6px 0 10px; border: solid transparent; border-width: 0 12px; border-image: var(--t-div) 0 6 fill / 0 12px repeat; }
+/* Play: 240x64 art, the hit box is the body (inset 8 px); all three states share one canvas so nothing moves */
+#title .title-play { position: relative; display: block; margin: 4px auto 2px; width: 224px; height: 48px; padding: 0; border: 0; background: none; cursor: pointer; }
+#title .title-play-art { position: absolute; left: -8px; top: -8px; width: 240px; height: 64px; background: var(--t-play) 0 0 / 240px 64px no-repeat; pointer-events: none; }
+#title .title-play:hover .title-play-art, #title .title-play:focus-visible .title-play-art { background-image: var(--t-play-h); }
+#title .title-play:active .title-play-art { background-image: var(--t-play-p); }
+#title .title-play:focus { outline: none; }
+/* build hash bottom-left (10 px / 8 px in), sound toggle bottom-right (18x18 at x2) */
+#title .title-version { position: absolute; left: 10px; bottom: 8px; font-size: 14px; color: #d4c8a0; text-shadow: 2px 2px 0 #120a0a; letter-spacing: .5px;
+  bottom: max(8px, env(safe-area-inset-bottom)); }
+#title .title-sound { position: absolute; right: 6px; bottom: max(4px, env(safe-area-inset-bottom)); width: 44px; height: 44px; padding: 0; border: 0; cursor: pointer;
+  background: transparent var(--t-snd-off) 50% 50% / 36px 36px no-repeat; }   /* 18x18 at x2 in a 44 px tap target */
+#title .title-sound:hover { background-image: var(--t-snd-off-h); }
+#title .title-sound.on { background-image: var(--t-snd-on); }
+#title .title-sound.on:hover { background-image: var(--t-snd-on-h); }
+@media (prefers-reduced-motion: reduce) { #title .title-logo { animation: none; } }

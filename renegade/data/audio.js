@@ -46,7 +46,7 @@ DATA.audio = {
   bus: { gain: 0.8, limiter: { threshold: -6, knee: 4, ratio: 12, attack: 0.003, release: 0.12 }, htmlGunAtten: true },
   // ambient loops: which screen plays which (town view + outpost panels / zone map + location views + battles)
   loops: { amb_outpost: { vol: 0.8 }, amb_wastes: { vol: 0.8 } },
-  screens: { outpost: "amb_outpost", run: "amb_wastes" },
+  screens: { outpost: "amb_outpost", run: "amb_wastes", title: "amb_outpost" },   // title: the camp at night (Slice 4 §G)
   // Music (Snare, assets/music_src/README.md): its own channel (gain = master x music slider), separate from SFX and
   // ambience. Web Audio buffers with loop = true (gapless); .ogg first (sample-exact), .mp3 if the browser can't play
   // ogg or the ogg fails. Under file:// it falls back to HTMLAudio (no sample-exact sync there).
@@ -59,13 +59,30 @@ DATA.audio = {
     tracks: {
       music_outpost:         { vol: 1, bpm: 100, beatsPerBar: 4, loopSec: 76.8 },                      // bar 2.4 s
       music_hushwood:        { vol: 1, bpm: 75, beatsPerBar: 4, loopSec: 102.4, sync: "hushwood" },  // bar 3.2 s
-      music_hushwood_battle: { vol: 1, bpm: 75, beatsPerBar: 4, loopSec: 102.4, sync: "hushwood" }
+      music_hushwood_battle: { vol: 1, bpm: 75, beatsPerBar: 4, loopSec: 102.4, sync: "hushwood" },
+      // Slice 4 §G (Snare, assets/music_src/README.md + README_zones2.md). Only tracks a state / zone / preload names are
+      // requested or packaged (tools/asset-manifest.js), so the future-zone pairs cost nothing until a zone uses them.
+      music_title:           { vol: 1, bpm: 100, beatsPerBar: 4, loopSec: 96 },                        // bar 2.4 s; the start screen
+      music_greyback:        { vol: 1, bpm: 125, beatsPerBar: 3, loopSec: 92.16, sync: "greyback" },   // 3/4, bar 1.44 s (future zone)
+      music_greyback_battle: { vol: 1, bpm: 500 / 3, beatsPerBar: 4, loopSec: 92.16, sync: "greyback", quantize: "bar" },   // 4/4 on the same 1.44 s bar: bar lines only
+      music_scablands:       { vol: 1, bpm: 150, beatsPerBar: 4, loopSec: 102.4, sync: "scablands" }, // bar 1.6 s (the late wasteland; NOT zone a)
+      music_scablands_battle:{ vol: 1, bpm: 150, beatsPerBar: 4, loopSec: 102.4, sync: "scablands" },
+      music_drowned:         { vol: 1, bpm: 80, beatsPerBar: 4, loopSec: 96, sync: "drowned" },        // 12/8: bpm counts dotted quarters; bar 3.0 s
+      music_drowned_battle:  { vol: 1, bpm: 80, beatsPerBar: 4, loopSec: 96, sync: "drowned" },
+      music_hollis:          { vol: 1, bpm: 120, beatsPerBar: 4, loopSec: 96, sync: "hollis" },        // bar 2.0 s (Hollis Outskirts: no zone id yet)
+      music_hollis_battle:   { vol: 1, bpm: 120, beatsPerBar: 4, loopSec: 96, sync: "hollis" }
     },
     // music state -> track. outpost = town view, outpost panels, the run result and body offer; run = zone map, location
     // views, searches, events and the pre-battle card; battle = the battle screen (placement, fight, summary).
-    states: { outpost: "music_outpost", run: "music_hushwood", battle: "music_hushwood_battle" },
-    zones: {},                                  // per-zone overrides, e.g. b: { run: "...", battle: "..." }; none yet: Hushwood in every zone
-    preload: { run: ["music_hushwood_battle"] },   // decode the battle track as soon as a run starts, so the switch is on time
+    // title = the start screen (Slice 4 §G): starts on the first tap / the 🔊 button; Play crossfades to the outpost
+    states: { title: "music_title", outpost: "music_outpost", run: "music_hushwood", battle: "music_hushwood_battle" },
+    // per-zone overrides. b = the Drowned Suburbs (data/zones.js). Hollis gets { run: "music_hollis", battle:
+    // "music_hollis_battle" } once it has a zone id. Zone a (labelled "The Scablands") keeps Hushwood.
+    zones: { b: { run: "music_drowned", battle: "music_drowned_battle" } },
+    preload: { run: ["music_hushwood_battle"] },   // decode the battle track as soon as a run starts, so the switch is on time (the zone's own battle track is preloaded too)
+    // same key + tempo, different lengths (so not one sync group): the incoming track still restarts from its top, but on
+    // the outgoing one's next bar line, so the beat grids line up during the crossfade (Snare: title -> outpost)
+    barAlign: [["music_title", "music_outpost"]],
     restartFadeSec: 1.75,                       // different groups (outpost <-> Hushwood): equal-power crossfade, incoming from 0
     toBattle: { quantize: "bar", maxBarWaitSec: 2.4, fadeSec: 0.4 },   // next bar line, or the next beat if the bar line is more than 2.4 s away
     fromBattle: { quantize: "bar", fadeBars: 1 },                       // starts on the next bar line, one bar long, so it ends on a bar line

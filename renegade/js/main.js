@@ -6,6 +6,7 @@
   if (!G.State.load()) G.State.newGame();
   G.logListeners.push(() => {});
   G.Sprites.preload(); // corpses/decals are stamped once onto the battle ground, so their art must be loaded before the first kill
+  if (G.Title && G.Title.shouldShow()) G.Title.show();   // Slice 4 §G: the title / login screen over the game
   G.UI.render();
   if (G.State.buildNotice) G.UI.toast(G.State.buildNotice);
   setInterval(() => G.UI.tick(), DATA.config.timers.tickMs);

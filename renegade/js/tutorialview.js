@@ -32,7 +32,7 @@
   };
   TV.holds = () => !!(TV.cur && TV.cur.trigger === "battle");
   TV.check = function () {
-    if (TV.cur || !G.Tut || !G.Tut.on() || !G.state) return;
+    if (TV.cur || !G.Tut || !G.Tut.on() || !G.state || (G.Title && G.Title.open)) return;   // not under the title screen
     const trig = TV.triggers(); if (!trig.length) return;
     const due = G.Tut.due(trig, ctx()); if (!due) return;
     TV.open(due);

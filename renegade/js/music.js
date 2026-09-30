@@ -24,10 +24,13 @@
   Mu.plan = function (from, to, pos, toState) {
     const D = M();
     if (!from) return { mode: "start", wait: 0, fade: D.firstFadeSec, offset: 0 };
-    if (!Mu.sameGroup(from, to)) return { mode: "restart", wait: 0, fade: D.restartFadeSec, offset: 0 };
+    if (!Mu.sameGroup(from, to)) {
+      const al = (D.barAlign || []).some((p) => p[0] === from && p[1] === to);   // Slice 4 §G: title -> outpost on the title's bar line
+      return { mode: "restart", wait: al ? Mu.untilLine(pos, Mu.barSec(from)) : 0, fade: D.restartFadeSec, offset: 0, grid: al ? "bar" : undefined };
+    }
     const bar = Mu.barSec(to), beat = Mu.beatSec(to), len = D.tracks[to].loopSec;
     let wait = Mu.untilLine(pos, bar), grid = "bar", fade;
-    if (toState === "battle") { const T = D.toBattle; if (wait > T.maxBarWaitSec) { wait = Mu.untilLine(pos, beat); grid = "beat"; } fade = T.fadeSec; }
+    if (toState === "battle") { const T = D.toBattle; if (wait > T.maxBarWaitSec && D.tracks[to].quantize !== "bar") { wait = Mu.untilLine(pos, beat); grid = "beat"; } fade = T.fadeSec; }
     else fade = bar * (D.fromBattle.fadeBars || 1);
     return { mode: "sync", wait, fade, grid, offset: mod(pos + wait, len) };
   };
@@ -78,6 +81,7 @@
     Mu.want = key;
     if (!hasDom || !S() || !S().unlocked || !S().enabled) return;
     for (const k of ((M().preload || {})[state] || [])) if (M().tracks[k]) Mu.load(k);
+    if (state === "run") { const bk = Mu.trackFor("battle", zone); if (bk && M().tracks[bk]) Mu.load(bk); }   // this zone's battle track, decoded early (Snare's note)
     if (!key) { Mu.stopAll(); return; }
     if (Mu.main && Mu.main.key === key) return;
     const e = Mu.load(key); if (e.state === "ok") Mu.go(key, state);
