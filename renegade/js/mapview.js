@@ -66,7 +66,7 @@
       el.style.left = (n.x / 10) + "%"; el.style.top = (n.y / 6) + "%";
       const wIcon = loc && loc.worldIcons && loc.worldEvent ? loc.worldIcons[s.world.hollow_creek] : null; // world-state icon (distress / aftermath)
       const wreck = loc && loc.iconWrecked && G.Exp.wrecked(n), still = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const iconKey = !loc ? "loc_insertion" : wreck ? (loc.iconWreckedAnim && !still ? loc.iconWreckedAnim : loc.iconWrecked) : (wIcon || loc.icon);   // Slice 5 §A: the wreck (animated unless reduced motion)
+      const iconKey = !loc ? (DATA.zones.list[map.zone || "a"] || {}).insertionIcon || "loc_insertion" : wreck ? (loc.iconWreckedAnim && !still ? loc.iconWreckedAnim : loc.iconWrecked) : (wIcon || loc.icon);   // Slice 5 §A: the wreck (animated unless reduced motion)
       const ic = SP.icon(iconKey, 32); el.appendChild(ic); if ((SP.def(iconKey) || {}).fps) MV.animate(ic, SP.def(iconKey));
       el.dataset.nid = nid;
       if (loc && loc.extraction) el.classList.add("extract");   // Slice 4 §A: tutorial T2 rings extraction points

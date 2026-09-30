@@ -66,9 +66,7 @@
     const GG = G.GruntGear, unl = (ids) => { for (const c of ids || []) UI.toast(`New look unlocked: ${GG.cosDef(c).name}. Pick it under Outfit.`); };   // Slice 5 §H
     const act = (gs, is, uid) => {
       if (g) { G.State.cosUnlocked = null; const e = G.State.equipGrunt(g.uid, gs, uid); if (e) return UI.fail(e); unl(G.State.cosUnlocked); }
-      else { const x = uid && s.stash.items.find((i) => i.uid === uid);
-        if (x && I.isHandItem(x)) { const fit = I.handFit(is, x, getB); if (fit.why) return UI.fail(fit.why); for (const k of fit.clear) delete lo.gear[k]; }   // Slice 5 §E
-        if (uid) lo.gear[is] = uid; else delete lo.gear[is]; if ((lo.pouch || []).some((p) => p.uid === uid)) lo.pouch = []; if (x) unl(GG.noteEquip(x)); G.State.save(); }
+      else { const e = G.State.equipBody(is, uid); if (e) return UI.fail(e); unl(G.State.cosUnlocked); }
       if (G.Sfx) G.Sfx.play("sfx_ui_click");
       if (G.Touch && G.Touch.layout()) UI.hideTip();   // phones: the tap also opened the row's item tooltip, which stayed over the redrawn doll
       redraw();

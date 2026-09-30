@@ -75,8 +75,8 @@ DATA.searchables = {
   // Slice 5 §F: where training spots are (one of each listed type, a fixed searchable): by location id or tag. [DRAFT]
   // No Lumber Mill yet (Hushwood, part G): the chop is in the woodsy Zone A sites until then.
   training: {
-    train_chop:     { locs: ["riverbed_camp", "rail_yard", "renegade_hollow", "gb_lodge"] },   // gb_lodge: the woodpile (Slice 5 §G)
-    train_fish:     { locs: ["toll_bridge", "pump_station", "b_culdesac", "b_outfall", "gb_dam"] },
+    train_chop:     { locs: ["riverbed_camp", "rail_yard", "renegade_hollow", "gb_lodge", "lumber_mill", "mossback"] },   // gb_lodge: the woodpile (Slice 5 §G)
+    train_fish:     { locs: ["toll_bridge", "pump_station", "b_culdesac", "b_outfall", "gb_dam", "stillwater"] },
     train_terminal: { tags: ["terminal"] }
   },
   // Sizes (Slice 2 §5). Searchable counts include doors (doors = rooms - 1) and generated old bodies; event objects,
@@ -118,14 +118,15 @@ DATA.searchables = {
   // Floor tile: zone first (Zone B: wet if water-tagged), then tag, then size (S sites are one room or a yard), then
   // the low-priority tags (homes / shops: concrete), else the default deck panels. Walls: fill + face per zone.
   floors: {
-    byZone: { b: { byTag: { water: "tile_floor_b_wet" }, default: "tile_floor_b" },
+    byZone: { a: { byTag: { water: "tile_floor_hushwood_wet", med: "tile_floor_clinic" }, default: "tile_floor_hushwood" },   // Slice 5 §G the Hushwood (Smudge 1828231); med: the School / Cryo Annex keep the clinic floor
+              b: { byTag: { water: "tile_floor_b_wet" }, default: "tile_floor_b" },
               greyback: { byTag: { water: "tile_floor_greyback_wet" }, default: "tile_floor_greyback" } },   // Slice 5 §G (Smudge, aa8b4fd)
     byTag: { water: "tile_floor_wet", med: "tile_floor_clinic" },
     bySize: { S: "tile_floor_yard" },
     byTagLow: { food: "tile_floor_concrete", cloth: "tile_floor_concrete" },
     default: "tile_floor"
   },
-  walls: { default: { fill: "tile_wall", face: "tile_wall_face" }, byZone: { b: { fill: "tile_wall_b", face: "tile_wall_face_b" }, greyback: { fill: "tile_wall_greyback", face: "tile_wall_face_greyback" } },
+  walls: { default: { fill: "tile_wall", face: "tile_wall_face" }, byZone: { a: { fill: "tile_wall_hushwood", face: "tile_wall_face_hushwood" }, b: { fill: "tile_wall_b", face: "tile_wall_face_b" }, greyback: { fill: "tile_wall_greyback", face: "tile_wall_face_greyback" } },
            bandsH: ["tile_wall_h", "tile_wall_h", "tile_wall_h_2", "tile_wall_h_3"], bandV: "tile_wall_v", corner: "tile_wall_corner",
            doorwayH: "tile_doorway_h", doorwayV: "tile_doorway_v" },
   // Event objects (§5: "events move onto objects"). Clicking one opens the existing check event.
@@ -165,9 +166,9 @@ DATA.searchables = {
     extract: {
       default:    { name: "Extraction point", sprite: "obj_radio", examine: "[PLACEHOLDER] Your way home." },
       byLoc: {
-        ex_truck:   { name: "Rusted Truck",   sprite: "obj_truck", wide: 2, wreckedSprite: "obj_truck_wrecked", wreckedAnim: "obj_truck_wrecked_smoke",
-                      examine: "[DRAFT] [PLACEHOLDER] The Rusted Truck. Keys in it, if it'll start.", examineWrecked: "[DRAFT] [PLACEHOLDER] Wrecked. It's not going anywhere." },   // Smudge's suggested lines (truck_props_manifest.json)
-        ex_tunnel:  { name: "Tunnel mouth",   sprite: "obj_ex_tunnel_mouth", examine: "[PLACEHOLDER] The tunnel home. Something always follows you into it." },
+        ex_truck:   { name: "Logging Truck",  sprite: "obj_logging_truck", wide: 2, wreckedSprite: "obj_logging_truck_wrecked", wreckedAnim: "obj_logging_truck_wrecked_smoke",   // Slice 5 §G (Smudge 1828231; Vixie: the red Rusted Truck art is retired from zone a, asset kept)
+                      examine: "[DRAFT] [PLACEHOLDER] The logging truck. Keys in it, if it'll start.", examineWrecked: "[DRAFT] [PLACEHOLDER] Wrecked. It's not going anywhere." },   // Smudge's suggested lines (truck_props_manifest.json)
+        ex_tunnel:  { name: "Culvert mouth",  sprite: "obj_ex_creek_culvert", examine: "[PLACEHOLDER] The creek runs out through a culvert under the road, toward home. Something always follows you into it." },   // Slice 5 §G: the Creek Culvert (Smudge 1828231)
         ex_rooftop: { name: "Pickup radio",   sprite: "obj_radio",      examine: "[PLACEHOLDER] A radio wired to a flare. Call the pickup and it comes." },
         b_levee:    { name: "Boat launch",    sprite: "obj_ex_boat", wide: 2, examine: "[PLACEHOLDER] The boat comes when you call. Hold the ramp till it does." },
         // Slice 5 §G: Smudge's 7a9a20d room objects

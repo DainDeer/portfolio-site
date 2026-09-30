@@ -96,10 +96,11 @@
     if (!rows || !rows.length || !map || s.run) return false;
     const prev = G.state; G.state = s; const done = M.status("m1") === "done"; G.state = prev; if (done) return false;
     const an = Object.values(map.nodes).find((n) => n.loc === P().loc); if (!an || rows.includes(an.row)) return false;
-    const D = DATA.map, ok = (n) => n.loc && !D.fixed[n.loc] && !(D.guaranteed || {})[n.loc] && D.locations[n.loc] && !D.locations[n.loc].zone;
+    const D = DATA.map, ok = (n) => n.loc && !n.secret && !D.fixed[n.loc] && !(D.guaranteed || {})[n.loc] && D.locations[n.loc] && !D.locations[n.loc].zone;
     let to = null; for (const r of rows.slice().sort((a, b) => Math.abs(a - an.row) - Math.abs(b - an.row) || a - b)) { to = Object.values(map.nodes).filter((n) => n.row === r && ok(n)).sort((a, b) => a.y - b.y)[0]; if (to) break; }
     if (!to) return false;
     an.loc = to.loc; to.loc = P().loc;
+    G.Map.attachSpurs(map);   // Slice 5 §G: a secret spur follows its host (the Witch's Cottage off Owlfall)
     if (s.world && s.world.sites) { delete s.world.sites[an.id]; delete s.world.sites[to.id]; }
     return true;
   };

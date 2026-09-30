@@ -610,7 +610,7 @@
     // Break away: the enemies you ran from are still here (this run only)
     if (site.escaped) { if (site.escaped.run === G.state.runCount) { const again = site.escaped.step; site.escaped = null; X.log(`${loc.name}: the fight you broke away from is still here.`, "bad"); X.push(again); return; } site.escaped = null; }
     // Slice 3 §7: a rival squad instead of the normal Hostiles roll (first entry only; Manhunt's forced battle wins)
-    if (!revisit && !t.forcedBattle && G.Rivals && G.Rivals.onArrive(node)) { if (loc.passage && !G.Zones.passageVisible(loc.passage, site.zone)) X.push({ type: "spot", pid: loc.passage, nid: node.id }); return; }
+    if (!revisit && !t.forcedBattle && G.Rivals && G.Rivals.onArrive(node)) { X.pushSpots(node, loc, site); return; }
     let pct, text;
     if (revisit) { const rv = X.revisitInfo(node); pct = rv.pct; text = rv.text; }
     else { const eh = X.entryHostiles(node); pct = eh.pct; text = eh.text; }   // Slice 3 §12: x restock multiplier on a picked-over site
@@ -619,22 +619,30 @@
     // Slice 3 §4b: at Manhunt the forced battle is a Hunter strike team (the Marked pack + 1 Marksman)
     if (hit && t.forcedBattle && G.Hunters) X.push({ type: "battle", family: "hunters", pack: "Manhunt", hunters: true, nid: node.id, why: "A hunter strike team intercepts you!" });
     else if (hit) X.push({ type: "battle", family: loc.family, budgetMult: t.forcedBattle ? 1.5 : 1, nid: node.id, why: t.forcedBattle ? "A hunter strike team intercepts you!" : revisit ? "They were waiting for you." : "Hostiles!" });
+    X.pushSpots(node, loc, site);
+  };
+  // spot checks on arrival: a hidden passage here, and (Slice 5 §G) a secret spur off this place that nobody has found
+  X.pushSpots = function (node, loc, site) {
     if (loc.passage && !G.Zones.passageVisible(loc.passage, site.zone)) X.push({ type: "spot", pid: loc.passage, nid: node.id });
+    const sp = loc.secretSpot, map = G.Zones.map(G.Zones.zoneOf(node.id));
+    if (sp && !G.Map.secretFound(sp.loc) && map.nodes["s_" + sp.loc]) X.push({ type: "spot", secret: sp.loc, nid: node.id });
   };
 
   // ---------- passage ----------
   // Spot check: best of the passage's skills (squad best) vs its DC
+  // pid: a passage id, or a spot step (a secret's spot lives on its host location: loc.secretSpot)
+  X.spotDef = (step) => (typeof step === "string" ? DATA.zones.passages[step].spot : step.secret ? G.Map.loc(G.Zones.node(step.nid)).secretSpot : DATA.zones.passages[step.pid].spot);
   X.spotInfo = function (pid) {
-    const P = DATA.zones.passages[pid], sp = P.spot;
+    const sp = X.spotDef(pid);
     let best = null;
     for (const sk of sp.skills) { const ci = G.Checks.compute(sk, sp.dc, X.members(), X.gearItems()); if (!best || ci.chance > best.chance) best = ci; }
     return best;
   };
   X.resolveSpot = function (step) {
-    const info = X.spotInfo(step.pid), roll = G.Checks.roll(info, null, "spot");
+    const info = X.spotInfo(step.secret ? step : step.pid), roll = G.Checks.roll(info, null, "spot");
     X.log(roll.text, "check");
     X.next();
-    if (G.Checks.isSuccess(roll.grade)) { X.discoverPassage(step.pid); return { found: true, roll }; }
+    if (G.Checks.isSuccess(roll.grade)) { if (step.secret) X.discoverSecret(step.secret); else X.discoverPassage(step.pid); return { found: true, roll }; }
     return { found: false, roll };
   };
   X.discoverPassage = function (pid) {
@@ -648,6 +656,14 @@
     }
     const from = (run() && run().zone) || P.hiddenAt || "a";
     X.log(`You found the ${P.name || "passage"}! It leads to ${DATA.zones.list[G.Zones.otherEnd(pid, from)].name}.`, "good");
+    G.State.save();
+  };
+  // Slice 5 §G: a secret place, found for good (every run, every later map of this save)
+  X.discoverSecret = function (locId) {
+    const s = G.state; s.secrets = s.secrets || {}; if (s.secrets[locId]) return;
+    s.secrets[locId] = true;
+    X.log(`You found ${DATA.map.locations[locId].name}! It's on your map for good.`, "good");
+    if (run()) X.markSeen();
     G.State.save();
   };
   X.canCross = function (pid) {

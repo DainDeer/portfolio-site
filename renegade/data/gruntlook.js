@@ -70,10 +70,8 @@ DATA.gruntLook = {
   items: {
     // Vixie's starter / basic items (patched_tunic, hide_vest, wool_cap) need no entry: Smudge's layers (26801b2) are in
     // grunt_options.json under the item's own key, merged at load.
-    head: { militia_helmet: "militia_helmet", scav_hood: "scav_hood", scrap_helmet: "militia_helmet", hunter_mask: "scav_hood",
-            witch_hat: "scav_hood", horse_mask: "scav_hood" },                              // Slice 5 §H stand-ins until Smudge's outfit layers
-    body: { militia_vest: "militia_tabard", scav_poncho: "scav_coat", padded_vest: "quilted_jacket", hunter_coat: "scav_coat",
-            wizard_robes: "scav_coat", maid_outfit: "starter_poncho" },                    // (lucky_boxers: cosmetics.outfits underwear)
+    head: { militia_helmet: "militia_helmet", scav_hood: "scav_hood", scrap_helmet: "militia_helmet", hunter_mask: "scav_hood" },   // Slice 5 §H outfits: Smudge's layers (25aa602) under the item keys
+    body: { militia_vest: "militia_tabard", scav_poncho: "scav_coat", padded_vest: "quilted_jacket", hunter_coat: "scav_coat" },
     backpack: { school_bag: "school_bag", military_ruck: "military_ruck", scav_satchel: "school_bag" },
     weapon: { pipe_rifle: "pipe_rifle", militia_carbine: "militia_carbine", nat_shiv: "nat_shiv", bass_guitar: "bass_guitar" }
   },
@@ -84,15 +82,17 @@ DATA.gruntLook = {
   // from an item with its own or a mapped part; the fallback doesn't count). Head "none" = bare head. Grunts only:
   // your body and Veterans keep their sprites. No bind / trade rules (parked for the MMO).
   //   outfits[id]: { name, slot, item (the item that unlocks it), underwear (body: nothing over the mannequin's underwear) }
-  //   The look is the item's own part once Smudge's layers are in grunt_options.json under the item key (outfitSlot
-  //   note there), else its stand-in (items map above); cosList() marks those pending.
+  //   The look is the item's own part (Smudge's layers in grunt_options.json under the item key, 25aa602); an outfit
+  //   without art falls back to a stand-in (items map above) and cosList() marks it pending. Vixie's calls: the horse
+  //   mask hides hair + beard (hides_facial_hair) and draws in the normal order; the witch hat keeps the hair; the maid
+  //   headband (the body part's extra headwear) draws only while the head draws nothing; outfits never hide packs.
   cosmetics: {
     outfits: {
       witch_hat:    { name: "Witch hat",          slot: "head", item: "witch_hat" },
       horse_mask:   { name: "Horse mask",         slot: "head", item: "horse_mask" },
       wizard_robes: { name: "Wizard robes",       slot: "body", item: "wizard_robes" },
       maid_outfit:  { name: "Maid outfit",        slot: "body", item: "maid_outfit" },
-      lucky_boxers: { name: "Just the underwear", slot: "body", item: "lucky_boxers", underwear: true }
+      lucky_boxers: { name: "Lucky boxers",       slot: "body", item: "lucky_boxers" }   // Vixie: its own boxers art (was underwear: true, the bare mannequin)
     }
   },
   dollScale: 5             // the paper doll draws the stand frame at 5x

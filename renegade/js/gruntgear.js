@@ -33,9 +33,10 @@
         const e = gear[slot][id] || {}, ly = e.layers || {};
         if (!P[slot][id]) {
           let part = null;
-          if (slot === "head" && ly.headwear) part = { headwear: strip(ly.headwear), hidesHair: !!e.hides_hair };
+          if (slot === "head" && ly.headwear) part = { headwear: strip(ly.headwear), hidesHair: !!e.hides_hair, hidesFacialHair: !!e.hides_facial_hair };
           else if (slot === "body" && ly.torso) { part = {}; for (const k of ["legwear", "footwear", "torso", "belt"]) if (ly[k]) part[k] = strip(ly[k]);
-            if (ly.sleeves) { part.sleeves = {}; for (const v in ly.sleeves) part.sleeves[v] = strip(ly.sleeves[v]); } if (e.hides_legwear) delete part.legwear; }
+            if (ly.sleeves) { part.sleeves = {}; for (const v in ly.sleeves) part.sleeves[v] = strip(ly.sleeves[v]); } if (e.hides_legwear) delete part.legwear;
+            if (e.extraLayers && e.extraLayers.headwear) part.headwear = strip(e.extraLayers.headwear); }   // Slice 5 §H: the maid headband (drawn only with nothing on the head)
           else if (slot === "backpack" && (ly.pack_back || ly.pack_straps)) part = { pack_back: strip(ly.pack_back), pack_straps: strip(ly.pack_straps) };
           else if (slot === "weapon" && ly.weapon) part = { weapon: strip(ly.weapon), armVariant: e.armVariant || (e.pose === "two_hand" ? "two_hand" : "one_hand") };
           else if (slot === "offhand" && (ly.shield || ly.offhand)) { part = { armVariant: e.armVariant || "one_hand" }; if (ly.shield) part.shield = strip(ly.shield); if (ly.offhand) part.offhand = strip(ly.offhand); }   // Slice 5 §E
@@ -77,7 +78,8 @@
   // every look: [{ id, name, slot, part, pending, underwear, silly }]
   GG.cosList = function () {
     const out = [], O = CO().outfits, P = L().parts, seen = new Set();
-    for (const id in O) { const o = O[id], own = P[o.slot] && P[o.slot][o.item];
+    for (const id in O) { const o = O[id], own = P[o.slot] && P[o.slot][o.item], pt = o.underwear ? GG.UNDERWEAR : GG.ownPart(o.slot, o.item);
+      if (pt) seen.add(o.slot + pt);   // the outfit IS that part's look (no second "look_<id>" entry)
       out.push({ id, name: o.name, slot: o.slot, silly: true, underwear: !!o.underwear, part: o.underwear ? GG.UNDERWEAR : GG.ownPart(o.slot, o.item), pending: !o.underwear && !own }); }
     for (const slot of ["head", "body"]) for (const part in P[slot]) {
       if (seen.has(slot + part)) continue; seen.add(slot + part);
@@ -129,7 +131,8 @@
     const pick = { pack_back: pk && pk.pack_back, body: fill(B.body), underwear: B.underwear, face: fill(B.face),
       legwear: uw ? null : bd ? (bd.hidesLegwear ? null : bd.legwear) : D.empty.legwear, footwear: bd && bd.footwear, torso: uw ? null : bd ? bd.torso : D.empty.torso,
       pack_straps: pk && pk.pack_straps, belt: bd && bd.belt, weapon: wp && wp.weapon, offhand: op && !blocked && op.offhand, shield: op && !blocked && op.shield, arms: fill(armsF), sleeves: sleevesF,
-      hair: hd && hd.hidesHair ? null : fill(B.hair), facial_hair: spec.beard ? fill(B.facial_hair) : null, headwear: hd && hd.headwear };
+      hair: hd && hd.hidesHair ? null : fill(B.hair), facial_hair: spec.beard && !(hd && hd.hidesFacialHair) ? fill(B.facial_hair) : null,
+      headwear: hd ? hd.headwear : bd && bd.headwear };   // a body part's headwear (the maid headband) only on a bare head
     const out = [];
     for (const layer of D.layerOrder) if (pick[layer]) out.push({ layer, file: D.base + pick[layer] });
     return out;

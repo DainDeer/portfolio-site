@@ -8,10 +8,12 @@ DATA.zones = {
   passageUnlockOnDeath: true,
   list: {
     a: {
-      name: "The Scablands", size: "Medium", tierLabel: "Tier 1–3", familyMix: "Outlaws and Bio-beasts",
+      name: "The Hushwood", size: "Medium", tierLabel: "Tier 1–3", familyMix: "Outlaws and Bio-beasts",
       startUnlocked: true, generated: true,        // the Slice 1 generated map (DATA.map)
       insertion: "outpost",                        // node id of the insertion point (drawn as "Insertion Point", never the outpost)
-      insertionName: "Insertion Point", resourceMult: 1, dcBonus: 0
+      insertionName: "Insertion Point", resourceMult: 1, dcBonus: 0,
+      mapBg: "map_bg_hushwood",                   // Slice 5 §G (Smudge 1828231)
+      insertionIcon: "loc_ranger_gate"            // the Ranger's Gate (Smudge 8272465; js/mapview.js, default loc_insertion)
     },
     b: {
       name: "The Drowned Suburbs", size: "Small", tierLabel: "Tier 2", familyMix: "85% Bio-beasts / 15% Outlaws",
@@ -66,17 +68,16 @@ DATA.zones = {
       spot: { skills: ["perception", "survival"], dc: 12 }, // once per visit on entering the Rail Yard, squad's best of either
       crossHeat: 5
     },
-    // Slice 5 §G. The brainstorm puts the Deer Trail at Hushwood's Fire Lookout; zone a has no Fire Lookout yet, so it
-    // starts behind Hollow Creek (always on the map) until the Hushwood pass adds one.
+    // Slice 5 §G: the Deer Trail starts at the Hushwood's Fire Lookout (fixed in rows 3-4, DATA.map.fixed)
     deer_trail: {
-      name: "Deer Trail", crossVerb: "follow", sprite: "obj_passage_deer_trail", examine: "[PLACEHOLDER] A narrow trail of hoofprints climbs into the hills. Something with horns uses it every day.", mapIcon: "map_passage",
-      ends: { a: { zone: "a", loc: "hollow_creek" }, greyback: { zone: "greyback", node: "gb1" } },
+      name: "Deer Trail", crossVerb: "follow", spotText: "[PLACEHOLDER] Fresh hoofprints cut off between the trees, uphill.", hiddenWhere: "behind the lookout", sprite: "obj_passage_deer_trail", examine: "[PLACEHOLDER] A narrow trail of hoofprints climbs into the hills. Something with horns uses it every day.", mapIcon: "map_passage",
+      ends: { a: { zone: "a", loc: "fire_lookout" }, greyback: { zone: "greyback", node: "gb1" } },
       hiddenAt: "a",
       spot: { skills: ["perception", "survival"], dc: 12 },
       crossHeat: 4
     },
     spillway: {
-      name: "Spillway Tunnel", crossVerb: "climb through", sprite: "obj_passage_spillway", anim: "obj_passage_spillway_trickle",   // anim (Vixie): the trickle; the still under reduced motion
+      name: "Spillway Tunnel", crossVerb: "climb through", spotText: "[PLACEHOLDER] Water trickles out of a crack behind the pumps. It's coming from somewhere higher.", hiddenWhere: "behind the pumps", sprite: "obj_passage_spillway", anim: "obj_passage_spillway_trickle",   // anim (Vixie): the trickle; the still under reduced motion
       examine: "[PLACEHOLDER] A concrete spillway tunnel, dripping. The dam is somewhere above.", mapIcon: "map_passage",
       ends: { greyback: { zone: "greyback", loc: "gb_dam" }, b: { zone: "b", loc: "b_cistern" } },
       hiddenAt: "b",                                     // hidden in the Cistern Pumphouse until spotted; always visible at the dam

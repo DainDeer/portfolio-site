@@ -105,6 +105,21 @@
     g.gear[slot] = it; if (it && G.GruntGear) St.cosUnlocked = G.GruntGear.noteEquip(it);   // Slice 5 §H: equipping once unlocks the look
     St.save(); return null;
   };
+  // the body's deploy loadout (items stay in the stash until you deploy). One item instance sits in ONE slot: picking it
+  // for a second slot moves it there (the newer pick wins, like hand conflicts). Pocket's bug: it used to fill both
+  St.equipBody = function (slot, itemUid) {
+    const s = G.state, lo = s.loadout, I = G.Items; lo.gear = lo.gear || {}; St.cosUnlocked = null;
+    const x = itemUid ? s.stash.items.find((i) => i.uid === itemUid) : null; if (itemUid && !x) return "That item isn't in the stash.";
+    if (x) {
+      const get = (k) => (k !== slot && lo.gear[k] === itemUid) || !lo.gear[k] ? null : s.stash.items.find((i) => i.uid === lo.gear[k]) || null;   // as if it had already left its old slot
+      if (I.isHandItem(x)) { const fit = I.handFit(slot, x, get); if (fit.why) return fit.why; for (const k of fit.clear) delete lo.gear[k]; }   // Slice 5 §E
+      for (const k in lo.gear) if (k !== slot && lo.gear[k] === itemUid) delete lo.gear[k];
+      lo.gear[slot] = itemUid;
+      if ((lo.pouch || []).some((p) => p && p.uid === itemUid)) lo.pouch = lo.pouch.filter((p) => !p || p.uid !== itemUid);
+      if (G.GruntGear) St.cosUnlocked = G.GruntGear.noteEquip(x);   // Slice 5 §H
+    } else delete lo.gear[slot];
+    St.save(); return null;
+  };
   St.gruntItems = (g) => Object.values((g && g.gear) || {}).filter(Boolean);
   // template: Grunt, Veteran (the Grunt template with DATA.allies.veteran over it) or the debug core ally
   St.gruntTpl = (g) => (g.tplKey === "pet" ? Object.assign({}, DATA.bodies.grunt, DATA.allies.pets[g.petKey] || {}) : g.tplKey === "core" ? DATA.bodies.coreAllyTest : g.tplKey === "veteran" ? Object.assign({}, DATA.bodies.grunt, DATA.allies.veteran) : DATA.bodies.grunt);
@@ -118,7 +133,7 @@
     const s = {
       version: DATA.config.version, seed, created: Date.now(),
       maps: null, world: { hollow_creek: "pending", sites: {} }, everSeen: {}, locFlags: {},
-      zonesUnlocked: {}, passages: {}, quests: null, buildings: null, journal: [],
+      zonesUnlocked: {}, passages: {}, secrets: {}, quests: null, buildings: null, journal: [],
       mind, lifetimeXp: 0,
       bodies: [St.makeBasicBody()],
       grunts: [], fallenGrunts: [], perks: {}, stash: { items: [], res: U.clone(DATA.items.startingStash.resources) },
@@ -286,7 +301,7 @@
     s.everSeen = s.everSeen || {}; s.locFlags = s.locFlags || {};
     s.zonesUnlocked = s.zonesUnlocked || {};
     for (const z of DATA.zones.order) if (DATA.zones.list[z].startUnlocked) s.zonesUnlocked[z] = true;
-    s.passages = s.passages || {}; s.debuffs = s.debuffs || {};
+    s.passages = s.passages || {}; s.secrets = s.secrets || {}; s.debuffs = s.debuffs || {};
     s.cosmetics = s.cosmetics || { unlocked: {} }; s.cosmetics.unlocked = s.cosmetics.unlocked || {};   // Slice 5 §H   // Slice 3 §4b debuffs (Marked by the Orbitals: runs left)
     s.quests = Object.assign(G.Quests.freshState(), s.quests || {});
     s.buildings = Object.assign(G.Outpost.freshState(), s.buildings || {});
@@ -315,6 +330,7 @@
     if (!s.difficulty || !DATA.config.difficulty.list[s.difficulty]) { s.difficulty = DATA.config.difficulty.default; s.difficultyLocked = true; }   // Slice 4 §H: older saves are Standard
     s.loadout = s.loadout || { bodyId: "body_basic", gear: {}, pouch: [], grunts: [] };
     s.loadout.gear = s.loadout.gear || {}; s.loadout.pouch = s.loadout.pouch || []; s.loadout.grunts = s.loadout.grunts || [];
+    { const seen = new Set(); for (const k of Object.keys(s.loadout.gear)) { const u = s.loadout.gear[k]; if (u && seen.has(u)) delete s.loadout.gear[k]; else if (u) seen.add(u); } }   // an item in two body slots (pre-fix saves): keep the first
     return s;
   };
   St.wipe = function () { try { localStorage.removeItem(DATA.config.saveKey); } catch (e) {} };

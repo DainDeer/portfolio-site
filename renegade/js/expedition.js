@@ -100,6 +100,7 @@
     return null;
   };
   X.visible = function (nid) {
+    { const z = G.Zones.zoneOf(nid), mm = G.state.maps && G.state.maps[z]; if (mm && G.Map.hiddenSecret(mm.nodes[nid])) return false; }   // Slice 5 §G: an unfound secret
     const r = run(); if (!r) return !!G.state.everSeen[nid];
     if (r.visited[nid] || (r.revealed && r.revealed[nid])) return true;   // revealed: fog lifted by an event (Signal peace)
     const map = G.Zones.map(G.Zones.zoneOf(nid));

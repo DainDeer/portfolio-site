@@ -37,7 +37,7 @@
   RV.zoneOk = (z) => !D().zones || D().zones.includes(z);   // follow-up (Vixie): rivals only in these zones (Zone B)
   RV.eligibleNode = function (map, n) {
     const loc = G.Map.loc(n); if (!loc) return false;
-    return n.id !== map.insertion && !loc.extraction && n.loc !== "hollow_creek";
+    return n.id !== map.insertion && !loc.extraction && n.loc !== "hollow_creek" && !G.Map.hiddenSecret(n);
   };
   // before each run: the next run's rival, pre-rolled for one unlocked zone (the Radio can read it), with a location
   RV.rollNext = function (rng) {

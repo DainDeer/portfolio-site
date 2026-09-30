@@ -5,7 +5,7 @@ window.DATA = window.DATA || {};
 // tag "office" (design, Slice 3): the School's admin area and municipal / commercial buildings; each gets 1 guaranteed
 // terminal (DATA.searchables.fixedByTag). Tag "terminal" (Relay Tower, clinics) adds terminals to the random mix instead.
 DATA.map = {
-  regionName: "The Scablands [PLACEHOLDER]",   // Zone A (see data/zones.js)
+  regionName: "The Hushwood [PLACEHOLDER]",   // Zone A (see data/zones.js). Slice 5 §G (Vixie): zone a is The Hushwood (was "The Scablands")
   rows: [3, 3, 3, 3, 3],          // locations per row (row 0 = outpost). 15 locations total
   rowTier: [0, 1, 1, 2, 2, 3],    // tier by row index (row 0 = outpost)
   extraEdgeChance: 0.45,          // chance of a second forward edge (creates forks/merges)
@@ -18,17 +18,18 @@ DATA.map = {
     fogAlpha: 0.9,                // fog over never-seen ground
     rememberedFogAlpha: 0.5,      // fog kept over locations remembered from earlier runs
     revealedAlpha: 0.45,          // strength of the revealed-ground tile over the map background
-    revealedAlphaByZone: { b: 0, greyback: 0 } // painted backgrounds (zones.list[z].mapBg) show through as-is
+    revealedAlphaByZone: { a: 0, b: 0, greyback: 0 } // painted backgrounds (zones.list[z].mapBg) show through as-is
   },
   // fixed placements: role -> allowed rows (placed in this order, so the extractions always get their row)
   fixed: {
     ex_truck:         { rows: [2] },       // always a tier-1 extraction reachable in the tutorial ("lightly railroaded", §3.5)
-    ex_tunnel:        { rows: [4] },
+    ex_tunnel:        { rows: [4, 5] },    // Slice 5 §G: the Creek Culvert
     ex_rooftop:       { rows: [5] },
     backpack_cache:   { rows: [1] },
     rail_yard:        { rows: [3, 4] },    // Slice 2: hosts the passage to Zone B (storm drain grate)
     hollow_creek:     { rows: [2, 3] },
-    pump_station:     { rows: [2, 3] }     // Slice 2: holds the Pump House quest object
+    pump_station:     { rows: [2, 3] },    // Slice 2: holds the Pump House quest object
+    fire_lookout:     { rows: [3, 4] }     // Slice 5 §G (Vixie): holds the Deer Trail up to Greyback
   },
   // Slice 4 §B: locations every Zone A map must have. Filled AFTER the normal assignment, and only when the roll left
   // them out: the first non-fixed node in the listed rows (in order) is swapped to it. No rng draws, so maps that
@@ -37,27 +38,46 @@ DATA.map = {
     cryo_annex:       { rows: [2, 3, 4] }
   },
   // Every location in every zone. `zone` set = not part of Zone A's generator pool (handcrafted, see data/zones.js).
+  // secret: never in the pool; a secretSpot on its host location adds it to the map as a hidden spur off the host
+  // (js/map.js), shown for good once a spot check finds it (state.secrets).
   // odds (independent %): hostiles, event (= "there is an event object in the location view"), survivors (a survivor object).
   // kind (optional): "medical" | "industrial" scales Med Supplies drops (DATA.searchables.medWeightByKind).
   // size: S | M | L (location view template, data/searchables.js). tags: resources found here (a matching tag doubles
   // that resource's weight in every loot table). Slice 1 tags migrated: circuits -> electronics, biomass -> chemicals.
   locations: {
-    flooded_mall:    { name: "Flooded Mall",          icon: "loc_mall",      family: "outlaws", size: "L", odds: { hostiles: 55, event: 30, survivors: 10 }, tags: ["scrap", "food", "cloth", "office"], events: ["toll_gate", "cache"] },
-    relay_tower:     { name: "Relay Tower 7",         icon: "loc_tower",     family: "machines", size: "M", odds: { hostiles: 35, event: 70, survivors: 5 },  tags: ["electronics", "data", "terminal"], events: ["relay", "ai_perimeter_drone"] },   // Slice 3 §4a: machines
+    // ---- Slice 5 §G (Vixie): these six leave the Hushwood pool for The Scablands (zone "scablands", tier 5; its map
+    // lands in the next push, until then they're on no map). Ids kept. ----
+    flooded_mall:    { zone: "scablands", name: "Flooded Mall",          icon: "loc_mall",      family: "outlaws", size: "L", odds: { hostiles: 55, event: 30, survivors: 10 }, tags: ["scrap", "food", "cloth", "office"], events: ["toll_gate", "cache"] },
+    relay_tower:     { zone: "scablands", name: "Relay Tower 7",         icon: "loc_tower",     family: "machines", size: "M", odds: { hostiles: 35, event: 70, survivors: 5 },  tags: ["electronics", "data", "terminal"], events: ["relay", "ai_perimeter_drone"] },   // Slice 3 §4a: machines
     riverbed_camp:   { name: "Dry Riverbed Camp",     icon: "loc_camp",      family: "outlaws", size: "M", odds: { hostiles: 70, event: 25, survivors: 10 }, tags: ["scrap", "food"], events: ["toll_gate"] },
-    brigid_clinic:   { kind: "medical", name: "St. Brigid Clinic",     icon: "loc_hospital",  family: "beasts",  size: "M", odds: { hostiles: 40, event: 45, survivors: 15 }, tags: ["med", "chemicals", "terminal"], events: ["cryo_ward"] },
+    brigid_clinic:   { zone: "scablands", kind: "medical", name: "St. Brigid Clinic",     icon: "loc_hospital",  family: "beasts",  size: "M", odds: { hostiles: 40, event: 45, survivors: 15 }, tags: ["med", "chemicals", "terminal"], events: ["cryo_ward"] },
     rail_yard:       { kind: "industrial", name: "Overgrown Rail Yard",   icon: "loc_overgrown", family: "beasts",  size: "M", odds: { hostiles: 65, event: 20, survivors: 5 },  tags: ["chemicals", "scrap", "biomass"], events: ["tunnel"], passage: "storm_drain" },
-    transit_tunnel:  { name: "Collapsed Transit Tunnel", icon: "loc_tunnel", family: "beasts",  size: "M", odds: { hostiles: 40, event: 80, survivors: 0 },  tags: ["scrap"], events: ["tunnel"] },
-    fuel_depot:      { kind: "industrial", name: "Fuel Depot 9",          icon: "loc_depot",     family: "outlaws", size: "M", odds: { hostiles: 50, event: 30, survivors: 5 },  tags: ["scrap", "chemicals", "fuel", "office"], events: ["cache", "toll_gate"] },
-    pylon_field:     { kind: "industrial", name: "Pylon Field",           icon: "loc_den",       family: "beasts",  size: "M", odds: { hostiles: 70, event: 25, survivors: 0 },  tags: ["chemicals", "biomass"], events: ["relay", "tunnel", "ai_perimeter_drone"] },
+    transit_tunnel:  { zone: "scablands", name: "Collapsed Transit Tunnel", icon: "loc_tunnel", family: "beasts",  size: "M", odds: { hostiles: 40, event: 80, survivors: 0 },  tags: ["scrap"], events: ["tunnel"] },
+    fuel_depot:      { zone: "scablands", kind: "industrial", name: "Fuel Depot 9",          icon: "loc_depot",     family: "outlaws", size: "M", odds: { hostiles: 50, event: 30, survivors: 5 },  tags: ["scrap", "chemicals", "fuel", "office"], events: ["cache", "toll_gate"] },
+    pylon_field:     { zone: "scablands", kind: "industrial", name: "Pylon Field",           icon: "loc_den",       family: "beasts",  size: "M", odds: { hostiles: 70, event: 25, survivors: 0 },  tags: ["chemicals", "biomass"], events: ["relay", "tunnel", "ai_perimeter_drone"] },
     toll_bridge:     { name: "Old Toll Bridge",       icon: "loc_camp",      family: "outlaws", size: "M", odds: { hostiles: 45, event: 75, survivors: 5 },  tags: ["scrap", "fuel", "office"], events: ["toll_gate"] },
     cryo_annex:      { kind: "medical", name: "Cryo Ward Annex",       icon: "loc_bunker",    family: "beasts",  size: "M", odds: { hostiles: 45, event: 75, survivors: 5 },  tags: ["med", "terminal"], events: ["cryo_ward"] },
+    // ---- The Hushwood's pool (Slice 5 §G, Vixie): the brainstorm's woods + three old keepers (Dead Renegade's Hollow,
+    // Dry Riverbed Camp, Old Toll Bridge). Names [PLACEHOLDER] (Megan's copy review), numbers [DRAFT]. Markers: Smudge's
+    // 1828231; the three keepers keep their old markers (Vixie). ----
+    mossback:        { name: "Mossback Campground", icon: "loc_mossback", family: "outlaws", size: "M", odds: { hostiles: 50, event: 40, survivors: 15 }, tags: ["food", "cloth"], events: ["cache", "toll_gate"] },
+    owlfall:         { name: "Owlfall Hollow",      icon: "loc_owlfall",  family: "beasts",  size: "M", odds: { hostiles: 55, event: 35, survivors: 5 },  tags: ["biomass", "chemicals", "food"], events: ["cache"],
+                       secretSpot: { loc: "witch_cottage", skills: ["perception"], dc: 15, text: "[PLACEHOLDER] Owls, all of them watching the same gap in the trees." } },   // Vixie: the Witch's Cottage
+    lumber_mill:     { kind: "industrial", name: "Lumber Mill No. 3", icon: "loc_lumber_mill", family: "outlaws", size: "L", odds: { hostiles: 55, event: 30, survivors: 5 }, tags: ["scrap", "fuel", "office"], events: ["toll_gate", "cache"] },
+    stillwater:      { name: "Stillwater Pond",     icon: "loc_stillwater", family: "beasts", size: "M", odds: { hostiles: 45, event: 40, survivors: 5 }, tags: ["water", "food", "biomass"], events: ["cache"] },
+    picnic:          { name: "Picnic of the Damned", icon: "loc_picnic", family: "beasts", size: "M", odds: { hostiles: 60, event: 50, survivors: 0 }, tags: ["food", "cloth"], events: ["cache"],
+                       objectWeights: { body: 40 } },   // the picnickers are still here
+    // fixed (rows [3, 4]): the Deer Trail to Greyback (it was at Hollow Creek until the Hushwood had its lookout)
+    fire_lookout:    { name: "Fire Lookout",        icon: "loc_fire_lookout", family: "outlaws", size: "S", odds: { hostiles: 40, event: 30, survivors: 5 }, tags: ["electronics", "cloth"], events: ["cache"], passage: "deer_trail" },
+    // SECRET (Vixie): off Owlfall Hollow, Perception DC 15 to spot (owlfall.secretSpot). The witch left her hat.
+    witch_cottage:   { name: "Witch's Cottage",     icon: "loc_witch_cottage", family: "beasts",  size: "S", odds: { hostiles: 35, event: 50, survivors: 20 }, tags: ["chemicals", "med"], events: ["cache"], secret: true,
+                       guaranteedLoot: { base: "witch_hat", rarity: "blue", once: true, object: { name: "Hat stand", type: "locker" } } },
     renegade_hollow: { name: "Dead Renegade's Hollow",icon: "loc_ruins",     family: "outlaws", size: "M", odds: { hostiles: 40, event: 70, survivors: 0 },  tags: ["electronics"], events: ["cache"] },
     // fixed roles
     backpack_cache:  { kind: "medical", name: "Abandoned School",      icon: "loc_ruins",     family: "beasts",  size: "M", odds: { hostiles: 30, event: 0, survivors: 10 }, tags: ["cloth", "scrap", "office"], events: [],
                        guaranteedLoot: { base: "school_bag", rarity: "white", once: true, object: { name: "School lockers", type: "locker" } } },  // "one backpack pickup"
     pump_station:    { kind: "industrial", name: "Pump Station",          icon: "loc_pump_station", family: "outlaws", size: "M", odds: { hostiles: 45, event: 25, survivors: 5 }, tags: ["water", "scrap", "office"], events: ["toll_gate", "cache"] },
-    hollow_creek:    { name: "Hollow Creek",          icon: "loc_settlement",family: "outlaws", size: "M", odds: { hostiles: 0, event: 0, survivors: 50 }, tags: ["food", "water"], events: [], worldEvent: "distress_hollow_creek", passage: "deer_trail",   // Slice 5 §G: the Deer Trail up to Greyback (until Hushwood has its Fire Lookout)
+    hollow_creek:    { name: "Hollow Creek",          icon: "loc_settlement",family: "outlaws", size: "M", odds: { hostiles: 0, event: 0, survivors: 50 }, tags: ["food", "water"], events: [], worldEvent: "distress_hollow_creek",    // Slice 5 §G: the Deer Trail moved to the Fire Lookout
                        
                        worldIcons: { ignored: "loc_distress", fallen: "loc_aftermath", aftermath: "loc_aftermath", aftermath_cleared: "loc_aftermath" },
                        // Distress call, same run: ignoring the radio starts a countdown. Arrive within holdMoves moves -> holdingEvent
@@ -72,10 +92,10 @@ DATA.map = {
                            container: { name: "Town Salvage", type: "crate", bonusItems: 2, rarityBonus: 15 }   // a guaranteed searchable, better than any normal crate
                          }
                        } },
-    ex_truck:        { name: "Rusted Truck",          icon: "loc_truck", iconWrecked: "loc_truck_wrecked", iconWreckedAnim: "loc_truck_wrecked_smoke",family: "outlaws", size: "M", odds: { hostiles: 30, event: 0, survivors: 0 }, tags: ["scrap", "fuel"], events: [],
+    ex_truck:        { name: "Logging Truck",          icon: "loc_logging_truck", iconWrecked: "loc_logging_truck_wrecked", iconWreckedAnim: "loc_logging_truck_wrecked_smoke",family: "outlaws", size: "M", odds: { hostiles: 30, event: 0, survivors: 0 }, tags: ["scrap", "fuel"], events: [],
                        extraction: { type: "check", skill: "piloting", dc: 12, failHeat: 5, badFail: "crash", crashHeat: 8 } },  // hotwire (§2.3). Slice 5 §A (Megan): a Bad Fail crashes it (was "battle"); crash numbers: config.extraction.crash
-    ex_tunnel:       { name: "Tunnel Home",           icon: "loc_extraction",family: "beasts",  size: "M", odds: { hostiles: 0, event: 0, survivors: 0 }, tags: ["scrap"], events: [],
-                       extraction: { type: "defense", surviveSec: 30, waves: 3, waveBudgetMult: 0.6 } },           // countdown defense (Tarkov-like)
+    ex_tunnel:       { name: "Creek Culvert",   icon: "loc_creek_culvert",family: "beasts",  size: "M", odds: { hostiles: 0, event: 0, survivors: 0 }, tags: ["scrap"], events: [],
+                       extraction: { type: "defense", surviveSec: 30, waves: 3, waveBudgetMult: 0.6 } },           // countdown defense (Tarkov-like). Slice 5 §G: renamed from Tunnel Home, same defense
     ex_rooftop:      { name: "Rooftop Pickup",        icon: "loc_extraction",family: "outlaws", size: "M", odds: { hostiles: 40, event: 0, survivors: 0 }, tags: [], events: [],
                        extraction: { type: "free" } },
     // ---- Zone B: The Drowned Suburbs (handcrafted, tier 2; nodes + edges in data/zones.js) ----

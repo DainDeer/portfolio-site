@@ -136,7 +136,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     for (const z of DATA.zones.order) {
       const d = DATA.zones.list[z], open = G.Zones.unlocked(z);
       const c = h("div", { class: "card zone-card" + (open ? "" : " disabled"), "data-zone": z, onclick: () => { if (!open) return UI.toast("Find the way in first."); UI.zone = z; UI.openPanel("deploy"); } });
-      if (!open) { c.appendChild(h("div", { class: "bc-name" }, d.lockedLabel || "??? – find the way in")); c.appendChild(h("div", { class: "bc-sub" }, "Somewhere past the Scablands.")); }
+      if (!open) { c.appendChild(h("div", { class: "bc-name" }, d.lockedLabel || "??? – find the way in")); c.appendChild(h("div", { class: "bc-sub" }, "Somewhere past the Hushwood.")); }
       else {
         const f = G.Zones.knownFacts(z), qs = G.Quests.questsInZone(z).map((id) => G.Quests.def(id).name);
         c.appendChild(h("div", { class: "bc-name" }, d.name));
@@ -776,13 +776,17 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
   };
 
   UI.stepSpot = function (step) {
-    const P = DATA.zones.passages[step.pid], info = G.Exp.spotInfo(step.pid);
-    const box = h("div", null, h("h2", null, "Something feels off here"), h("p", { class: "ev-text" }, "Water is running somewhere under the tracks. Maybe there's a way down."),
-      h("p", null, `Best of ${P.spot.skills.map((k) => DATA.skills[k].name).join(" / ")} (squad best) vs DC ${P.spot.dc}: `, h("span", { class: "chance" }, UI.checkLabel(info))));
+    // a hidden passage, or (Slice 5 §G) a secret place off this one (step.secret: its spot is the host's secretSpot)
+    const P = step.secret ? null : DATA.zones.passages[step.pid], sp = G.Exp.spotDef(step.secret ? step : step.pid), info = G.Exp.spotInfo(step.secret ? step : step.pid);
+    const from = (G.state.run && G.state.run.zone) || "a", flavor = step.secret ? sp.text : P.spotText || "Water is running somewhere under the tracks. Maybe there's a way down.";
+    const box = h("div", null, h("h2", null, "Something feels off here"), h("p", { class: "ev-text" }, flavor),
+      h("p", null, `Best of ${sp.skills.map((k) => DATA.skills[k].name).join(" / ")} (squad best) vs DC ${sp.dc}: `, h("span", { class: "chance" }, UI.checkLabel(info))));
     const btn = h("button", { class: "primary", "data-act": "spot", onclick: () => {
       const res = G.XP.at({ el: btn }, () => G.Exp.resolveSpot(step));
-      const out = h("div", null, h("h2", null, res.found ? "You found a way down!" : "Nothing obvious"), h("p", { class: "roll " + (res.found ? "good" : "bad") }, res.roll.text),
-        h("p", null, res.found ? `A ${P.name.toLowerCase()} hidden under the weeds leads to ${DATA.zones.list[G.Zones.otherEnd(step.pid, "a")].name}. It's on your map for good` + (DATA.zones.passageUnlockOnDeath ? ", and the zone is now a starting choice at the outpost." : ".") : "Maybe you'll spot it on a later visit."),
+      const foundTxt = step.secret ? `${DATA.map.locations[step.secret].name} is tucked away just off the path. It's on your map for good.`
+        : `A ${P.name.toLowerCase()} hidden ${P.hiddenWhere || "under the weeds"} leads to ${DATA.zones.list[G.Zones.otherEnd(step.pid, from)].name}. It's on your map for good` + (DATA.zones.passageUnlockOnDeath ? ", and the zone is now a starting choice at the outpost." : ".");
+      const out = h("div", null, h("h2", null, res.found ? (step.secret ? "You found something!" : "You found a way through!") : "Nothing obvious"), h("p", { class: "roll " + (res.found ? "good" : "bad") }, res.roll.text),
+        h("p", null, res.found ? foundTxt : "Maybe you'll spot it on a later visit."),
         h("button", { class: "primary", onclick: () => UI.render() }, "Continue"));
       UI.modal(out);
     } }, "Look around");

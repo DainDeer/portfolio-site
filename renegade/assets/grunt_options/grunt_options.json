@@ -690,6 +690,44 @@
         "hides_hair": false,
         "hides_facial_hair": false,
         "clipsHairAbove": true
+      },
+      "witch_hat": {
+        "name": "Witch hat",
+        "set": "silly",
+        "items": [
+          "witch_hat"
+        ],
+        "layers": {
+          "headwear": "grunt_options/gear/head/witch_hat/16_headwear.png"
+        },
+        "onMannequin": "grunt_options/gear/head/witch_hat/on_mannequin.png",
+        "cosmetic": true,
+        "silly": true,
+        "icon": "item_witch_hat",
+        "iconFile": "items/item_witch_hat.png",
+        "generatedBy": "slice5_outfits.py",
+        "hides_hair": false,
+        "hides_facial_hair": false,
+        "clipsHairAbove": true
+      },
+      "horse_mask": {
+        "name": "Horse mask",
+        "set": "silly",
+        "items": [
+          "horse_mask"
+        ],
+        "layers": {
+          "headwear": "grunt_options/gear/head/horse_mask/16_headwear.png"
+        },
+        "onMannequin": "grunt_options/gear/head/horse_mask/on_mannequin.png",
+        "cosmetic": true,
+        "silly": true,
+        "icon": "item_horse_mask",
+        "iconFile": "items/item_horse_mask.png",
+        "generatedBy": "slice5_outfits.py",
+        "hides_hair": true,
+        "hides_facial_hair": true,
+        "clipsHairAbove": true
       }
     },
     "body": {
@@ -816,6 +854,87 @@
         },
         "onMannequin": "grunt_options/gear/body/hide_vest/on_mannequin.png",
         "hides_legwear": false
+      },
+      "wizard_robes": {
+        "name": "Wizard robes",
+        "set": "silly",
+        "items": [
+          "wizard_robes"
+        ],
+        "layers": {
+          "footwear": "grunt_options/gear/body/wizard_robes/06_footwear.png",
+          "torso": "grunt_options/gear/body/wizard_robes/07_torso.png",
+          "belt": "grunt_options/gear/body/wizard_robes/09_belt.png",
+          "sleeves": {
+            "one_hand": "grunt_options/gear/body/wizard_robes/13_sleeves.png",
+            "two_hand": "grunt_options/gear/body/wizard_robes/13_sleeves_two_hand.png",
+            "two_hand_rifle": "grunt_options/gear/body/wizard_robes/13_sleeves_two_hand_rifle.png",
+            "one_hand_shield": "grunt_options/gear/body/wizard_robes/13_sleeves_one_hand_shield.png"
+          }
+        },
+        "onMannequin": "grunt_options/gear/body/wizard_robes/on_mannequin.png",
+        "cosmetic": true,
+        "silly": true,
+        "icon": "item_wizard_robes",
+        "iconFile": "items/item_wizard_robes.png",
+        "generatedBy": "slice5_outfits.py",
+        "hides_legwear": true
+      },
+      "maid_outfit": {
+        "name": "Maid outfit",
+        "set": "silly",
+        "items": [
+          "maid_outfit"
+        ],
+        "layers": {
+          "legwear": "grunt_options/gear/body/maid_outfit/05_legwear.png",
+          "footwear": "grunt_options/gear/body/maid_outfit/06_footwear.png",
+          "torso": "grunt_options/gear/body/maid_outfit/07_torso.png",
+          "belt": "grunt_options/gear/body/maid_outfit/09_belt.png",
+          "sleeves": {
+            "one_hand": "grunt_options/gear/body/maid_outfit/13_sleeves.png",
+            "two_hand": "grunt_options/gear/body/maid_outfit/13_sleeves_two_hand.png",
+            "two_hand_rifle": "grunt_options/gear/body/maid_outfit/13_sleeves_two_hand_rifle.png",
+            "one_hand_shield": "grunt_options/gear/body/maid_outfit/13_sleeves_one_hand_shield.png"
+          }
+        },
+        "onMannequin": "grunt_options/gear/body/maid_outfit/on_mannequin.png",
+        "cosmetic": true,
+        "silly": true,
+        "icon": "item_maid_outfit",
+        "iconFile": "items/item_maid_outfit.png",
+        "generatedBy": "slice5_outfits.py",
+        "hides_legwear": false,
+        "extraLayers": {
+          "headwear": "grunt_options/gear/body/maid_outfit/16_headwear.png"
+        },
+        "extraLayersWhen": "headwear: only while the head slot draws nothing (no head gear, no head look)"
+      },
+      "lucky_boxers": {
+        "name": "Lucky boxers",
+        "set": "silly",
+        "items": [
+          "lucky_boxers"
+        ],
+        "layers": {
+          "legwear": "grunt_options/gear/body/lucky_boxers/05_legwear.png",
+          "footwear": "grunt_options/gear/body/lucky_boxers/06_footwear.png",
+          "torso": "grunt_options/gear/body/lucky_boxers/07_torso.png",
+          "sleeves": {
+            "one_hand": "grunt_options/gear/body/lucky_boxers/13_sleeves.png",
+            "two_hand": "grunt_options/gear/body/lucky_boxers/13_sleeves_two_hand.png",
+            "two_hand_rifle": "grunt_options/gear/body/lucky_boxers/13_sleeves_two_hand_rifle.png",
+            "one_hand_shield": "grunt_options/gear/body/lucky_boxers/13_sleeves_one_hand_shield.png"
+          }
+        },
+        "onMannequin": "grunt_options/gear/body/lucky_boxers/on_mannequin.png",
+        "cosmetic": true,
+        "silly": true,
+        "icon": "item_lucky_boxers",
+        "iconFile": "items/item_lucky_boxers.png",
+        "generatedBy": "slice5_outfits.py",
+        "hides_legwear": false,
+        "underwearLook": "this is the lucky_boxers item's own look (boxers + vest + socks). The bare 'Just the underwear' look (base/underwear.png, no body layers) needs no art."
       }
     },
     "backpack": {
@@ -1131,5 +1250,41 @@
       "headwear"
     ],
     "rename": "edit SHIELD_IDS / SHIELD_POSE / SHIELD_LAYER at the top of assets/src/slice5_shields.py and rerun it: every file, key and this JSON follow"
+  },
+  "outfits": {
+    "generatedBy": "slice5_outfits.py",
+    "spec": "Slice 5 H (slice-5.md): cosmetic looks over the real gear; unlock = find + equip once",
+    "ids": {
+      "head": [
+        "witch_hat",
+        "horse_mask"
+      ],
+      "body": [
+        "wizard_robes",
+        "maid_outfit",
+        "lucky_boxers"
+      ]
+    },
+    "note": "gear ids = the item bases in data/items.js (silly: true) = DATA.gruntLook.cosmetics.outfits ids, so GruntGear.mergeOptions adds the parts and ownPart picks them by key over the gruntLook.items stand-ins. No new layer: heads use headwear, bodies use legwear/footwear/torso/belt/sleeves (sleeves per arm variant).",
+    "hides": {
+      "witch_hat": [],
+      "horse_mask": [
+        "hair",
+        "facial_hair"
+      ],
+      "wizard_robes": [
+        "legwear"
+      ],
+      "maid_outfit": [],
+      "lucky_boxers": []
+    },
+    "extraLayers": {
+      "maid_outfit": {
+        "headwear": "grunt_options/gear/body/maid_outfit/16_headwear.png",
+        "when": "the head slot draws nothing (no head gear, no head look)"
+      }
+    },
+    "manifest": "grunt_options/outfits_manifest.json",
+    "preview": "grunt_options/preview_outfits_2x.png"
   }
 }

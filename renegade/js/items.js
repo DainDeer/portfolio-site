@@ -211,6 +211,7 @@
       if (w.tags.length) lines.push("Tags: " + w.tags.join(", "));
       lines.push(`Skill: ${DATA.skills[w.skill].name}` + (item.req ? ` (req ${item.req}${LC().enforceRequirements ? "" : ", not enforced"})` : ""));
     }
+    if (b.silly) lines.push(`<span class="cos-tag">Cosmetic</span> · equip once to unlock its look for good`);   // Slice 5 §H (Vixie)
     if (b.slot === "shield") lines.push(`Shield · off hand · blocks ${b.blockPct}% of hits from the front · Brawling`);   // Slice 5 §E
     if (b.armor) lines.push(`+${Math.round(b.armor * sc)} Armor`);
     if (b.evasion) lines.push(`+${Math.round(b.evasion * sc)} Evasion`);

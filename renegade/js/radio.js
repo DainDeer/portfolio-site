@@ -10,7 +10,7 @@
   R.size = () => O().effects("radio").bounties || 0;
   // zones where a family shows up (location families on the zone map), unlocked only
   R.zonesWith = (family) => Object.keys(G.state.maps).filter((z) => G.Zones.unlocked(z) && Object.values(G.state.maps[z].nodes).some((n) => { const l = G.Map.loc(n); return l && l.family === family; }));
-  R.scoutTargets = () => { const out = []; for (const z of Object.keys(G.state.maps)) { if (!G.Zones.unlocked(z)) continue; const m = G.state.maps[z]; for (const n of Object.values(m.nodes)) { const l = G.Map.loc(n); if (l && l.name && n.id !== m.insertion && !(G.state.world.sites || {})[n.id]) out.push({ zone: z, nid: n.id }); } } return out; };
+  R.scoutTargets = () => { const out = []; for (const z of Object.keys(G.state.maps)) { if (!G.Zones.unlocked(z)) continue; const m = G.state.maps[z]; for (const n of Object.values(m.nodes)) { const l = G.Map.loc(n); if (l && l.name && n.id !== m.insertion && !G.Map.hiddenSecret(n) && !(G.state.world.sites || {})[n.id]) out.push({ zone: z, nid: n.id }); } } return out; };
   R.make = function (tplId, rng, hot) {
     const t = D().templates[tplId], b = { uid: U.uid("bty"), tpl: tplId, type: t.type, status: "open", progress: 0, hot: !!hot };
     if (t.type === "kill") { const zs = R.zonesWith(t.family); if (!zs.length) return null; b.zone = rng.pick(zs); b.family = t.family; b.n = t.n; }
