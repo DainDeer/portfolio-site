@@ -489,12 +489,12 @@
     if (step.defense && step.extraction) {
       const ex = step.extraction;
       setup.mode = "defense"; setup.surviveSec = ex.surviveSec;
-      setup.enemies = G.Battle.buildEnemyGroup(G.rng, step.family, budget * ex.waveBudgetMult, elites);
-      setup.waves = []; for (let w = 0; w < ex.waves - 1; w++) setup.waves.push(G.Battle.buildEnemyGroup(G.rng, step.family, budget * ex.waveBudgetMult, 0));
+      setup.enemies = G.Battle.buildEnemyGroup(G.rng, step.family, budget * ex.waveBudgetMult, elites, r.zone);
+      setup.waves = []; for (let w = 0; w < ex.waves - 1; w++) setup.waves.push(G.Battle.buildEnemyGroup(G.rng, step.family, budget * ex.waveBudgetMult, 0, r.zone));
     } else if (step.family === "rivals" && step.rival && G.Rivals) { setup.enemies = []; setup.enemyUnits = G.Rivals.units(step.rival); if (step.freeze) setup.freeze = step.freeze; }   // Slice 3 §7 snapshot
     else if (step.family === "hunters" && G.Hunters) { setup.enemies = G.Hunters.packUnits(step.pack || "Hunted"); setup.ambush = !!step.ambush; }   // fixed packs
     else if (step.enemies) setup.enemies = step.enemies.map((id) => ({ id }));   // debug / screenshots: an explicit unit list
-    else setup.enemies = G.Battle.buildEnemyGroup(G.rng, step.family, budget, elites);
+    else setup.enemies = G.Battle.buildEnemyGroup(G.rng, step.family, budget, elites, r.zone);
     const b = G.Battle.create(setup);
     b.escapable = true; b.pack = step.pack || null; b.nid = step.nid || r.loc;   // Break away (js/escape.js)
     const used = G.Workbench ? G.Workbench.applyAmmo(r, b.units) : null;   // Slice 3 §9: 1 pack per battle, every gun in the squad
@@ -619,12 +619,23 @@
     const r = run(), node = X.node(), ex = X.extractionDef(node);
     if (ex.type === "free") { X.extractSuccess(); return { ok: true, text: "Extracted." }; }
     if (ex.type === "check") {
+      // Slice 5 §G Goat Path: a slow way out. Every attempt is a long climb first: +slowHeat, and a hunter pack gets its
+      // move; if that brings a fight to you, the attempt never happens
+      if (ex.slow) {
+        if (ex.slowHeat) X.addHeat(ex.slowHeat, "extract");
+        if (G.Hunters) G.Hunters.afterMove({});
+        if (!run() || run() !== r) return { ok: false, text: "" };
+        if (r.queue.length) { X.log("Something catches up with you on the climb!", "bad"); G.State.save(); return { ok: false, text: `The climb takes too long: something catches up with you! +${ex.slowHeat || 0} Heat.` }; }
+      }
       const info = G.Checks.compute(ex.skill, ex.dc, X.members(), X.gearItems()); const roll = G.Checks.roll(info, null, "extract");
       X.log(roll.text, "check");
-      if (G.Checks.isSuccess(roll.grade)) { X.extractSuccess(); return { ok: true, roll, text: roll.text + " — the engine turns over!" }; }
+      if (G.Checks.isSuccess(roll.grade)) { X.extractSuccess(); return { ok: true, roll, text: roll.text + " — " + (ex.okText || "the engine turns over!") }; }
       if (roll.grade === "badFail" && ex.badFail === "crash") return X.crash(node, ex, roll);   // Slice 5 §A
       if (roll.grade === "badFail" && ex.badFail === "battle") { X.push({ type: "battle", family: G.Map.loc(node).family, budgetMult: 1, nid: node.id, why: "The noise draws attention!" }); return { ok: false, roll, text: roll.text + " — the noise draws attention!" }; }
-      X.addHeat(ex.failHeat, "extract"); return { ok: false, roll, text: roll.text + ` — it won't start. +${ex.failHeat} Heat.` };
+      // Slice 5 §G Cable Car: a Bad Fail stalls it midway; you fight on the car, and a win carries you out (step.extraction)
+      if (roll.grade === "badFail" && ex.badFail === "stall") { X.log(ex.stallText, "bad"); X.push({ type: "battle", family: G.Map.loc(node).family, budgetMult: ex.stallBudgetMult != null ? ex.stallBudgetMult : 1, nid: node.id, extraction: ex, stall: true, why: ex.stallText }); return { ok: false, stall: true, roll, text: roll.text + " — " + ex.stallText }; }
+      const fh = ex.failHeat || 0; if (fh) X.addHeat(fh, "extract");
+      return { ok: false, roll, text: roll.text + ` — ${ex.failText || "it won't start."}${fh ? ` +${fh} Heat.` : ""}` + (ex.slow && ex.slowHeat ? ` (The climb: +${ex.slowHeat} Heat.)` : "") };
     }
     if (ex.type === "defense") { X.push({ type: "battle", family: G.Map.loc(node).family, budgetMult: ex.budgetMult != null ? ex.budgetMult : 1, defense: true, extraction: ex, nid: node.id, why: `Hold out for ${ex.surviveSec} s!` }); return { ok: false, text: "Defend the extraction!" }; }
   };

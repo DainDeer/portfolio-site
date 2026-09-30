@@ -206,15 +206,16 @@
   };
 
   // Buy enemies from a budget (§7.3)
-  B.buildEnemyGroup = function (rng, family, budget, eliteCount) {
-    const fam = DATA.enemies.families[family];
+  // zone (Slice 5 §G): a zone's familyUnits list replaces the family's units there (Greyback: goats; repeats weight the pick)
+  B.buildEnemyGroup = function (rng, family, budget, eliteCount, zone) {
+    const fam = DATA.enemies.families[family], zu = zone && ((DATA.zones.list[zone] || {}).familyUnits || {})[family], units = zu || fam.units;
     const out = []; let left = Math.max(1, Math.round(budget)); let guard = 50;
     while (left > 0 && guard-- > 0) {
-      const opts = fam.units.filter((k) => DATA.enemies.units[k].cost <= left && (!G.EnemyAI || G.EnemyAI.allowed(k, out)));
+      const opts = units.filter((k) => DATA.enemies.units[k].cost <= left && (!G.EnemyAI || G.EnemyAI.allowed(k, out)));
       if (!opts.length) break;
       const k = rng.pick(opts); out.push(k); left -= DATA.enemies.units[k].cost;
     }
-    if (!out.length) out.push(fam.units[0]);
+    if (!out.length) out.push(units[0]);
     return out.map((k, i) => ({ id: k, elite: i < (eliteCount || 0) }));
   };
 

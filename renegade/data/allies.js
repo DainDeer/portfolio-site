@@ -76,7 +76,12 @@ DATA.allies = {
     scout_drone: { name: "Drone", item: "pet_scout_drone", sprite: "enemy_ai_drone", ai: "ranged", deployCost: 1, rank: "grunt",
                    stats: { max_hp: 45, armor: 1, evasion: 8, move_speed: 4.6, crit_chance: 5, crit_damage: 150 },
                    skills: { marksmanship: 6, acrobatics: 4 }, weapons: ["drone_zapper"], cost: { electronics: 3 },
-                   names: ["Blink", "Whirr", "Dot", "Hum"], desc: "[PLACEHOLDER] Somebody's scout, re-taught. It buzzes when it's happy." }
+                   names: ["Blink", "Whirr", "Dot", "Hum"], desc: "[PLACEHOLDER] Somebody's scout, re-taught. It buzzes when it's happy." },
+    // Slice 5 §G (Vixie): the pet goat. Dies like any ally (the same difficulty rules as a Grunt); hire a new one at the lot.
+    goat:        { name: "Goat", item: "pet_goat", sprite: "unit_pet_goat", ai: "melee", deployCost: 1, rank: "grunt",
+                   stats: { max_hp: 75, armor: 1, evasion: 5, move_speed: 4.8, crit_chance: 5, crit_damage: 150 },
+                   skills: { feral: 6, athletics: 6, acrobatics: 3, endurance: 5 }, weapons: ["goat_horns"], cost: { food: 5 },
+                   names: ["Clover", "Buttons", "Gruff", "Nanny", "Billy", "Chewie"], desc: "[PLACEHOLDER] It eats anything. It headbutts anyone. It likes you, probably." }
   },
 
   // ---- history log ----

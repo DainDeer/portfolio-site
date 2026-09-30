@@ -25,7 +25,7 @@
     out.push({ id: "rival:crew", kind: "rival", ref: "crew", name: d.rival.name, sprite: d.rival.sprite, group: "people", rarity: "rare", family: "rivals" });
     for (const g in Q) out.push({ id: "npc:" + g, kind: "npc", ref: g, name: Q[g].name, sprite: Q[g].portrait, group: "people", rarity: "uncommon", portrait: true });
     if (DATA.tutorial && DATA.tutorial.marta) out.push({ id: "npc:marta", kind: "npc", ref: "marta", name: DATA.tutorial.marta.name, sprite: DATA.tutorial.marta.portrait, group: "people", rarity: "uncommon", portrait: true });
-    for (const id in L) { const l = L[id]; if (l.zone && l.zone !== "b") continue;
+    for (const id in L) { const l = L[id]; if (l.zone && !DATA.zones.list[l.zone]) continue;   // every zone's places (Slice 5 §G: + Greyback)
       out.push({ id: "loc:" + id, kind: "loc", ref: id, name: l.name, sprite: l.icon, group: "places", rarity: l.rare || l.secret || d.rareLocations.includes(id) ? "rare" : "common", zone: l.zone || "a" }); }
     for (const c of out) c.blurb = d.blurbs[c.id] || d.blurbDefault[c.group];
     cache = out; cacheKey = key; return out;

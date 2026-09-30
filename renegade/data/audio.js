@@ -71,7 +71,7 @@ DATA.audio = {
       // Slice 4 §G (Snare, assets/music_src/README.md + README_zones2.md). Only tracks a state / zone / preload names are
       // requested or packaged (tools/asset-manifest.js), so the future-zone pairs cost nothing until a zone uses them.
       music_title:           { vol: 1, bpm: 100, beatsPerBar: 4, loopSec: 96 },                        // bar 2.4 s; the start screen
-      music_greyback:        { vol: 1, bpm: 125, beatsPerBar: 3, loopSec: 92.16, sync: "greyback" },   // 3/4, bar 1.44 s (future zone)
+      music_greyback:        { vol: 1, bpm: 125, beatsPerBar: 3, loopSec: 92.16, sync: "greyback" },   // 3/4, bar 1.44 s (Greyback Hills, Slice 5 §G)
       music_greyback_battle: { vol: 1, bpm: 500 / 3, beatsPerBar: 4, loopSec: 92.16, sync: "greyback", quantize: "bar" },   // 4/4 on the same 1.44 s bar: bar lines only
       music_scablands:       { vol: 1, bpm: 150, beatsPerBar: 4, loopSec: 102.4, sync: "scablands" }, // bar 1.6 s (the late wasteland; NOT zone a)
       music_scablands_battle:{ vol: 1, bpm: 150, beatsPerBar: 4, loopSec: 102.4, sync: "scablands" },
@@ -86,7 +86,7 @@ DATA.audio = {
     states: { title: "music_title", outpost: "music_outpost", run: "music_hushwood", battle: "music_hushwood_battle" },
     // per-zone overrides. b = the Drowned Suburbs (data/zones.js). Hollis gets { run: "music_hollis", battle:
     // "music_hollis_battle" } once it has a zone id. Zone a (labelled "The Scablands") keeps Hushwood.
-    zones: { b: { run: "music_drowned", battle: "music_drowned_battle" } },
+    zones: { b: { run: "music_drowned", battle: "music_drowned_battle" }, greyback: { run: "music_greyback", battle: "music_greyback_battle" } },   // greyback: Slice 5 §G
     preload: {},   // Snare: a run preloads only its own zone's battle track (js/music.js Mu.set: trackFor("battle", zone)), so the switch is on time
     // same key + tempo, different lengths (so not one sync group): the incoming track still restarts from its top, but on
     // the outgoing one's next bar line, so the beat grids line up during the crossfade (Snare: title -> outpost)

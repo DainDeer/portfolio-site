@@ -51,6 +51,7 @@ DATA.items = {
     // Slice 5 §F pets (allies.pets): carried out of a run = unlocked. Not equippable, never random loot. [PLACEHOLDER] icons
     pet_hound_pup:   { name: "Hound pup",      slot: "pet", pet: "hound_pup",   weight: 2, req: 0, dropWeight: 0, noScale: true, sprite: "item_pet_hound_pup" },
     pet_scout_drone: { name: "Stray drone",    slot: "pet", pet: "scout_drone", weight: 2, req: 0, dropWeight: 0, noScale: true, sprite: "item_pet_scout_drone" },
+    pet_goat:        { name: "Stubborn kid",   slot: "pet", pet: "goat",        weight: 3, req: 0, dropWeight: 0, noScale: true, sprite: "item_pet_goat" },   // Slice 5 §G: Smudge's icon (aa8b4fd)
     school_bag:    { name: "School Bag",        slot: "backpack", carryKg: 10, weight: 0.8, req: 0, dropWeight: 4, noScale: true },
     military_ruck: { name: "Military Ruck",     slot: "backpack", carryKg: 20, moveSpeedPct: -3, weight: 2.0, req: 0, dropWeight: 2, noScale: true },
     // Slice 3 §5 set pieces (data/sets.js). evasion / checkSkill are base stats like armor (evasion scales with ilvl).
@@ -77,6 +78,7 @@ DATA.items = {
     nat_shiv:      { name: "Shiv",              slot: "weapon", natural: true, style: "blades", skill: "blades",       dmg: 6, type: "kinetic", interval: 0.6, range: 1.2, acc: 65, mag: 0, reload: 0, jam: 0, weight: 0, dropWeight: 0, sprite: "item_rust_machete", sfx: "sfx_melee_hit" },
     nat_pistol:    { name: "Scrap Pistol",      slot: "weapon", natural: true, style: "gun",    skill: "marksmanship", dmg: 6, type: "kinetic", interval: 0.8, range: 12, acc: 50, mag: 6, reload: 2.0, jam: 8, weight: 0, dropWeight: 0, sprite: "item_glokk_17", sfx: "sfx_shot_pistol" },
     bone_claws:    { name: "Bone Claws",        slot: "weapon", natural: true, style: "feral",  skill: "feral",        dmg: 7, type: "bio", interval: 0.8, range: 1.2, acc: 65, mag: 0, reload: 0, jam: 0, weight: 0, dropWeight: 0, sfx: "sfx_claw" },
+    goat_horns:    { name: "Horns",             slot: "weapon", natural: true, style: "feral",  skill: "feral",        dmg: 9, type: "kinetic", interval: 1.1, range: 1.3, acc: 65, mag: 0, reload: 0, jam: 0, weight: 0, dropWeight: 0, sprite: "item_bone_claws", sfx: "sfx_melee_hit" },   // Slice 5 §G feral goats (+ the pet goat)
     maw_bite:      { name: "Maw Bite",          slot: "weapon", natural: true, style: "feral",  skill: "feral",        dmg: 20,type: "bio", interval: 1.4, range: 1.8, acc: 60, mag: 0, reload: 0, jam: 0, weight: 0, dropWeight: 0, sprite: "item_bone_claws", sfx: "sfx_claw" },
     // Slice 3 §4 machine / Hunter weapons (natural: never dropped)
     // machine weapons: design call (milestone 4) Sentry gun 5 -> 8, Warden stun baton 12 -> 16 (5 v 5: 99.7% -> 89.2% squad wins, 27.1 -> 29.4 s; flanking untouched)

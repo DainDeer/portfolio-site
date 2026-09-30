@@ -3,7 +3,7 @@ window.DATA = window.DATA || {};
 DATA.enemies = {
   families: {
     outlaws: { name: "Outlaws",    units: ["raider", "gunman", "brute"], corpse: "corpse_human" },
-    beasts:  { name: "Bio-beasts", units: ["hound", "spitter", "maw"],   corpse: "corpse_beast" },
+    beasts:  { name: "Bio-beasts", units: ["hound", "spitter", "maw"],   corpse: "corpse_beast" },   // + goat: Greyback only (zones.greyback.familyUnits)
     // Slice 3 §4a: pre-fall security machines. Shared: resistances, Bleed immunity, Burn 50%, never Critical, sparks /
     // oil / metal gibs instead of blood, a killed machine is a searchable wreck (body_machine). Pierce is the counter.
     machines: { name: "Machines", units: ["ai_drone", "ai_crawler", "ai_sentry", "ai_warden"], corpse: "corpse_machine",
@@ -31,6 +31,13 @@ DATA.enemies = {
     maw:     { name: "Maw",     family: "beasts",  cost: 4, sprite: "enemy_beast_maw",     ai: "melee",  weapon: "maw_bite",
                stats: { max_hp: 330, armor: 5, evasion: 0, move_speed: 3.2, crit_chance: 5, crit_damage: 150 },
                skills: { feral: 12, acrobatics: 0, endurance: 15 } },
+    // Slice 5 §G (Vixie): ordinary feral goats, beasts family, Greyback Hills only (not in families.beasts.units: the zone's
+    // familyUnits list adds them). beh.charge: every everySec, a target minM..maxM away -> the Charge run (the Breacher's
+    // buff: speedMult, +dmgPct, knockdown); the art swaps to the charge strip while it runs (sprites.enemy_beast_goat.charge).
+    goat:    { name: "Feral Goat", family: "beasts", cost: 1, sprite: "enemy_beast_goat",    ai: "melee",  weapon: "goat_horns",
+               stats: { max_hp: 70, armor: 1, evasion: 6, move_speed: 5.2, crit_chance: 6, crit_damage: 150 },
+               skills: { feral: 8, acrobatics: 8, endurance: 5 },
+               beh: { charge: { firstSec: 1.5, everySec: 7, minM: 3, maxM: 9, speedMult: 2.6, maxSec: 1.6, dmgPct: 40, knockdownSec: 0.8 } } },
     // ---- machines (Slice 3 §4a). beh = behaviour numbers read by js/enemyai.js ----
     ai_drone:   { name: "Scout Drone",   family: "machines", cost: 1, sprite: "enemy_ai_drone",   ai: "ranged", weapon: "drone_zapper",
                   stats: { max_hp: 35, armor: 0, evasion: 12, move_speed: 6.5, crit_chance: 5, crit_damage: 150 }, skills: { marksmanship: 6, acrobatics: 6 },
@@ -83,10 +90,10 @@ DATA.enemies = {
     debuff: { enabled: true, id: "orbital_mark", name: "Marked by the Orbitals", runs: 2, startHeat: 25 }
   },
   // Slice 5 §F: each family's own rare drops, rolled on each of its bodies when searched. [DRAFT %]
-  // { item, rarity, pct } | { res, n, pct } | { pet, pct } (the pet's item: DATA.allies.pets[pet].item). Rivals: their own gear.
+  // { item, rarity, pct } | { res, n, pct } | { pet, pct }; optional units / notUnits: only / never on those unit ids (the pet's item: DATA.allies.pets[pet].item). Rivals: their own gear.
   familyDrops: {
     outlaws:  [{ res: "fuel", n: 2, pct: 8 }, { item: "militia_carbine", rarity: "blue", pct: 2 }],
-    beasts:   [{ item: "hide_vest", rarity: "blue", pct: 3 }, { pet: "hound_pup", pct: 0.3 }],
+    beasts:   [{ item: "hide_vest", rarity: "blue", pct: 3 }, { pet: "hound_pup", pct: 0.3, notUnits: ["goat"] }, { pet: "goat", pct: 1, units: ["goat"] }],   // units / notUnits: by the body's unit id (Slice 5 §G)
     machines: [{ res: "data_shards", n: 1, pct: 8 }, { pet: "scout_drone", pct: 0.3 }],
     hunters:  [{ item: "hunter_longrifle", rarity: "blue", pct: 3 }]
   },

@@ -601,6 +601,7 @@
         const lk = u.look && hasArt(u.look) ? u.look : null;   // Slice 4 §F: a Grunt's paper doll once it's composited
         let key = lk || u.sprite, frame = 0; const wk = lk ? lk + "_w" : sd.walk;
         if (art && (u.moving || sd.hover) && wk && hasArt(wk)) { key = wk; frame = b.t * (SP.def(wk).fps || 8); }   // hover: the drone's rotor strip always runs
+        if (art && !lk && sd.charge && u.buffs && u.buffs.charge && hasArt(sd.charge)) { key = sd.charge; frame = b.t * (SP.def(sd.charge).fps || 8); }   // Slice 5 §G (Vixie): the goat's charge strip while it charges, else the walk strip
         const alpha = u.unseen ? 0.18 : u.state === "retreating" ? 0.8 : undefined;   // an Unseen Stalker is a faint shimmer
         if (u.rival) { ctx.save(); ctx.shadowColor = "rgba(90,230,255,0.95)"; ctx.shadowBlur = 12; }   // Slice 3 §7: rivals are faint cyan ghosts
         const r = SP.drawWorld(ctx, key, x, y, sz, { rot: u.facing, facing: true, anchor: true, frame, alpha: u.rival ? 0.78 : alpha });

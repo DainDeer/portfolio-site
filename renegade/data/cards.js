@@ -1,7 +1,7 @@
 // Slice 4 §D: collectible cards (Series 1) + the binder. Not items: no weight, no slot, never in the stash, never lost.
 // Picked up the moment they drop. The list is BUILT FROM DATA (js/cards.js G.Cards.list()), so new content adds cards:
 //   every enemy unit (DATA.enemies.units), the rival crews (one card), every quest giver (DATA.quests.givers) + Old
-//   Marta, every location in zones a and b (DATA.map.locations).
+//   Marta, every location in every zone (DATA.map.locations; Slice 5 §G adds Greyback).
 // Card id: "<kind>:<id>"  kind = enemy | rival | npc | loc.   Group: creatures | people | places (see groupOf).
 // Rarity: common (regular enemies, locations), uncommon (elite-grade units listed below, NPCs), rare (a unit or
 //   location with rare: true / secret: true, Hunters, rivals).

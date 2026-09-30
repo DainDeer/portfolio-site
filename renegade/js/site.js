@@ -215,8 +215,9 @@
   X.trainDef = (o) => { const T = o && o.type && SD().types[o.type]; return (T && T.train) || null; };
   X.trainedNow = (o) => o.trainedRun != null && o.trainedRun === G.state.runCount;   // once per run
   // Slice 5 §F: the family's own rare drops on a body (enemies.familyDrops) -> items / res (a pet = its item)
-  X.rollFamilyDrops = function (family, items, res, rng, ilvl, resOnly) {
+  X.rollFamilyDrops = function (family, items, res, rng, ilvl, resOnly, unit) {
     for (const d of (DATA.enemies.familyDrops || {})[family] || []) {
+      if ((d.units && !d.units.includes(unit)) || (d.notUnits && d.notUnits.includes(unit))) continue;   // Slice 5 §G: the goat pet from goats only
       if (!rng.chance(d.pct)) continue;
       if (d.res) res[d.res] = (res[d.res] || 0) + (d.n || 1);
       else if (resOnly) continue;
@@ -339,7 +340,7 @@
     const raw = noise + H / C.hostilesDiv + heat + prior - stealth + loud;
     const tm = X.tutorialOn() && CFG().tutorial.disturbanceMult != null ? CFG().tutorial.disturbanceMult : 1;   // tutorial only
     const pct = Math.max(C.minPct, raw * tm);
-    const heatGain = action === "force" ? CFG().heat.forceLock : action === "kick" ? CFG().heat.kickDoor : action === "train" ? (T.train.heat || 0) : 0;
+    const heatGain = action === "force" ? CFG().heat.forceLock : action === "kick" ? CFG().heat.kickDoor : action === "train" ? (T.train.heat || 0) : action === "search" && o.type !== "door" ? (T.searchHeat || 0) : 0;   // searchHeat: Slice 5 §G Crater pod
     let check = null;
     if (action === "pick" && T.lock) check = G.Checks.compute(T.lock.check.skill, T.lock.check.dc, X.members(), X.gearItems());
     if (action === "search" && o.heavy && T.heavy) check = G.Checks.compute(T.heavy.check.skill, T.heavy.check.dc, X.members(), X.gearItems());
@@ -361,6 +362,7 @@
       const lo = o && o.unit && DATA.sets && DATA.sets.gunmanMult && o.unit === "gunman" ? { setMult: DATA.sets.gunmanMult } : null;
       for (let i = 0; i < n; i++) items.push(G.Items.rollLoot(rng, ilvl, rb, lo));
       if (o && o.dropWeapon) items.push(G.Items.make(o.dropWeapon, G.Items.rollRarity(rng, X.rarityBonus(), ilvl), ilvl, rng));
+      if (T.orangePct && rng.chance(T.orangePct)) { const oi = Math.max(ilvl, DATA.items.rarities.orange.minIlvl || 0); items.push(G.Items.make(G.Items.rollBase(rng), "orange", oi, rng)); }   // Slice 5 §G Crater pod
     }
     const tags = loc.tags || [], mult = SD().tagWeightMult;
     for (let k = 0; k < (T.resRolls || 0); k++) {
@@ -372,7 +374,7 @@
       if (amt > 0) res[e[0]] = (res[e[0]] || 0) + amt;
     }
     X.rollExtras((T.extras || []).concat((o && o.extras) || []), res, rng);
-    if (o && o.famDrops) X.rollFamilyDrops(o.famDrops, items, res, rng, X.itemLevel(node), !!o.resOnly);   // Slice 5 §F
+    if (o && o.famDrops) X.rollFamilyDrops(o.famDrops, items, res, rng, X.itemLevel(node), !!o.resOnly, o.unit);   // Slice 5 §F
     return { items, res };
   };
 
@@ -477,6 +479,7 @@
         }
         if (!o.blocked) {
           loot = X.rollObjectLoot(node, o.type, o); o.searched = true;
+          if (info.heatGain) { X.addHeat(info.heatGain, "search"); texts.push(`+${info.heatGain} Heat`); }
           if (o.guaranteed) { loot.items.unshift(G.Items.make(o.guaranteed.base, o.guaranteed.rarity, X.itemLevel(node), G.rng)); G.state.locFlags[site.loc + "_gl"] = true; }
         }
       }
@@ -602,6 +605,7 @@
     site.visitSearches = 0; site.visits++;
     r.view = "site";
     { const ex = X.exitObj(site); if (ex) site.squadAt = ex.id; }   // Slice 5 §D: you arrive by the way in
+    if (!revisit && loc.entryHeat) { X.addHeat(loc.entryHeat, "secret"); X.log(`${loc.name}: every Hunter in orbit saw you come in. +${loc.entryHeat} Heat.`, "heat"); }   // Slice 5 §G the Crater
     const t = X.heatTier();
     // Break away: the enemies you ran from are still here (this run only)
     if (site.escaped) { if (site.escaped.run === G.state.runCount) { const again = site.escaped.step; site.escaped = null; X.log(`${loc.name}: the fight you broke away from is still here.`, "bad"); X.push(again); return; } site.escaped = null; }
@@ -642,7 +646,8 @@
       if (DATA.zones.passageUnlockOnDeath) s.zonesUnlocked[z] = true;
       else if (run()) { run().pendingUnlocks = run().pendingUnlocks || []; run().pendingUnlocks.push(z); }
     }
-    X.log(`You found the ${P.name || "passage"}! It leads to ${DATA.zones.list[G.Zones.otherEnd(pid, "a")].name}.`, "good");
+    const from = (run() && run().zone) || P.hiddenAt || "a";
+    X.log(`You found the ${P.name || "passage"}! It leads to ${DATA.zones.list[G.Zones.otherEnd(pid, from)].name}.`, "good");
     G.State.save();
   };
   X.canCross = function (pid) {
@@ -659,7 +664,7 @@
     const r = run(), P = DATA.zones.passages[pid], to = G.Zones.otherEnd(pid, r.zone), nid = G.Zones.passageNode(pid, to);
     r.zone = to;
     X.addHeat(P.crossHeat != null ? P.crossHeat : CFG().heat.passageCross, "passage");
-    X.log(`You squeeze through the ${P.name || "passage"} into ${DATA.zones.list[to].name}. +${P.crossHeat} Heat.`);
+    X.log(`You ${P.crossVerb || "squeeze through"} the ${P.name || "passage"} into ${DATA.zones.list[to].name}. +${P.crossHeat} Heat.`);
     X.enterNode(nid, { noMoveHeat: true, passage: true });
     { const st = X.site(nid), gr = st && st.objects.find((o) => o.kind === "grate"); if (gr) st.squadAt = gr.id; }   // Slice 5 §D: you come up out of the grate
     return null;

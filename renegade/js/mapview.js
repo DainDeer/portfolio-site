@@ -136,7 +136,7 @@
   // Ground layer: map background, revealed-ground tile around visible locations, fog texture elsewhere.
   // Painted at the wrap's real pixel size (so scouted areas are true circles); node positions are 1000x600 map space.
   MV.ground = function (cv, W, H, map, vis, known) {
-    const V = DATA.map.view || {}, bg = (map.zone === "b" && SP.get("map_bg_b")) || SP.get("map_bg"), fogImg = SP.get("map_fog"), rev = SP.get("map_revealed");
+    const V = DATA.map.view || {}, zbg = (DATA.zones.list[map.zone || "a"] || {}).mapBg || (map.zone === "b" ? "map_bg_b" : null), bg = (zbg && SP.get(zbg)) || SP.get("map_bg"), fogImg = SP.get("map_fog"), rev = SP.get("map_revealed");
     const sx = W / 1000, sy = H / 600;
     cv.width = W; cv.height = H;
     const ctx = cv.getContext("2d"); ctx.imageSmoothingEnabled = !DATA.sprites.pixelArt;

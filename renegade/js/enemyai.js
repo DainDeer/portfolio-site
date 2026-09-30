@@ -16,6 +16,7 @@
     if (u.beh && u.beh.mark) u.markT = u.beh.mark.everySec;
     if (u.beh && u.beh.mine) u.atk = 1e9;   // its "weapon" never swings
     if (u.beh && u.beh.burst) { u.burstCd = u.beh.burst.firstSec; u.cb = null; }
+    if (u.beh && u.beh.charge) u.chargeCd = u.beh.charge.firstSec;
   };
 
   // B.create: Stalkers roll Unseen (Stealth vs the squad's best Perception, contested; setup.ambush = automatic),
@@ -79,12 +80,27 @@
         if (t) { t.buffs.marked = { t: be.mark.sec, pct: be.mark.dmgTakenPct, src: u }; X().floatText(b, t, "MARKED", "#ff4040", true); G.Battle.fx(b, { t: "sfx", key: "sfx_ability_aim" }); b.log.push(`${u.name} marks ${t.name}`); }
       }
     }
+    if (be.charge) chargeTick(b, u, dt);
     if (be.mine) return mineTick(b, u, dt, foes);
     if (be.turret) return turretTick(b, u, dt, foes);
     if (be.marksman && u.aimT > 0) return aimTick(b, u, dt);
     if (be.burst) return burstTick(b, u, dt, foes);
     return false;
   };
+
+  // Slice 5 §G feral goat: every everySec, a target minM..maxM away -> the Charge run (the same buff as the Breacher's
+  // Charge: js/battle.js moves it at speedMult and hits on arrival for +dmgPct with a knockdown). Normal moves otherwise.
+  function chargeTick(b, u, dt) {
+    const c = u.beh.charge; if (u.buffs.charge) return;
+    u.chargeCd = (u.chargeCd || 0) - dt; if (u.chargeCd > 0) return;
+    const t = u.target; if (!t || !alive(t)) return;
+    const d = U.dist(u, t); if (d < c.minM || d > c.maxM) return;
+    u.chargeCd = c.everySec;
+    u.buffs.charge = { tgt: t, t: c.maxSec, speedMult: c.speedMult, dmgPct: c.dmgPct, knockdown: c.knockdownSec };
+    X().floatText(b, u, "CHARGE!", "#ffcf70"); b.log.push(`${u.name} charges ${t.name}`);
+    b.chargeStats = b.chargeStats || { n: 0 }; b.chargeStats.n++;
+  }
+  EA.charging = (u) => !!(u && u.beh && u.beh.charge && u.buffs && u.buffs.charge);
 
   // design call (milestone 4): the Captain's telegraphed burst. Phases on u.cb: aim (tracking, then locked) -> fire.
   // Between bursts it returns false: normal movement and its (weak) sustained carbine fire.

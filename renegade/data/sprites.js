@@ -28,9 +28,9 @@ DATA.sprites = {
   corpseVariants: {
     // byUnit (by unit sprite key) wins over the human/beast default
     domed: { human: "corpse_human_domed", beast: "corpse_beast_domed",          // Domed roll on a core ally
-             byUnit: { unit_grunt: "corpse_grunt_domed", unit_veteran: "corpse_veteran_domed", enemy_beast_hound: "corpse_beast_hound_domed", enemy_beast_spitter: "corpse_beast_spitter_domed", enemy_beast_maw: "corpse_beast_maw_domed", enemy_hunter_stalker: "corpse_hunter_stalker_domed", enemy_hunter_marksman: "corpse_hunter_marksman_domed", enemy_hunter_captain: "corpse_hunter_captain_domed" } },
+             byUnit: { enemy_beast_goat: "corpse_beast_goat_domed", unit_pet_goat: "corpse_pet_goat", unit_grunt: "corpse_grunt_domed", unit_veteran: "corpse_veteran_domed", enemy_beast_hound: "corpse_beast_hound_domed", enemy_beast_spitter: "corpse_beast_spitter_domed", enemy_beast_maw: "corpse_beast_maw_domed", enemy_hunter_stalker: "corpse_hunter_stalker_domed", enemy_hunter_marksman: "corpse_hunter_marksman_domed", enemy_hunter_captain: "corpse_hunter_captain_domed" } },
     gore:  { human: "corpse_human_dismembered", beast: "corpse_beast_domed",    // gibbed kill (overkill / crit / Butcher finisher)
-             byUnit: { unit_grunt: "corpse_grunt_dismembered", unit_veteran: "corpse_veteran_dismembered", enemy_beast_hound: "corpse_beast_hound_domed", enemy_beast_spitter: "corpse_beast_spitter_domed", enemy_beast_maw: "corpse_beast_maw_domed" , enemy_hunter_stalker: "corpse_hunter_stalker_dismembered", enemy_hunter_marksman: "corpse_hunter_marksman_dismembered", enemy_hunter_captain: "corpse_hunter_captain_dismembered" } }
+             byUnit: { enemy_beast_goat: "corpse_beast_goat_domed", unit_pet_goat: "corpse_pet_goat", unit_grunt: "corpse_grunt_dismembered", unit_veteran: "corpse_veteran_dismembered", enemy_beast_hound: "corpse_beast_hound_domed", enemy_beast_spitter: "corpse_beast_spitter_domed", enemy_beast_maw: "corpse_beast_maw_domed" , enemy_hunter_stalker: "corpse_hunter_stalker_dismembered", enemy_hunter_marksman: "corpse_hunter_marksman_dismembered", enemy_hunter_captain: "corpse_hunter_captain_dismembered" } }
   },
   // Downed main body (Part A2): the pool strip is drawn first, then the unit's `downed:` strip, where the corpse would be
   // (same rotation / anchor as the corpses). Missing art -> the unit's corpse sprite + a canvas pool.
@@ -122,6 +122,31 @@ DATA.sprites = {
   enemy_outlaw_raider_strip2: { file: "units/enemy_outlaw_raider_strip2.png",          shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
   enemy_outlaw_gunman_strip2: { file: "units/enemy_outlaw_gunman_strip2.png",          shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
   enemy_outlaw_brute_strip2: { file: "units/enemy_outlaw_brute_strip2.png",           shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
+  // ---- Slice 5 §G Greyback Hills (Smudge, aa8b4fd; assets/map/greyback_manifest.json) ----
+  enemy_beast_goat:      { file: "units/enemy_beast_goat.png",      shape: "triangle", color: "#bca878", size: 0.8, anchorY: 0.75, feetY: 0.97, walk: "enemy_beast_goat_strip2", charge: "enemy_beast_goat_charge_strip2", corpse: "corpse_beast_goat" },   // charge: js/battleview.js, while beh.charge runs
+  enemy_beast_goat_strip2:        { file: "units/enemy_beast_goat_strip2.png",        shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
+  enemy_beast_goat_charge_strip2: { file: "units/enemy_beast_goat_charge_strip2.png", shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
+  corpse_beast_goat:     { file: "fx/corpse_beast_goat.png",        shape: "corpse",   color: "#5e4a30", size: 1.0, anchorY: 0.5 },
+  corpse_beast_goat_domed: { file: "fx/corpse_beast_goat_domed.png", shape: "corpse",  color: "#5e4a30", size: 1.0, anchorY: 0.5 },
+  unit_pet_goat:         { file: "units/unit_pet_goat.png",         shape: "circle",   color: "#46b8a4", size: 0.8, anchorY: 0.75, feetY: 0.97, walk: "unit_pet_goat_strip2", corpse: "corpse_pet_goat" },
+  unit_pet_goat_strip2:  { file: "units/unit_pet_goat_strip2.png",  shape: "none",     color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
+  corpse_pet_goat:       { file: "fx/corpse_pet_goat.png",          shape: "corpse",   color: "#5e4a30", size: 1.0, anchorY: 0.5 },
+  item_pet_goat:         { file: "items/item_pet_goat.png",         shape: "badge",    color: "#46b8a4", size: 1, pad: 2 },
+  map_bg_greyback:       { file: "map/map_bg_greyback.png",         shape: "none",     color: "#23241f", size: 1 },
+  tile_floor_greyback:   { file: "tiles/tile_floor_greyback.png",   shape: "none",     color: "#5a574c", size: 1 },
+  tile_floor_greyback_wet: { file: "tiles/tile_floor_greyback_wet.png", shape: "none", color: "#44504c", size: 1 },
+  tile_wall_greyback:    { file: "tiles/tile_wall_greyback.png",    shape: "none",     color: "#2c2a24", size: 1 },
+  tile_wall_face_greyback: { file: "tiles/tile_wall_face_greyback.png", shape: "none", color: "#00000060", size: 1 },
+  loc_switchback:       { file: "map/loc_switchback.png", shape: "star", color: "#8c8c86", size: 1 },
+  loc_goatherd_terraces: { file: "map/loc_goatherd_terraces.png", shape: "star", color: "#8c8c86", size: 1 },
+  loc_quarry_pit:       { file: "map/loc_quarry_pit.png", shape: "star", color: "#8c8c86", size: 1 },
+  loc_hermit_cave:      { file: "map/loc_hermit_cave.png", shape: "star", color: "#8c8c86", size: 1 },
+  loc_ski_lodge:        { file: "map/loc_ski_lodge.png", shape: "star", color: "#8c8c86", size: 1 },
+  loc_relay_summit:     { file: "map/loc_relay_summit.png", shape: "star", color: "#8c8c86", size: 1 },
+  loc_harlan_dam:       { file: "map/loc_harlan_dam.png", shape: "star", color: "#8c8c86", size: 1 },
+  loc_cable_car:        { file: "map/loc_cable_car.png", shape: "star", color: "#8c8c86", size: 1 },
+  loc_goat_path:        { file: "map/loc_goat_path.png", shape: "star", color: "#8c8c86", size: 1 },
+  loc_crater:           { file: "map/loc_crater.png", shape: "star", color: "#8c8c86", size: 1 },
   enemy_beast_hound_strip2: { file: "units/enemy_beast_hound_strip2.png",            shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
   enemy_beast_spitter_strip2: { file: "units/enemy_beast_spitter_strip2.png",          shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97 },
   enemy_beast_maw_strip2:  { file: "units/enemy_beast_maw_strip2.png",              shape: "none", color: "#000", size: 1, frames: 2, fps: 8, anchorY: 0.75, feetY: 0.97, imgScale: 1.5 },

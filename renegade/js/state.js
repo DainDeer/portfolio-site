@@ -279,7 +279,7 @@
   // Fill any Slice 2 fields a save is missing (also used after migration). Never throws on partial saves.
   St.repair = function (s) {
     if (!s.maps || !s.maps.a) s.maps = G.Zones.buildAll((s.seed >>> 0) || 1);
-    if (!s.maps.b) s.maps.b = G.Zones.build("b");
+    for (const z of DATA.zones.order) if (!s.maps[z] && !DATA.zones.list[z].generated) s.maps[z] = G.Zones.build(z);   // zones added later (Slice 5 §G Greyback) join old saves
     s.world = s.world || { hollow_creek: "pending" }; s.world.sites = s.world.sites || {};
     s.everSeen = s.everSeen || {}; s.locFlags = s.locFlags || {};
     s.zonesUnlocked = s.zonesUnlocked || {};

@@ -63,6 +63,11 @@ DATA.searchables = {
                       train: { skill: "survival", xp: 600, heat: 0, label: "Fish", line: "[PLACEHOLDER] You sit still long enough to learn the water." } },
     train_terminal: { name: "Working terminal", examine: "[PLACEHOLDER] This one still boots. The login screen blinks at you.", sprite: "obj_computer", searchSec: 8, noise: 4,
                       train: { skill: "hacking", xp: 600, heat: 1, label: "Practise", line: "[PLACEHOLDER] You poke at it until it stops fighting you." } },
+    // Slice 5 §G: the Crater's pod (tag "crater": fixedByTag). orangePct: its own chance of one Orange (Prototype) item,
+    // past the item-level cap (Orange needs iLvl 6; Greyback is tier 2). heat: added when you finish searching it.
+    crater_pod: { name: "Glowing pod", examine: "[PLACEHOLDER] A scorched orbital pod, still warm, still humming. The hatch is ajar.", sprite: "obj_cryo_pod", searchSec: 10, noise: 12, gearRolls: 1, bonusItems: 1, rarityBonus: 60, resRolls: 2,
+                  orangePct: 12, searchHeat: 6,
+                  table: [["electronics", 40, 1, 3], ["data_shards", 35, 1, 2], ["relic", 25, 1, 1]] },
     door:       { name: "Door", examine: "[PLACEHOLDER] A door. What's behind it is anyone's guess.",          sprite: "obj_door",   searchSec: 3, noise: 10, resRolls: 0, opensRoom: true,
                   stashChance: 10, stashAs: "crate",                                               // one crate roll behind it
                   lock: { chance: 30, check: { skill: "engineering", dc: 12 }, pickSec: 3, kick: { sec: 1 } } }  // kick: +forceNoise, +heat.kickDoor
@@ -70,8 +75,8 @@ DATA.searchables = {
   // Slice 5 §F: where training spots are (one of each listed type, a fixed searchable): by location id or tag. [DRAFT]
   // No Lumber Mill yet (Hushwood, part G): the chop is in the woodsy Zone A sites until then.
   training: {
-    train_chop:     { locs: ["riverbed_camp", "rail_yard", "renegade_hollow"] },
-    train_fish:     { locs: ["toll_bridge", "pump_station", "b_culdesac", "b_outfall"] },
+    train_chop:     { locs: ["riverbed_camp", "rail_yard", "renegade_hollow", "gb_lodge"] },   // gb_lodge: the woodpile (Slice 5 §G)
+    train_fish:     { locs: ["toll_bridge", "pump_station", "b_culdesac", "b_outfall", "gb_dam"] },
     train_terminal: { tags: ["terminal"] }
   },
   // Sizes (Slice 2 §5). Searchable counts include doors (doors = rooms - 1) and generated old bodies; event objects,
@@ -97,7 +102,7 @@ DATA.searchables = {
     // added once if the location has any of `tags` OR is in any of `zones` (Growth cluster: biomass places and Zone B only)
     anyOf: { growth: { weight: 35, tags: ["biomass", "chemicals", "med"], zones: ["b"] }, terminal: { weight: 15, tags: ["terminal"] } },   // growth 15 -> 35, also chemicals / med places (Biomass tuning)
     // guaranteed objects by location tag (they take generated slots): 1 terminal in every office (design)
-    fixedByTag: { office: ["terminal"] },
+    fixedByTag: { office: ["terminal"], crater: ["crater_pod"] },
     byTag: { fuel: { vehicle: 25 }, food: { crate: 15 }, water: { crate: 10 }, scrap: { crate: 10 }, cloth: { locker: 10 }, electronics: { desk: 20 },
              chemicals: { locker: 10 }, med: { locker: 10, desk: 5 } }
   },
@@ -113,13 +118,14 @@ DATA.searchables = {
   // Floor tile: zone first (Zone B: wet if water-tagged), then tag, then size (S sites are one room or a yard), then
   // the low-priority tags (homes / shops: concrete), else the default deck panels. Walls: fill + face per zone.
   floors: {
-    byZone: { b: { byTag: { water: "tile_floor_b_wet" }, default: "tile_floor_b" } },
+    byZone: { b: { byTag: { water: "tile_floor_b_wet" }, default: "tile_floor_b" },
+              greyback: { byTag: { water: "tile_floor_greyback_wet" }, default: "tile_floor_greyback" } },   // Slice 5 §G (Smudge, aa8b4fd)
     byTag: { water: "tile_floor_wet", med: "tile_floor_clinic" },
     bySize: { S: "tile_floor_yard" },
     byTagLow: { food: "tile_floor_concrete", cloth: "tile_floor_concrete" },
     default: "tile_floor"
   },
-  walls: { default: { fill: "tile_wall", face: "tile_wall_face" }, byZone: { b: { fill: "tile_wall_b", face: "tile_wall_face_b" } },
+  walls: { default: { fill: "tile_wall", face: "tile_wall_face" }, byZone: { b: { fill: "tile_wall_b", face: "tile_wall_face_b" }, greyback: { fill: "tile_wall_greyback", face: "tile_wall_face_greyback" } },
            bandsH: ["tile_wall_h", "tile_wall_h", "tile_wall_h_2", "tile_wall_h_3"], bandV: "tile_wall_v", corner: "tile_wall_corner",
            doorwayH: "tile_doorway_h", doorwayV: "tile_doorway_v" },
   // Event objects (§5: "events move onto objects"). Clicking one opens the existing check event.
@@ -163,7 +169,10 @@ DATA.searchables = {
                       examine: "[DRAFT] [PLACEHOLDER] The Rusted Truck. Keys in it, if it'll start.", examineWrecked: "[DRAFT] [PLACEHOLDER] Wrecked. It's not going anywhere." },   // Smudge's suggested lines (truck_props_manifest.json)
         ex_tunnel:  { name: "Tunnel mouth",   sprite: "obj_ex_tunnel_mouth", examine: "[PLACEHOLDER] The tunnel home. Something always follows you into it." },
         ex_rooftop: { name: "Pickup radio",   sprite: "obj_radio",      examine: "[PLACEHOLDER] A radio wired to a flare. Call the pickup and it comes." },
-        b_levee:    { name: "Boat launch",    sprite: "obj_ex_boat", wide: 2, examine: "[PLACEHOLDER] The boat comes when you call. Hold the ramp till it does." }
+        b_levee:    { name: "Boat launch",    sprite: "obj_ex_boat", wide: 2, examine: "[PLACEHOLDER] The boat comes when you call. Hold the ramp till it does." },
+        // Slice 5 §G: no object art for these yet; the map markers stand in (loc_cable_car / loc_goat_path)
+        gb_cable_car: { name: "Cable car",    sprite: "loc_cable_car", examine: "[PLACEHOLDER] A rusted gondola on a sagging cable. The motor box has a crank." },
+        gb_goat_path: { name: "Goat path",    sprite: "loc_goat_path", examine: "[PLACEHOLDER] A path only a goat would call a path. It goes down, eventually." }
       }
     }
   },
