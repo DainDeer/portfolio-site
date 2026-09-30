@@ -76,7 +76,7 @@
         el.appendChild(odds);
         if (!loc.extraction) { const lr = document.createElement("div"); const read = G.Exp.lootRead(nid); lr.className = "mn-loot" + (/^Picked/.test(read) ? " picked" : ""); lr.dataset.lootRead = read; lr.textContent = read; el.appendChild(lr); }
         const tags = [];
-        if (loc.extraction) { const ex = G.Exp.extractionDef(n); tags.push(G.Exp.extractionOpen(n) ? `EXTRACT (${ex.type === "check" ? DATA.skills[ex.skill].name + " DC " + ex.dc : ex.type})` : "EXTRACT CLOSED"); }
+        if (loc.extraction) { const ex = G.Exp.extractionDef(n); tags.push(G.Exp.extractionOpen(n) ? `EXTRACT (${ex.type === "check" ? DATA.skills[ex.skill].name + " DC " + ex.dc : ex.type})` : G.Exp.wrecked(n) ? "WRECKED" : "EXTRACT CLOSED"); }   // Slice 5 §A
         const wo = G.Exp.worldOverride(n); if (wo) tags.push(wo.label);
         if (r.visited[nid] && nid !== r.loc) tags.push("visited");
         if (loc.size) tags.push(loc.size);

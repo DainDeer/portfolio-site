@@ -689,7 +689,8 @@
     if (loc && loc.extraction) {
       const ex = X.extractionDef(node), open = X.extractionOpen(node);
       let label = ex.type === "free" ? "Extract (free)" : ex.type === "check" ? (() => { const c = G.Checks.compute(ex.skill, ex.dc, X.members(), X.gearItems()); return `Extract: ${DATA.skills[ex.skill].name} DC ${ex.dc} — ${Math.round(c.chance)}%`; })() : `Extract: hold out ${ex.surviveSec} s (defense battle)`;
-      side.appendChild(h("section", { class: "panel extract" }, h("h3", null, "Extraction point: " + loc.name), open ? h("button", { class: "primary big", "data-act": "extract", disabled: !X.canExtract(), onclick: () => { const res = X.extract(); UI.toast(res.text); UI.render(); } }, label) : h("div", { class: "warn" }, "Closed at this Heat level.")));
+      side.appendChild(h("section", { class: "panel extract" }, h("h3", null, "Extraction point: " + loc.name), open ? h("button", { class: "primary big", "data-act": "extract", disabled: !X.canExtract(), onclick: () => { const res = X.extract(); if (res.crash) UI.crashFlash(res); else UI.toast(res.text); UI.render(); } }, label)
+        : X.wrecked(node) ? h("div", { class: "warn wrecked", "data-note": "wrecked" }, `${DATA.config.extraction.crash.line} Find another way out.`) : h("div", { class: "warn" }, "Closed at this Heat level.")));
     } else side.appendChild(h("section", { class: "panel" }, h("small", null, inSite ? (TL() ? "Tap" : "Click") + " an object to search it. The tooltip shows the time and the disturbance chance. Leave to the map to move on." : `${TL() ? "Tap" : "Click"} a highlighted neighbouring location to move (+${DATA.config.heat.perMove} Heat). ${TL() ? "Tap" : "Click"} where you are to go back inside. The outpost is hidden: extraction is the only way home.`)));
     // log
     const lg = h("section", { class: "panel log" }, h("h3", null, "Log"));
@@ -849,6 +850,14 @@
         retry ? h("button", { class: "primary confirm-btn", "data-act": "retry-fight", onclick: () => UI.retryFight() }, "↻ Retry fight") : null,
         h("button", { class: (retry ? "" : "primary ") + "confirm-btn", "data-act": "battle-continue", onclick: () => { G.BattleView.unmount(UI.battle.v); UI.battle = null; UI.closeModal(); G.Exp.finishBattle(step, b); UI.render(); } }, "Continue")));
     UI.modal(box, "wide");
+  };
+
+  // Slice 5 §A: the truck crash: the heavy sound, a short line across the screen, the roll in a toast
+  UI.crashFlash = function (res) {
+    if (res.sfx) G.Sfx.play(res.sfx);
+    const el = h("div", { class: "crash-flash", "data-flash": "crash" }, res.line); document.body.appendChild(el);
+    setTimeout(() => el.remove(), DATA.config.extraction.crash.lineMs);
+    UI.toast(res.text);
   };
 
   // Slice 4 §H: Casual's Retry fight: back to the save as it was when this battle was built, and the same battle again

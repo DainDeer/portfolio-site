@@ -72,7 +72,7 @@ DATA.map = {
                          }
                        } },
     ex_truck:        { name: "Rusted Truck",          icon: "loc_extraction",family: "outlaws", size: "M", odds: { hostiles: 30, event: 0, survivors: 0 }, tags: ["scrap", "fuel"], events: [],
-                       extraction: { type: "check", skill: "piloting", dc: 12, failHeat: 5, badFail: "battle" } },  // hotwire (§2.3)
+                       extraction: { type: "check", skill: "piloting", dc: 12, failHeat: 5, badFail: "crash", crashHeat: 8 } },  // hotwire (§2.3). Slice 5 §A (Megan): a Bad Fail crashes it (was "battle"); crash numbers: config.extraction.crash
     ex_tunnel:       { name: "Tunnel Home",           icon: "loc_extraction",family: "beasts",  size: "M", odds: { hostiles: 0, event: 0, survivors: 0 }, tags: ["scrap"], events: [],
                        extraction: { type: "defense", surviveSec: 30, waves: 3, waveBudgetMult: 0.6 } },           // countdown defense (Tarkov-like)
     ex_rooftop:      { name: "Rooftop Pickup",        icon: "loc_extraction",family: "outlaws", size: "M", odds: { hostiles: 40, event: 0, survivors: 0 }, tags: [], events: [],

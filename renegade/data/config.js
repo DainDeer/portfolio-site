@@ -241,6 +241,18 @@ DATA.config = {
     squadScale: { base: 3, perExtra: 0.55, maxMult: 2.0, zones: ["b"] }   // follow-up (Vixie): never more than x2.0 in total   // 0.55: geared deaths 8% -> ~22-25% (target 20-25%)
   },
 
+  // Slice 5 §A (Megan, Vixie's [DRAFT] call): an extraction check with badFail: "crash" (the Rusted Truck) is wrecked by a
+  // Bad Fail: +crashHeat (in the extraction's data), a heavy crash sound, a short on-screen line, and that extraction is
+  // closed for the rest of the run (no re-roll): reach a different exit. A plain Fail keeps its softer failHeat stall.
+  extraction: {
+    crash: {
+      sfx: "sfx_explosion",          // stand-in until Smudge's heavy crash SFX lands (then its key here; no code change)
+      line: "The truck's wrecked.",  // [PLACEHOLDER] the flash line
+      lineMs: 2600,
+      log: "The engine screams, the truck lurches into a tree and dies for good. The whole wood heard that."   // [PLACEHOLDER]
+    }
+  },
+
   // ======================= TUTORIAL OVERRIDES =======================
   // Active only while the tutorial runs (the first expedition(s) with the Basic body + 2 Grunts, until the first
   // human body is claimed: state.tutorialDone === false). Every later run uses the normal numbers unchanged.
@@ -249,7 +261,7 @@ DATA.config = {
     enabled: true,
     // per-location extraction overrides, merged over DATA.map.locations[id].extraction
     extraction: {
-      ex_truck: { dc: 8, badFail: "stall", failHeat: 3 }   // Piloting DC 12 -> 8; a Bad Fail just stalls (+3 Heat) instead of starting a battle
+      ex_truck: { dc: 8, badFail: "crash", failHeat: 3, crashHeat: 8 }   // Piloting DC 12 -> 8; a Fail stalls (+3 Heat). Slice 5 §A: a Bad Fail crashes it (+8 Heat [DRAFT], was a +3 stall)
     },
     enemyBudgetMultByLoc: {
       ex_truck: 0.6,     // fights AT the Rusted Truck: budget x0.6 (1 Raider instead of 2 when Quiet)

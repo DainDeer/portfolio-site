@@ -86,10 +86,13 @@
     const map = G.Zones.map(G.Zones.zoneOf(nid));
     return G.Map.neighbors(map, nid).some((n) => r.visited[n]) || nid === map.insertion;
   };
+  X.wrecked = (node) => !!(run() && run().wrecked && node && run().wrecked[node.id]);   // Slice 5 §A: crashed this run
   X.extractionOpen = function (node) {
     const loc = G.Map.loc(node); if (!loc || !loc.extraction) return false;
+    if (X.wrecked(node)) return false;
     const n = X.heatTier().closeExtractions; if (!n) return true;
-    const order = run().extractOrder[G.Zones.zoneOf(node.id)] || [];   // per zone: each zone keeps at least one open
+    // per zone: each zone keeps at least one open (a wrecked one doesn't count as that one)
+    const order = (run().extractOrder[G.Zones.zoneOf(node.id)] || []).filter((id) => !(run().wrecked && run().wrecked[id]));
     const closed = order.slice(0, Math.min(n, order.length - 1));
     return !closed.includes(node.id);
   };
@@ -590,10 +593,22 @@
       const info = G.Checks.compute(ex.skill, ex.dc, X.members(), X.gearItems()); const roll = G.Checks.roll(info);
       X.log(roll.text, "check");
       if (G.Checks.isSuccess(roll.grade)) { X.extractSuccess(); return { ok: true, text: roll.text + " — the engine turns over!" }; }
+      if (roll.grade === "badFail" && ex.badFail === "crash") return X.crash(node, ex, roll);   // Slice 5 §A
       if (roll.grade === "badFail" && ex.badFail === "battle") { X.push({ type: "battle", family: G.Map.loc(node).family, budgetMult: 1, nid: node.id, why: "The noise draws attention!" }); return { ok: false, text: roll.text + " — the noise draws attention!" }; }
       X.addHeat(ex.failHeat, "extract"); return { ok: false, text: roll.text + ` — it won't start. +${ex.failHeat} Heat.` };
     }
     if (ex.type === "defense") { X.push({ type: "battle", family: G.Map.loc(node).family, budgetMult: ex.budgetMult != null ? ex.budgetMult : 1, defense: true, extraction: ex, nid: node.id, why: `Hold out for ${ex.surviveSec} s!` }); return { ok: false, text: "Defend the extraction!" }; }
+  };
+
+  // Slice 5 §A: a Bad Fail crashes the truck: Heat spike, closed for the rest of the run, no re-roll. (A later "enemies
+  // hear loud noises" system can read run.wrecked[nid].loud; nothing listens yet.)
+  X.crash = function (node, ex, roll) {
+    const r = run(), C = CFG().extraction.crash, heat = ex.crashHeat != null ? ex.crashHeat : ex.failHeat;
+    r.wrecked = r.wrecked || {}; r.wrecked[node.id] = { moves: r.moves, loud: true };
+    X.addHeat(heat, "extract");
+    X.log(`${C.log} +${heat} Heat. ${G.Map.loc(node).name} is closed for this run: find another way out.`, "bad");
+    G.State.save();
+    return { ok: false, crash: true, text: `${roll.text} — ${C.line} +${heat} Heat.`, line: C.line, sfx: C.sfx, heat };
   };
 
   X.extractSuccess = function () {
