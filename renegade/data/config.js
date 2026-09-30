@@ -298,7 +298,19 @@ DATA.config = {
       atlas: { ember: { file: "ui/dice/d20_bone_ember.png" }, gold: { file: "ui/dice/d20_bone_gold.png" }, ash: { file: "ui/dice/d20_bone_ash.png" }, blood: { file: "ui/dice/d20_bone_blood.png" } },
       rest: { ember: { file: "ui/dice/d20_rest_ember.png" }, gold: { file: "ui/dice/d20_rest_gold.png" }, ash: { file: "ui/dice/d20_rest_ash.png" }, blood: { file: "ui/dice/d20_rest_blood.png" }, frame: [40, 41], offset: [59, 23] },
       digits: { ember: { file: "ui/dice/dice_digits_ember.png" }, gold: { file: "ui/dice/dice_digits_gold.png" }, ash: { file: "ui/dice/dice_digits_ash.png" }, blood: { file: "ui/dice/dice_digits_blood.png" }, cell: [13, 17] },
-      box: { floor: { file: "ui/dice/box_floor.png" }, wall: { file: "ui/dice/box_wall.png" }, rim: { file: "ui/dice/box_rim.png" } }
+      box: { floor: { file: "ui/dice/box_floor.png" }, wall: { file: "ui/dice/box_wall.png" }, rim: { file: "ui/dice/box_rim.png" } },
+      // Vixie (Sep 30): the docked batch die (scouting batches; js/dice.js Dc.showMini), size = its 64 CSS px box, drawn
+      // pixelated at a whole-number scale only. body = the die inside that box [x0, y0, x1, y1]: only it takes a tap (the
+      // rest lets map taps through). tumble = a looping strip while it rolls (none: it cycles the rest frames).
+      // Smudge's 64 px d20 (b7e795a, assets/ui/dice/dice64_manifest.json): rest.<tint> = 20 frames of 64x64 (frame n - 1 =
+      // face n up, same tints as the big die), offset [0, 0] (the frame is the die), tumble = the 8-frame ember loop at
+      // 12 fps. If these fail to load, the big die's 40x41 resting strips (art.rest) stand in at 1x, centred.
+      mini: {
+        size: 64,
+        rest: { ember: { file: "ui/dice/d20_rest_64_ember.png" }, gold: { file: "ui/dice/d20_rest_64_gold.png" }, ash: { file: "ui/dice/d20_rest_64_ash.png" }, blood: { file: "ui/dice/d20_rest_64_blood.png" }, frame: [64, 64], offset: [0, 0] },
+        tumble: { file: "ui/dice/d20_tumble_64_ember.png", frames: 8, fps: 12 },
+        body: [4, 1, 58, 60]
+      }
     },
     tints: { rolling: "ember", crit: "gold", success: "ember", fail: "ash", badFail: "blood" },   // the die + plaque digits on landing
     scale: 2,                                   // native pixels shown x2, nearest (phones too: x1.5 blurs this art)

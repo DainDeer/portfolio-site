@@ -31,6 +31,6 @@ DATA.cards = {
   blurbs: {},
   blurbDefault: { creatures: "[PLACEHOLDER] Something out there that wants you dead.", people: "[PLACEHOLDER] Somebody with a story.", places: "[PLACEHOLDER] A place in the wastes." },
   // the pickup pop (corner of the screen): card back, flip, front; "NEW!" on a first copy
-  pop: { holdMs: 2600, flipMs: 420, newDelayMs: 200 },
+  pop: { holdMs: 2600, flipMs: 420, newDelayMs: 200, toastMs: 3500 },   // toastMs: landscape phone battles show a bottom toast instead (js/cardview.js)
   art: { frameSize: [80, 112], window: [8, 8, 64, 64], namePlate: [7, 77, 66, 20], newBadge: [54, -5], foilFrames: 6, foilFps: 8 }
 };

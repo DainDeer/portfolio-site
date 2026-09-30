@@ -21,9 +21,43 @@
   // ---- pickup pop (corner): back -> flip -> front; NEW! on a first copy ----
   const queue = []; let showing = false;
   CV.pickup = function (info) { queue.push(info); if (!showing) next(); };
+  // Vixie (Sep 30): in a landscape phone battle the pop sat over the right column; there a small toast (thumbnail + name)
+  // runs along the bottom edge instead and fades by itself (pop.toastMs). A tap opens the big card. Never pauses the fight
+  // (nothing here touches the battle), and it keeps off the battle controls (CV.placeToast). Portrait / desktop: the pop.
+  CV.toastMode = () => !!(G.Touch && G.Touch.landscape && G.Touch.landscape() && document.querySelector("#screen > .battle-wrap"));
+  CV.TOAST_AVOID = ".touch-ctl, .ability-bar, .abl-btn, .tp-panel, .battle-hud, .bh-speed, .tc-btn, .dice-panel, .dice-mini, .tut-box";
+  CV.placeToast = function (el) {
+    const R = (s) => { const e = document.querySelector(s); return e && e.getBoundingClientRect(); }, vw = root.innerWidth, vh = root.innerHeight;
+    const col = R(".touch-ctl"), bw = R("#screen > .battle-wrap"), spots = [];
+    if (col && col.left > vw / 2) spots.push({ spot: "col", left: col.left, right: 6 });                        // under the right column's controls
+    if (bw) spots.push({ spot: "field", left: bw.left + 6, right: Math.max(6, vw - bw.right + 6) });             // along the bottom of the battlefield
+    const hit = [...document.querySelectorAll(CV.TOAST_AVOID)].map((e) => e.getBoundingClientRect()).filter((r) => r.width && r.height);
+    let best = null;
+    for (const sp of spots) {
+      Object.assign(el.style, { left: sp.left + "px", right: sp.right + "px" }); el.dataset.spot = sp.spot;
+      const a = el.getBoundingClientRect(), c = hit.reduce((s, b) => s + Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)), 0);
+      if (!best || c < best.c) best = { sp, c };
+      if (!c) break;
+    }
+    if (best) { Object.assign(el.style, { left: best.sp.left + "px", right: best.sp.right + "px" }); el.dataset.spot = best.sp.spot; }
+  };
+  function toast(info) {
+    const P = DATA.cards.pop;
+    const el = h("div", { class: "card-toast", "data-card": info.card.id, role: "button", title: "Tap to see the card" },
+      CV.card(info.card, { foil: info.foil, px: 32 }),
+      h("div", { class: "ct-text" }, h("b", null, info.card.name), h("small", null, (info.isNew ? "New card!" : "×" + info.n) + (info.foil ? " · Foil" : ""))));
+    let gone = false; const iv = setInterval(() => { if (!gone) CV.placeToast(el); }, 250);
+    const bye = () => { if (gone) return; gone = true; clearInterval(iv); clearTimeout(el._t); el.remove(); next(); };
+    el.onclick = (e) => { e.stopPropagation(); const c = info.card; bye(); CV.inspect(c); };
+    document.body.appendChild(el); CV.placeToast(el);
+    if (G.Sfx) { G.Sfx.play(info.foil ? "sfx_card_foil" : "sfx_card_pickup"); if (info.isNew) setTimeout(() => G.Sfx.play("sfx_card_new"), P.newDelayMs); }
+    requestAnimationFrame(() => el.classList.add("in"));
+    el._t = setTimeout(() => { el.classList.add("out"); setTimeout(bye, 400); }, P.toastMs || 3500);
+  }
   function next() {
     const info = queue.shift(); if (!info) { showing = false; return; }
     showing = true;
+    if (CV.toastMode()) return toast(info);
     const P = DATA.cards.pop, px = root.innerWidth >= 900 && root.innerHeight >= 600 ? 160 : 80;   // whole-pixel scales only (2x / 1x)
     const box = h("div", { class: "card-pop", "data-card": info.card.id, style: `--flip:${P.flipMs}ms;--cw:${px}px` });
     const flip = h("div", { class: "cp-flip" }, img("card_back", "cp-back"), CV.card(info.card, { foil: info.foil, isNew: info.isNew, px }));

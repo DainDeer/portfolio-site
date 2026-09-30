@@ -201,7 +201,7 @@ void main() {
     if (!Dc.q.length) { Dc.played = 0; return Dc.flushWaiters(); }
     const i = Dc.q.findIndex((x) => x.hold), next = Dc.q.splice(i >= 0 ? i : 0, 1)[0], later = Dc.played > 0 && !next.hold, Q = C().queue || {};   // a batch's followers (scouting) play faster + quieter; a check you clicked never does   // holding checks first
     Dc.playing = next; Dc.played = (Dc.played || 0) + 1;
-    Dc.show(next, Object.assign({ noShield: !next.hold }, later ? { speed: Q.speed, holdMs: Q.holdMs, quiet: true } : {})).then(() => { Dc.playing = false; Dc.flushWaiters(); Dc.pump(); });
+    Dc.show(next, Object.assign({ noShield: !next.hold, mini: !next.hold }, later ? { speed: Q.speed, holdMs: Q.holdMs, quiet: true } : {})).then(() => { Dc.playing = false; Dc.flushWaiters(); Dc.pump(); });
   };
   // sounds (config.dice.sfx; all behind the toggle, since no die = no capture)
   Dc.sfx = function (what) {
@@ -223,6 +223,7 @@ void main() {
   // show roll (from G.Checks.roll) and resolve when it's landed + held (or tapped). Always resolves.
   Dc.show = function (roll, opts) {
     opts = opts || {};
+    if (opts.mini) return Dc.showMini(roll, opts);
     return new Promise((resolve) => {
       const cf = C(), A = cf.art, h = G.UI.h, k = cf.scale, [ww, wh] = [A.panel.window[2], A.panel.window[3]], px = (v) => v * k + "px";
       Dc.close();
@@ -260,5 +261,75 @@ void main() {
       }).catch((e) => { Dc.error = String(e && e.message || e); still("error"); });
     });
   };
-  Dc.close = function () { if (typeof document === "undefined") return; for (const el of document.querySelectorAll(".dice-panel, .dice-shield")) el.remove(); Dc.cur = null; };
+  // ---- the docked batch die (Vixie, Sep 30): a batch of rolls that don't hold the screen (scouting a new neighbourhood)
+  // rolls a small d20 in a 64 px box (config.dice.art.mini) docked in a corner (bottom-left first) instead of the big panel,
+  // with no shield: the frame lets taps through (pointer-events: none) and only the die's body takes a tap, which skips.
+  // Same plan (its length and wall hits time the roll + the bounce sounds), same thunk / stinger rule (pump's opts.quiet:
+  // the stinger on a batch's first die only), same speeds as the big panel. It tumbles (the ember loop) with a small hop,
+  // then shows face n in the grade's tint. Placement skips anything it would cover: the tutorial box / ring, the pods
+  // wheels' buttons, the phone battle buttons, a toast (then the next corner). Art: config.dice.art.mini (for now a
+  // placeholder = the big die's 40x41 resting strips at 1x until Smudge's 64 px strips land; if its files fail to load,
+  // those same strips stand in). Always a whole-number scale, pixelated.
+  Dc.miniArt = function (tint) {
+    const A = C().art, M = A.mini || {}, size = M.size || 64;
+    const r = Dc.mini64 !== false && M.rest && M.rest[tint] ? M.rest : A.rest, fr = r.frame || [size, size];
+    return { file: r[tint].file, frame: fr, offset: r === M.rest ? r.offset : null, native: fr[0] === size && fr[1] === size };
+  };
+  Dc.checkMini64 = function () {   // once: do the configured strips load? (else the stand-in above)
+    const M = C().art.mini || {}; if (Dc.mini64 != null || !M.rest || typeof Image === "undefined") return;
+    Dc.mini64 = null; const im = new Image(); im.onload = () => { Dc.mini64 = true; }; im.onerror = () => { Dc.mini64 = false; }; im.src = url(M.rest.ember.file);
+  };
+  Dc.MINI_AVOID = ".tut-box, .tut-ring, .tut-arrow, .wheel-btn, .touch-ctl, .card-toast, #toast.show";
+  Dc.placeMini = function (el) {
+    const hit = [...document.querySelectorAll(Dc.MINI_AVOID)].map((e) => e.getBoundingClientRect()).filter((r) => r.width && r.height);
+    const over = (a) => hit.reduce((s, b) => s + Math.max(0, Math.min(a.right, b.right + 4) - Math.max(a.left, b.left - 4)) * Math.max(0, Math.min(a.bottom, b.bottom + 4) - Math.max(a.top, b.top - 4)), 0);
+    let best = null;
+    for (const spot of ["bl", "br", "tl", "tr"]) {
+      el.dataset.spot = spot; const c = over(el.getBoundingClientRect());
+      if (!best || c < best.c) best = { spot, c };
+      if (!c) break;
+    }
+    el.dataset.spot = best.spot;
+  };
+  Dc.showMini = function (roll, opts) {
+    return new Promise((resolve) => {
+      const cf = C(), h = G.UI.h, M = cf.art.mini || {}, size = M.size || 64, tintEnd = Dc.tint(roll.grade), tint0 = (cf.tints || {}).rolling || "ember", body = M.body || [4, 1, 58, 60];
+      Dc.close(); Dc.checkMini64();
+      const face = h("div", { class: "dice-mini-face" });
+      const hit = h("div", { class: "dice-mini-hit", role: "button", "aria-label": roll.label || `d20: ${roll.d}`, style: `left:${body[0]}px;top:${body[1]}px;width:${body[2] - body[0]}px;height:${body[3] - body[1]}px` });
+      const el = h("div", { class: "dice-mini", "data-dice": "rolling", "data-kind": roll.kind || "" }, face, hit);
+      el.style.width = el.style.height = size + "px";
+      const setFace = (n, tint, lift) => {   // a rest frame: face n up
+        const a = Dc.miniArt(tint), k = Math.max(1, Math.floor(Math.min(size / a.frame[0], size / a.frame[1]))), w = a.frame[0] * k, fh = a.frame[1] * k;
+        const x = a.offset && k === 1 ? a.offset[0] : Math.floor((size - w) / 2), y = a.offset && k === 1 ? a.offset[1] : Math.floor((size - fh) / 2);
+        face.style.cssText = `width:${w}px;height:${fh}px;left:${x}px;top:${y}px;background-image:url(${url(a.file)});background-size:${w * 20}px ${fh}px;background-position:${-(n - 1) * w}px 0;transform:translateY(${-(lift || 0)}px)`;
+        el.dataset.art = a.native ? "64" : "stand-in";
+      };
+      const setTumble = (i, lift) => {   // the tumble loop (mini.tumble); none / stand-in: cycle the rest frames
+        const T = M.tumble; if (!T || Dc.mini64 === false) return setFace(1 + (i * 7) % 20, tint0, lift);
+        face.style.cssText = `width:${size}px;height:${size}px;left:0;top:0;background-image:url(${url(T.file)});background-size:${size * T.frames}px ${size}px;background-position:${-(i % T.frames) * size}px 0;transform:translateY(${-(lift || 0)}px)`;
+        el.dataset.art = "64";
+      };
+      setTumble(0);
+      document.body.append(el); Dc.placeMini(el);
+      let done = false, raf = 0, landed = false, plan = null; const iv = setInterval(() => { if (!done) Dc.placeMini(el); }, 250);
+      const finish = () => { if (done) return; done = true; cancelAnimationFrame(raf); clearInterval(iv); Dc.close(); resolve(roll); };
+      const land = () => { if (landed) return; landed = true; cancelAnimationFrame(raf); Dc.sfx(opts.quiet ? "landQuiet" : "land");
+        setFace(roll.d, tintEnd); el.dataset.dice = "landed"; el.dataset.face = String(roll.d); el.dataset.tint = tintEnd;
+        setTimeout(finish, opts.holdMs != null ? opts.holdMs : cf.holdMs); };
+      hit.onclick = (e) => { e.stopPropagation(); if (landed) finish(); else land(); };
+      Dc.cur = { panel: el, shield: null, get plan() { return plan; }, finish, mini: true };
+      if (Dc.reduced() || opts.still) { Dc.mode = "still"; Dc.stillWhy = "reduced motion"; return land(); }
+      Dc.load().then(() => { if (done || landed) return;
+        plan = Dc.plan(roll.d, opts.seed || ((Math.random() * 4294967295) >>> 0) || 1); Dc.mode = "mini";
+        const speed = (Dc.phone() ? cf.phoneSpeed : 1) * (opts.speed || 1), maxB = (cf.sfx || {}).maxBounces || 3, fps = (M.tumble && M.tumble.fps) || 12; let t0 = 0, bi = 0;
+        const tick = (now) => { if (!t0) t0 = now; const i = Math.floor((now - t0) / 1000 * 60 * speed); if (i >= plan.frames.length) return land();
+          while (bi < plan.bounces.length && plan.bounces[bi] <= i) { if (bi < maxB) Dc.sfx("bounce"); bi++; }
+          setTumble(Math.floor((now - t0) / 1000 * fps * speed), Math.round(Math.max(0, plan.frames[i][1] - Dc.geo.inR) * 5));
+          raf = requestAnimationFrame(tick); };
+        raf = requestAnimationFrame(tick);
+      }).catch((e) => { Dc.error = String(e && e.message || e); Dc.mode = "still"; Dc.stillWhy = "error"; land(); });
+    });
+  };
+  Dc.close = function () { if (typeof document === "undefined") return; for (const el of document.querySelectorAll(".dice-panel, .dice-shield, .dice-mini")) el.remove(); Dc.cur = null; };
 })(typeof window !== "undefined" ? window : globalThis);

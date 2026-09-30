@@ -17,6 +17,10 @@
 @media (pointer: coarse) and (max-width: 940px), (pointer: coarse) and (max-height: 500px) {
   #app { height: 100vh; height: 100dvh; }
 
+  /* Vixie (Sep 30): binder cells show the art + rarity frame only; the name box text (8.2cqw) came out 4.6-5.8 px here.
+     A tap opens the big card with the name (CardView.inspect: not inside .binder, so it keeps its name). */
+  .binder .tcard .tc-name { display: none; }
+
   /* compact top bar: one row that scrolls sideways; the debug hint (keyboard only) and the subtitle go */
   #topbar { flex-wrap: nowrap; overflow-x: auto; gap: 10px; padding: 0 8px; padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); white-space: nowrap; scrollbar-width: none; font-size: 12px; }
   #topbar::-webkit-scrollbar { display: none; }

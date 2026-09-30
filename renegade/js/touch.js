@@ -21,6 +21,9 @@
   T.PHONE = "(pointer: coarse) and (max-width: 940px), (pointer: coarse) and (max-height: 500px)";
   const phoneMq = root.matchMedia ? root.matchMedia(T.PHONE) : null;
   T.layout = () => !!(phoneMq && phoneMq.matches);
+  T.LANDSCAPE = "(pointer: coarse) and (max-height: 500px) and (orientation: landscape)";   // css/mobile.css "landscape phones"
+  const landMq = root.matchMedia ? root.matchMedia(T.LANDSCAPE) : null;
+  T.landscape = () => !!(landMq && landMq.matches);
   // committing actions: first tap = tooltip, second tap on the same element = the action
   T.tapFirst = ".map-node.reachable, .map-node.enterable, .site-obj.usable";
   const CONTROL = "button, a, input, select, textarea, label, .abl-btn, .card, .town-hs";
