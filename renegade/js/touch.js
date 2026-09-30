@@ -60,6 +60,8 @@
     box.scrollLeft += c.left + c.width / 2 - (b.left + b.width / 2); box.scrollTop += c.top + c.height / 2 - (b.top + b.height / 2);
   };
   new MutationObserver(() => T.centerMap()).observe(document.getElementById("screen"), { childList: true });
-  // older iOS Safari ignores user-scalable=no: block its pinch gesture events (no-ops elsewhere)
-  for (const k of ["gesturestart", "gesturechange"]) document.addEventListener(k, (e) => e.preventDefault(), { passive: false });
+  // older iOS Safari ignores user-scalable=no: block its pinch gesture events, on touch devices only
+  // (desktop Safari fires them for trackpad pinch: left alone there, so pinch-zoom on a Mac still works)
+  const coarse = root.matchMedia ? root.matchMedia("(pointer: coarse)") : null;
+  for (const k of ["gesturestart", "gesturechange"]) document.addEventListener(k, (e) => { if (coarse && coarse.matches) e.preventDefault(); }, { passive: false });
 })(window);

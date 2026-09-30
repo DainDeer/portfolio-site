@@ -100,6 +100,7 @@
   .abl-auto { width: 32px; height: 32px; right: 6px; font-size: 12px; }
   .combat-feed { flex: 1 1 100%; min-width: 0; max-height: 72px; }
   .tp-panel { max-width: none; }
+  .tp-q { max-width: 100%; }   /* long "1. Break away → name" rows wrap instead of running out of the panel */
   .tp-panel .tp-head { font-size: 11px; display: block; padding: 0; border: 0; }
   .touch-ctl { display: flex; gap: 8px; }
   .tc-btn { flex: 1 1 0; min-height: 52px; margin: 0; font-size: 15px; font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.2; }
@@ -138,7 +139,8 @@
   #screen > .touch-ctl .tc-cancel { flex-basis: 100%; order: -1; }   /* its own row, on top, while aiming */
   .ability-bar { padding-top: 0; }
   .abl-btn { flex-basis: 100%; }
-  .tp-panel { max-height: 45dvh; overflow-y: auto; }
+  .tp-panel { max-height: 45dvh; overflow-y: auto; display: flex; flex-direction: column; }
+  .tp-panel > .tp-items, .tp-panel > .tp-queue { order: -1; }   /* kits + queue above the help text, so the queue isn't below the fold */
 }
 
 /* ---------- portrait phones: usable, stacked ---------- */
