@@ -128,7 +128,7 @@
     }
     if (o.kind === "grate") {   // the passage's own art (data, so old sites pick up new keys); anim: an animated strip, the still under reduced motion
       const P = (DATA.zones.passages || {})[o.pid] || {}, still = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const base = !still && P.anim && has(P.anim) ? P.anim : (P.sprite && has(P.sprite) ? P.sprite : o.sprite);
+      const base = !still && P.anim && has(P.anim) ? P.anim : (P.sprite && has(P.sprite) ? P.sprite : has(P.fallbackSprite) ? P.fallbackSprite : o.sprite);   // fallbackSprite: the Rail Spur until Smudge's marker lands
       return G.Zones.passageFound(o.pid) && has(base + "_open") ? base + "_open" : base;
     }
     if (o.kind === "extract") return X.extractSprite(o, typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches);   // Slice 5 §D: the wreck burns (the still under reduced motion)
@@ -162,7 +162,8 @@
 
   // Order (art README): wall fill, edge bands, corner caps, then the face inside each room's top edge; doorway plates under doors.
   SV.paint = function (cv, site) {
-    const ctx = cv.getContext("2d"), S = DATA.searchables, V = S.view, WL = S.walls, wz = Object.assign({}, WL.default, (WL.byZone || {})[site.zone] || {});
+    const ctx = cv.getContext("2d"), S = DATA.searchables, V = S.view, WL = S.walls, wz = Object.assign({}, WL.default);
+    { const zw = (WL.byZone || {})[site.zone] || {}; for (const k in zw) if (DATA.sprites[zw[k]]) wz[k] = zw[k]; }   // Slice 5 §G: a zone's wall art only once it's registered (Scablands hooks)
     const T = V.wall;
     ctx.imageSmoothingEnabled = !DATA.sprites.pixelArt;
     put(ctx, wz.fill, 0, 0, W, H, 0, 0);

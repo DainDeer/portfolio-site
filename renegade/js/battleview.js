@@ -539,15 +539,21 @@
     v.shake = Math.max(0, v.shake - dt * 20);
   };
 
+  // Slice 5 §G: the arena floor by zone (DATA.zones.battleFloors: zone id -> key, zone a = the Hushwood's), else bg_battle
+  // (no floor for the zone, or the key isn't registered: SP.or never auto-registers, so no 404s)
+  BV.arenaBg = function () {
+    const zid = (G.state && G.state.run && G.state.run.zone) || null;
+    return SP.or(zid && (DATA.zones.battleFloors || {})[zid], "bg_battle");
+  };
   BV.draw = function (v) {
     const ctx = v.ctx, b = v.b, c = C(), px = v.px;
     v.art = b.units.some((u) => hasArt(u.sprite));
     ctx.save();
     ctx.imageSmoothingEnabled = !S().pixelArt;
     if (v.shake > 0) ctx.translate(Math.round((Math.random() - 0.5) * v.shake), Math.round((Math.random() - 0.5) * v.shake));
-    const pat = SP.pattern(ctx, "bg_battle");
+    const bgk = BV.arenaBg(), pat = SP.pattern(ctx, bgk);
     if (pat && pat.setTransform && typeof DOMMatrix !== "undefined") pat.setTransform(new DOMMatrix().scale(S().texelScale || 1));
-    ctx.fillStyle = pat || SP.def("bg_battle").color; ctx.fillRect(-10, -10, v.W + 20, v.H + 20);
+    ctx.fillStyle = pat || SP.def(bgk).color; ctx.fillRect(-10, -10, v.W + 20, v.H + 20);
     // faint ground grid
     ctx.strokeStyle = "rgba(255,255,255,0.03)"; ctx.lineWidth = 1;
     for (let x = 0; x <= c.arenaW; x += c.gridCell) { ctx.beginPath(); ctx.moveTo(x * px, 0); ctx.lineTo(x * px, v.H); ctx.stroke(); }

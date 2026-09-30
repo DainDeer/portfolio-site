@@ -6,7 +6,7 @@
   // Zone A: generated from the save seed (G.Map.generate). Others: hand-made node lists in data/zones.js.
   Z.build = function (zid, seed) {
     const d = Z.def(zid);
-    if (d.generated) return G.Map.generate(seed >>> 0);
+    if (d.generated) return G.Map.generate(seed >>> 0, zid);
     const nodes = {};
     for (const id in d.nodes) { const n = Object.assign({ id }, d.nodes[id]); nodes[id] = { id, x: n.x, y: n.y, loc: n.loc, tier: n.tier || d.tier || 1, zone: zid, hiddenUntilAdjacent: !!n.hiddenUntilAdjacent }; }
     return { zone: zid, insertion: d.insertion, nodes, edges: d.edges.map((e) => e.slice()) };
@@ -24,7 +24,9 @@
     for (const k in P.ends) { const e = P.ends[k]; if (e.zone !== zid) continue; if (e.node) return e.node; const n = G.Map.nodeOfLoc(Z.map(zid), e.loc); return n && n.id; }
     return null;
   };
-  Z.passageAt = function (locId) { const l = DATA.map.locations[locId]; return l && l.passage ? l.passage : null; };
+  Z.passageAt = function (locId) { const l = DATA.map.locations[locId]; return l && l.passage ? Z.passagesOf(l)[0] : null; };
+  // Slice 5 §G: a location can hold several passages (the Rail Yard: the storm drain + the hidden rail spur)
+  Z.passagesOf = (loc) => (!loc || !loc.passage ? [] : [].concat(loc.passage));
   Z.otherEnd = function (pid, zid) { const P = DATA.zones.passages[pid]; for (const k in P.ends) if (P.ends[k].zone !== zid) return P.ends[k].zone; return null; };
   Z.passageFound = (pid) => !!G.state.passages[pid];
   // Is the passage visible from this zone's end? (hidden at the Zone A end until spotted; always visible from B1)

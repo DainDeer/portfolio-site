@@ -18,15 +18,14 @@ DATA.map = {
     fogAlpha: 0.9,                // fog over never-seen ground
     rememberedFogAlpha: 0.5,      // fog kept over locations remembered from earlier runs
     revealedAlpha: 0.45,          // strength of the revealed-ground tile over the map background
-    revealedAlphaByZone: { a: 0, b: 0, greyback: 0 } // painted backgrounds (zones.list[z].mapBg) show through as-is
+    revealedAlphaByZone: { a: 0, b: 0, greyback: 0, scablands: 0 } // painted backgrounds (zones.list[z].mapBg) show through as-is
   },
   // fixed placements: role -> allowed rows (placed in this order, so the extractions always get their row)
   fixed: {
     ex_truck:         { rows: [2] },       // always a tier-1 extraction reachable in the tutorial ("lightly railroaded", §3.5)
     ex_tunnel:        { rows: [4, 5] },    // Slice 5 §G: the Creek Culvert
-    ex_rooftop:       { rows: [5] },
     backpack_cache:   { rows: [1] },
-    rail_yard:        { rows: [3, 4] },    // Slice 2: hosts the passage to Zone B (storm drain grate)
+    rail_yard:        { rows: [3, 4] },    // Slice 2: hosts the passage to Zone B (storm drain grate); Slice 5 §G: + the Rail Spur to the Scablands
     hollow_creek:     { rows: [2, 3] },
     pump_station:     { rows: [2, 3] },    // Slice 2: holds the Pump House quest object
     fire_lookout:     { rows: [3, 4] }     // Slice 5 §G (Vixie): holds the Deer Trail up to Greyback
@@ -45,14 +44,14 @@ DATA.map = {
   // size: S | M | L (location view template, data/searchables.js). tags: resources found here (a matching tag doubles
   // that resource's weight in every loot table). Slice 1 tags migrated: circuits -> electronics, biomass -> chemicals.
   locations: {
-    // ---- Slice 5 §G (Vixie): these six leave the Hushwood pool for The Scablands (zone "scablands", tier 5; its map
-    // lands in the next push, until then they're on no map). Ids kept. ----
+    // ---- Slice 5 §G (Vixie): The Scablands (zone "scablands", tier 5, generated from its own seed salt: data/zones.js
+    // list.scablands.gen). These six left the Hushwood pool; ids kept. ----
     flooded_mall:    { zone: "scablands", name: "Flooded Mall",          icon: "loc_mall",      family: "outlaws", size: "L", odds: { hostiles: 55, event: 30, survivors: 10 }, tags: ["scrap", "food", "cloth", "office"], events: ["toll_gate", "cache"] },
     relay_tower:     { zone: "scablands", name: "Relay Tower 7",         icon: "loc_tower",     family: "machines", size: "M", odds: { hostiles: 35, event: 70, survivors: 5 },  tags: ["electronics", "data", "terminal"], events: ["relay", "ai_perimeter_drone"] },   // Slice 3 §4a: machines
     riverbed_camp:   { name: "Dry Riverbed Camp",     icon: "loc_camp",      family: "outlaws", size: "M", odds: { hostiles: 70, event: 25, survivors: 10 }, tags: ["scrap", "food"], events: ["toll_gate"] },
     brigid_clinic:   { zone: "scablands", kind: "medical", name: "St. Brigid Clinic",     icon: "loc_hospital",  family: "beasts",  size: "M", odds: { hostiles: 40, event: 45, survivors: 15 }, tags: ["med", "chemicals", "terminal"], events: ["cryo_ward"] },
-    rail_yard:       { kind: "industrial", name: "Overgrown Rail Yard",   icon: "loc_overgrown", family: "beasts",  size: "M", odds: { hostiles: 65, event: 20, survivors: 5 },  tags: ["chemicals", "scrap", "biomass"], events: ["tunnel"], passage: "storm_drain" },
-    transit_tunnel:  { zone: "scablands", name: "Collapsed Transit Tunnel", icon: "loc_tunnel", family: "beasts",  size: "M", odds: { hostiles: 40, event: 80, survivors: 0 },  tags: ["scrap"], events: ["tunnel"] },
+    rail_yard:       { kind: "industrial", name: "Overgrown Rail Yard",   icon: "loc_overgrown", family: "beasts",  size: "M", odds: { hostiles: 65, event: 20, survivors: 5 },  tags: ["chemicals", "scrap", "biomass"], events: ["tunnel"], passage: ["storm_drain", "rail_spur"] },
+    transit_tunnel:  { zone: "scablands", name: "Collapsed Transit Tunnel", icon: "loc_tunnel", family: "beasts",  size: "M", odds: { hostiles: 40, event: 80, survivors: 0 },  tags: ["scrap"], events: ["tunnel"], passage: "rail_spur" },   // the Rail Spur comes up here (fixed in row 1)
     fuel_depot:      { zone: "scablands", kind: "industrial", name: "Fuel Depot 9",          icon: "loc_depot",     family: "outlaws", size: "M", odds: { hostiles: 50, event: 30, survivors: 5 },  tags: ["scrap", "chemicals", "fuel", "office"], events: ["cache", "toll_gate"] },
     pylon_field:     { zone: "scablands", kind: "industrial", name: "Pylon Field",           icon: "loc_den",       family: "beasts",  size: "M", odds: { hostiles: 70, event: 25, survivors: 0 },  tags: ["chemicals", "biomass"], events: ["relay", "tunnel", "ai_perimeter_drone"] },
     toll_bridge:     { name: "Old Toll Bridge",       icon: "loc_camp",      family: "outlaws", size: "M", odds: { hostiles: 45, event: 75, survivors: 5 },  tags: ["scrap", "fuel", "office"], events: ["toll_gate"] },
@@ -96,7 +95,11 @@ DATA.map = {
                        extraction: { type: "check", skill: "piloting", dc: 12, failHeat: 5, badFail: "crash", crashHeat: 8 } },  // hotwire (§2.3). Slice 5 §A (Megan): a Bad Fail crashes it (was "battle"); crash numbers: config.extraction.crash
     ex_tunnel:       { name: "Creek Culvert",   icon: "loc_creek_culvert",family: "beasts",  size: "M", odds: { hostiles: 0, event: 0, survivors: 0 }, tags: ["scrap"], events: [],
                        extraction: { type: "defense", surviveSec: 30, waves: 3, waveBudgetMult: 0.6 } },           // countdown defense (Tarkov-like). Slice 5 §G: renamed from Tunnel Home, same defense
-    ex_rooftop:      { name: "Rooftop Pickup",        icon: "loc_extraction",family: "outlaws", size: "M", odds: { hostiles: 40, event: 0, survivors: 0 }, tags: [], events: [],
+    // ---- Slice 5 §G: The Scablands' extractions (the six places above + these two; generated map, data/zones.js) ----
+    // Tunnel Home: the old Zone A defense (now the Creek Culvert's too). Marker loc_sc_tunnel until then loc_extraction.
+    sc_tunnel:       { zone: "scablands", name: "Tunnel Home", icon: "loc_sc_tunnel", iconFallback: "loc_extraction", family: "beasts", size: "M", odds: { hostiles: 0, event: 0, survivors: 0 }, tags: ["scrap"], events: [],
+                       extraction: { type: "defense", surviveSec: 30, waves: 3, waveBudgetMult: 0.6 } },
+    ex_rooftop:      { zone: "scablands", name: "Rooftop Pickup",        icon: "loc_extraction",family: "outlaws", size: "M", odds: { hostiles: 40, event: 0, survivors: 0 }, tags: [], events: [],
                        extraction: { type: "free" } },
     // ---- Zone B: The Drowned Suburbs (handcrafted, tier 2; nodes + edges in data/zones.js) ----
     b_outfall:       { kind: "industrial", zone: "b", name: "Storm Drain Outfall",  icon: "loc_outfall",      family: "beasts",  size: "S", odds: { hostiles: 30, event: 0,  survivors: 0 },  tags: ["water"], events: [], passage: "storm_drain" },

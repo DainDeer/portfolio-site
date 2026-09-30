@@ -3,15 +3,25 @@
   const G = root.G, U = G.Util;
   const M = G.Map = {};
 
-  M.generate = function (seed) {
-    const D = DATA.map, rng = U.makeRng((seed ^ 0x9e3779b9) >>> 0);
-    const nodes = { outpost: { id: "outpost", row: 0, x: 60, y: 300, loc: null } };
-    const rows = [["outpost"]];
-    const W = 1000, H = 600, nRows = D.rows.length;
-    D.rows.forEach((count, ri) => {
+  // Slice 5 §G: one generator for every generated zone. Zone a reads DATA.map (rows / rowTier / fixed / guaranteed, the
+  // old "outpost" + "n<row>_<i>" ids, so its maps are unchanged); another zone reads its zones.list[zid].gen block
+  // (The Scablands: own seed salt, own rows / tiers / fixed roles, pool = the locations with zone === zid). Node ids stay
+  // unique across zones (G.Zones.node searches every map by id), so other zones prefix theirs (gen.idPrefix).
+  M.genConfig = function (zid) {
+    const D = DATA.map;
+    if (!zid || zid === "a") return { zid: "a", salt: 0x9e3779b9, rows: D.rows, rowTier: D.rowTier, fixed: D.fixed, guaranteed: D.guaranteed || {}, ins: "outpost", prefix: "n", pool: (k) => !D.locations[k].zone, filler: "riverbed_camp" };
+    const g = DATA.zones.list[zid].gen;
+    return { zid, salt: g.salt >>> 0, rows: g.rows, rowTier: g.rowTier, fixed: g.fixed || {}, guaranteed: g.guaranteed || {}, ins: g.idPrefix + "_ins", prefix: g.idPrefix, pool: (k) => D.locations[k].zone === zid, filler: g.filler };
+  };
+  M.generate = function (seed, zid) {
+    const D = DATA.map, C = M.genConfig(zid), INS = C.ins, rng = U.makeRng((seed ^ C.salt) >>> 0);
+    const nodes = { [INS]: { id: INS, row: 0, x: 60, y: 300, loc: null } };
+    const rows = [[INS]];
+    const W = 1000, H = 600, nRows = C.rows.length;
+    C.rows.forEach((count, ri) => {
       const r = ri + 1, ids = [];
       for (let i = 0; i < count; i++) {
-        const id = "n" + r + "_" + i;
+        const id = C.prefix + r + "_" + i;
         const y = (H / (count + 1)) * (i + 1) + rng.range(-35, 35);
         const x = 60 + (r * (W - 120)) / nRows + rng.range(-30, 30);
         nodes[id] = { id, row: r, x, y, loc: null };
@@ -22,7 +32,7 @@
     const edges = [];
     const addEdge = (a, b) => { if (a === b) return; if (!edges.some((e) => (e[0] === a && e[1] === b) || (e[0] === b && e[1] === a))) edges.push([a, b]); };
     // outpost exits: connect to every row-1 node
-    for (const id of rows[1]) addEdge("outpost", id);
+    for (const id of rows[1]) addEdge(INS, id);
     for (let r = 1; r < rows.length - 1; r++) {
       const A = rows[r], B = rows[r + 1];
       A.forEach((a, i) => {
@@ -39,9 +49,9 @@
     for (let guard = 0; guard < 20; guard++) {
       const comp = {}; let c = 0;
       for (const id in nodes) {
-        if (id === "outpost" || comp[id] != null) continue;
+        if (id === INS || comp[id] != null) continue;
         const q = [id]; comp[id] = c;
-        while (q.length) { const x = q.shift(); for (const e of edges) { const y = e[0] === x ? e[1] : e[1] === x ? e[0] : null; if (y && y !== "outpost" && comp[y] == null) { comp[y] = c; q.push(y); } } }
+        while (q.length) { const x = q.shift(); for (const e of edges) { const y = e[0] === x ? e[1] : e[1] === x ? e[0] : null; if (y && y !== INS && comp[y] == null) { comp[y] = c; q.push(y); } } }
         c++;
       }
       if (c <= 1) break;
@@ -51,26 +61,26 @@
     }
     // assign locations: fixed roles first
     const free = {}; rows.forEach((ids, r) => { if (r > 0) free[r] = ids.slice(); });
-    for (const locId in D.fixed) {
-      const allowed = D.fixed[locId].rows.filter((r) => free[r] && free[r].length);
+    for (const locId in C.fixed) {
+      const allowed = C.fixed[locId].rows.filter((r) => free[r] && free[r].length);
       if (!allowed.length) continue;
       const r = rng.pick(allowed), nid = rng.pick(free[r]);
       free[r].splice(free[r].indexOf(nid), 1);
       nodes[nid].loc = locId;
     }
-    const pool = rng.shuffle(Object.keys(D.locations).filter((k) => !D.fixed[k] && !D.locations[k].zone && !D.locations[k].secret));   // Zone B locations have their own hand-made map
-    for (const r in free) for (const nid of free[r]) nodes[nid].loc = pool.length ? pool.pop() : "riverbed_camp";
+    const pool = rng.shuffle(Object.keys(D.locations).filter((k) => !C.fixed[k] && C.pool(k) && !D.locations[k].secret));   // zone a: locations without a zone (the handcrafted zones have their own maps)
+    for (const r in free) for (const nid of free[r]) nodes[nid].loc = pool.length ? pool.pop() : C.filler;
     // Slice 4 §B guaranteed locations (deterministic swap, no rng draws: maps that already had them are unchanged)
-    for (const locId in D.guaranteed || {}) {
+    for (const locId in C.guaranteed) {
       if (Object.values(nodes).some((n) => n.loc === locId)) continue;
       let swap = null;
-      for (const r of D.guaranteed[locId].rows) { swap = (rows[r] || []).find((nid) => nodes[nid].loc && !D.fixed[nodes[nid].loc] && !(D.guaranteed || {})[nodes[nid].loc]); if (swap) break; }
+      for (const r of C.guaranteed[locId].rows) { swap = (rows[r] || []).find((nid) => nodes[nid].loc && !C.fixed[nodes[nid].loc] && !C.guaranteed[nodes[nid].loc]); if (swap) break; }
       if (swap) nodes[swap].loc = locId;
     }
     // Slice 5 §G: secret spurs (the Witch's Cottage off Owlfall Hollow). A dead-end node next to its host, hidden from
     // every graph walk (M.neighbors) until a spot check finds it. No rng draws: the rest of the map is unchanged.
-    for (const nid in nodes) nodes[nid].tier = DATA.map.rowTier[nodes[nid].row] || 1;
-    const map = { seed, zone: "a", insertion: "outpost", nodes, edges };
+    for (const nid in nodes) { nodes[nid].tier = C.rowTier[nodes[nid].row] || 1; if (C.zid !== "a") nodes[nid].zone = C.zid; }
+    const map = { seed, zone: C.zid, insertion: INS, nodes, edges };
     M.attachSpurs(map);
     return map;
   };
@@ -94,6 +104,8 @@
   // Slice 5 §G: a secret node nobody has found yet is not on the map at all (no fog "?", no edge, no move, no Hunter path)
   M.secretFound = (locId) => !!(G.state && G.state.secrets && G.state.secrets[locId]);
   M.hiddenSecret = (node) => !!(node && node.secret && !M.secretFound(node.loc));
+  // a location's map marker: its own art once registered, else iconFallback (Slice 5 §G hooks, e.g. loc_sc_tunnel)
+  M.icon = (loc) => (!loc ? "loc_insertion" : DATA.sprites && !DATA.sprites[loc.icon] ? loc.iconFallback || "loc_unknown" : loc.icon);
   M.loc = (node) => (node && node.loc ? DATA.map.locations[node.loc] : null);
   M.nodeOfLoc = (map, locId) => Object.values(map.nodes).find((n) => n.loc === locId);
   // The outpost never appears on a map in Slice 2: Zone A's row-0 node is the Insertion Point (internal id "outpost").

@@ -44,6 +44,12 @@ DATA.searchables = {
                   table: [["fuel", 45, 1, 2], ["scrap", 35, 2, 3], ["electronics", 20, 1, 1]] },
     growth:     { name: "Growth cluster", examine: "[PLACEHOLDER] Wet, glossy growth, pulsing faintly. Don't touch it bare-handed.", sprite: "obj_growth",  searchSec: 3, noise: 4, resRolls: 1,
                   table: [["biomass", 70, 1, 2], ["chemicals", 20, 1, 1], [null, 10]] },
+    // Slice 5 §G (Smudge): the retired red Rusted Truck art (Slice 5 §D) comes back as Scablands wreck scenery
+    // (objectWeights.byZone.scablands). Same 2-slot footprint as the old extract truck.
+    rusted_truck: { name: "Rusted truck", examine: "[PLACEHOLDER] A red pickup rusting where it stopped. The cab's still shut.", sprite: "obj_truck", searchSec: 4, noise: 6, resRolls: 2, wide: 2,
+                  table: [["fuel", 40, 1, 2], ["scrap", 45, 2, 3], ["electronics", 15, 1, 1]] },
+    truck_wreck:  { name: "Burnt-out truck", examine: "[PLACEHOLDER] What's left of a pickup, nose-down in the dirt. Still smouldering, somehow.", sprite: "obj_truck_wrecked", searchSec: 3, noise: 5, resRolls: 1, wide: 2,
+                  table: [["scrap", 70, 1, 3], ["fuel", 20, 1, 1], [null, 10]] },
     body_machine: { name: "Machine wreck", examine: "[PLACEHOLDER] A dead machine, leaking something dark.", sprite: "corpse_machine", searchSec: 3, noise: 5, resRolls: 1,   // every killed machine (Part B step 8)
                   table: [["electronics", 40, 1, 2], ["scrap", 35, 1, 3], ["fuel", 10, 1, 1], ["data_shards", 7, 1, 1], [null, 8]] },
     // design call (milestone 3): dormant machine wrecks in Zone B (objectWeights.byZone.b). Same table as a fresh wreck;
@@ -98,7 +104,7 @@ DATA.searchables = {
   // "body" becomes body_human or body_beast by the location's family (old corpses).
   objectWeights: {
     base:  { crate: 30, locker: 25, desk: 15, body: 15, safe: 5, vehicle: 10 },   // vehicle 4 -> 10 (Slice 3 §11 Fuel tuning; 14 filled every site with cars and the fuel tag stopped mattering)
-    byZone: { b: { vehicle: 10, machine_dormant: 8 } },   // machine_dormant: design call (milestone 3), machines in Zone B
+    byZone: { b: { vehicle: 10, machine_dormant: 8 }, scablands: { rusted_truck: 8, truck_wreck: 8, machine_dormant: 8 } },   // scablands: Slice 5 §G [DRAFT]   // machine_dormant: design call (milestone 3), machines in Zone B
     // added once if the location has any of `tags` OR is in any of `zones` (Growth cluster: biomass places and Zone B only)
     anyOf: { growth: { weight: 35, tags: ["biomass", "chemicals", "med"], zones: ["b"] }, terminal: { weight: 15, tags: ["terminal"] } },   // growth 15 -> 35, also chemicals / med places (Biomass tuning)
     // guaranteed objects by location tag (they take generated slots): 1 terminal in every office (design)
@@ -120,13 +126,16 @@ DATA.searchables = {
   floors: {
     byZone: { a: { byTag: { water: "tile_floor_hushwood_wet", med: "tile_floor_clinic" }, default: "tile_floor_hushwood" },   // Slice 5 §G the Hushwood (Smudge 1828231); med: the School / Cryo Annex keep the clinic floor
               b: { byTag: { water: "tile_floor_b_wet" }, default: "tile_floor_b" },
-              greyback: { byTag: { water: "tile_floor_greyback_wet" }, default: "tile_floor_greyback" } },   // Slice 5 §G (Smudge, aa8b4fd)
+              greyback: { byTag: { water: "tile_floor_greyback_wet" }, default: "tile_floor_greyback" },
+              // Slice 5 §G (Smudge c2c0f9c); js/site.js floorFor falls through to the generic floors if a key isn't registered
+              scablands: { byTag: { water: "tile_floor_scablands_wet", med: "tile_floor_clinic" }, default: "tile_floor_scablands" } },   // Slice 5 §G (Smudge, aa8b4fd)
     byTag: { water: "tile_floor_wet", med: "tile_floor_clinic" },
     bySize: { S: "tile_floor_yard" },
     byTagLow: { food: "tile_floor_concrete", cloth: "tile_floor_concrete" },
     default: "tile_floor"
   },
-  walls: { default: { fill: "tile_wall", face: "tile_wall_face" }, byZone: { a: { fill: "tile_wall_hushwood", face: "tile_wall_face_hushwood" }, b: { fill: "tile_wall_b", face: "tile_wall_face_b" }, greyback: { fill: "tile_wall_greyback", face: "tile_wall_face_greyback" } },
+  walls: { default: { fill: "tile_wall", face: "tile_wall_face" }, byZone: { a: { fill: "tile_wall_hushwood", face: "tile_wall_face_hushwood" }, b: { fill: "tile_wall_b", face: "tile_wall_face_b" }, greyback: { fill: "tile_wall_greyback", face: "tile_wall_face_greyback" },
+                                                       scablands: { fill: "tile_wall_scablands", face: "tile_wall_face_scablands" } },   // Smudge c2c0f9c (js/siteview.js keeps tile_wall / tile_wall_face if unregistered)
            bandsH: ["tile_wall_h", "tile_wall_h", "tile_wall_h_2", "tile_wall_h_3"], bandV: "tile_wall_v", corner: "tile_wall_corner",
            doorwayH: "tile_doorway_h", doorwayV: "tile_doorway_v" },
   // Event objects (§5: "events move onto objects"). Clicking one opens the existing check event.
@@ -169,6 +178,7 @@ DATA.searchables = {
         ex_truck:   { name: "Logging Truck",  sprite: "obj_logging_truck", wide: 2, wreckedSprite: "obj_logging_truck_wrecked", wreckedAnim: "obj_logging_truck_wrecked_smoke",   // Slice 5 §G (Smudge 1828231; Vixie: the red Rusted Truck art is retired from zone a, asset kept)
                       examine: "[DRAFT] [PLACEHOLDER] The logging truck. Keys in it, if it'll start.", examineWrecked: "[DRAFT] [PLACEHOLDER] Wrecked. It's not going anywhere." },   // Smudge's suggested lines (truck_props_manifest.json)
         ex_tunnel:  { name: "Culvert mouth",  sprite: "obj_ex_creek_culvert", examine: "[PLACEHOLDER] The creek runs out through a culvert under the road, toward home. Something always follows you into it." },   // Slice 5 §G: the Creek Culvert (Smudge 1828231)
+        sc_tunnel:  { name: "Tunnel mouth",   sprite: "obj_ex_sc_tunnel", fallback: "obj_ex_tunnel_mouth", examine: "[PLACEHOLDER] A service tunnel, pointed home. Something always follows you into it." },   // Slice 5 §G: Tunnel Home (hook: obj_ex_sc_tunnel; meanwhile the old tunnel mouth)
         ex_rooftop: { name: "Pickup radio",   sprite: "obj_radio",      examine: "[PLACEHOLDER] A radio wired to a flare. Call the pickup and it comes." },
         b_levee:    { name: "Boat launch",    sprite: "obj_ex_boat", wide: 2, examine: "[PLACEHOLDER] The boat comes when you call. Hold the ramp till it does." },
         // Slice 5 §G: Smudge's 7a9a20d room objects

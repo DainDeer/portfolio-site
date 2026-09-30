@@ -2,7 +2,7 @@
 // Tags follow the design doc: most numbers are [DRAFT] (design doc v0.4, Slice 2).
 window.DATA = window.DATA || {};
 DATA.config = {
-  version: 3,               // save format. Slice 1 saves (version 1) and Slice 2 saves (version 2) are migrated on load (js/state.js St.migrate / St.migrate3)
+  version: 4,               // save format. 4 (Slice 5 §G, Vixie): The Scablands' map + the moved Rooftop Pickup, so older saves are set aside (new game). Slice 1 saves (version 1) and Slice 2 saves (version 2) are migrated on load (js/state.js St.migrate / St.migrate3)
   saveKey: "renegade_slice1_save",      // same key as Slice 1 so an existing save is found and migrated
   overridesKey: "renegade_slice1_tuning",
   // Megan, for now: a new build (window.BUILD_ID from js/build_id.js, the commit hash in packaged builds) wipes the saved
@@ -255,13 +255,13 @@ DATA.config = {
 
   // Enemy budgets (§7.3 "enemies build from the same kind of budget, scaled by location tier and Heat")
   enemies: {
-    budgetByTier: [0, 1, 2, 3.5, 5],
+    budgetByTier: [0, 1, 2, 3.5, 5, 6.5],   // [5]: The Scablands (Slice 5 §G) [DRAFT], +1.5 like 3 -> 4 (was the "|| 3" fallback)
     budgetPerDepth: 0.3,
     eliteBudgetMult: 1.0,
     // Slice 3 §11 (geared lever): bigger squads meet bigger groups. Budget x (1 + perExtra x (squad size - base)), squad
     // size = body + Grunts deployed this run (fixed at the start; allies lost mid-run don't shrink it). Off in the tutorial,
     // only in `zones` (Zone B: in Zone A it made the econ bot die and re-recruit, Vault L2 median run 7 -> 9).
-    squadScale: { base: 3, perExtra: 0.55, maxMult: 2.0, zones: ["b", "greyback"] }   // follow-up (Vixie): never more than x2.0 in total   // 0.55: geared deaths 8% -> ~22-25% (target 20-25%)
+    squadScale: { base: 3, perExtra: 0.55, maxMult: 2.0, zones: ["b", "greyback", "scablands"] }   // follow-up (Vixie): never more than x2.0 in total   // 0.55: geared deaths 8% -> ~22-25% (target 20-25%)
   },
 
   // Slice 5 §A (Megan, Vixie's [DRAFT] call): an extraction check with badFail: "crash" (the Rusted Truck) is wrecked by a
@@ -366,7 +366,7 @@ DATA.config = {
 
   // §10 loot
   loot: {
-    ilvlByTier: [1, 1, 4, 8, 12],
+    ilvlByTier: [1, 1, 4, 8, 12, 16],   // [5]: The Scablands (Slice 5 §G) [DRAFT] (was the "|| 1" fallback)
     ilvlPerDepth: 1,
     heatPerIlvl: 20,
     ilvlVariance: 2,

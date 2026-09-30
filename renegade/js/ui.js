@@ -669,7 +669,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     // heat
     const t = X.heatTier();
     const heat = h("section", { class: "panel", "data-tut": "heat" }, h("h3", null, `Heat ${r.heat} — ${t.name}`), bar(r.heat / DATA.config.heat.max, t.color, `${r.heat}/100`));
-    const marks = h("div", { class: "heat-marks" }); for (const th of DATA.config.heat.thresholds) marks.appendChild(h("span", { style: `left:${th.min}%` }, "|" + th.name));
+    const marks = h("div", { class: "heat-marks" }); for (const th of DATA.config.heat.thresholds) marks.appendChild(th.min >= 80 ? h("span", { class: "hm-end", style: `right:${100 - th.min}%` }, th.name + "|") : h("span", { style: `left:${th.min}%` }, "|" + th.name));   // Slice 5: a label near the end reads leftward from its tick (Manhunt at 90 overflowed the side panel)
     heat.appendChild(marks);
     { const rh = X.carriedResHeat(); heat.appendChild(h("small", { class: "heat-move", "data-heat-move": String(DATA.config.heat.perMove + rh) }, `Each move: +${DATA.config.heat.perMove}` + (rh ? ` · Relic Tech: +${rh} (+${DATA.resources.relic.heatPerMove} per unit carried)` : "") + " Heat")); heat.appendChild(h("br")); }
     heat.appendChild(h("small", null, `Enemy budget ×${t.budgetMult} · loot rarity +${t.lootBonus}%` + (G.Perks.rarityBonus() ? ` (+${G.Perks.rarityBonus()}% Scavenger's Eye)` : "") + (t.hostileBonus ? ` · hostiles +${t.hostileBonus}%` : "") + (t.closeExtractions ? ` · ${t.closeExtractions >= 99 ? "only one extraction open" : t.closeExtractions + " extraction(s) closed"}` : "") + (t.forcedBattle ? " · strike team intercepts at next location" : "")));

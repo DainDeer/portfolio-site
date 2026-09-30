@@ -165,7 +165,7 @@
     // seeds
     const sd = h("div", { class: "dbg-sec" }, h("h4", null, `Zone A map seed: ${s.maps.a.seed}`));
     const seedIn = h("input", { type: "number", value: s.maps.a.seed, style: "width:110px" });
-    const reseed = (v) => { if (r) return "Finish the expedition first."; s.maps.a = G.Map.generate(v >>> 0); s.seed = s.maps.a.seed; s.everSeen = {}; return "Zone A regenerated."; };
+    const reseed = (v) => { if (r) return "Finish the expedition first."; s.maps.a = G.Map.generate(v >>> 0); for (const z of DATA.zones.order) if (z !== "a" && DATA.zones.list[z].generated) s.maps[z] = G.Map.generate(v >>> 0, z); if (G.Main) G.Main.clampAnnex(s); s.seed = s.maps.a.seed; s.everSeen = {}; return "Zone A (and the Scablands) regenerated."; };
     sd.appendChild(h("div", null, seedIn, btn("Reseed map", () => reseed(+seedIn.value)), btn("Random", () => reseed(U.randomSeed()))));
     sd.appendChild(btn("NEW GAME (wipe save)", () => { if (!confirm("Wipe the save and start over?")) return; if (G.UI.battle) { G.BattleView.unmount(G.UI.battle.v); G.UI.battle = null; } G.UI.closeModal(); G.State.newGame(+seedIn.value >>> 0); G.UI.panel = null; if (G.Title && G.Title.shouldShow()) { G.Title.choice = null; G.Title.show(); } return "New game."; }));
     el.appendChild(sd);

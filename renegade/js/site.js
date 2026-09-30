@@ -96,7 +96,8 @@
   function floorFor(loc) {
     const F = SD().floors, tags = loc.tags || [], Z = (F.byZone || {})[loc.zone || "a"];
     if (loc.floor) return loc.floor;                       // per-location override (e.g. the flooded Zone B sites)
-    if (Z) { for (const t of tags) if ((Z.byTag || {})[t]) return Z.byTag[t]; return Z.default; }
+    if (Z) { const has = (k) => !!(k && DATA.sprites[k]);   // Slice 5 §G: a zone tile that hasn't landed (Scablands) falls through to the generic floors
+      for (const t of tags) if (has((Z.byTag || {})[t])) return Z.byTag[t]; if (has(Z.default)) return Z.default; }
     for (const t of tags) if (F.byTag[t]) return F.byTag[t];
     if ((F.bySize || {})[loc.size]) return F.bySize[loc.size];
     for (const t of tags) if ((F.byTagLow || {})[t]) return F.byTagLow[t];
@@ -198,7 +199,7 @@
     if (ev) X.addEventObject(site, ev);
     if (rng.chance(odds.survivors || 0)) { const so = S.survivorObject; place(site, mk(site, { kind: "survivor", name: so.name, sprite: so.sprite }), rng.int(0, nRooms - 1), rng); }
     // the passage grate (always in the first room); hidden at the Zone A end until spotted
-    if (loc.passage) { const P = DATA.zones.passages[loc.passage]; place(site, mk(site, { kind: "grate", pid: loc.passage, name: P.name || "Storm drain grate", sprite: P.sprite }), 0, rng); }
+    for (const pid of G.Zones.passagesOf(loc)) { const P = DATA.zones.passages[pid]; place(site, mk(site, { kind: "grate", pid, name: P.name || "Storm drain grate", sprite: DATA.sprites[P.sprite] ? P.sprite : P.fallbackSprite || "obj_grate" }), 0, rng); }   // Slice 5 §G: the Rail Yard holds two
     // props (decor), swapped by tags
     const PR = S.props, pool = []; for (const t of loc.tags || []) for (const p of PR.byTag[t] || []) pool.push(p);
     if (!pool.length) pool.push(...PR.default);
@@ -245,7 +246,11 @@
     const k = E.byLoc[locId] || (loc && E.byKind[loc.kind]) || (tags.find((t) => E.byTag[t]) && E.byTag[tags.find((t) => E.byTag[t])]) || E.default;
     return Object.assign({ style: k }, E.styles[k] || E.styles[E.default]);
   };
-  X.extractSpot = (locId) => Object.assign({}, AC().extract.default, AC().extract.byLoc[locId] || {});
+  X.extractSpot = function (locId) {
+    const sp = Object.assign({}, AC().extract.default, AC().extract.byLoc[locId] || {});
+    if (sp.fallback && !DATA.sprites[sp.sprite]) sp.sprite = sp.fallback;   // Slice 5 §G hook: the Tunnel Home's own art (obj_ex_sc_tunnel) until it lands
+    return sp;
+  };
   X.extractSprite = function (o, still) {   // intact / the burning wreck (still: its first frame, for reduced motion)
     const sp = X.extractSpot(o.loc), has = (k) => !!(k && DATA.sprites[k]);
     if (!X.wrecked(X.node(o.nid))) return sp.sprite;
@@ -494,7 +499,7 @@
     if (hit) X.push({ type: "battle", family: loc.family, budgetMult: CFG().search.battleBudgetMult, nid: site.nid, why: "Disturbance! Something heard you." });
     // Slice 3: a terminal can trip a drone alarm (a machine fight); off until its enemy family exists (step 8)
     const al = T.alarm; let alarm = null;
-    if (al && o.searched && !hit && DATA.enemies.families[al.family]) {
+    if (al && o.searched && !hit && DATA.enemies.families[al.family] && !X.familyBarred(al.family, site.zone)) {   // Slice 5 §G: no drone alarms in the Hushwood
       const ar = G.rng() * 100; alarm = { pct: al.chance, roll: ar, hit: ar < al.chance };
       X.log(`Alarm ${o.name}: ${al.chance}% → rolled ${Math.floor(ar)}: ${alarm.hit ? "a drone answers!" : "quiet."}`, "roll");
       if (alarm.hit) X.push({ type: "battle", family: al.family, budgetMult: al.budgetMult, nid: site.nid, why: al.why });
@@ -623,7 +628,7 @@
   };
   // spot checks on arrival: a hidden passage here, and (Slice 5 §G) a secret spur off this place that nobody has found
   X.pushSpots = function (node, loc, site) {
-    if (loc.passage && !G.Zones.passageVisible(loc.passage, site.zone)) X.push({ type: "spot", pid: loc.passage, nid: node.id });
+    for (const pid of G.Zones.passagesOf(loc)) if (!G.Zones.passageVisible(pid, site.zone)) X.push({ type: "spot", pid, nid: node.id });
     const sp = loc.secretSpot, map = G.Zones.map(G.Zones.zoneOf(node.id));
     if (sp && !G.Map.secretFound(sp.loc) && map.nodes["s_" + sp.loc]) X.push({ type: "spot", secret: sp.loc, nid: node.id });
   };
@@ -670,7 +675,7 @@
     const r = run(); if (!r || r.queue.length) return "Finish what's in front of you first.";
     if (X.immobile()) return "You're carrying too much to move.";
     const here = X.node(); const loc = G.Map.loc(here);
-    if (!loc || loc.passage !== pid) return "No passage here.";
+    if (!loc || !G.Zones.passagesOf(loc).includes(pid)) return "No passage here.";
     if (!G.Zones.passageVisible(pid, r.zone)) return "You haven't found it.";
     return null;
   };
@@ -682,7 +687,7 @@
     X.addHeat(P.crossHeat != null ? P.crossHeat : CFG().heat.passageCross, "passage");
     X.log(`You ${P.crossVerb || "squeeze through"} the ${P.name || "passage"} into ${DATA.zones.list[to].name}. +${P.crossHeat} Heat.`);
     X.enterNode(nid, { noMoveHeat: true, passage: true });
-    { const st = X.site(nid), gr = st && st.objects.find((o) => o.kind === "grate"); if (gr) st.squadAt = gr.id; }   // Slice 5 §D: you come up out of the grate
+    { const st = X.site(nid), gr = st && st.objects.find((o) => o.kind === "grate" && o.pid === pid); if (gr) st.squadAt = gr.id; }   // Slice 5 §D: you come up out of the grate
     return null;
   };
 })(typeof window !== "undefined" ? window : globalThis);

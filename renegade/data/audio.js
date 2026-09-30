@@ -85,8 +85,10 @@ DATA.audio = {
     // title = the start screen (Slice 4 §G): starts on the first tap / the 🔊 button; Play crossfades to the outpost
     states: { title: "music_title", outpost: "music_outpost", run: "music_hushwood", battle: "music_hushwood_battle" },
     // per-zone overrides. b = the Drowned Suburbs (data/zones.js). Hollis gets { run: "music_hollis", battle:
-    // "music_hollis_battle" } once it has a zone id. Zone a (labelled "The Scablands") keeps Hushwood.
-    zones: { b: { run: "music_drowned", battle: "music_drowned_battle" }, greyback: { run: "music_greyback", battle: "music_greyback_battle" } },   // greyback: Slice 5 §G
+    // "music_hollis_battle" } once it has a zone id. Zone a (The Hushwood) keeps the default pair. scablands: the same
+    // sync group on both tracks (bar-line crossfade, like the Hushwood pair) (Snare, Slice 5 §G).
+    zones: { b: { run: "music_drowned", battle: "music_drowned_battle" }, greyback: { run: "music_greyback", battle: "music_greyback_battle" },   // greyback: Slice 5 §G
+             scablands: { run: "music_scablands", battle: "music_scablands_battle" } },
     preload: {},   // Snare: a run preloads only its own zone's battle track (js/music.js Mu.set: trackFor("battle", zone)), so the switch is on time
     // same key + tempo, different lengths (so not one sync group): the incoming track still restarts from its top, but on
     // the outgoing one's next bar line, so the beat grids line up during the crossfade (Snare: title -> outpost)

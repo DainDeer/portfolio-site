@@ -250,6 +250,7 @@
       let st = o.s;
       if (st.version === 1) { st = St.migrate(st); St.loadNotice = "Your Slice 1 save was carried over to Slice 2" + (St.migrateNotes.length ? ": " + St.migrateNotes.join(" ") : "."); }
       if (st.version === 2) { st = St.migrate3(st); St.loadNotice = (St.loadNotice ? St.loadNotice + " " : "") + "Your save was carried over to Slice 3: locations now remember what you searched (every place starts fully stocked)."; }
+      if (st.version < DATA.config.version) throw new Error("it's from an older build (save version " + st.version + "; The Scablands reshaped the map in version 4)");   // Slice 5 §G (Vixie): a wipe, not a migration
       if (st.version !== DATA.config.version) throw new Error("unknown save version " + st.version);
       St.repair(st);
       G.state = st; G.clockOffset = o.clockOffset || 0;
@@ -296,7 +297,7 @@
   // Fill any Slice 2 fields a save is missing (also used after migration). Never throws on partial saves.
   St.repair = function (s) {
     if (!s.maps || !s.maps.a) s.maps = G.Zones.buildAll((s.seed >>> 0) || 1);
-    for (const z of DATA.zones.order) if (!s.maps[z] && !DATA.zones.list[z].generated) s.maps[z] = G.Zones.build(z);   // zones added later (Slice 5 §G Greyback) join old saves
+    for (const z of DATA.zones.order) if (!s.maps[z]) s.maps[z] = G.Zones.build(z, (s.seed >>> 0) || 1);   // zones added later (Slice 5 §G Greyback, the generated Scablands) join a save
     s.world = s.world || { hollow_creek: "pending" }; s.world.sites = s.world.sites || {};
     s.everSeen = s.everSeen || {}; s.locFlags = s.locFlags || {};
     s.zonesUnlocked = s.zonesUnlocked || {};

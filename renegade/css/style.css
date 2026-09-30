@@ -57,7 +57,7 @@ h2 { margin: 4px 0 10px; } h3 { margin: 0 0 8px; font-size: 14px; color: #e8c880
 .mn-odds { font-size: 11px; white-space: nowrap; text-shadow: 0 0 3px #000; } .mn-odds .h { color: #ff8a7a; } .mn-odds .e { color: #9ad0ff; } .mn-odds .c { color: #ffd870; } .mn-odds .s { color: #9ae09a; }
 .mn-tags { font-size: 10px; color: #bba; text-shadow: 0 0 3px #000; }
 .sq-row { display: flex; align-items: center; gap: 6px; margin: 3px 0; } .sq-name { width: 110px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; } .sq-row.dead { opacity: .6; }
-.heat-marks { position: relative; height: 14px; font-size: 9px; color: #999; } .heat-marks span { position: absolute; white-space: nowrap; }
+.heat-marks { position: relative; height: 14px; font-size: 9px; color: #999; overflow: hidden; } .heat-marks span { position: absolute; white-space: nowrap; } .heat-marks span.hm-end { text-align: right; }
 .log div { font-size: 11px; color: #bbb; border-bottom: 1px solid #262520; }
 .modal-back { position: fixed; inset: 0; background: #000a; display: flex; align-items: center; justify-content: center; z-index: 50; }
 .modal { background: #201f18; border: 1px solid #6a6040; border-radius: 6px; padding: 16px 20px; max-width: 560px; max-height: 88vh; overflow: auto; box-shadow: 0 10px 40px #000; }

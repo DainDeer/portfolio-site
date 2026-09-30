@@ -44,8 +44,8 @@ DATA.tutorial = {
     t2_map: { trigger: "map", modes: ["full", "tips"], steps: [
       // phones: the zone map scrolls inside its box (css/mobile.css), so the three nodes don't all fit on a landscape
       // screen; ring where you stand instead (js/touch.js keeps it centred) and say how picking works by touch
-      { id: "t2_routes", target: ".map-node.reachable", targetTouch: ".map-node.current", text: "Three ways in. Each spot shows what lives there and what it might hold. Pick one.",
-        textTouch: "You start here. Three ways in. Each spot shows what lives there and what it might hold. Tap one to look, tap it again to go." },
+      { id: "t2_routes", target: ".map-node.reachable", targetTouch: ".map-node.current", text: "Three ways in from the Ranger's Gate. Each spot shows what lives there and what it might hold. Pick one.",
+        textTouch: "You start at the Ranger's Gate. Three ways in. Each spot shows what lives there and what it might hold. Tap one to look, tap it again to go." },
       { id: "t2_heat", target: "[data-tut=heat]", text: "Noise and fighting raise Heat. More Heat means tougher enemies and worse odds." },
       { id: "t2_extract", target: ".map-node.extract", skipIfMissing: true, text: "This is your way out. Get here to keep what you're carrying. Die out there and you lose it." },
       { id: "t2_notimer", target: null, text: "There's no timer. Push deeper for better loot, or leave while you're ahead." }

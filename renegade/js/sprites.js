@@ -14,9 +14,13 @@
     }
     return d;
   };
+  // Slice 5 §G art hooks: code asks for a key that may not be registered yet (Smudge's art registers it in
+  // data/sprites.js when it lands) and falls back meanwhile. SP.or never auto-registers, so a hook costs no 404.
+  SP.has = (key) => !!(key && reg()[key]);
+  SP.or = (key, fallback) => (SP.has(key) ? key : fallback);
   SP.get = function (key) {
     const c = SP.cache[key];
-    if (c) return c.ok ? c.img : null;
+    if (c) return c.ok ? c.img : c.failed && reg()[key] && reg()[key].fallback ? SP.get(reg()[key].fallback) : null;   // def.fallback: another key's art if this file fails to load
     if (/^gl_/.test(key)) { if (G.GruntLook) G.GruntLook.ensure(key.replace(/_w$/, "")); return null; }   // composited at runtime, never fetched
     const d = SP.def(key);
     const entry = SP.cache[key] = { ok: false, img: null };
@@ -24,7 +28,7 @@
     if ((reg().pendingArt || []).some((p) => key.startsWith(p))) return null; // not delivered yet: don't request (avoids 404 noise)
     const img = new Image();
     img.onload = () => { entry.ok = true; entry.img = img; for (const f of SP.listeners) f(key); };
-    img.onerror = () => { entry.ok = false; };
+    img.onerror = () => { entry.ok = false; entry.failed = true; if (d.fallback) { const f = SP.get(d.fallback); if (f) for (const fn of SP.listeners) fn(key); else { let done = false; SP.listeners.push((k) => { if (done || k !== d.fallback) return; done = true; setTimeout(() => { for (const fn of SP.listeners) fn(key); }, 0); }); } } };
     img.src = reg().basePath + d.file;
     return null;
   };

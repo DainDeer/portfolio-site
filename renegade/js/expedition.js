@@ -214,7 +214,15 @@
   X.log = function (msg, cls) { if (run()) { run().log.push(msg); if (run().log.length > 200) run().log.shift(); } G.log(msg, cls); };
   X.markSeen = function () { const m = G.Zones.map(); for (const nid in m.nodes) if (X.visible(nid)) G.state.everSeen[nid] = true; if (G.Scout) G.Scout.around(); };   // Addendum A2: scouting rolls
   X.current = () => (run() ? run().queue[0] : null);
-  X.push = (step, front) => { if (front) run().queue.unshift(step); else run().queue.push(step); };
+  X.push = (step, front) => { X.zoneFamily(step); if (front) run().queue.unshift(step); else run().queue.push(step); };
+  // Slice 5 §G (Vixie): a zone can bar an enemy family for good (The Hushwood: no machines, beasts and raiders only).
+  // A battle of a barred family fights the zone's familySwap instead (the Cryo Ward's defence system, say).
+  X.zoneFamily = function (step) {
+    const z = DATA.zones.list[(run() && run().zone) || "a"] || {};
+    if (step && step.type === "battle" && (z.noFamilies || []).includes(step.family)) step.family = (z.familySwap || {})[step.family] || "outlaws";
+    return step;
+  };
+  X.familyBarred = (fam, zid) => ((DATA.zones.list[zid || (run() && run().zone) || "a"] || {}).noFamilies || []).includes(fam);
   X.next = function () { run().queue.shift(); G.State.save(); };
 
   // ---------- movement ----------

@@ -11,12 +11,39 @@
       for (const x of cs) { const f = Math.floor((Date.now() - +x.dataset.t0) / 1000 * +x.dataset.fps); if (f !== +x.dataset.frame) { x.dataset.frame = f; SP.paintIcon(x); } } }, 40);
   };
 
+  // Slice 5 §G (Vixie): the zone backgrounds are painted with their landmarks at the node positions (map space 1000x600
+  // stretched over the 1024x640 art). The bg keeps drawing with "cover" (phones keep big tappable nodes), and every node,
+  // edge, token and fog hole goes through the same cover transform, so it sits on its landmark at any crop. A node whose
+  // landmark falls outside the visible crop is clamped inside the viewport (margin) instead of hidden.
+  MV.frame = function (W, H) {
+    const V = DATA.map.view || {}, AW = V.artW || 1024, AH = V.artH || 640, k = Math.max(W / AW, H / AH), bw = AW * k, bh = AH * k;
+    const ox = (W - bw) / 2, oy = (H - bh) / 2, M = V.edgeMargin || { x: 26, top: 26, bottom: 34 };
+    const raw = (x, y) => [ox + (x / 1000) * bw, oy + (y / 600) * bh];
+    return { W, H, ox, oy, bw, bh, k: bw / 1000, raw,
+      at: (x, y) => { const p = raw(x, y); return [U.clamp(p[0], Math.min(M.x, W / 2), Math.max(W / 2, W - M.x)), U.clamp(p[1], Math.min(M.top, H / 2), Math.max(H / 2, H - M.bottom))]; } };
+  };
+  // place every map-space element of a rendered map (nodes, tokens, edges, the ground) for the wrap's current size
+  MV.layout = function (wrap) {
+    const W = wrap.clientWidth || 1000, H = wrap.clientHeight || 600, F = MV.frame(W, H);
+    if (wrap._laid === W + "x" + H) return F;
+    wrap._laid = W + "x" + H;
+    for (const el of wrap.querySelectorAll("[data-mx]")) { const p = F.at(+el.dataset.mx, +el.dataset.my); el.style.left = Math.round(p[0]) + "px"; el.style.top = Math.round(p[1]) + "px"; }
+    const svg = wrap.querySelector("svg.map-edges"); if (svg) svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    for (const l of wrap.querySelectorAll("line[data-ax]")) {
+      const a = F.at(+l.dataset.ax, +l.dataset.ay), b = F.at(+l.dataset.bx, +l.dataset.by);
+      l.setAttribute("x1", a[0]); l.setAttribute("y1", a[1]); l.setAttribute("x2", b[0]); l.setAttribute("y2", b[1]);
+    }
+    if (wrap._ground) wrap._ground(W, H, F);
+    return F;
+  };
+  const pos = (el, x, y) => { el.dataset.mx = x; el.dataset.my = y; el.style.left = (x / 10) + "%"; el.style.top = (y / 6) + "%"; };   // % until MV.layout runs
+
   MV.render = function (container, onPick) {
     const s = G.state, map = G.Zones.map(), r = s.run, ins = map.insertion;
     container.innerHTML = "";
     const wrap = document.createElement("div"); wrap.className = "map-wrap";
     const svgNS = "http://www.w3.org/2000/svg";
-    const svg = document.createElementNS(svgNS, "svg"); svg.setAttribute("viewBox", "0 0 1000 600"); svg.setAttribute("preserveAspectRatio", "none"); svg.classList.add("map-edges");
+    const svg = document.createElementNS(svgNS, "svg"); svg.setAttribute("viewBox", "0 0 1000 600"); svg.setAttribute("preserveAspectRatio", "none"); svg.classList.add("map-edges");   // viewBox: wrap px once MV.layout runs
     const vis = (nid) => (r ? G.Exp.visible(nid) : false);
     const known = (nid) => vis(nid) || (DATA.config.expedition.fogPersistsBetweenRuns && s.everSeen[nid]) || nid === ins;
     const V = DATA.map.view || {};
@@ -44,6 +71,7 @@
       const na = map.nodes[a], nb = map.nodes[b];
       const l = document.createElementNS(svgNS, "line");
       l.setAttribute("x1", na.x); l.setAttribute("y1", na.y); l.setAttribute("x2", nb.x); l.setAttribute("y2", nb.y);
+      l.dataset.ax = na.x; l.dataset.ay = na.y; l.dataset.bx = nb.x; l.dataset.by = nb.y;
       const active = r && ((a === r.loc && G.Exp.canMoveTo(b)) || (b === r.loc && G.Exp.canMoveTo(a)));
       l.setAttribute("class", active ? "edge active" : (vis(a) && vis(b) ? "edge" : "edge dim"));
       if (unknownSet[a] && unknownSet[b]) continue;
@@ -54,7 +82,7 @@
       const n = map.nodes[nid];
       if (unknownSet[nid]) {
         const el = document.createElement("div"); el.className = "map-node unknown";
-        el.style.left = (n.x / 10) + "%"; el.style.top = (n.y / 6) + "%";
+        pos(el, n.x, n.y);
         el.appendChild(SP.icon("loc_unknown", 32));
         const name = document.createElement("div"); name.className = "mn-name"; name.textContent = "Unscouted"; el.appendChild(name);
         wrap.appendChild(el); continue;
@@ -63,15 +91,15 @@
       const loc = G.Map.loc(n), isVis = vis(nid);
       const el = document.createElement("div");
       el.className = "map-node" + (isVis ? "" : " remembered") + (r && r.loc === nid ? " current" : "") + (r && r.visited[nid] ? " visited" : "");
-      el.style.left = (n.x / 10) + "%"; el.style.top = (n.y / 6) + "%";
+      pos(el, n.x, n.y);
       const wIcon = loc && loc.worldIcons && loc.worldEvent ? loc.worldIcons[s.world.hollow_creek] : null; // world-state icon (distress / aftermath)
       const wreck = loc && loc.iconWrecked && G.Exp.wrecked(n), still = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const iconKey = !loc ? (DATA.zones.list[map.zone || "a"] || {}).insertionIcon || "loc_insertion" : wreck ? (loc.iconWreckedAnim && !still ? loc.iconWreckedAnim : loc.iconWrecked) : (wIcon || loc.icon);   // Slice 5 §A: the wreck (animated unless reduced motion)
+      const iconKey = !loc ? SP.or((DATA.zones.list[map.zone || "a"] || {}).insertionIcon, "loc_insertion") : wreck ? (loc.iconWreckedAnim && !still ? loc.iconWreckedAnim : loc.iconWrecked) : (wIcon || G.Map.icon(loc));   // Slice 5 §A: the wreck (animated unless reduced motion)
       const ic = SP.icon(iconKey, 32); el.appendChild(ic); if ((SP.def(iconKey) || {}).fps) MV.animate(ic, SP.def(iconKey));
       el.dataset.nid = nid;
       if (loc && loc.extraction) el.classList.add("extract");   // Slice 4 §A: tutorial T2 rings extraction points
       // passage icon (once found), quest marker (an active find quest's object is here and holds the item)
-      if (loc && loc.passage && G.Zones.passageVisible(loc.passage, map.zone || "a")) { const pi = SP.icon(DATA.zones.passages[loc.passage].mapIcon, 20, "mn-passage"); pi.title = DATA.zones.passages[loc.passage].name + ": leads to " + DATA.zones.list[G.Zones.otherEnd(loc.passage, map.zone || "a")].name; el.appendChild(pi); }
+      for (const pid of G.Zones.passagesOf(loc)) if (G.Zones.passageVisible(pid, map.zone || "a")) { const P = DATA.zones.passages[pid], pi = SP.icon(SP.or(P.mapIcon, "map_passage"), 20, "mn-passage"); pi.title = P.name + ": leads to " + DATA.zones.list[G.Zones.otherEnd(pid, map.zone || "a")].name; el.appendChild(pi); }   // Slice 5 §G: the Rail Yard has two
       if (loc && G.Quests.findObjectsAt(map.zone || "a", n.loc).some((q) => G.Quests.itemAvailable(q))) { const qm = document.createElement("div"); qm.className = "mn-quest"; qm.textContent = "!"; qm.title = "Quest objective here"; el.appendChild(qm); }
       const cd = countdownOf(nid);
       if (cd > 0) { const b = document.createElement("div"); b.className = "mn-countdown"; b.textContent = `⏳ ${cd}`; b.title = `Hollow Creek holds for ${cd} more move${cd === 1 ? "" : "s"}. Arrive in time to defend it.`; el.appendChild(b); el.classList.add("distress"); }
@@ -107,11 +135,11 @@
       const n = map.nodes[hp.nid], path = (hp.trail || []).concat([hp.nid]);
       for (let i = 0; i < path.length - 1; i++) {
         const a = map.nodes[path[i]], c = map.nodes[path[i + 1]]; if (!a || !c || a === c) continue;
-        const tk = SP.icon("map_hunter_tracks", 16, "map-hunter-tracks"); tk.style.left = ((a.x + c.x) / 2 / 10) + "%"; tk.style.top = ((a.y + c.y) / 2 / 6) + "%";
+        const tk = SP.icon("map_hunter_tracks", 16, "map-hunter-tracks"); pos(tk, (a.x + c.x) / 2, (a.y + c.y) / 2);
         tk.style.transform = `translate(-50%,-50%) rotate(${Math.atan2(c.y - a.y, c.x - a.x) + Math.PI / 4}rad)`; wrap.appendChild(tk);
       }
       const tok = document.createElement("div"); tok.className = "map-hunter" + (hp.lostFor > 0 ? " lost" : ""); tok.dataset.hunterAt = hp.nid;
-      tok.style.left = (n.x / 10) + "%"; tok.style.top = (n.y / 6) + "%"; tok.appendChild(SP.icon("map_hunter_pack", 32));
+      pos(tok, n.x, n.y); tok.appendChild(SP.icon("map_hunter_pack", 32));
       tok.title = `Hunter pack (${hp.tier}): moves 1 node toward you after each of your moves${G.Hunters.slowEvery() > 1 ? " (every 2nd move: Hunter's Garb)" : ""}${hp.lostFor > 0 ? `. Lost your trail for ${hp.lostFor} more moves` : ""}. Crossing a passage shakes them off.`;
       wrap.appendChild(tok);
     }
@@ -120,7 +148,7 @@
     if (rvn && map.nodes[rvn]) {
       const n = map.nodes[rvn], nx = G.Rivals.st().next, snap = G.Rivals.byId(nx.id);
       const tok = document.createElement("div"); tok.className = "map-rival"; tok.dataset.rivalAt = rvn;
-      tok.style.left = (n.x / 10) + "%"; tok.style.top = (n.y / 6) + "%"; tok.appendChild(SP.icon("map_rival", 26));
+      pos(tok, n.x, n.y); tok.appendChild(SP.icon("map_rival", 26));
       tok.title = `Rival squad${snap ? " " + snap.handle : ""} last seen here (Radio). You'll meet them if you enter.`;
       wrap.appendChild(tok);
     }
@@ -130,25 +158,28 @@
     }
     container.appendChild(wrap);
     wrap.dataset.zone = map.zone || "a";
-    MV.ground(ground, wrap.clientWidth || 1000, wrap.clientHeight || 600, map, vis, known);
+    wrap._ground = (W, H, F) => MV.ground(ground, W, H, map, vis, known, F);
+    MV.layout(wrap);
+    // re-place on resize (rotation, the side panel opening): positions are px in the bg's cover frame now
+    if (typeof ResizeObserver !== "undefined") { const ro = new ResizeObserver(() => { if (!wrap.isConnected) { ro.disconnect(); return; } MV.layout(wrap); }); ro.observe(wrap); }
   };
 
   // Ground layer: map background, revealed-ground tile around visible locations, fog texture elsewhere.
   // Painted at the wrap's real pixel size (so scouted areas are true circles); node positions are 1000x600 map space.
-  MV.ground = function (cv, W, H, map, vis, known) {
-    const V = DATA.map.view || {}, zbg = (DATA.zones.list[map.zone || "a"] || {}).mapBg || (map.zone === "b" ? "map_bg_b" : null), bg = (zbg && SP.get(zbg)) || SP.get("map_bg"), fogImg = SP.get("map_fog"), rev = SP.get("map_revealed");
-    const sx = W / 1000, sy = H / 600;
+  MV.ground = function (cv, W, H, map, vis, known, F) {
+    F = F || MV.frame(W, H);
+    const V = DATA.map.view || {}, zbg = SP.or((DATA.zones.list[map.zone || "a"] || {}).mapBg || (map.zone === "b" ? "map_bg_b" : null), null), bg = (zbg && SP.get(zbg)) || SP.get("map_bg"), fogImg = SP.get("map_fog"), rev = SP.get("map_revealed");
     cv.width = W; cv.height = H;
     const ctx = cv.getContext("2d"); ctx.imageSmoothingEnabled = !DATA.sprites.pixelArt;
-    if (bg) { const k = Math.max(W / bg.naturalWidth, H / bg.naturalHeight), bw = bg.naturalWidth * k, bh = bg.naturalHeight * k; ctx.drawImage(bg, (W - bw) / 2, (H - bh) / 2, bw, bh); } // cover
+    if (bg) ctx.drawImage(bg, F.ox, F.oy, F.bw, F.bh);   // cover (the same frame the nodes are placed in: MV.frame)
     else { ctx.fillStyle = SP.def("map_bg").color; ctx.fillRect(0, 0, W, H); }
-    const R = (V.revealRadius || 78) * (sx + sy) / 2;
-    const circle = (g, n, rr) => { g.beginPath(); g.arc(n.x * sx, n.y * sy, rr, 0, Math.PI * 2); g.fill(); };
+    const R = (V.revealRadius || 78) * F.k, P = (n) => F.at(n.x, n.y);
+    const circle = (g, n, rr) => { const p = P(n); g.beginPath(); g.arc(p[0], p[1], rr, 0, Math.PI * 2); g.fill(); };
     const visN = Object.values(map.nodes).filter((n) => vis(n.id)), memN = Object.values(map.nodes).filter((n) => !vis(n.id) && known(n.id));
-    const revA = (V.revealedAlphaByZone || {})[map.zone] != null ? V.revealedAlphaByZone[map.zone] : (V.revealedAlpha != null ? V.revealedAlpha : 0.45);
+    const revA = zbg && (V.revealedAlphaByZone || {})[map.zone] != null ? V.revealedAlphaByZone[map.zone] : (V.revealedAlpha != null ? V.revealedAlpha : 0.45);
     if (rev && visN.length && revA > 0) { // revealed-ground tile, clipped to the scouted circles
       ctx.save(); ctx.globalAlpha = revA; ctx.beginPath();
-      for (const n of visN) { ctx.moveTo(n.x * sx + R, n.y * sy); ctx.arc(n.x * sx, n.y * sy, R, 0, Math.PI * 2); }
+      for (const n of visN) { const p = P(n); ctx.moveTo(p[0] + R, p[1]); ctx.arc(p[0], p[1], R, 0, Math.PI * 2); }
       ctx.clip(); ctx.fillStyle = ctx.createPattern(rev, "repeat"); ctx.fillRect(0, 0, W, H); ctx.restore();
     }
     // fog: textured layer with holes punched out (hard inner ring + half-strength outer ring keeps the pixel look)
