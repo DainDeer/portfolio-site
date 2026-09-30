@@ -598,7 +598,7 @@
     for (const b of r.claimedBodies) s.bodies.push(b);
     s.extractions++;
     let offer = null;
-    if (!s.tutorialDone && !s.humanOffer) { offer = G.State.rollHumanOffer(G.rng); s.humanOffer = offer; }
+    // Slice 4 §B: the first extraction no longer rolls the human body offer; the working pod in the cryo annex does (G.Main.claim)
     s.lastResult = { kind: "extracted", items: got.map((i) => ({ name: G.Items.name(i), rarity: i.rarity, ilvl: i.ilvl })), res: resGot, grunts: newGrunts, bodies: r.claimedBodies.map((b) => G.State.bodyTitle(b)),
                      heat: r.heat, moves: r.moves, stats: r.stats, offer: !!offer, xp: r.xpTally || {}, zone: r.zone, nickOffers: s.nickOffers.map((o) => o.uid),
                      ammo: r.ammo ? { base: r.ammo.base, used: r.ammo.used, left: r.ammo.n } : null, bounties: bounties.map((b) => G.Radio.text(b)) };

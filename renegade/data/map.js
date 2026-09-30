@@ -30,6 +30,12 @@ DATA.map = {
     hollow_creek:     { rows: [2, 3] },
     pump_station:     { rows: [2, 3] }     // Slice 2: holds the Pump House quest object
   },
+  // Slice 4 §B: locations every Zone A map must have. Filled AFTER the normal assignment, and only when the roll left
+  // them out: the first non-fixed node in the listed rows (in order) is swapped to it. No rng draws, so maps that
+  // already had it are unchanged. cryo_annex holds the pods room of Main 1 (DATA.main.pods).
+  guaranteed: {
+    cryo_annex:       { rows: [2, 3, 4] }
+  },
   // Every location in every zone. `zone` set = not part of Zone A's generator pool (handcrafted, see data/zones.js).
   // odds (independent %): hostiles, event (= "there is an event object in the location view"), survivors (a survivor object).
   // kind (optional): "medical" | "industrial" scales Med Supplies drops (DATA.searchables.medWeightByKind).

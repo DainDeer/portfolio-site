@@ -28,7 +28,11 @@ DATA.audio = {
     // approved after the Slice 3 list (assets/audio_src/README.md wiring notes). Not in the gun group.
     // `pending: true` on a key keeps it silent and never requested until its file lands.
     sfx_miss: { vol: 0.5 },        // a non-melee miss, ~40 ms after the shot (missDelayMs)
-    sfx_crit: { vol: 0.9 }         // layered over sfx_hit_flesh on a crit (battle.js emits it beside the crit shake)
+    sfx_crit: { vol: 0.9 },        // layered over sfx_hit_flesh on a crit (battle.js emits it beside the crit shake)
+    // Slice 4 (assets/audio_src/README.md "Slice 4 set"): UI sounds x0.8, no group
+    sfx_wheel_click: { vol: 0.64 },   // each spin of a pods-room wall wheel (§B1)
+    sfx_door_heavy: { vol: 0.8 },     // once, when the wheels match and the sealed door opens
+    sfx_tutorial_pop: { vol: 0.64 }   // a tutorial box appears (each step)
   },
   // SFX bus: every one-shot goes through a gain + limiter (DynamicsCompressor) before the master, so 6 stacked shots
   // don't clip (loops bypass it). Under file:// (HTMLAudio, no Web Audio graph) gunshots are attenuated instead:

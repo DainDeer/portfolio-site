@@ -60,6 +60,13 @@
     }
     const pool = rng.shuffle(Object.keys(D.locations).filter((k) => !D.fixed[k] && !D.locations[k].zone));   // Zone B locations have their own hand-made map
     for (const r in free) for (const nid of free[r]) nodes[nid].loc = pool.length ? pool.pop() : "flooded_mall";
+    // Slice 4 §B guaranteed locations (deterministic swap, no rng draws: maps that already had them are unchanged)
+    for (const locId in D.guaranteed || {}) {
+      if (Object.values(nodes).some((n) => n.loc === locId)) continue;
+      let swap = null;
+      for (const r of D.guaranteed[locId].rows) { swap = (rows[r] || []).find((nid) => nodes[nid].loc && !D.fixed[nodes[nid].loc] && !(D.guaranteed || {})[nodes[nid].loc]); if (swap) break; }
+      if (swap) nodes[swap].loc = locId;
+    }
     for (const nid in nodes) nodes[nid].tier = DATA.map.rowTier[nodes[nid].row] || 1;
     return { seed, zone: "a", insertion: "outpost", nodes, edges };
   };

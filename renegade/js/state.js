@@ -120,8 +120,9 @@
       grunts: [], fallenGrunts: [], perks: {}, stash: { items: [], res: U.clone(DATA.items.startingStash.resources) },
       loadout: { bodyId: "body_basic", gear: {}, pouch: [], grunts: [] },
       tutorialDone: false, humanOffer: null, runCount: 0, extractions: 0, deaths: 0, lore: [],
-      run: null, lastResult: null, settings: St.defaultSettings(), tut: G.Tut ? G.Tut.fresh() : null
+      run: null, lastResult: null, settings: St.defaultSettings(), tut: G.Tut ? G.Tut.fresh() : null, main: null
     };
+    if (G.Main) { const prev = G.state; G.state = s; G.Main.st(); G.state = prev; }   // Slice 4 §B: main quests + the pods solution
     { const prev = G.state; G.state = s; for (let i = 0; i < DATA.config.deploy.startingGrunts; i++) s.grunts.push(St.makeGrunt(rng)); G.state = prev; }
     for (const k in DATA.resources) if (!DATA.resources[k].hidden && s.stash.res[k] == null) s.stash.res[k] = 0;   // every stockpile resource shows (Slice 3: 11)
     const sg = DATA.items.startingGear;
@@ -285,6 +286,7 @@
     for (const k in DATA.resources) if (s.stash.res[k] == null && !DATA.resources[k].hidden) s.stash.res[k] = 0;
     s.settings = Object.assign(St.defaultSettings(), s.settings || {});
     if (G.Tut) { s.tut = Object.assign(G.Tut.fresh(), s.tut || {}); s.tut.steps = s.tut.steps || {}; }   // Slice 4 §A: tutorial flags + Marta's choice
+    if (G.Main) { const prev = G.state; G.state = s; G.Main.st(); G.state = prev; }   // Slice 4 §B
     s.lore = s.lore || []; s.bodies = s.bodies && s.bodies.length ? s.bodies : [St.makeBasicBody()];
     s.grunts = s.grunts || []; s.fallenGrunts = s.fallenGrunts || []; s.perks = s.perks || {};   // Slice 3 §3: picks are derived from the level, so old saves get theirs
     // older saves: Grunts named "Grunt #NN" (or unnamed) get a random name; missing record fields are filled in

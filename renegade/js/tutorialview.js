@@ -67,6 +67,7 @@
     el.querySelector(".tut-next").textContent = last ? "Got it" : "Next";
     el.querySelector(".tut-n").textContent = TV.cur.steps.length > 1 ? `${TV.cur.i + 1}/${TV.cur.steps.length}` : "";
     el.dataset.step = st.id;
+    if (G.Sfx) G.Sfx.play("sfx_tutorial_pop");   // Slice 4 SFX: each step appears
     const t = targetsOf(st); if (t[0] && t[0].scrollIntoView) { try { t[0].scrollIntoView({ block: "nearest", inline: "nearest" }); } catch (e) {} }
     TV.place();
     if (!TV.raf) { const loop = () => { if (!TV.cur) { TV.raf = 0; return; } TV.place(); TV.raf = requestAnimationFrame(loop); }; TV.raf = requestAnimationFrame(loop); }
@@ -109,7 +110,6 @@
   TV.next = function () {
     const st = TV.step(); if (!st) return TV.close();
     G.Tut.mark(st.id); G.State.save();
-    if (G.Sfx) G.Sfx.play("sfx_ui_click");
     TV.cur.i++;
     if (TV.cur.i >= TV.cur.steps.length) TV.close(); else TV.show();
   };

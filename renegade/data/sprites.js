@@ -17,7 +17,7 @@ DATA.sprites = {
   // left/right by heading (the delivered art). "rotate": art faces east and is rotated.
   facingMode: "flip",
   // Keys whose art isn't delivered yet: never requested, placeholder badges only (no 404s). Remove a prefix when its art lands.
-  pendingArt: ["skill_", "stat_", "dmg_", "map_rival", "ui_break_away", "npc_marta", "town_marta"],   // prefixes not delivered yet: drawn as placeholders, never requested (bld_* and quest_available landed in Slice 3 batch 1)
+  pendingArt: ["skill_", "stat_", "dmg_", "map_rival", "ui_break_away", "npc_marta", "town_marta", "obj_mural", "obj_wheel"],   // prefixes not delivered yet: drawn as placeholders, never requested (bld_* and quest_available landed in Slice 3 batch 1)
   pixelArt: true,      // nearest-neighbour scaling for image sprites (crisp pixel art)
   // Battle canvas: every image sprite is drawn at (native px x texelScale), so a 32px unit = 64 canvas px = 2 m at pxPerM 32.
   texelScale: 2,
@@ -254,6 +254,9 @@ DATA.sprites = {
   // Slice 4 §A1 Old Marta (portrait + town figure): no art yet (pendingArt), drawn as placeholders, never requested
   npc_marta:             { file: "ui/npc_marta.png",                shape: "badge",    color: "#4a6a3a", size: 1, text: "M" },
   town_marta:            { file: "town/town_marta.png",             shape: "badge",    color: "#4a6a3a", size: 1, text: "M" },
+  // Slice 4 §B the pods puzzle (mural + wall wheel): no art yet (pendingArt), drawn as placeholders, never requested
+  obj_mural:             { file: "objects/obj_mural.png",           shape: "badge",    color: "#6a5a7a", size: 1, text: "MU" },
+  obj_wheel:             { file: "objects/obj_wheel.png",           shape: "badge",    color: "#6a6a6a", size: 1, text: "W" },
   // ---- Slice 2: location view (top-down, battle art style, 32 px texels drawn x2 like the battle canvas) ----
   tile_floor:            { file: "tiles/tile_floor.png",            shape: "none",     color: "#34322a", size: 1 },
   tile_floor_wet:        { file: "tiles/tile_floor_wet.png",        shape: "none",     color: "#2a3434", size: 1 },

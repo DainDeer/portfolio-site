@@ -29,6 +29,7 @@
       if (o.questId && G.Quests.itemAvailable(o.questId) && !o.searched) el.appendChild(SP.icon("marker_quest", V.markerPx, "obj-quest"));
       if (o.locked && !o.searched && (o.type !== "door" || o.jammed)) { const l = document.createElement("div"); l.className = "obj-lock"; l.textContent = o.jammed ? "⛓" : "🔒"; el.appendChild(l); }
       if (X.hasLeft(o)) { const l = document.createElement("div"); l.className = "obj-left"; l.textContent = "…"; el.appendChild(l); }
+      if (o.kind === "wheel") { SV.wheel(el, o, blockedWhy, busy); wrap.appendChild(el); SV.els[o.id] = el; continue; }   // Slice 4 §B pods puzzle
       if (open && !busy) {
         el.addEventListener("mousemove", (e) => G.UI.showTip(SV.tip(o, acts, blockedWhy), e.clientX, e.clientY));
         el.addEventListener("mouseleave", () => G.UI.hideTip());
@@ -60,15 +61,37 @@
     return wrap;
   };
 
-  SV.actionLabel = { search: "Search", pick: "Pick the lock", force: "Force it", kick: "Kick it", reopen: "Take what's left", use: "Interact", cross: "Crawl through" };
+  SV.actionLabel = { search: "Search", pick: "Pick the lock", force: "Force it", kick: "Kick it", reopen: "Take what's left", use: "Interact", cross: "Crawl through", claim: "Claim the body", examine: "Examine" };
+  // Slice 4 §B: a wall wheel. Its arrow points at one of 4 positions. Click the left half to turn it counterclockwise,
+  // the right half clockwise; on touch screens two small arrow buttons sit under it (css: .wheel-btns).
+  SV.wheel = function (el, o, why, busy) {
+    const P = DATA.main.pods, touch = !!(root.matchMedia && root.matchMedia("(pointer: coarse)").matches);
+    el.classList.add("wheel"); el.dataset.pos = o.pos; el.dataset.idx = o.idx;
+    const face = document.createElement("div"); face.className = "wheel-face"; face.textContent = "↑"; face.style.transform = `rotate(${o.pos * 90}deg)`; el.appendChild(face);
+    const num = document.createElement("div"); num.className = "wheel-n"; num.textContent = o.idx + 1; el.appendChild(num);   // matches "wheel 1/2/3" on the mural
+    if (why || busy) { el.classList.add("done"); el.addEventListener("mousemove", (e) => G.UI.showTip(`<b>${o.name}</b><br><i>${why || ""}</i>`, e.clientX, e.clientY)); el.addEventListener("mouseleave", () => G.UI.hideTip()); return; }
+    el.classList.add("spinnable");
+    const spin = (dir) => G.UI.spinWheel(o, dir);
+    el.addEventListener("mousemove", (e) => { const r = el.getBoundingClientRect(), left = e.clientX < r.left + r.width / 2; el.dataset.half = left ? "l" : "r";
+      G.UI.showTip(`<b>${o.name}</b> · pointing ${P.arrows[o.pos]}<br>${left ? "↺ Click to turn counterclockwise" : "↻ Click to turn clockwise"}`, e.clientX, e.clientY); });
+    el.addEventListener("mouseleave", () => { delete el.dataset.half; G.UI.hideTip(); });
+    el.addEventListener("click", (e) => { e.stopPropagation(); if (touch) return; const r = el.getBoundingClientRect(); spin(e.clientX < r.left + r.width / 2 ? -1 : 1); });
+    const btns = document.createElement("div"); btns.className = "wheel-btns";
+    for (const [dir, lbl, t] of [[-1, "↺", "Turn counterclockwise"], [1, "↻", "Turn clockwise"]]) {
+      const b = document.createElement("button"); b.className = "wheel-btn"; b.dataset.dir = dir; b.textContent = lbl; b.title = t; b.setAttribute("aria-label", `${o.name}: ${t}`);
+      b.addEventListener("click", (e) => { e.stopPropagation(); spin(dir); }); btns.appendChild(b);
+    }
+    el.appendChild(btns);
+  };
   SV.tip = function (o, acts, why) {
     const X = G.Exp;
     let t = `<b>${o.name}</b>`;
+    if (o.kind === "mural" && G.Main) return t + `<br><i>${G.Main.examine(o)}</i>`;   // Slice 4 §B/E: examine text on hover
     if (o.questId && G.Quests.itemAvailable(o.questId)) t += ` <span style="color:${DATA.items.questColor}">(quest)</span>`;
     if (o.locked && !o.searched) t += o.jammed ? " · lock jammed" : " · locked";
     if (why) return t + `<br><i>${why}</i>`;
     for (const a of acts) {
-      if (a === "use" || a === "cross" || a === "reopen") { t += `<br>${SV.actionLabel[a]}`; continue; }
+      if (a === "use" || a === "cross" || a === "reopen" || a === "claim" || a === "examine") { t += `<br>${SV.actionLabel[a]}`; continue; }
       const i = X.searchInfo(o.id, a);
       t += `<br>${SV.actionLabel[a]}: <b>${U.fmt1(i.sec)} s</b> · disturbance <b>${U.fmt1(i.pct)}%</b>` + (i.heatGain ? ` · +${i.heatGain} Heat` : "") + (i.check ? ` · ${DATA.skills[i.check.skill].name} DC ${i.check.dc} ${Math.round(i.check.chance)}%` : "");
       if (G.Debug && G.Debug.rollMath) t += `<br><small>${i.math}</small>`;
@@ -81,7 +104,7 @@
     const X = G.Exp, has = (k) => !!DATA.sprites[k];
     if (o.type === "door") {
       const base = (o.vertical != null ? o.vertical : site.rooms[o.opens] && site.rooms[o.room] && site.rooms[o.opens].row === site.rooms[o.room].row) ? "obj_door_v" : "obj_door";
-      const st = site.rooms[o.opens] && site.rooms[o.opens].open ? (o.broken ? "_broken" : "_open") : (o.locked ? "_locked" : "");
+      const st = site.rooms[o.opens] && site.rooms[o.opens].open ? (o.broken ? "_broken" : "_open") : (o.locked || o.sealed ? "_locked" : "");
       return has(base + st) ? base + st : base;
     }
     if (o.kind === "grate") return G.Zones.passageFound(o.pid) && has(o.sprite + "_open") ? o.sprite + "_open" : o.sprite;

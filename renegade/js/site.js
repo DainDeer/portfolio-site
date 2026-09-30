@@ -25,6 +25,7 @@
     if (site && loc && loc.worldEvent && site.enteredRun !== rc && site.world !== G.state.world.hollow_creek) site = null;   // the one world event (same key as X.worldOverride)
     if (!site) { site = S[node.id] = X.generateSite(node); site.enteredRun = rc; site.entry = { run: rc, level: 1, mult: 1, fresh: true }; return site; }
     if (site.enteredRun !== rc) X.restockOnEntry(site, node);
+    if (G.Main && !site.pods && G.Main.isPodsSite(site)) G.Main.decorate(site, { mk, place, rng: G.rng });   // a site built before Slice 4
     return site;
   };
 
@@ -158,6 +159,8 @@
       else { y = (R.row > P.row ? R.y : P.y) - V.wall / 2; x = R.x + R.w / 2; }
       mk(site, { type: "door", name: "Door", sprite: D.sprite, room: P.i, opens: i, vertical: R.row === P.row, x: Math.round(x), y: Math.round(y), locked: rng.chance(D.lock.chance) });
     }
+    // Slice 4 §B: the pods room (sealed door, 3 wheels by it, the mural, the working pod) takes its slots first. No rng draws.
+    if (G.Main) G.Main.decorate(site, { mk, place, rng });
     // the searchables: fixed ones first (they take generated slots, so the count stays in the size range)
     const fixed = [];
     const gl = loc.guaranteedLoot;
@@ -229,6 +232,10 @@
     if (!X.roomOpen(site, o.room)) return "Behind a closed door.";
     if (o.kind === "event" || o.kind === "survivor") return o.done ? "Already dealt with." : null;
     if (o.kind === "grate") return null;
+    if (o.kind === "mural") return null;   // Slice 4 §B pods room
+    if (o.kind === "wheel") { const d = site.pods && X.obj(site.pods.door, site); return d && !d.sealed ? "Set. The door is open." : null; }
+    if (o.kind === "pod") return o.done || (G.Main && G.Main.status("m1") === "done") ? DATA.main.pods.pod.claimed : null;
+    if (o.sealed) return DATA.main.pods.door.blocked;
     if (o.type === "door" && site.rooms[o.opens].open) return "Open.";
     if (o.blocked) return "Too heavy to shift.";
     if (o.searched && !X.hasLeft(o)) return "Searched.";
@@ -239,6 +246,10 @@
   X.objActions = function (o) {
     if (o.kind === "event" || o.kind === "survivor") return o.done ? [] : ["use"];
     if (o.kind === "grate") return ["cross"];
+    if (o.kind === "mural") return ["examine"];
+    if (o.kind === "wheel") return ["spin"];
+    if (o.kind === "pod") return o.done ? [] : ["claim"];
+    if (o.sealed) return [];
     if (o.searched) return X.hasLeft(o) ? ["reopen"] : [];
     if (o.blocked) return [];
     const T = X.typeDef(o);

@@ -23,7 +23,7 @@
   #topbar > * { flex: none; }
   #topbar .brand small, #topbar > .hint { display: none; }
   #topbar .res-i { margin-right: 5px; }
-  #topbar .settings-btn { margin-left: auto; position: sticky; right: 0; }   /* stays reachable when the bar scrolls */
+  #topbar .top-btns { margin-left: auto; position: sticky; right: 0; }   /* stays reachable when the bar scrolls */
   #screen { padding: 6px; padding-left: max(6px, env(safe-area-inset-left)); padding-right: max(6px, env(safe-area-inset-right)); padding-bottom: max(6px, env(safe-area-inset-bottom)); -webkit-overflow-scrolling: touch; }
 
   /* tap targets: 44 px minimum */
@@ -146,7 +146,7 @@
 /* ---------- portrait phones: usable, stacked ---------- */
 @media (pointer: coarse) and (max-width: 940px) and (orientation: portrait) {
   #topbar { flex-wrap: wrap; white-space: normal; overflow: visible; row-gap: 0; padding-top: 2px; padding-bottom: 2px; }
-  #topbar .settings-btn { position: static; }
+  #topbar .top-btns { position: static; }
   #topbar > * { flex: 0 1 auto; min-width: 0; }
   .tabs { flex-wrap: wrap; overflow: visible; }
   .exp-layout { flex-direction: column; height: auto; }

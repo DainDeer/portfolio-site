@@ -61,7 +61,8 @@
     for (const k in DATA.items.resources) if (!DATA.items.resources[k].hidden) box.appendChild(h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " + (res[k] || 0)));
     t.appendChild(box);
     t.appendChild(h("span", null, `Character Lv ${G.Skills.charLevel(s)} · Runs ${s.runCount} · Extracted ${s.extractions} · Deaths ${s.deaths}`));
-    t.appendChild(h("button", { class: "settings-btn", "data-act": "settings", title: "Settings (audio, aim mode)", onclick: () => UI.showSettings() }, "⚙ Settings"));
+    t.appendChild(h("span", { class: "top-btns" }, h("button", { class: "settings-btn journal-btn", "data-act": "journal", title: "Journal (main objective, side quests)", onclick: () => UI.showJournal() }, "📖 Journal"),   // Slice 4 §B
+      h("button", { class: "settings-btn", "data-act": "settings", title: "Settings (audio, aim mode)", onclick: () => UI.showSettings() }, "⚙ Settings")));
     t.appendChild(h("span", { class: "hint" }, "` / F1: debug"));
   };
 
@@ -372,7 +373,7 @@
     const FW = DATA.config.deploy.fallbackWeapon;
     if (FW && !(lo.gear.weapon && s.stash.items.some((i) => i.uid === lo.gear.weapon))) el.appendChild(h("p", { class: "hint fallback-note", "data-note": "fallback-weapon" }, `No weapon equipped: the outpost will issue a free ${DATA.items.bases[FW.base].name} (${DATA.items.rarities[FW.rarity].name}, i${FW.ilvl}) for this deploy.`));
     el.appendChild(h("div", { class: "deploy-go" }, h("button", { class: "primary big", "data-act": "deploy", disabled: !!err, onclick: () => { const e = G.Exp.start(lo, undefined, UI.zone); if (e) UI.fail(e); else UI.panel = null; UI.render(); } }, `Deploy to ${zd.name} ▶`), err ? h("span", { class: "warn" }, " " + err) : null,
-      !s.tutorialDone ? h("p", { class: "hint" }, "Tutorial: you start in a level-1 Basic body with 2 Grunts. Extract once to claim your first specialized human body. Dying here costs nothing but what you carry — the Basic body has no restore timer.") : null));
+      !s.tutorialDone ? h("p", { class: "hint" }, "Tutorial: you start in a level-1 Basic body with 2 Grunts. Find the working cryo pod (Journal: Main Objective) to claim your first specialized human body. Dying here costs nothing but what you carry — the Basic body has no restore timer.") : null));
     G.State.save();
   };
 
@@ -490,16 +491,45 @@
   };
 
   // Slice 4 §A1: Old Marta. First talk: her 3 help choices (the tutorial mode). After that: a short line.
+  // Slice 4 §B: the Journal (outpost + run top bar): the one main objective, then every accepted side quest with progress
+  UI.showJournal = function () {
+    const Mn = G.Main, Q = G.Quests, box = h("div", { class: "journal", "data-panel": "journal" }, h("h2", null, "Journal"));
+    box.appendChild(h("h3", null, "Main Objective"));
+    const cur = Mn && Mn.current();
+    if (cur) {
+      const q = Mn.def(cur), where = Mn.whereText(cur);
+      box.appendChild(h("div", { class: "jr-main", "data-main": cur }, h("b", null, q.name), h("p", null, q.objective),
+        where ? h("p", { class: "hint", "data-where": q.where }, "📍 " + where) : q.where ? h("p", { class: "hint" }, "Location not scouted yet.") : null,
+        q.placeholder ? h("p", { class: "hint" }, "More to come.") : null));
+    } else box.appendChild(h("p", { class: "hint" }, Mn && Mn.status("m1") === "locked" ? `Talk to ${DATA.tutorial.marta.name} by the trapdoor.` : "Nothing right now."));
+    box.appendChild(h("h3", null, "Side Quests"));
+    const ids = Q.activeIds();
+    if (!ids.length) box.appendChild(h("p", { class: "hint" }, "None accepted. Dunn and Doc Ilse have work."));
+    for (const id of ids) {
+      const q = Q.def(id), p = Q.progress(id), gd = DATA.quests.givers[q.giver];
+      box.appendChild(h("div", { class: "jr-side", "data-quest": id }, h("b", null, q.name), h("small", null, ` · ${gd ? gd.name : q.giver}`),
+        h("div", null, Q.objectiveText(id) + ` (${p.have}/${p.need})`)));
+    }
+    box.appendChild(h("button", { class: "primary", onclick: () => UI.closeModal() }, "Close"));
+    UI.modal(box);
+  };
   UI.showMarta = function (after) {
     const M = DATA.tutorial.marta, first = G.Tut.needsMarta();
     const box = h("div", { class: "marta", "data-panel": "marta" }, h("div", { class: "marta-talk" }, SP.icon(M.portrait, 64),
       h("div", null, h("h2", null, M.name, h("small", null, " · " + M.title)), h("p", null, first ? M.greeting : M.talkAgain))));
+    const questBox = () => G.Main && G.Main.status("m1") === "active" ? h("div", { class: "marta-quest", "data-main": "m1" }, h("b", null, "Main quest: " + DATA.main.quests.m1.name), h("p", { class: "hint" }, DATA.main.quests.m1.objective),
+      h("p", null, `“${DATA.main.martaHint}”`)) : null;   // Slice 4 §B: Marta gives Main 1 with her hint
     const done = (msg) => { UI.closeModal(); if (msg) UI.toast(`${M.name}: "${msg}"`); UI.render(); if (after) after(); };
     if (first) {
       const ch = h("div", { class: "marta-choices" });
-      for (const c of M.choices) ch.appendChild(h("button", { "data-marta-choice": c.mode, onclick: () => { G.Tut.setMode(c.mode); G.State.save(); done(M.afterChoice[c.mode]); } }, `“${c.label}”`));
+      for (const c of M.choices) ch.appendChild(h("button", { "data-marta-choice": c.mode, onclick: () => {
+        G.Tut.setMode(c.mode); if (G.Main) G.Main.onMartaTalked(); G.State.save();
+        const q = questBox(); if (!q) return done(M.afterChoice[c.mode]);
+        UI.modal(h("div", { class: "marta", "data-panel": "marta" }, h("div", { class: "marta-talk" }, SP.icon(M.portrait, 64), h("div", null, h("h2", null, M.name), h("p", null, M.afterChoice[c.mode]))), q,
+          h("button", { class: "primary", "data-act": "marta-ok", onclick: () => done() }, "Got it")));
+      } }, `“${c.label}”`));
       box.appendChild(ch);
-    } else box.appendChild(h("button", { class: "primary", onclick: () => done() }, "Bye"));
+    } else { const q = questBox(); if (q) box.appendChild(q); box.appendChild(h("button", { class: "primary", onclick: () => done() }, "Bye")); }
     UI.modal(box);
   };
 
@@ -568,9 +598,9 @@
     if (G.XPFloat) rows.forEach(([row, k], i) => setTimeout(() => { if (row.isConnected) G.XPFloat.text(row, `+${Math.round(xp[k])} XP (${k})`, null, "right"); }, 120 * i));
   };
 
-  UI.showBodyOffer = function () {
+  UI.showBodyOffer = function (step) {
     const s = G.state;
-    const box = h("div", null, h("h2", null, "A new body"), h("p", null, "Among the wreckage you find dormant human bodies you can claim. Pick one — this ends the tutorial."));
+    const box = h("div", null, h("h2", null, "A new body"), h("p", null, step ? "Behind the frost, a few of the pods still hold dormant human bodies. Pick one. This ends the tutorial, and the body is yours whether or not you make it out." : "Among the wreckage you find dormant human bodies you can claim. Pick one — this ends the tutorial."));
     const cards = h("div", { class: "cards" });
     s.humanOffer.forEach((b, i) => {
       const sp = DATA.bodies.specialties[b.spec];
@@ -579,7 +609,7 @@
         h("div", { class: "bc-desc" }, "Quirks: " + b.quirks.map((q) => DATA.bodies.quirks[q].name + " — " + DATA.bodies.quirks[q].desc).join("; ")),
         h("div", { class: "bc-desc" }, Object.entries(b.skills).filter(([, v]) => v.lvl > 1).map(([k, v]) => `${DATA.skills[k].name} ${v.lvl}`).join(", ")),
         h("div", { class: "bc-desc" }, `HP ${DATA.bodies.classes[b.cls].stats.max_hp} · Speed ${DATA.bodies.classes[b.cls].stats.move_speed} · deploy cost ${G.State.bodyCost(b)}`),
-        h("button", { class: "primary", onclick: () => { G.Exp.chooseHumanBody(i); UI.render(); } }, "Claim")));
+        h("button", { class: "primary", "data-act": "claim-body", onclick: () => { G.Exp.chooseHumanBody(i); if (step && G.state.run && G.Exp.current() === step) G.Exp.next(); UI.render(); } }, "Claim")));
     });
     box.appendChild(cards);
     UI.modal(box, "wide");
@@ -666,6 +696,7 @@
     if (step.type === "spot") return UI.stepSpot(step);
     if (step.type === "hunters") return UI.stepHunters(step);
     if (step.type === "rival") return UI.stepRival(step);
+    if (step.type === "bodyoffer") { if (G.state.humanOffer) return UI.showBodyOffer(step); G.Exp.next(); return UI.renderStep(); }   // Slice 4 §B pods claim
   };
 
   // Slice 3 §7 rival squad (a snapshot of another player's / your own past squad): Engage / Ambush / Hide / Parley
@@ -720,11 +751,22 @@
   };
 
   // ---------- location view interaction ----------
+  // Slice 4 §B: turn a pods-room wheel (dir -1 counterclockwise, +1 clockwise). No noise, no Heat, no fail state.
+  UI.spinWheel = function (o, dir) {
+    const r = G.Main.spin(o.id, dir); if (r.error) return UI.fail(r.error);
+    G.Sfx.play("sfx_wheel_click"); UI.hideTip();
+    if (r.opened) { setTimeout(() => G.Sfx.play("sfx_door_heavy"), 150); UI.toast(DATA.main.pods.openText); }
+    UI.render();
+    if (r.opened) { const w = document.querySelector(".site-wrap"); if (w) w.classList.add("clunk"); }
+  };
   UI.onSiteObject = function (o, acts, el) {
     const X = G.Exp, site = X.site();
     site.squadAt = o.id;
     if (acts[0] === "use") { const r = X.useObject(o.id); if (r.error) UI.fail(r.error); UI.render(); return; }
     if (acts[0] === "reopen") { X.reopen(o.id); UI.render(); return; }
+    // Slice 4 §B pods room: the mural (examine: a tap on phones reads it), the working pod
+    if (acts[0] === "examine") { UI.modal(h("div", { class: "examine", "data-examine": o.id }, h("h2", null, o.name), h("p", { class: "ev-text" }, G.Main.examine(o)), h("button", { class: "primary", onclick: () => UI.closeModal() }, "OK"))); return; }
+    if (acts[0] === "claim") { const r = G.Main.claim(o.id); if (r.error) UI.fail(r.error); else UI.toast(r.text); UI.render(); return; }
     if (acts[0] === "cross") {
       const P = DATA.zones.passages[o.pid], to = G.Zones.otherEnd(o.pid, G.state.run.zone), why = X.canCross(o.pid);
       if (why) return UI.fail(why);
