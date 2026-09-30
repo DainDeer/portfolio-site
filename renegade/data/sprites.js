@@ -17,7 +17,7 @@ DATA.sprites = {
   // left/right by heading (the delivered art). "rotate": art faces east and is rotated.
   facingMode: "flip",
   // Keys whose art isn't delivered yet: never requested, placeholder badges only (no 404s). Remove a prefix when its art lands.
-  pendingArt: ["skill_", "stat_", "dmg_", "map_rival", "ui_break_away", "npc_marta", "town_marta", "obj_mural", "obj_wheel", "wt_bow", "wt_crossbow", "wt_club", "wt_improvised"],   // prefixes not delivered yet: drawn as placeholders, never requested (bld_* and quest_available landed in Slice 3 batch 1)
+  pendingArt: ["skill_", "stat_", "dmg_", "map_rival", "ui_break_away"],   // prefixes not delivered yet: drawn as placeholders, never requested (bld_* and quest_available landed in Slice 3 batch 1)
   pixelArt: true,      // nearest-neighbour scaling for image sprites (crisp pixel art)
   // Battle canvas: every image sprite is drawn at (native px x texelScale), so a 32px unit = 64 canvas px = 2 m at pxPerM 32.
   texelScale: 2,
@@ -251,12 +251,40 @@ DATA.sprites = {
   town_hover_lot_comms:  { file: "town/town_hover_lot_comms.png", shape: "none", color: "#ffd84a", size: 1 },
   npc_dunn:              { file: "ui/npc_dunn.png",                 shape: "badge",    color: "#6a5a3a", size: 1, text: "D" },
   npc_ilse:              { file: "ui/npc_ilse.png",                 shape: "badge",    color: "#7a4a4a", size: 1, text: "I" },
-  // Slice 4 §A1 Old Marta (portrait + town figure): no art yet (pendingArt), drawn as placeholders, never requested
+  // Slice 4 §A1 Old Marta (portrait + town figure; Smudge's art, bb0a635)
   npc_marta:             { file: "ui/npc_marta.png",                shape: "badge",    color: "#4a6a3a", size: 1, text: "M" },
   town_marta:            { file: "town/town_marta.png",             shape: "badge",    color: "#4a6a3a", size: 1, text: "M" },
-  // Slice 4 §B the pods puzzle (mural + wall wheel): no art yet (pendingArt), drawn as placeholders, never requested
-  obj_mural:             { file: "objects/obj_mural.png",           shape: "badge",    color: "#6a5a7a", size: 1, text: "MU" },
+  // Slice 4 §B the pods puzzle (Smudge's art, bb0a635; assets/slice4_manifest.json "pods")
+  obj_mural:             { file: "objects/obj_mural.png",           shape: "badge",    color: "#6a5a7a", size: 1, text: "MU" },   // 64x32: two slots wide
+  obj_door_sealed:       { file: "objects/obj_door_sealed.png",     shape: "badge",    color: "#5a6a6a", size: 1, text: "DR" },
+  obj_door_sealed_open:  { file: "objects/obj_door_sealed_open.png", shape: "badge",   color: "#5a6a6a", size: 1, text: "DR" },
   obj_wheel:             { file: "objects/obj_wheel.png",           shape: "badge",    color: "#6a6a6a", size: 1, text: "W" },
+  obj_wheel_a_up:    { file: "objects/obj_wheel_a_up.png", shape: "badge", color: "#6a6a6a", size: 1, text: "W" },
+  obj_wheel_a_right: { file: "objects/obj_wheel_a_right.png", shape: "badge", color: "#6a6a6a", size: 1, text: "W" },
+  obj_wheel_a_down:  { file: "objects/obj_wheel_a_down.png", shape: "badge", color: "#6a6a6a", size: 1, text: "W" },
+  obj_wheel_a_left:  { file: "objects/obj_wheel_a_left.png", shape: "badge", color: "#6a6a6a", size: 1, text: "W" },
+  obj_wheel_b_up:    { file: "objects/obj_wheel_b_up.png", shape: "badge", color: "#6a6a6a", size: 1, text: "W" },
+  obj_wheel_b_right: { file: "objects/obj_wheel_b_right.png", shape: "badge", color: "#6a6a6a", size: 1, text: "W" },
+  obj_wheel_b_down:  { file: "objects/obj_wheel_b_down.png", shape: "badge", color: "#6a6a6a", size: 1, text: "W" },
+  obj_wheel_b_left:  { file: "objects/obj_wheel_b_left.png", shape: "badge", color: "#6a6a6a", size: 1, text: "W" },
+  obj_wheel_c_up:    { file: "objects/obj_wheel_c_up.png", shape: "badge", color: "#6a6a6a", size: 1, text: "W" },
+  obj_wheel_c_right: { file: "objects/obj_wheel_c_right.png", shape: "badge", color: "#6a6a6a", size: 1, text: "W" },
+  obj_wheel_c_down:  { file: "objects/obj_wheel_c_down.png", shape: "badge", color: "#6a6a6a", size: 1, text: "W" },
+  obj_wheel_c_left:  { file: "objects/obj_wheel_c_left.png", shape: "badge", color: "#6a6a6a", size: 1, text: "W" },
+  obj_mural_arrow_1_up:    { file: "objects/obj_mural_arrow_1_up.png", shape: "none", color: "#000", size: 1 },
+  obj_mural_arrow_1_right: { file: "objects/obj_mural_arrow_1_right.png", shape: "none", color: "#000", size: 1 },
+  obj_mural_arrow_1_down:  { file: "objects/obj_mural_arrow_1_down.png", shape: "none", color: "#000", size: 1 },
+  obj_mural_arrow_1_left:  { file: "objects/obj_mural_arrow_1_left.png", shape: "none", color: "#000", size: 1 },
+  obj_mural_arrow_2_up:    { file: "objects/obj_mural_arrow_2_up.png", shape: "none", color: "#000", size: 1 },
+  obj_mural_arrow_2_right: { file: "objects/obj_mural_arrow_2_right.png", shape: "none", color: "#000", size: 1 },
+  obj_mural_arrow_2_down:  { file: "objects/obj_mural_arrow_2_down.png", shape: "none", color: "#000", size: 1 },
+  obj_mural_arrow_2_left:  { file: "objects/obj_mural_arrow_2_left.png", shape: "none", color: "#000", size: 1 },
+  obj_mural_arrow_3_up:    { file: "objects/obj_mural_arrow_3_up.png", shape: "none", color: "#000", size: 1 },
+  obj_mural_arrow_3_right: { file: "objects/obj_mural_arrow_3_right.png", shape: "none", color: "#000", size: 1 },
+  obj_mural_arrow_3_down:  { file: "objects/obj_mural_arrow_3_down.png", shape: "none", color: "#000", size: 1 },
+  obj_mural_arrow_3_left:  { file: "objects/obj_mural_arrow_3_left.png", shape: "none", color: "#000", size: 1 },
+  btn_spin_ccw:          { file: "ui/btn_spin_ccw.png", shape: "badge", color: "#555", size: 1, text: "<" },
+  btn_spin_cw:           { file: "ui/btn_spin_cw.png", shape: "badge", color: "#555", size: 1, text: ">" },
   // ---- Slice 2: location view (top-down, battle art style, 32 px texels drawn x2 like the battle canvas) ----
   tile_floor:            { file: "tiles/tile_floor.png",            shape: "none",     color: "#34322a", size: 1 },
   tile_floor_wet:        { file: "tiles/tile_floor_wet.png",        shape: "none",     color: "#2a3434", size: 1 },
@@ -342,18 +370,17 @@ DATA.sprites = {
   item_ar16_stoner:      { file: "items/item_ar16_stoner.png",      shape: "bar",      color: "#4a4a4a", size: 1, pad: 2 },
   item_rust_machete:     { file: "items/item_rust_machete.png",     shape: "bar",      color: "#a07050", size: 1, pad: 2 },
   item_knuckle_wraps:    { file: "items/item_knuckle_wraps.png",    shape: "bar",      color: "#c0a080", size: 1, pad: 2 },
-  // Slice 4 §C: one art model per weapon type (data/weapons.js). Until Smudge's type art lands, the gun and blade types
-  // reuse an existing weapon's file (swap `file` to items/wt_<type>.png then); bow / crossbow / club / improvised are
-  // placeholders (pendingArt, never requested).
-  wt_pistol:             { file: "items/item_glokk_17.png",         shape: "bar",      color: "#5a5a5a", size: 1, pad: 2 },
-  wt_rifle:              { file: "items/item_pipe_rifle.png",       shape: "bar",      color: "#8a7a6a", size: 1, pad: 2 },
-  wt_auto:               { file: "items/item_smg.png",              shape: "bar",      color: "#6a6a5a", size: 1, pad: 2 },
-  wt_shotgun:            { file: "items/item_remingon_870.png",     shape: "bar",      color: "#7a5a4a", size: 1, pad: 2 },
-  wt_blade:              { file: "items/item_rust_machete.png",     shape: "bar",      color: "#a07050", size: 1, pad: 2 },
-  wt_bow:                { file: "items/wt_bow.png",                shape: "badge",    color: "#8a6a3a", size: 1, text: "BOW" },
-  wt_crossbow:           { file: "items/wt_crossbow.png",           shape: "badge",    color: "#6a5a3a", size: 1, text: "XB" },
-  wt_club:               { file: "items/wt_club.png",               shape: "badge",    color: "#7a6a5a", size: 1, text: "CLB" },
-  wt_improvised:         { file: "items/wt_improvised.png",         shape: "badge",    color: "#6a7a5a", size: 1, text: "JNK" },
+  // Slice 4 §C: one art model per weapon type (data/weapons.js; Smudge's art, bb0a635): items/item_wtype_<wtype>.png
+  item_wtype_pistol:     { file: "items/item_wtype_pistol.png",     shape: "bar",      color: "#7a6a5a", size: 1, pad: 2 },
+  item_wtype_rifle:      { file: "items/item_wtype_rifle.png",      shape: "bar",      color: "#7a6a5a", size: 1, pad: 2 },
+  item_wtype_auto:       { file: "items/item_wtype_auto.png",       shape: "bar",      color: "#7a6a5a", size: 1, pad: 2 },
+  item_wtype_shotgun:    { file: "items/item_wtype_shotgun.png",    shape: "bar",      color: "#7a6a5a", size: 1, pad: 2 },
+  item_wtype_bow:        { file: "items/item_wtype_bow.png",        shape: "bar",      color: "#7a6a5a", size: 1, pad: 2 },
+  item_wtype_crossbow:   { file: "items/item_wtype_crossbow.png",   shape: "bar",      color: "#7a6a5a", size: 1, pad: 2 },
+  item_wtype_blade:      { file: "items/item_wtype_blade.png",      shape: "bar",      color: "#7a6a5a", size: 1, pad: 2 },
+  item_wtype_club:       { file: "items/item_wtype_club.png",       shape: "bar",      color: "#7a6a5a", size: 1, pad: 2 },
+  item_wtype_improvised: { file: "items/item_wtype_improvised.png", shape: "bar",      color: "#7a6a5a", size: 1, pad: 2 },
+  item_bass_guitar:      { file: "items/item_bass_guitar.png",      shape: "bar",      color: "#a03a2a", size: 1, pad: 2 },
   item_scrap_helmet:     { file: "items/item_scrap_helmet.png",     shape: "circle",   color: "#7a7a6a", size: 1, pad: 2 },
   item_padded_vest:      { file: "items/item_padded_vest.png",      shape: "square",   color: "#6a5a4a", size: 1, pad: 2 },
   item_school_bag:       { file: "items/item_school_bag.png",       shape: "square",   color: "#c05050", size: 1, pad: 2 },

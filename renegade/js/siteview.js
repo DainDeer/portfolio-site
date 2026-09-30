@@ -21,10 +21,12 @@
       el.className = "site-obj" + (open ? "" : " dark") + (done ? " done" : "") + (o.kind !== "search" ? " " + o.kind : "") + (o.type === "door" ? " door" : "") + (o.fresh ? " corpse" : "") + (busy && busy.objId === o.id ? " busy" : "");
       el.dataset.obj = o.id; el.dataset.kind = o.kind; if (o.type) el.dataset.type = o.type;
       el.style.left = (o.x / W * 100) + "%"; el.style.top = (o.y / H * 100) + "%";
-      const V = DATA.searchables.view, px = o.type === "door" ? V.doorPx : V.objPx * ((DATA.searchables.types[o.type] || {}).wide || 1);   // the car is wide (2 slots)
+      const V = DATA.searchables.view, px = o.type === "door" ? V.doorPx : V.objPx * (o.wide || (DATA.searchables.types[o.type] || {}).wide || 1);   // the car is wide (2 slots)
       el.style.width = (px / W * 100) + "%";           // scales with the view (objects are 32 native x2 on the 1000 px canvas)
       const spr = SV.spriteFor(o, site); el.dataset.sprite = spr;
       el.appendChild(SP.icon(spr, px, "site-art"));
+      if (o.kind === "mural" && G.Main) G.Main.st().pods.sol.forEach((p, i) => el.appendChild(SP.icon(`obj_mural_arrow_${i + 1}_${["up", "right", "down", "left"][p]}`, px, "site-art mural-arrow")));   // the painted answer
+      if (o.sealed != null && o.type === "door" && (o.vertical != null ? o.vertical : site.rooms[o.opens].row === site.rooms[o.room].row)) el.classList.add("sealed-v");   // the bulkhead art is horizontal: turned for a side wall
       const mk = SV.markerFor(o); if (mk) el.appendChild(SP.icon(mk, V.markerPx, "obj-marker"));
       if (o.questId && G.Quests.itemAvailable(o.questId) && !o.searched) el.appendChild(SP.icon("marker_quest", V.markerPx, "obj-quest"));
       if (o.locked && !o.searched && (o.type !== "door" || o.jammed)) { const l = document.createElement("div"); l.className = "obj-lock"; l.textContent = o.jammed ? "⛓" : "🔒"; el.appendChild(l); }
@@ -66,9 +68,7 @@
   // the right half clockwise; on touch screens two small arrow buttons sit under it (css: .wheel-btns).
   SV.wheel = function (el, o, why, busy) {
     const P = DATA.main.pods, touch = !!(root.matchMedia && root.matchMedia("(pointer: coarse)").matches);
-    el.classList.add("wheel"); el.dataset.pos = o.pos; el.dataset.idx = o.idx;
-    const face = document.createElement("div"); face.className = "wheel-face"; face.textContent = "↑"; face.style.transform = `rotate(${o.pos * 90}deg)`; el.appendChild(face);
-    const num = document.createElement("div"); num.className = "wheel-n"; num.textContent = o.idx + 1; el.appendChild(num);   // matches "wheel 1/2/3" on the mural
+    el.classList.add("wheel"); el.dataset.pos = o.pos; el.dataset.idx = o.idx;   // art: obj_wheel_<a|b|c>_<dir> (SV.spriteFor); tally I / II / III = wheel 1 / 2 / 3 on the mural
     if (why || busy) { el.classList.add("done"); el.addEventListener("mousemove", (e) => G.UI.showTip(`<b>${o.name}</b><br><i>${why || ""}</i>`, e.clientX, e.clientY)); el.addEventListener("mouseleave", () => G.UI.hideTip()); return; }
     el.classList.add("spinnable");
     const spin = (dir) => G.UI.spinWheel(o, dir);
@@ -78,7 +78,7 @@
     el.addEventListener("click", (e) => { e.stopPropagation(); if (touch) return; const r = el.getBoundingClientRect(); spin(e.clientX < r.left + r.width / 2 ? -1 : 1); });
     const btns = document.createElement("div"); btns.className = "wheel-btns";
     for (const [dir, lbl, t] of [[-1, "↺", "Turn counterclockwise"], [1, "↻", "Turn clockwise"]]) {
-      const b = document.createElement("button"); b.className = "wheel-btn"; b.dataset.dir = dir; b.textContent = lbl; b.title = t; b.setAttribute("aria-label", `${o.name}: ${t}`);
+      const b = document.createElement("button"); b.className = "wheel-btn"; b.dataset.dir = dir; b.appendChild(SP.icon(dir < 0 ? "btn_spin_ccw" : "btn_spin_cw", 32, "wheel-btn-art")); b.title = t; b.setAttribute("aria-label", `${o.name}: ${t}`);
       b.addEventListener("click", (e) => { e.stopPropagation(); spin(dir); }); btns.appendChild(b);
     }
     el.appendChild(btns);
@@ -102,12 +102,14 @@
   // Sprite for an object in its current state (falls back to the base sprite when a state has no art key).
   SV.spriteFor = function (o, site) {
     const X = G.Exp, has = (k) => !!DATA.sprites[k];
+    if (o.type === "door" && o.sealed != null) return site.rooms[o.opens].open ? "obj_door_sealed_open" : "obj_door_sealed";   // Slice 4 §B pods bulkhead
     if (o.type === "door") {
       const base = (o.vertical != null ? o.vertical : site.rooms[o.opens] && site.rooms[o.room] && site.rooms[o.opens].row === site.rooms[o.room].row) ? "obj_door_v" : "obj_door";
-      const st = site.rooms[o.opens] && site.rooms[o.opens].open ? (o.broken ? "_broken" : "_open") : (o.locked || o.sealed ? "_locked" : "");
+      const st = site.rooms[o.opens] && site.rooms[o.opens].open ? (o.broken ? "_broken" : "_open") : (o.locked ? "_locked" : "");
       return has(base + st) ? base + st : base;
     }
     if (o.kind === "grate") return G.Zones.passageFound(o.pid) && has(o.sprite + "_open") ? o.sprite + "_open" : o.sprite;
+    if (o.kind === "wheel") { const k = `obj_wheel_${"abc"[o.idx] || "a"}_${["up", "right", "down", "left"][o.pos]}`; return has(k) ? k : o.sprite; }   // Slice 4 §B
     if (o.kind !== "search") return o.sprite;
     if (o.type === "body_human" || o.type === "body_beast" || o.type === "body_machine" || o.type === "machine_dormant") {
       if (!o.searched) return o.sprite;

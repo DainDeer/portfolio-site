@@ -19,7 +19,10 @@ DATA.town = {
     { id: "memorial",    label: "Memorial Wall",              opens: "memorial",  x: 660, y: 64,  w: 130, h: 64,  sprite: "town_memorial",  state: "active", tip: "The fallen, newest first" },
     { id: "lot_comms",   label: "Empty lot (Comms Array)",    opens: "radio", x: 820, y: 60,  w: 120, h: 90,  sprite: "town_lot_comms",       state: "active", tip: "Build the Radio" },
     // Slice 4 §A1: Old Marta by the trapdoor (DATA.tutorial.marta). Placeholder figure until town_marta art lands.
-    { id: "marta",       label: "Old Marta",                  opens: "marta", x: 374, y: 452, w: 70,  h: 84,  sprite: "town_marta", state: "active", npc: "marta" },
+    { id: "marta",       label: "Old Marta",                  opens: "marta", x: 374, y: 452, w: 70,  h: 84,  sprite: "town_marta", state: "active", npc: "marta",
+      // Smudge's art (assets/slice4_manifest.json "town/town_marta.png".hotspot): used until town_hotspots.json has her
+      art: { rect: [374, 452, 70, 84], sprite: { file: "town/town_marta.png", x: 377, y: 470 }, outline: { file: "town/town_hl_marta.png", x: 373, y: 466 },
+             hover: { file: "town/town_hover_marta.png", x: 373, y: 466 }, labelAnchor: [409, 474] } },
     { id: "lot_still",   label: "Empty lot (Water Still)",    opens: "still", x: 460, y: 300, w: 120, h: 80,  sprite: "town_lot_still",       state: "active", tip: "Build the Water Still" }
   ],
   // Floating quest marker over a giver's building while it has a quest you can take now (data/quests.js givers[].hotspot).

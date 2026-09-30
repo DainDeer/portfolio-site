@@ -62,7 +62,12 @@
     site.pods.wheels.sort((a, b) => { const A = site.objects.find((o) => o.id === a), B = site.objects.find((o) => o.id === b); return A.x - B.x || A.y - B.y; });
     site.pods.wheels.forEach((id, i) => { const w = site.objects.find((o) => o.id === id); w.idx = i; w.pos = (sol[i] + 2) % P().positions; w.name = `${P().wheel.name} ${i + 1}`; });
     const R0 = site.rooms[door.room], R1 = site.rooms[door.opens];
-    put(H.mk(site, { kind: "mural", name: P().mural.name, sprite: "obj_mural" }), door.room, R0.x + R0.w / 2, R0.y);   // on the far wall
+    // the mural is 64x32 art: two side-by-side slots (like the car), nearest the top wall; one slot if there's no pair
+    const mural = H.mk(site, { kind: "mural", name: P().mural.name, sprite: "obj_mural" }), sl = DATA.searchables.view.slot;
+    let pair = null;
+    for (const p of R0.free || []) { const q = R0.free.find((f) => f.y === p.y && f.x === p.x + sl); if (q && (!pair || Math.hypot(p.x - R0.x - R0.w / 2, p.y - R0.y) < Math.hypot(pair[0].x - R0.x - R0.w / 2, pair[0].y - R0.y))) pair = [p, q]; }
+    if (pair) { R0.free = R0.free.filter((f) => f !== pair[0] && f !== pair[1]); Object.assign(mural, { room: door.room, x: Math.round((pair[0].x + pair[1].x) / 2), y: pair[0].y, wide: 2 }); }
+    else put(mural, door.room, R0.x + R0.w / 2, R0.y);
     put(H.mk(site, { kind: "pod", name: P().pod.name, sprite: P().pod.sprite }), door.opens, R1.x + R1.w / 2, R1.y + R1.h / 2);
   };
   M.solText = () => M.st().pods.sol.map((p, i) => `wheel ${i + 1} ${P().arrows[p]}`).join(", ");

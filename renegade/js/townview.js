@@ -11,7 +11,7 @@
     const art = DATA.townArt && DATA.townArt.hotspots ? Object.fromEntries(DATA.townArt.hotspots.map((x) => [x.id, x])) : {};
     const O = G.Outpost;
     return DATA.town.hotspots.map((d) => {
-      let a = art[d.id] || {};
+      let a = art[d.id] || d.art || {};
       const rect = a.rect || [d.x, d.y, d.w, d.h];
       // Slice 3 §9-10: the building on this hotspot (if any). Built: its built art + name; unbuilt: the lot + "Build ..." tip
       const bk = O && O.byHotspot ? O.byHotspot(d.id) : null, built = bk && O.st(bk).level >= 1;
@@ -59,8 +59,8 @@
       const el = h("div", { class: `town-hs ${hs.state}` + (hs.built ? " built" : ""), "data-hs": hs.id, "data-building": hs.building ? `${hs.building}:${G.Outpost.st(hs.building).level}` : null, style: `left:${x / 10}%;top:${y / 6}%;width:${w / 10}%;height:${hh / 6}%` });
       // placeholder box (hidden once the background art is showing; stays for hotspots without art)
       el.appendChild(h("div", { class: "hs-ph" }, hs.label));
-      if (hs.npc) el.appendChild(G.Sprites.icon(hs.sprite, 64, "hs-npc"));   // Slice 4 §A1: a standing NPC (placeholder until its art lands)
       const ov = (o, cls) => { if (!o || !o.file) return; const im = h("img", { class: cls, src: src(o.file), alt: "", draggable: "false" }); im.addEventListener("load", () => { im.style.left = ((o.x - x) / w * 100) + "%"; im.style.top = ((o.y - y) / hh * 100) + "%"; im.style.width = (im.naturalWidth / w * 100) + "%"; im.style.height = (im.naturalHeight / hh * 100) + "%"; }); im.addEventListener("error", () => im.remove()); el.appendChild(im); };
+      if (hs.npc) { if (hs.art.sprite && hs.art.sprite.file) ov(hs.art.sprite, "hs-npcart"); else el.appendChild(G.Sprites.icon(hs.sprite, 64, "hs-npc")); }   // Slice 4 §A1: a standing NPC (not in town_bg)
       if (hs.art.builtSprite) ov(hs.art.builtSprite, "hs-built");   // Slice 3: the built building replaces the old art (opaque)
       ov(hs.art.hover, "hs-hover");
       if (hs.art.open) ov(hs.art.open, "hs-open");

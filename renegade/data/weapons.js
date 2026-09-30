@@ -6,8 +6,7 @@
 //   hands  1 | 2   (paper-doll pose, §F)
 // DATA.items.wtypes[wt]: { name, style, skill, sprite, gun }
 //   sprite: the one art model per wtype. A weapon uses its own item_<id> art when it has it (the Slice 1-3 weapons),
-//   otherwise its type's sprite. wt_pistol / wt_rifle / wt_auto / wt_shotgun / wt_blade point at an existing weapon's
-//   file until Smudge's type art lands; wt_bow / wt_crossbow / wt_club / wt_improvised are placeholders (pendingArt).
+//   otherwise its type's sprite item_wtype_<wtype> (Smudge's art). The Bass Guitar has its own (item_bass_guitar).
 //   gun: true = a "gun" for DATA.items.zoneTypeWeight.
 // Skills: bows / crossbows = Marksmanship (style "gun": they shoot); clubs / improvised = Brawling (style "fists"),
 //   except the ones marked (b) in §C4 (Shovel, Broken Bottle) = Blades (style "blades"); blades = Blades.
@@ -17,15 +16,15 @@
 //   backpack 7), then the base inside it by dropWeight x zoneTypeWeight x set bonus. Without this, ~100 new weapons
 //   would crowd armour and packs out of every container. Set it to null to go back to one flat pool.
 DATA.items.wtypes = {
-  pistol:     { name: "Pistol",     style: "gun",    skill: "marksmanship", sprite: "wt_pistol",     gun: true },
-  rifle:      { name: "Rifle",      style: "gun",    skill: "marksmanship", sprite: "wt_rifle",      gun: true },
-  auto:       { name: "Automatic",  style: "gun",    skill: "marksmanship", sprite: "wt_auto",       gun: true },
-  shotgun:    { name: "Shotgun",    style: "gun",    skill: "marksmanship", sprite: "wt_shotgun",    gun: true },
-  bow:        { name: "Bow",        style: "gun",    skill: "marksmanship", sprite: "wt_bow" },
-  crossbow:   { name: "Crossbow",   style: "gun",    skill: "marksmanship", sprite: "wt_crossbow" },
-  blade:      { name: "Blade",      style: "blades", skill: "blades",       sprite: "wt_blade" },
-  club:       { name: "Club",       style: "fists",  skill: "brawling",     sprite: "wt_club" },
-  improvised: { name: "Improvised", style: "fists",  skill: "brawling",     sprite: "wt_improvised" }
+  pistol:     { name: "Pistol",     style: "gun",    skill: "marksmanship", sprite: "item_wtype_pistol",     gun: true },
+  rifle:      { name: "Rifle",      style: "gun",    skill: "marksmanship", sprite: "item_wtype_rifle",      gun: true },
+  auto:       { name: "Automatic",  style: "gun",    skill: "marksmanship", sprite: "item_wtype_auto",       gun: true },
+  shotgun:    { name: "Shotgun",    style: "gun",    skill: "marksmanship", sprite: "item_wtype_shotgun",    gun: true },
+  bow:        { name: "Bow",        style: "gun",    skill: "marksmanship", sprite: "item_wtype_bow" },
+  crossbow:   { name: "Crossbow",   style: "gun",    skill: "marksmanship", sprite: "item_wtype_crossbow" },
+  blade:      { name: "Blade",      style: "blades", skill: "blades",       sprite: "item_wtype_blade" },
+  club:       { name: "Club",       style: "fists",  skill: "brawling",     sprite: "item_wtype_club" },
+  improvised: { name: "Improvised", style: "fists",  skill: "brawling",     sprite: "item_wtype_improvised" }
 };
 DATA.items.zoneTypeWeight = {
   a: { pistol: 0.15, rifle: 0.15, auto: 0.15, shotgun: 0.15 },   // first zone (and the tutorial): guns are a lucky find
@@ -172,4 +171,5 @@ DATA.items.slotShares = { weapon: 66, head: 9, body: 9, backpack: 7 };
       sfx, wtype: wt, hands, sprite: W[wt].sprite };
     if (tag) B[id].tag = tag;
   }
+  B.bass_guitar.sprite = "item_bass_guitar";   // its own art (and paper-doll layer)
 })();
