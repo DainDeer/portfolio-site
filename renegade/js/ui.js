@@ -393,7 +393,7 @@
     if (UI.ablText(b)) t += `Abilities: ${UI.ablText(b)}<br>`;
     if (b.quirks.length) t += "Quirks: " + b.quirks.map((q) => `${DATA.bodies.quirks[q].name} (${DATA.bodies.quirks[q].desc})`).join("; ") + "<br>";
     t += Object.entries(b.skills).filter(([, v]) => v.lvl > 1).map(([k, v]) => `${DATA.skills[k].name} ${v.lvl}`).join(", ") || "All body skills 1";
-    const ms = G.State.restoreMs(b); t += G.Difficulty && G.Difficulty.def().permadeath ? "<br>Hardcore: if killed, it's gone for good" : `<br>Restore time if killed: ${ms ? U.fmtTime(ms) : "none"}`;
+    const ms = G.State.restoreMs(b); t += G.Difficulty && G.Difficulty.isPermadeath(G.state, b) ? "<br>Hardcore: if killed, it's gone for good" : `<br>Restore time if killed: ${ms ? U.fmtTime(ms) : "none"}`;
     return t;
   };
 

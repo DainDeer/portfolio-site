@@ -651,7 +651,7 @@
     // Slice 4 §H: Casual keeps the equipped items and rolls each find; Hardcore loses the body for good
     const DF = G.Difficulty, cas = DF ? DF.onDeath(s, r) : null;
     const lostNow = cas ? cas.foundLost.length : lost;
-    const hard = DF && DF.def(s).permadeath;
+    const hard = DF && DF.isPermadeath(s, body);   // Hardcore + a human body (the Basic body dies as in Standard)
     const ms = hard ? 0 : G.State.restoreMs(body);
     body.restoreUntil = ms ? G.now() + ms : 0;
     if (DF) DF.snap = null;

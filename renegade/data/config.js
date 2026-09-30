@@ -46,15 +46,16 @@ DATA.config = {
     default: "standard",   // saves from before §H, and a new game made without the start screen (?notitle, tests)
     list: {
       casual: { name: "Casual", keepEquipped: true, foundLossPct: 50, foundResLossPct: 50, retries: -1,
-        // keepEquipped: the body's equipped items always come home. foundLossPct: each item found that run (the bag) is
-        // lost on its own roll. foundResLossPct [DRAFT, Rivet]: each found resource type (the whole stack) the same way.
+        // keepEquipped: the body's equipped items always come home (leftover ammo packs too). foundLossPct: each item found
+        // that run (the bag) is lost on its own roll. foundResLossPct (Vixie): each UNIT of each found resource rolls on
+        // its own, so a stack comes home at about half.
         // retries: "Retry fight" on the defeat screen restarts that battle from its start (-1 = unlimited).
         desc: "Casual: death keeps your equipped gear. Each thing you found that run has a 50% chance to be lost. Retry a lost fight as often as you like." },
       standard: { name: "Standard", desc: "Standard: today's rules. A body that dies goes on its restore timer." },
       hardcore: { name: "Hardcore", permadeath: true,
-        // permadeath: a body that dies is gone for good (no restore timer, its stats with it). You go on in another body;
-        // if the Basic body dies a fresh level-1 husk takes its place, so there's always one.
-        desc: "Hardcore: a body that dies is gone for good, stats and all. You go on in another body." }
+        // permadeath: a human body that dies is gone for good (no restore timer, its stats with it; state.fallenBodies).
+        // You go on in another body. The Basic body is never reset (Vixie): it dies as in Standard and keeps its levels.
+        desc: "Hardcore: a human body that dies is gone for good, stats and all. The Basic body comes back as in Standard." }
     },
     pickHint: "Pick a difficulty. It is locked for this save."
   },
