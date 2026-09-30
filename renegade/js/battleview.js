@@ -577,8 +577,9 @@
       let top;
       if (!down) {
         // walk strip while moving (data: sprites[key].walk), static frame otherwise
-        let key = u.sprite, frame = 0;
-        if (art && (u.moving || sd.hover) && sd.walk && hasArt(sd.walk)) { key = sd.walk; frame = b.t * (SP.def(sd.walk).fps || 8); }   // hover: the drone's rotor strip always runs
+        const lk = u.look && hasArt(u.look) ? u.look : null;   // Slice 4 §F: a Grunt's paper doll once it's composited
+        let key = lk || u.sprite, frame = 0; const wk = lk ? lk + "_w" : sd.walk;
+        if (art && (u.moving || sd.hover) && wk && hasArt(wk)) { key = wk; frame = b.t * (SP.def(wk).fps || 8); }   // hover: the drone's rotor strip always runs
         const alpha = u.unseen ? 0.18 : u.state === "retreating" ? 0.8 : undefined;   // an Unseen Stalker is a faint shimmer
         if (u.rival) { ctx.save(); ctx.shadowColor = "rgba(90,230,255,0.95)"; ctx.shadowBlur = 12; }   // Slice 3 §7: rivals are faint cyan ghosts
         const r = SP.drawWorld(ctx, key, x, y, sz, { rot: u.facing, facing: true, anchor: true, frame, alpha: u.rival ? 0.78 : alpha });

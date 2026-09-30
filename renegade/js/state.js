@@ -65,12 +65,13 @@
              weapon: rng.pick(tpl.weapons), skills, hp: null, runs: 0, extractions: 0, kills: 0, history: [], s3: true };
     const noNeg = opts.noNegative != null ? opts.noNegative : !!(DATA.allies.tutorialNoNegative && G.state && !G.state.tutorialDone);
     g.traits = G.Allies.rollTraits(rng, DATA.allies.recruitTraits, { noNegative: noNeg });
+    if (tpl.rank !== "core" && DATA.config.grunts.innateWeapon) g.weapon = DATA.config.grunts.innateWeapon;   // Slice 4 §F: a new Grunt has just a shiv (the rng.pick above still runs, so rolls don't move)
     if (opts.candidate) g.candidate = true; else G.Allies.log(g, "recruited", "Recruited.");
     return St.repairGrunt(g, G.state ? G.state.runCount : 0);
   };
   St.repairGrunt = function (g, run) {
     g.nickname = g.nickname || null; g.traits = g.traits || []; g.history = g.history || [{ run: run || 0, what: "recruited", text: `Run ${run || 0}: Recruited.` }];
-    g.gear = g.gear || St.emptyGear(g); g.dead = !!g.dead; g.tplKey = g.tplKey || (g.rank === "core" ? "core" : "grunt");
+    g.gear = g.gear || St.emptyGear(g); if (G.GruntGear) G.GruntGear.migrate(g); g.dead = !!g.dead; g.tplKey = g.tplKey || (g.rank === "core" ? "core" : "grunt");
     g.runs = g.runs || 0; g.extractions = g.extractions || 0; g.kills = g.kills || 0;
     return g;
   };
@@ -124,6 +125,7 @@
     };
     if (G.Main) { const prev = G.state; G.state = s; G.Main.st(); G.state = prev; }   // Slice 4 §B: main quests + the pods solution
     { const prev = G.state; G.state = s; for (let i = 0; i < DATA.config.deploy.startingGrunts; i++) s.grunts.push(St.makeGrunt(rng)); G.state = prev; }
+    if (G.GruntGear) s.grunts.forEach((g, i) => G.GruntGear.giveStartKit(g, i));   // Slice 4 §F: Grunt 1 Pipe Rifle, Grunt 2 Rust Machete
     for (const k in DATA.resources) if (!DATA.resources[k].hidden && s.stash.res[k] == null) s.stash.res[k] = 0;   // every stockpile resource shows (Slice 3: 11)
     const sg = DATA.items.startingGear;
     for (const slot in sg) { const it = G.Items.make(sg[slot].base, sg[slot].rarity, sg[slot].ilvl, rng); s.stash.items.push(it); s.loadout.gear[slot] = it.uid; }

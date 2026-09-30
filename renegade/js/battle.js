@@ -108,6 +108,7 @@
     });
     withWeapon(u, gw || g.weapon);
     gearUp(u, items);
+    if (G.GruntGear && !(opts && opts.rival)) u.look = G.GruntGear.lookKey(g);   // Slice 4 §F: the paper-doll sprite (drawn by js/battleview.js when composited)
     if (tm && tm.jam) u.weapon.jam += tm.jam;   // "Jam rating": added to the weapon's own
     injure(u, g);
     if (G.Perks && !(opts && opts.rival)) { u.jamMult = G.Perks.jamMult(); if (u.rank === "grunt") u.dmgPct += G.Perks.gruntDmgPct(); }   // Gun Nut (squad), Expendables (Grunts only)

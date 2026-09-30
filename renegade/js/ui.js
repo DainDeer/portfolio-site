@@ -183,10 +183,10 @@
     const list = h("div", { class: "recruit-roster" });
     for (const g of s.grunts) {
       const pw = A.canPromote(g), promo = g.tplKey === "grunt" && pw === null;
-      list.appendChild(h("div", { class: "rr-row", "data-grunt": g.uid }, SP.icon(G.State.gruntTpl(g).sprite, 24),
+      list.appendChild(h("div", { class: "rr-row", "data-grunt": g.uid }, UI.gruntIcon(g, 32),
         h("span", { class: "rr-name" + (A.isVeteran(g) ? " vet" : "") }, (A.isVeteran(g) ? "★ " : "") + A.name(g)), ` · ${A.rankName(g)} · deploy cost ${G.State.gruntTpl(g).deployCost} · ${g.extractions || 0} extractions · ${g.kills || 0} kills `, UI.traitChips(g.traits),
         g.rank === "grunt" || A.isVeteran(g) ? h("button", { "data-act": "grunt-equip", onclick: () => UI.openPanel("grunt:" + g.uid) }, "Equip / details") : null,
-        promo ? h("button", { class: "primary promote", "data-act": "promote", title: `Free. A Veteran goes Critical instead of dying, +HP/Armor/skills, a 3rd trait, 4 slots, but deploy cost ${DATA.allies.veteran.deployCost}.`, onclick: () => { const e = A.promote(g.uid); if (e) UI.fail(e); else UI.toast(A.name(g) + " is now a Veteran."); UI.render(); } }, "Promote") : null));
+        promo ? h("button", { class: "primary promote", "data-act": "promote", title: `Free. A Veteran goes Critical instead of dying, +HP/Armor/skills, a 3rd trait, but deploy cost ${DATA.allies.veteran.deployCost}.`, onclick: () => { const e = A.promote(g.uid); if (e) UI.fail(e); else UI.toast(A.name(g) + " is now a Veteran."); UI.render(); } }, "Promote") : null));
     }
     if (!s.grunts.length) list.appendChild(h("i", null, "Nobody. Recruit someone before you deploy."));
     el.appendChild(list);
@@ -202,20 +202,10 @@
   UI.panelGrunt = function (el, g) {
     const s = G.state, A = G.Allies, SL = G.State.gruntSlots(g), itemLine = (it) => `${G.Items.name(it)} [${DATA.items.rarities[it.rarity].name} i${it.ilvl}]${it.affixes.length ? " " + it.affixes.map(G.Items.affixText).join(", ") : ""}`;
     const nameIn = h("input", { type: "text", value: g.name, maxlength: DATA.config.grunts.nameMaxLen, "data-field": "grunt-name" });
-    el.appendChild(h("div", { class: "grunt-head" }, SP.icon(G.State.gruntTpl(g).sprite, 48), h("div", null, h("div", { class: "cand-name" }, (A.isVeteran(g) ? "★ " : "") + A.name(g) + ` · ${A.rankName(g)}`), UI.traitChips(g.traits)),
+    el.appendChild(h("div", { class: "grunt-head" }, UI.gruntIcon(g, 64), h("div", null, h("div", { class: "cand-name" }, (A.isVeteran(g) ? "★ " : "") + A.name(g) + ` · ${A.rankName(g)}`), UI.traitChips(g.traits)),
       h("label", null, " Name ", nameIn),
       h("button", { "data-act": "grunt-rename", onclick: () => { const e = G.State.renameGrunt(g.uid, nameIn.value); UI.toast(e || "Renamed to " + A.name(g) + "."); UI.render(); } }, "Rename")));
-    const labels = { weapon: "Weapon", gear: "Gear (armour or pack)", head: "Head", body: "Body", pack: "Pack" };
-    for (const slot of Object.keys(SL)) {
-      const sel = h("select", { "data-slot": slot, onchange: (e) => { const err = G.State.equipGrunt(g.uid, slot, e.target.value || null); if (err) UI.fail(err); UI.render(); } });
-      sel.appendChild(h("option", { value: "" }, slot === "weapon" ? `(own weapon: ${G.Items.base(g.weapon).name})` : "(none)"));
-      const cur = g.gear[slot]; if (cur) sel.appendChild(h("option", { value: cur.uid, selected: "selected" }, itemLine(cur) + " — equipped"));
-      for (const it of s.stash.items.filter((i) => !G.Items.isQuest(i) && SL[slot].includes(G.Items.base(i.base).slot))) sel.appendChild(h("option", { value: it.uid }, `${itemLine(it)} (${G.Items.base(it.base).slot})`));
-      if (s.run) sel.disabled = true;
-      // slot icons: slot_weapon / slot_gear / slot_head / slot_body / slot_pack (slot_gear stays the fallback for an unknown slot)
-      const icon = DATA.sprites["slot_" + slot] ? "slot_" + slot : "slot_gear";
-      el.appendChild(h("div", { class: "grunt-slot" }, SP.icon(icon, 20, "slot-icon"), h("b", null, (labels[slot] || slot) + ": "), sel));
-    }
+    el.appendChild(UI.dollEl({ grunt: g }));   // Slice 4 §F: the paper doll (4 slots, the stash filtered by slot)
     const setsEl = UI.setsEl(G.State.gruntItems(g)); if (setsEl) el.appendChild(setsEl);
     { const ic = UI.injuryChips ? UI.injuryChips(g) : null; if (ic) el.appendChild(h("div", { class: "inj-line" }, "Injuries: ", ic)); }
     const u = G.Battle.unitFromGrunt(g), pk = G.State.gruntPack(g);
@@ -319,20 +309,22 @@
     for (const g of s.grunts) {
       const on = lo.grunts.includes(g.uid), cost = G.State.gruntTpl(g).deployCost;
       const cb = h("input", { type: "checkbox", checked: on, disabled: !on && used + cost > score, onchange: () => { if (on) lo.grunts = lo.grunts.filter((x) => x !== g.uid); else lo.grunts.push(g.uid); UI.render(); } });
-      ssec.appendChild(tipOn(h("label", { class: "grunt-row" }, cb, SP.icon(G.State.gruntTpl(g).sprite, 20), ` ${G.Allies.name(g)} (${G.Allies.rankName(g)}, cost ${cost}) — ${g.gear ? UI.gruntGearText(g) : G.Items.base(g.weapon).name}; ` + Object.entries(g.skills).map(([k, v]) => DATA.skills[k].name + " " + v.lvl).join(", ") + " ", UI.traitChips(g.traits), UI.injuryChips ? UI.injuryChips(g) : null), `<b>${G.Allies.name(g)}</b>: ${g.rank === "core" ? "goes Critical at 0 HP (can be Domed)" : "dies at 0 HP"}.` + (g.traits.length ? "<br>" + UI.traitTipHtml(g.traits) : "")));
+      ssec.appendChild(tipOn(h("label", { class: "grunt-row" }, cb, UI.gruntIcon(g, 32), ` ${G.Allies.name(g)} (${G.Allies.rankName(g)}, cost ${cost}) — ${g.gear ? UI.gruntGearText(g) : G.Items.base(g.weapon).name}; ` + Object.entries(g.skills).map(([k, v]) => DATA.skills[k].name + " " + v.lvl).join(", ") + " ", UI.traitChips(g.traits), UI.injuryChips ? UI.injuryChips(g) : null,
+        h("button", { class: "grunt-gear-btn", "data-act": "grunt-doll", "data-grunt": g.uid, title: "Head, body, pack, weapon", onclick: (e) => { e.preventDefault(); e.stopPropagation(); UI.showDoll({ grunt: g }); } }, "Gear…")), `<b>${G.Allies.name(g)}</b>: ${g.rank === "core" ? "goes Critical at 0 HP (can be Domed)" : "dies at 0 HP"}.` + (g.traits.length ? "<br>" + UI.traitTipHtml(g.traits) : "")));
     }
     el.appendChild(ssec);
     // gear
     const gsec = h("section", { class: "panel" }, h("h3", null, "3 · Gear (taken from the Vault — lost if your body dies)"));
-    for (const slot of ["weapon", "head", "body", "backpack"]) {
-      const sel = h("select", { onchange: (e) => { if (e.target.value) lo.gear[slot] = e.target.value; else delete lo.gear[slot]; if ((lo.pouch || []).some((p) => p.uid === e.target.value)) lo.pouch = []; UI.render(); } });
-      sel.appendChild(h("option", { value: "" }, slot === "weapon" ? `(natural weapon: ${G.Items.base(body.cls ? DATA.bodies.classes[body.cls].naturalWeapon : DATA.bodies.basicBody.naturalWeapon).name})` : slot === "backpack" && DATA.config.deploy.freeBackpack ? `(none: you'll take a free ${G.Items.base(DATA.config.deploy.freeBackpack.base).name})` : "(none)"));
-      for (const it of s.stash.items.filter((i) => G.Items.base(i.base).slot === slot)) {
-        const o = h("option", { value: it.uid }, `${G.Items.name(it)} [${DATA.items.rarities[it.rarity].name} i${it.ilvl}] ${it.affixes.map(G.Items.affixText).join(", ")}`);
-        if (lo.gear[slot] === it.uid) o.selected = true; sel.appendChild(o);
+    // Slice 4 §F: the body's gear goes through the same paper doll as the Grunts (items stay in the Vault until you deploy)
+    { const chips = h("div", { class: "gear-chips" });
+      for (const slot of ["weapon", "head", "body", "backpack"]) {
+        const it = lo.gear[slot] && s.stash.items.find((i) => i.uid === lo.gear[slot]);
+        if (lo.gear[slot] && !it) delete lo.gear[slot];
+        chips.appendChild(h("span", { class: "gear-chip" + (it ? " r-" + it.rarity : " empty"), "data-gslot": slot }, SP.icon(it ? G.Items.sprite(it) : (DATA.sprites["slot_" + (slot === "backpack" ? "pack" : slot)] ? "slot_" + (slot === "backpack" ? "pack" : slot) : "slot_gear"), 24),
+          h("span", it ? { style: "color:" + DATA.items.rarities[it.rarity].color } : null, it ? G.Items.name(it) : slot === "weapon" ? `(natural: ${G.Items.base(body.cls ? DATA.bodies.classes[body.cls].naturalWeapon : DATA.bodies.basicBody.naturalWeapon).name})` : slot === "backpack" && DATA.config.deploy.freeBackpack ? "(free School Bag)" : "(none)")));
       }
-      gsec.appendChild(h("div", { class: "gear-row" }, h("span", { class: "slot" }, slot), sel));
-    }
+      chips.appendChild(h("button", { "data-act": "body-doll", onclick: () => { UI.showDoll({ body: true }); } }, "Equip…"));
+      gsec.appendChild(chips); }
     // pouch (one select per slot; Vault L2 = 2 slots) + med
     const slots = G.Outpost.pouchSlots(), pk = G.Outpost.pouchMaxKg();
     lo.pouch = (lo.pouch || []).slice(0, slots);
@@ -648,7 +640,7 @@
       h("button", { disabled: !(r.bag.res.med > 0) || r.bodyHp >= maxHp, onclick: () => { UI.toast(X.useMed("body")); UI.render(); } }, healIco(), "Heal")));
     r.squad.forEach((m, i) => {
       const mx = G.Battle.unitFromGrunt(m.g).maxHp, isCarried = r.carriedCritical.includes(m.g.uid);
-      sq.appendChild(h("div", { class: "sq-row" + (m.hp <= 0 ? " dead" : "") }, SP.icon(G.State.gruntTpl(m.g).sprite, 18), h("span", { class: "sq-name" }, G.Allies.name(m.g)), m.hp > 0 ? bar(m.hp / mx, "#5fd35f", `${Math.ceil(m.hp)}/${Math.round(mx)}`) : h("span", { class: "bad" }, isCarried ? "Critical (carried)" : m.left ? "left behind" : "dead"),
+      sq.appendChild(h("div", { class: "sq-row" + (m.hp <= 0 ? " dead" : "") }, UI.gruntIcon(m.g, 18), h("span", { class: "sq-name" }, G.Allies.name(m.g)), m.hp > 0 ? bar(m.hp / mx, "#5fd35f", `${Math.ceil(m.hp)}/${Math.round(mx)}`) : h("span", { class: "bad" }, isCarried ? "Critical (carried)" : m.left ? "left behind" : "dead"),
         m.hp > 0 ? h("button", { disabled: !(r.bag.res.med > 0) || m.hp >= mx, onclick: () => { UI.toast(X.useMed(i)); UI.render(); } }, healIco(), "Heal") : null));
     });
     side.appendChild(sq);

@@ -6,6 +6,7 @@
 
   SP.def = function (key) {
     let d = reg()[key];
+    if (!d && /^gl_/.test(key)) return reg().unit_grunt;   // Slice 4 §F: a paper-doll key before it's composited (js/gruntlook.js)
     if (!d) { // auto-register icon families (skill_*, stat_*, dmg_*) with a text badge placeholder
       const m = /^(skill|stat|dmg)_(.+)$/.exec(key);
       d = { file: "icons/" + key + ".png", shape: "badge", color: m && m[1] === "skill" ? "#556" : "#465", size: 1, text: m ? m[2].slice(0, 3).toUpperCase() : "?" };
@@ -16,6 +17,7 @@
   SP.get = function (key) {
     const c = SP.cache[key];
     if (c) return c.ok ? c.img : null;
+    if (/^gl_/.test(key)) { if (G.GruntLook) G.GruntLook.ensure(key.replace(/_w$/, "")); return null; }   // composited at runtime, never fetched
     const d = SP.def(key);
     const entry = SP.cache[key] = { ok: false, img: null };
     if (reg().probeAssets === false || !d.file || typeof Image === "undefined") return null;

@@ -192,7 +192,7 @@
     for (const k in g.skills) g.skills[k].lvl += V.skillBonus;
     const t = A.rollTraits(G.rng, 1, { kinds: D().promoteTraitKinds }, g.traits); g.traits = g.traits.concat(t);
     // Grunt gear -> Veteran slots (the old single gear slot's item moves to head / body / pack)
-    const old = g.gear || {}, gear = { weapon: old.weapon || null }; for (const k in V.slots) if (k !== "weapon") gear[k] = null;
+    const old = g.gear || {}, gear = { weapon: old.weapon || null }; for (const k in V.slots) if (k !== "weapon") gear[k] = old[k] || null;   // Slice 4 §F: Grunts already have the 4 slots
     if (old.gear) { const sl = G.Items.base(old.gear.base).slot, k = Object.keys(V.slots).find((x) => V.slots[x].includes(sl)); if (k) gear[k] = old.gear; else S().stash.items.push(old.gear); }
     g.gear = gear;
     A.log(g, "promoted", `Promoted to Veteran (new trait: ${t.map((x) => A.trait(x).name).join(", ") || "none left"}).`);

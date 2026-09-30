@@ -654,7 +654,10 @@
     else if (w.hollow_creek === "saved" || w.hollow_creek === "allied_visited") w.hollow_creek = "allied";
     // tutorial Grunts are free: top the roster up to the starting count while the tutorial is on. After it, dead Grunts
     // stay dead until you recruit (G.Outpost.recruit, config.grunts.recruitCost).
-    if (!s.tutorialDone) while (s.grunts.filter((g) => g.rank === "grunt").length < CFG().deploy.startingGrunts) s.grunts.push(G.State.makeGrunt(G.rng));
+    if (!s.tutorialDone) while (s.grunts.filter((g) => g.rank === "grunt").length < CFG().deploy.startingGrunts) {
+      const i = s.grunts.filter((g) => g.rank === "grunt").length, g = G.State.makeGrunt(G.rng); s.grunts.push(g);
+      if (G.GruntGear) G.GruntGear.giveStartKit(g, i);   // Slice 4 §F: the tutorial's free top-ups come with the starting kit
+    }
     // ASSUMPTION: during the tutorial, re-issue the starter gear if you lost it, so the Basic body is never soft-locked with bare fists
     if (!s.tutorialDone && CFG().deploy.tutorialReissueStarterGear) {
       const sg = DATA.items.startingGear;

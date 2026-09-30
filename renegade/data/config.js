@@ -38,9 +38,14 @@ DATA.config = {
   grunts: {
     recruitCost: { food: 3, water: 3 },
     rosterCap: 5,
-    // Megan's playtest: each Grunt has a weapon slot and one gear slot (armour or a pack), equipped from the Vault stash
-    // at the outpost (Recruitment lot -> Equip). Gear on a Grunt that dies in battle stays on its body in the location.
-    slots: { weapon: ["weapon"], gear: ["head", "body", "backpack"] },
+    // Slice 4 §F: every Grunt has the body's 4 slots (was Megan's playtest weapon + one gear slot), equipped from the Vault
+    // stash at the outpost through the paper doll. Gear on a Grunt that dies in battle stays on its body in the location.
+    slots: { weapon: ["weapon"], head: ["head"], body: ["body"], pack: ["backpack"] },
+    innateWeapon: "nat_shiv",        // §F: what a Grunt fights with when its weapon slot is empty (new recruits: just a shiv)
+    // §F starting kit: the new game's Grunts (and the tutorial's free top-ups) get these equipped, by roster position.
+    // [JUDGMENT] no basic head / body item exists in data (the starter wrap + poncho art has no item), so weapons only.
+    startKit: [{ weapon: { base: "pipe_rifle", rarity: "white", ilvl: 1 } }, { weapon: { base: "rust_machete", rarity: "white", ilvl: 1 } }],
+    gearCountsTowardCarry: false,    // [JUDGMENT] today's rule kept: a Grunt's gear isn't in your carried kg (its pack adds capacity)
     nameMaxLen: 28           // "First Last" (Slice 3 §1; the nickname is shown separately)
   },
 
