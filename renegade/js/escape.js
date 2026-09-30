@@ -63,6 +63,7 @@
     const i = E.info(b), die = DATA.config.checks.die, d = b.rng.int(1, die), total = d + i.mod, pass = d === die || (d !== 1 && total >= i.dc);
     const text = `Break away: ${DATA.skills[i.skill].name} d20 ${d} + ${i.mod} (best skill ${i.best}) = ${total} vs ${i.dc} [${i.why}] → ${pass ? (d === die ? "natural 20, " : "") + "you get out!" : (d === 1 ? "natural 1, " : "") + "you stumble!"}`;
     s.tries++; s.last = { d, mod: i.mod, total, dc: i.dc, pass, text };
+    if (G.Dice) G.Dice.capture({ d, total, grade: d === die ? "crit" : d === 1 ? "badFail" : pass ? "success" : "fail", text }, "breakaway");   // Slice 5 §B: the fight holds while it rolls
     b.log.push(text); (b.checks = b.checks || []).push({ kind: "escape", text, pass, t: b.t }); E.feed(b, text, pass ? "good" : "bad");
     G.Battle._.floatText(b, u, pass ? `BREAK AWAY ${total} vs ${i.dc}: OUT!` : `BREAK AWAY ${total} vs ${i.dc}: STUMBLE`, pass ? "#7ee07e" : "#ff7a6a", true);
     if (pass) {

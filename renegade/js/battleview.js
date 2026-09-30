@@ -438,7 +438,7 @@
     const timeScale = v.slowmo > 0 ? C().slowMoOnKill : 1;
     v.slowmo = Math.max(0, v.slowmo - dt);
     if (b.phase === "fight" && !v.tutSeen && G.TutView) { v.tutSeen = true; G.TutView.check(); }   // Slice 4 §A T3: first frame of the fight
-    const held = !!(G.TutView && G.TutView.holds());   // a tutorial step is showing: the fight holds (b.paused untouched)
+    const held = !!(G.TutView && G.TutView.holds()) || !!(G.Dice && G.Dice.busy());   // + Slice 5 §B: Break away's die   // a tutorial step is showing: the fight holds (b.paused untouched)
     if (b.phase === "fight" && !held) G.Battle.advance(b, dt, v.speed, timeScale);   // aiming: 25% of 1x (or paused), see G.Abilities.timeScale
     for (const e of v.booms) e.age += dt * v.speed * timeScale; v.booms = v.booms.filter((e) => e.age < 0.4);
     BV.drainFx(v);

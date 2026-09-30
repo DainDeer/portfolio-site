@@ -50,7 +50,7 @@
     tryUrl(0);
     return e;
   }
-  const sfxUrls = (key) => [base() + A().sfxPath + key + A().ext];
+  const sfxUrls = (key) => [base() + ((A().sfx[key] || {}).path || A().sfxPath) + key + A().ext];   // path: a key filed elsewhere (Snare's stinger_roll in music/)
   const loopUrls = (key) => {
     const exts = A().loopExts.filter((x) => !(x === ".ogg" && hasDom && !(new Audio()).canPlayType("audio/ogg")));
     return exts.map((x) => base() + A().ambPath + key + x);
@@ -71,7 +71,7 @@
     const adm = SFX.admit(key, vol, t); if (!adm.ok) return false;
     if (adm.stop) { try { adm.stop.stop(); } catch (x) {} SFX.guns = SFX.guns.filter((v) => v !== adm.stop); }
     SFX.last[key] = t;
-    const rate = 1 + (Math.random() * 2 - 1) * A().pitchVar;
+    const rate = def.noPitch ? 1 : 1 + (Math.random() * 2 - 1) * A().pitchVar;   // noPitch: musical one-shots stay in key
     let voice;
     try {
       if (e.buf && SFX.ctx) {

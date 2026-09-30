@@ -22,7 +22,8 @@
     return { skill, dc: effDc, best: best.lvl, roller: best.m, helpers, gear, mod, chance: (succ / C().die) * 100 };
   };
 
-  K.roll = function (info, rng) {
+  // kind: which check this is (config.dice.consumers decides which ones show the physics d20, js/dice.js)
+  K.roll = function (info, rng, kind) {
     rng = rng || G.rng;
     const d = rng.int(1, C().die);
     const total = d + info.mod;
@@ -36,7 +37,9 @@
     if (info.roller) G.State.giveXp(info.roller, info.skill, xpAmt);
     const text = `${DATA.skills[info.skill].name} check: d20 ${d} + ${Math.floor(info.best / C().skillDiv)} (skill ${info.best})` +
       (info.helpers ? ` + ${info.helpers} helpers` : "") + (info.gear ? ` + ${info.gear} gear` : "") + ` = ${total} vs DC ${info.dc} → ${K.gradeName(grade)}`;
-    return { d, total, grade, text };
+    const out = { d, total, grade, text };
+    if (G.Dice && kind) G.Dice.capture(out, kind);   // Slice 5 §B: shown before the outcome (when that kind is on)
+    return out;
   };
   K.gradeName = (g) => ({ crit: "CRITICAL SUCCESS", success: "Success", fail: "Fail", badFail: "BAD FAIL" }[g]);
   K.isSuccess = (g) => g === "crit" || g === "success";

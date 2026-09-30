@@ -393,7 +393,7 @@
     if (opt.check) {
       if (useGrunt && opt.gruntSpendable) { texts.push(X.spendGrunt()); effects = opt.outcomes.success; roll = { grade: "success", text: "Grunt sent ahead: automatic success." }; }
       else {
-        const info = X.optionChance(opt); roll = G.Checks.roll(info);
+        const info = X.optionChance(opt); roll = G.Checks.roll(info, null, "event");
         X.log(roll.text, "check");
         const o = opt.outcomes;
         effects = o[roll.grade] || (roll.grade === "crit" ? o.success : roll.grade === "badFail" ? o.fail : o.fail) || [];
@@ -610,7 +610,7 @@
     const r = run(), node = X.node(), ex = X.extractionDef(node);
     if (ex.type === "free") { X.extractSuccess(); return { ok: true, text: "Extracted." }; }
     if (ex.type === "check") {
-      const info = G.Checks.compute(ex.skill, ex.dc, X.members(), X.gearItems()); const roll = G.Checks.roll(info);
+      const info = G.Checks.compute(ex.skill, ex.dc, X.members(), X.gearItems()); const roll = G.Checks.roll(info, null, "extract");
       X.log(roll.text, "check");
       if (G.Checks.isSuccess(roll.grade)) { X.extractSuccess(); return { ok: true, roll, text: roll.text + " — the engine turns over!" }; }
       if (roll.grade === "badFail" && ex.badFail === "crash") return X.crash(node, ex, roll);   // Slice 5 §A

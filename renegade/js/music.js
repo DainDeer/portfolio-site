@@ -30,7 +30,7 @@
     }
     const bar = Mu.barSec(to), beat = Mu.beatSec(to), len = D.tracks[to].loopSec;
     let wait = Mu.untilLine(pos, bar), grid = "bar", fade;
-    if (toState === "battle") { const T = D.toBattle; if (wait > T.maxBarWaitSec && D.tracks[to].quantize !== "bar") { wait = Mu.untilLine(pos, beat); grid = "beat"; } fade = T.fadeSec; }
+    if (toState === "battle") { const T = D.toBattle, maxWait = T.maxBarWaitBars != null ? T.maxBarWaitBars * bar : T.maxBarWaitSec; if (wait > maxWait + 1e-9 && D.tracks[to].quantize !== "bar") { wait = Mu.untilLine(pos, beat); grid = "beat"; } fade = T.fadeSec; }
     else fade = bar * (D.fromBattle.fadeBars || 1);
     return { mode: "sync", wait, fade, grid, offset: mod(pos + wait, len) };
   };

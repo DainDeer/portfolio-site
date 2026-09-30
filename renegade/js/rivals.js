@@ -101,17 +101,17 @@
     const r = run(), snap = step.snap, fight = (freeze, why) => { X().next(); X().push({ type: "battle", family: "rivals", rival: snap, freeze, nid: step.nid, why }, true); G.State.save(); };
     if (choice === "engage") { fight(null, `${snap.handle}!`); return { text: "Engage!", battle: true }; }
     if (choice === "ambush") {
-      const roll = G.Checks.roll(RV.checkInfo(D().ambush)); X().log(roll.text, "check");
+      const roll = G.Checks.roll(RV.checkInfo(D().ambush), null, "rival"); X().log(roll.text, "check");
       if (G.Checks.isSuccess(roll.grade)) { fight({ side: 1, sec: D().ambush.freezeSec }, "Ambush!"); return { text: `Ambush! They're frozen for ${D().ambush.freezeSec} s.`, battle: true, roll }; }
       fight(null, "They saw you coming."); return { text: "They saw you coming. Engage!", battle: true, roll };
     }
     if (choice === "hide") {
-      const roll = G.Checks.roll(RV.checkInfo(D().hide)); X().log(roll.text, "check");
+      const roll = G.Checks.roll(RV.checkInfo(D().hide), null, "rival"); X().log(roll.text, "check");
       if (G.Checks.isSuccess(roll.grade)) { X().next(); X().log(`You stay out of sight. ${snap.handle} moves on.`, "good"); G.State.save(); return { text: "You stay hidden. They move on.", roll }; }
       fight(null, "They found you."); return { text: "They found you. Engage!", battle: true, roll };
     }
     if (choice === "parley") {
-      const P = D().parley, roll = G.Checks.roll(RV.checkInfo(P)); X().log(roll.text, "check");
+      const P = D().parley, roll = G.Checks.roll(RV.checkInfo(P), null, "rival"); X().log(roll.text, "check");
       if (roll.grade === "badFail") { fight({ side: 0, sec: P.freezeSec }, "It was a trap!"); return { text: `It was a trap: they ambush you (you're frozen for ${P.freezeSec} s).`, battle: true, roll }; }
       X().next();
       if (!G.Checks.isSuccess(roll.grade)) { X().log(`${snap.handle} doesn't want to talk and leaves.`); G.State.save(); return { text: "They don't want to talk. They leave.", roll }; }

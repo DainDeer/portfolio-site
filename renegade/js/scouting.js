@@ -27,6 +27,7 @@
     const node = G.Zones.map().nodes[nid], text = `Scouting ${G.Map.label(node)}: ${DATA.skills[i.skill].name} d20 ${d} + ${i.mod} (skill ${i.best}${i.radio ? ", +" + i.radio + " Radio" : ""}) = ${total} vs DC ${i.dc} → ${pass ? "Pass" : "Fail"}`;
     const o = r.scout[key(nid)] = { d, mod: i.mod, total, dc: i.dc, pass, text };
     X().log(text, pass ? "good" : "roll");
+    if (G.Dice) G.Dice.capture({ d, total, grade: d === die ? "crit" : d === 1 ? "badFail" : pass ? "success" : "fail", text }, "scout");   // Slice 5 §B
     return o;
   };
   // called whenever the squad's position changes (X.markSeen): roll every location in reach that hasn't rolled this run

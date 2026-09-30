@@ -19,7 +19,8 @@
   }
   UI.h = h;
   UI.fail = function (msg) { G.Sfx.play("sfx_ui_error"); UI.toast(msg); };   // a refused action: toast + error sound
-  UI.toast = function (msg) { const t = $("#toast"); t.textContent = msg; t.onclick = null; t.classList.remove("clickable"); t.classList.add("show"); clearTimeout(UI._tt); UI._tt = setTimeout(() => t.classList.remove("show"), 2600); };
+  UI.toast = function (msg) { if (G.Dice && G.Dice.busy()) return G.Dice.whenIdle(() => UI.toast(msg));   // Slice 5 §B: a check's toast waits for its die
+    const t = $("#toast"); t.textContent = msg; t.onclick = null; t.classList.remove("clickable"); t.classList.add("show"); clearTimeout(UI._tt); UI._tt = setTimeout(() => t.classList.remove("show"), 2600); };
   UI.showTip = function (html, x, y) { UI.tipAt = performance.now(); const t = $("#tooltip"); t.innerHTML = html; t.classList.remove("hidden"); const w = t.offsetWidth, hh = t.offsetHeight; t.style.left = Math.min(window.innerWidth - w - 8, x + 14) + "px"; t.style.top = Math.min(window.innerHeight - hh - 8, y + 14) + "px"; };
   UI.hideTip = function () { UI.tipArmed = null; $("#tooltip").classList.add("hidden"); };   // tipAt / tipArmed: tap-to-show on touch (js/touch.js)
   const tipOn = UI.tipOn = (el, fn) => { el.addEventListener("mousemove", (e) => UI.showTip(typeof fn === "function" ? fn() : fn, e.clientX, e.clientY)); el.addEventListener("mouseleave", UI.hideTip); return el; };
@@ -69,6 +70,7 @@
 
   // ---------- main render ----------
   UI.render = function () {
+    if (G.Dice && G.Dice.busy()) { if (!UI._renderAfterDice) { UI._renderAfterDice = true; G.Dice.whenIdle(() => { UI._renderAfterDice = false; UI.render(); }); } return; }   // Slice 5 §B: the outcome shows once the die lands
     UI.hideTip();
     if (G.TutView) setTimeout(G.TutView.check, 0);   // Slice 4 §A: a tutorial step due on the new screen (js/tutorialview.js)
     if (G.State.loadNotice) { const n = G.State.loadNotice; G.State.loadNotice = null; setTimeout(() => UI.modal(h("div", null, h("h2", null, "Save"), h("p", null, n), h("button", { class: "primary", onclick: () => UI.render() }, "OK"))), 0); }
@@ -556,6 +558,9 @@
     const aim = h("select", { "data-set": "aimMode", onchange: (e) => { st.aimMode = e.target.value; G.State.save(); } });
     for (const [v, l] of [["slowmo", "Slow-mo 25% while aiming"], ["pause", "Full pause while aiming"]]) aim.appendChild(h("option", { value: v, selected: st.aimMode === v }, l));
     box.appendChild(h("div", { class: "set-row" }, h("label", null, "Aim mode"), aim));
+    // Slice 5 §B (Vixie): the physics d20 for out-of-combat checks; off = outcomes at once, no die, no dice sounds
+    box.appendChild(h("h3", null, "Dice"));
+    box.appendChild(h("div", { class: "set-row" }, h("label", null, h("input", { type: "checkbox", "data-set": "showDice", checked: st.showDice !== false, onchange: (e) => { st.showDice = e.target.checked; G.State.save(); } }), " Show dice rolls")));
     // Slice 4 §A: tutorial level (Marta's choice) + Replay tutorial (re-arms every step for the next run)
     if (G.Tut) {
       box.appendChild(h("h3", null, "Gameplay"));
@@ -855,14 +860,14 @@
   };
 
   // Slice 5 §A: the truck crash: the heavy sound, a short line across the screen, the roll in a toast
-  // Slice 5 §B: a check extraction rolls the d20 on screen first (G.Dice); the result lands once the die has.
+  // Slice 5 §B: a check extraction rolls the d20 on screen first (G.Dice queue); the flash / toast / screen wait for it.
   UI.extractClick = function () {
-    const res = G.Exp.extract(), after = () => { if (res.crash) UI.crashFlash(res); else UI.toast(res.text); UI.render(); };
-    if (res.roll && G.Dice && G.Dice.enabled("extract")) { UI._diceBusy = true; G.Dice.show(Object.assign({ label: res.roll.text.replace(/^.*?: /, "") }, res.roll)).then(() => { UI._diceBusy = false; after(); }); }
-    else after();
+    const res = G.Exp.extract();
+    if (res.crash) UI.crashFlash(res); else UI.toast(res.text); UI.render();
     return res;
   };
   UI.crashFlash = function (res) {
+    if (G.Dice && G.Dice.busy()) return G.Dice.whenIdle(() => UI.crashFlash(res));   // after the die
     if (res.sfx) G.Sfx.play(res.sfx);
     const el = h("div", { class: "crash-flash", "data-flash": "crash" }, res.line); document.body.appendChild(el);
     setTimeout(() => el.remove(), DATA.config.extraction.crash.lineMs);
@@ -942,7 +947,7 @@
   UI.tick = function () {
     if (!G.state.run) {
       const done = G.Outpost.tick(), dirty = G.Outpost.dirty; G.Outpost.dirty = false;
-      if ((done.length || dirty) && !document.querySelector(".modal") && !UI._diceBusy) {
+      if ((done.length || dirty) && !document.querySelector(".modal") && !(G.Dice && G.Dice.busy())) {
         if (done.length) { const k = done[0], O = G.Outpost; UI.toast(O.st(k).level === 1 ? `${O.def(k).name} built!` : `${O.def(k).name} upgrade finished!`); }
         G.State.save(); UI.render(); return;
       }

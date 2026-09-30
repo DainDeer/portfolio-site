@@ -394,7 +394,7 @@
       site.rooms[o.opens].open = true; o.searched = true; texts.push("The door opens.");
       if (T.stashChance && G.rng.chance(T.stashChance)) { loot = X.rollObjectLoot(node, T.stashAs, { rarityBonus: CFG().search.doorStashRarityBonus }); texts.push("A stash was hidden behind it!"); }
     };
-    const check = (c) => { const ci = G.Checks.compute(c.skill, c.dc, X.members(), X.gearItems()); const rr = G.XP.at({ obj: o.id }, () => G.Checks.roll(ci)); X.log(rr.text, "check"); return rr; };
+    const check = (c) => { const ci = G.Checks.compute(c.skill, c.dc, X.members(), X.gearItems()); const rr = G.XP.at({ obj: o.id }, () => G.Checks.roll(ci, null, "search")); X.log(rr.text, "check"); return rr; };
     if (action === "pick") {
       roll = check(T.lock.check);
       if (G.Checks.isSuccess(roll.grade)) { o.locked = false; texts.push("Lock picked."); if (o.type === "door") openDoor(); else { loot = X.rollObjectLoot(node, o.type, o); o.searched = true; } }
@@ -566,7 +566,7 @@
     return best;
   };
   X.resolveSpot = function (step) {
-    const info = X.spotInfo(step.pid), roll = G.Checks.roll(info);
+    const info = X.spotInfo(step.pid), roll = G.Checks.roll(info, null, "spot");
     X.log(roll.text, "check");
     X.next();
     if (G.Checks.isSuccess(roll.grade)) { X.discoverPassage(step.pid); return { found: true, roll }; }

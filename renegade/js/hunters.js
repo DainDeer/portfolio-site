@@ -99,7 +99,7 @@
       return { text: dies ? `${nm} didn't make it. The Hunters lose you for ${D().bait.loseMoves} moves.` : `${nm} made it back. The Hunters lose you for ${D().bait.loseMoves} moves.`, died: dies };
     }
     if (choice === "hide") {
-      const info = H.hideInfo(), roll = G.Checks.roll(info); X().log(roll.text, "check");
+      const info = H.hideInfo(), roll = G.Checks.roll(info, null, "hunter"); X().log(roll.text, "check");
       if (G.Checks.isSuccess(roll.grade)) { X().next(); H.shake("You stay hidden. The Hunters move on."); G.State.save(); return { text: "You stay hidden. They move on.", roll }; }
       X().next(); X().push({ type: "battle", family: "hunters", pack: step.pack, ambush: true, hunters: true, nid: r.loc, why: "They found you: ambush!" }, true); G.State.save();
       return { text: "They found you. The Stalkers strike first!", roll, battle: true };

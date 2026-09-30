@@ -11,7 +11,7 @@ DATA.config = {
   save: { resetOnNewBuild: true, buildIdKey: "renegade_build_id" },
   // Slice 3 §2 / §8: player settings (Settings panel, saved with the game). Audio defaults are in data/audio.js.
   // aimMode: "slowmo" (the battle runs at abilities.aimTimeScale while you aim) | "pause" (open question 1: both work)
-  settings: { aimMode: "slowmo" },
+  settings: { aimMode: "slowmo", showDice: true },   // showDice: Slice 5 §B "Show dice rolls" (off: outcomes show at once, no die, no dice sounds)
   // Slice 3 §12: world restocking (replaces expedition.restockEachRun). Sites persist between runs in state.world.sites.
   // A site is picked over once you search an object there or win a battle there (restock level 0). The level rises one
   // step per run (any run, any zone): runsBySize runs to 100%. First entry of a later run: each searched object refills
@@ -267,7 +267,14 @@ DATA.config = {
   // lands is the rolled number. Consumers: where the die is shown (the extraction check first, per the spec).
   dice: {
     enabled: true,
-    consumers: ["extract"],
+    // Vixie (Sep 30): every out-of-combat check the player starts shows the die; never the per-hit rolls in a battle.
+    // extract, search (lock / heavy / trap), event options, rival choices, Hunter hide, passage spotting, scouting and
+    // Break away (the one check inside a fight: the fight holds while the die rolls). Not "craft" (the Workbench's
+    // quality roll lands on a timer, not at a click). The player can turn them off: settings.showDice.
+    consumers: ["extract", "search", "event", "rival", "hunter", "spot", "scout", "breakaway"],
+    queue: { speed: 2, holdMs: 500, noHold: ["scout"] },   // noHold kinds never hold the screen (no shield: scouting rolls itself as you move); a batch of them (a new neighbourhood) plays x2 after the first, holds 0.5 s, thunk without the stinger
+    // sounds (data/audio.js): a random tumble per wall bounce (up to maxBounces), then the thunk + Snare's stinger on the landing frame
+    sfx: { bounce: ["sfx_dice_bounce_1", "sfx_dice_bounce_2", "sfx_dice_bounce_3"], maxBounces: 3, bounceMinSpeed: 0.5, land: "sfx_dice_land", stinger: "stinger_roll" },
     // Smudge 7ddb42d (assets/ui/dice/dice_manifest.json): the mesh + numbering, box, lantern, camera and light are in the
     // scene json (fetched: packaged through this "file"); the panel art below is placed from these numbers (native px).
     scene: { file: "ui/dice/d20_scene.json" },
@@ -285,7 +292,7 @@ DATA.config = {
     maxSimSec: 3.2, phoneSpeed: 1.5,            // phones play the same roll faster ("shorter roll")
     holdMs: 1300,                               // the landed number stays this long before the outcome shows (tap skips)
     lidY: 3,                                    // the invisible lid (scene box notes)
-    throw: { speed: [4.2, 5.6], spin: [9, 15], height: [1.5, 1.9] },
+    throw: { speed: [6.5, 8], spin: [9, 15], height: [1.5, 1.9] },   // hard enough to reach the far wall (most rolls clatter)
     physics: { gravity: -24, restitution: 0.34, friction: 0.5, inertia: 0.36, angDamp: 3, restV: 0.12, restW: 0.35, restSec: 0.2 }
   },
 

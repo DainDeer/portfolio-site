@@ -56,7 +56,7 @@
     const dir = norm([1, 0, (rng() - 0.5) * 0.8]); let v = add(mul(dir, R(T.speed)), [0, -1, 0]);
     let w = mul(norm([rng() - 0.5, rng() - 0.5, rng() - 0.5]), R(T.spin));
     const planes = [[[0, 1, 0], 0], [[1, 0, 0], -B.half_x], [[-1, 0, 0], -B.half_x], [[0, 0, 1], -B.half_z], [[0, 0, -1], -B.half_z], [[0, -1, 0], -(cf.lidY || 3)]];
-    let rest = 0, restedAt = -1;
+    let rest = 0, restedAt = -1, lastHit = -99; const bounces = [], minHit = ((cf.sfx || {}).bounceMinSpeed) || 1.2;   // wall hits (frame index) for the tumble sounds
     for (let s = 0; s < steps; s++) {
       v = add(v, [0, P.gravity * dt, 0]); pos = add(pos, mul(v, dt));
       const wq = [0, w[0], w[1], w[2]], dq = qmul(wq, q); q = qnorm(q.map((x, i) => x + 0.5 * dt * dq[i]));
@@ -67,6 +67,7 @@
           const r = qrot(q, lv), p = add(pos, r), pen = d - dot(n, p); if (pen <= 0) continue;
           if (n[1] === 1) onFloor = true; deepest = Math.max(deepest, pen);
           const vp = add(v, cross(w, r)), vn = dot(vp, n); if (vn >= 0) continue;
+          if (n[1] === 0 && -vn > minHit && s - lastHit > 30) { bounces.push(frames.length); lastHit = s; }
           const rn = cross(r, n), den = 1 + dot(rn, rn) / P.inertia, j = -(1 + P.restitution) * vn / den;
           v = add(v, mul(n, j)); w = add(w, mul(cross(r, mul(n, j)), 1 / P.inertia));
           const vp2 = add(v, cross(w, r)), vt = sub(vp2, mul(n, dot(vp2, n))), vtl = len(vt);
@@ -85,7 +86,7 @@
     const k = restedAt >= 0 ? 4 : 14, f0 = frames[frames.length - 1] || [pos[0], pos[1], pos[2]].concat(q), q0 = f0.slice(3), sg = Math.sign(q0[0] * qEnd[0] + q0[1] * qEnd[1] + q0[2] * qEnd[2] + q0[3] * qEnd[3]) || 1;
     for (let i = 1; i <= k; i++) { const a = i / k, qa = qnorm(q0.map((x, j) => x + (qEnd[j] * sg - x) * a)); frames.push([f0[0] + (pEnd[0] - f0[0]) * a, f0[1] + (pEnd[1] - f0[1]) * a, f0[2] + (pEnd[2] - f0[2]) * a].concat(qa)); }
     frames[frames.length - 1] = pEnd.concat(qEnd);
-    return { frames, top: Dc.topFace(qEnd), rested: restedAt >= 0, restedAt, qEnd };
+    return { frames, top: Dc.topFace(qEnd), rested: restedAt >= 0, restedAt, qEnd, bounces };
   };
   // the symmetry that puts face n where face m was: replay with q * s^-1, s = quat(F_n * F_m^T)
   Dc.symmetry = function (m, n) { return qFromMat(matMulT(Dc.geo.frame[n], Dc.geo.frame[m])); };
@@ -93,7 +94,7 @@
     const sim = Dc.simulate(seed), m = sim.top, n = Dc.geo.faceOf[d], si = qconj(Dc.symmetry(m, n));
     const frames = sim.frames.map((f) => f.slice(0, 3).concat(qmul(f.slice(3), si)));
     const qEnd = qmul(sim.qEnd, si);
-    return { d, seed, frames, qEnd, rested: sim.rested, landedFace: m, face: n, top: Dc.topFace(qEnd) };
+    return { d, seed, frames, qEnd, rested: sim.rested, landedFace: m, face: n, top: Dc.topFace(qEnd), bounces: sim.bounces };
   };
   Dc.tint = (grade) => (C().tints || {})[grade] || "ember";
 
@@ -180,7 +181,34 @@ void main() {
   };
 
   // ---- the panel ----
-  Dc.enabled = (consumer) => { const c = C(); return !!(c && c.enabled && (c.consumers || []).includes(consumer) && typeof document !== "undefined"); };
+  Dc.enabled = (consumer) => { const c = C(); return !!(c && c.enabled && (c.consumers || []).includes(consumer) && typeof document !== "undefined" && Dc.on()); };
+  Dc.on = () => !(G.state && G.state.settings && G.state.settings.showDice === false);   // "Show dice rolls" (settings)
+  // ---- the queue: G.Checks.roll(info, rng, kind) / scouting / Break away hand their rolls here. While a die is queued or
+  // rolling, the UI holds its outcome (UI.render / UI.toast / the crash flash go through Dc.whenIdle), so a check's result
+  // shows once the die has landed. Several at once (a new neighbourhood's scouting) play one after another, faster. ----
+  Dc.q = []; Dc.playing = false; Dc.waiters = []; Dc.defer = (fn) => setTimeout(fn, 0);
+  Dc.capture = function (roll, kind) {
+    if (!Dc.enabled(kind)) return false;
+    Dc.q.push(Object.assign({ kind, hold: !((C().queue || {}).noHold || []).includes(kind), label: roll.text ? roll.text.replace(/^.*?: /, "") : null }, roll));
+    if (!Dc.playing) Dc.defer(Dc.pump);
+    return true;
+  };
+  Dc.busy = () => !!(Dc.playing && Dc.playing.hold) || Dc.q.some((x) => x.hold);   // only holding kinds hold the outcome
+  Dc.whenIdle = function (fn) { if (Dc.busy()) Dc.waiters.push(fn); else fn(); };
+  Dc.flushWaiters = function () { if (Dc.busy()) return; const w = Dc.waiters; Dc.waiters = []; for (const fn of w) { try { fn(); } catch (e) { console.error(e); } } };
+  Dc.pump = function () {
+    if (Dc.playing) return;
+    if (!Dc.q.length) { Dc.played = 0; return Dc.flushWaiters(); }
+    const i = Dc.q.findIndex((x) => x.hold), next = Dc.q.splice(i >= 0 ? i : 0, 1)[0], later = Dc.played > 0 && !next.hold, Q = C().queue || {};   // a batch's followers (scouting) play faster + quieter; a check you clicked never does   // holding checks first
+    Dc.playing = next; Dc.played = (Dc.played || 0) + 1;
+    Dc.show(next, Object.assign({ noShield: !next.hold }, later ? { speed: Q.speed, holdMs: Q.holdMs, quiet: true } : {})).then(() => { Dc.playing = false; Dc.flushWaiters(); Dc.pump(); });
+  };
+  // sounds (config.dice.sfx; all behind the toggle, since no die = no capture)
+  Dc.sfx = function (what) {
+    const S = C().sfx || {}; if (!G.Sfx) return;
+    if (what === "bounce") { const b = S.bounce || []; if (b.length) G.Sfx.play(b[Math.floor(Math.random() * b.length)]); }
+    else if (what === "land" || what === "landQuiet") { if (S.land) G.Sfx.play(S.land); if (S.stinger && what === "land") G.Sfx.play(S.stinger); }   // queued followers: the thunk only
+  };
   Dc.phone = () => typeof window !== "undefined" && (window.innerWidth <= 700 || window.innerHeight <= 450);
   Dc.reduced = () => !!(root.matchMedia && root.matchMedia("(prefers-reduced-motion: reduce)").matches);
   // the plaque number in Smudge's digits (cells 13x17, advance cell - 1), centred in the plaque's field
@@ -204,15 +232,15 @@ void main() {
       const line = h("div", { class: "dice-line", style: `top:${px(A.plaque.at[1] + A.plaque.size[1] + 2)}` });
       const panel = h("div", { class: "dice-panel", "data-dice": "rolling", style: `width:${px(A.panel.size[0])};height:${px(A.panel.size[1])};background-image:url(${url(A.panel.file)})` }, cv, plaque, line);
       const shield = h("div", { class: "dice-shield", title: "Tap to skip" });
-      document.body.append(shield, panel);
+      if (opts.noShield) document.body.append(panel); else document.body.append(shield, panel);
       let done = false, raf = 0, r = null, plan = null, landed = false;
       const finish = () => { if (done) return; done = true; cancelAnimationFrame(raf); Dc.close(); resolve(roll); };
-      const land = () => { if (landed) return; landed = true; cancelAnimationFrame(raf);
+      const land = () => { if (landed) return; landed = true; cancelAnimationFrame(raf); Dc.sfx(opts.quiet ? "landQuiet" : "land");
         if (r && plan) { r.tint(tintEnd); r.frame(plan.frames[plan.frames.length - 1]); }
         panel.dataset.dice = "landed"; panel.dataset.face = String(roll.d); panel.dataset.tint = tintEnd;
         Dc.digits(plaque, roll.d, tintEnd);
         line.textContent = roll.label || `d20: ${roll.d}`; line.className = "dice-line " + (G.Checks.isSuccess(roll.grade) ? "good" : "bad");
-        setTimeout(finish, cf.holdMs); };
+        setTimeout(finish, opts.holdMs != null ? opts.holdMs : cf.holdMs); };
       const still = (why) => {   // Smudge's still: the lit empty box + the resting die showing the number (frame n - 1)
         if (landed || done) return; Dc.mode = "still"; Dc.stillWhy = why; cv.remove(); const R = A.rest;
         const box = h("div", { class: "dice-still", style: `left:${px(A.panel.window[0])};top:${px(A.panel.window[1])};width:${px(ww)};height:${px(wh)};background-image:url(${url(A.still.file)})` },
@@ -224,8 +252,10 @@ void main() {
       Dc.load().then(() => { if (done || landed) return;
         plan = Dc.plan(roll.d, opts.seed || ((Math.random() * 4294967295) >>> 0) || 1);
         return Dc.render(cv).then((rr) => { if (done || landed) return; r = rr; Dc.mode = "webgl";
-          const speed = Dc.phone() ? cf.phoneSpeed : 1; let t0 = 0;
-          const tick = (now) => { if (!t0) t0 = now; const i = Math.floor((now - t0) / 1000 * 60 * speed); if (i >= plan.frames.length) return land(); r.frame(plan.frames[i]); raf = requestAnimationFrame(tick); };
+          const speed = (Dc.phone() ? cf.phoneSpeed : 1) * (opts.speed || 1), maxB = (cf.sfx || {}).maxBounces || 3; let t0 = 0, bi = 0;
+          const tick = (now) => { if (!t0) t0 = now; const i = Math.floor((now - t0) / 1000 * 60 * speed); if (i >= plan.frames.length) return land();
+            while (bi < plan.bounces.length && plan.bounces[bi] <= i) { if (bi < maxB) Dc.sfx("bounce"); bi++; }   // a tumble per wall hit, up to maxBounces
+            r.frame(plan.frames[i]); raf = requestAnimationFrame(tick); };
           raf = requestAnimationFrame(tick); });
       }).catch((e) => { Dc.error = String(e && e.message || e); still("error"); });
     });

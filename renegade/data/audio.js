@@ -42,6 +42,10 @@ DATA.audio = {
     sfx_truck_crash_1: { vol: 1.0 },   // once as a truck Bad Fail crash resolves (config.extraction.crash.sfx), with the line + Heat spike
     sfx_truck_crash_2: { vol: 0.9 },   // spare take: registered, not played anywhere yet
     // sfx_truck_wreck_idle (optional 4 s loop, 0.2) is not wired: the loop player runs one loop per screen
+    // Slice 5 §B d20 sounds (config.dice.sfx names them; js/dice.js fires them; Smudge 6451cc2). Not in the gun group.
+    sfx_dice_bounce_1: { vol: 1.0 }, sfx_dice_bounce_2: { vol: 1.0 }, sfx_dice_bounce_3: { vol: 1.0 },   // a random one per wall bounce, up to 3 a roll
+    sfx_dice_land: { vol: 1.0 },       // the landing frame, with stinger_roll
+    stinger_roll: { vol: 0.45, path: "music/", noPitch: true },   // Snare (assets/music_src/README_zones2.md): on top of the landing thunk, SFX bus
     sfx_bonk_1: { vol: 1.0 }, sfx_bonk_2: { vol: 1.0 }, sfx_bonk_3: { vol: 0.95 }, sfx_bonk_bass: { vol: 0.8 }
   },
   // SFX bus: every one-shot goes through a gain + limiter (DynamicsCompressor) before the master, so 6 stacked shots
@@ -83,12 +87,12 @@ DATA.audio = {
     // per-zone overrides. b = the Drowned Suburbs (data/zones.js). Hollis gets { run: "music_hollis", battle:
     // "music_hollis_battle" } once it has a zone id. Zone a (labelled "The Scablands") keeps Hushwood.
     zones: { b: { run: "music_drowned", battle: "music_drowned_battle" } },
-    preload: { run: ["music_hushwood_battle"] },   // decode the battle track as soon as a run starts, so the switch is on time (the zone's own battle track is preloaded too)
+    preload: {},   // Snare: a run preloads only its own zone's battle track (js/music.js Mu.set: trackFor("battle", zone)), so the switch is on time
     // same key + tempo, different lengths (so not one sync group): the incoming track still restarts from its top, but on
     // the outgoing one's next bar line, so the beat grids line up during the crossfade (Snare: title -> outpost)
     barAlign: [["music_title", "music_outpost"]],
     restartFadeSec: 1.75,                       // different groups (outpost <-> Hushwood): equal-power crossfade, incoming from 0
-    toBattle: { quantize: "bar", maxBarWaitSec: 2.4, fadeSec: 0.4 },   // next bar line, or the next beat if the bar line is more than 2.4 s away
+    toBattle: { quantize: "bar", maxBarWaitBars: 1, fadeSec: 0.4 },   // next bar line, or the next beat if the bar line is more than maxBarWaitBars of the incoming track's own bars away (Snare: was a fixed 2.4 s)
     fromBattle: { quantize: "bar", fadeBars: 1 },                       // starts on the next bar line, one bar long, so it ends on a bar line
     firstFadeSec: 1.5,                          // fade-in when music starts from silence (first tap / unmute)
     leadSec: 0.06                               // scheduling headroom for Web Audio start times
