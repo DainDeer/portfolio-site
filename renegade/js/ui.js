@@ -362,11 +362,25 @@
     const loSets = UI.setsEl(Object.values(lo.gear).map((uid) => s.stash.items.find((i) => i.uid === uid)).filter(Boolean)); if (loSets) gsec.appendChild(loSets);
     el.appendChild(gsec);
     const err = G.Exp.validateLoadout(lo);
-    const FW = DATA.config.deploy.fallbackWeapon;
-    if (FW && !(lo.gear.weapon && s.stash.items.some((i) => i.uid === lo.gear.weapon))) el.appendChild(h("p", { class: "hint fallback-note", "data-note": "fallback-weapon" }, `No weapon equipped: the outpost will issue a free ${DATA.items.bases[FW.base].name} (${DATA.items.rarities[FW.rarity].name}, i${FW.ilvl}) for this deploy.`));
-    el.appendChild(h("div", { class: "deploy-go" }, h("button", { class: "primary big", "data-act": "deploy", disabled: !!err, onclick: () => { const e = G.Exp.start(lo, undefined, UI.zone); if (e) UI.fail(e); else UI.panel = null; UI.render(); } }, `Deploy to ${zd.name} ▶`), err ? h("span", { class: "warn" }, " " + err) : null,
+    // Vixie (Slice 4): no free weapon; unarmed units fight with bare fists, and Deploy asks first
+    const unarmed = G.Exp.unarmedUnits(lo);
+    if (unarmed.length) el.appendChild(h("p", { class: "hint warn unarmed-note", "data-note": "unarmed" }, `${UI.unarmedText(unarmed)} Bare fists are weak (${DATA.config.unarmed.dmg} damage).`));
+    const go = () => { const e = G.Exp.start(lo, undefined, UI.zone); if (e) UI.fail(e); else UI.panel = null; UI.render(); };
+    el.appendChild(h("div", { class: "deploy-go" }, h("button", { class: "primary big", "data-act": "deploy", disabled: !!err, onclick: () => (unarmed.length ? UI.confirmUnarmed(unarmed, go) : go()) }, `Deploy to ${zd.name} ▶`), err ? h("span", { class: "warn" }, " " + err) : null,
       !s.tutorialDone ? h("p", { class: "hint" }, "Tutorial: you start in a level-1 Basic body with 2 Grunts. Find the working cryo pod (Journal: Main Objective) to claim your first specialized human body. Dying here costs nothing but what you carry — the Basic body has no restore timer.") : null));
     G.State.save();
+  };
+
+  // Vixie (Slice 4): "<Name> is unarmed." / "A and B are unarmed."
+  UI.unarmedText = (names) => (names.length === 1 ? `${names[0]} is unarmed.` : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]} are unarmed.`);
+  // the unarmed deploy confirm: the list, Deploy / Cancel (44 px tap targets)
+  UI.confirmUnarmed = function (names, onDeploy) {
+    const close = () => { $("#modal-root").innerHTML = ""; };
+    UI.modal([h("h3", {}, "Unarmed"), h("p", {}, `${UI.unarmedText(names)} Deploy anyway?`),
+      h("ul", { class: "unarmed-list" }, names.map((n) => h("li", {}, `${n}: bare fists`))),
+      h("div", { class: "confirm-row" },
+        h("button", { class: "primary confirm-btn", "data-act": "unarmed-deploy", onclick: () => { close(); onDeploy(); } }, "Deploy"),
+        h("button", { class: "confirm-btn", "data-act": "unarmed-cancel", onclick: close }, "Cancel"))], "confirm-unarmed");
   };
 
   // Slice 3 §2: a body's actives, "[1] Called Shot (6 s) · [2] Frag Grenade (18 s)"

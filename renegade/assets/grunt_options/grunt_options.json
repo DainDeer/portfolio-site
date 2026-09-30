@@ -1,0 +1,895 @@
+{
+  "note": "EXPLORATION for Megan: the Grunt as a paper doll. Megan picked option e (mannequin) as the default look; options a-d became gear sets (see 'gear' / 'sets'). Palette A only.",
+  "canvas": [
+    32,
+    32
+  ],
+  "view": "3/4 top-down, facing south, lit top-left (as unit_grunt)",
+  "layerOrder": [
+    "pack_back",
+    "stowed",
+    "body",
+    "underwear",
+    "face",
+    "legwear",
+    "footwear",
+    "torso",
+    "pack_straps",
+    "belt",
+    "weapon",
+    "offhand",
+    "arms",
+    "sleeves",
+    "hair",
+    "facial_hair",
+    "headwear"
+  ],
+  "layerFrames": "every layer file is a 96x32 strip: stand | walkA | walkB (walkA/B = the 2 frames of *_strip2)",
+  "outfitSlot": "a full outfit (robe, maid dress, suit) replaces legwear + torso + sleeves (+ belt) and sits in the torso slot; hats/masks go in headwear (above hair); an 'underwear version' is just body + underwear + face + arms + hair",
+  "anchors": {
+    "units": "32x32 model px (x right, y down; pixel = floor(value)); same canvas as unit_grunt",
+    "static": {
+      "headCentre": [
+        16.0,
+        9.6
+      ],
+      "headTop (hats)": [
+        16.0,
+        6.0
+      ],
+      "eyeLine (masks, glasses)": 10.5,
+      "neck": [
+        16.0,
+        12.6
+      ],
+      "shoulderL": [
+        11.4,
+        14.2
+      ],
+      "shoulderR": [
+        20.6,
+        14.2
+      ],
+      "chest": [
+        16.0,
+        16.0
+      ],
+      "waist (belt line)": [
+        16.0,
+        20.4
+      ],
+      "hipL": [
+        13.4,
+        21.0
+      ],
+      "hipR": [
+        18.6,
+        21.0
+      ]
+    },
+    "perFrame": {
+      "stand": {
+        "handL": [
+          10.4,
+          21.0
+        ],
+        "handR": [
+          21.6,
+          21.0
+        ],
+        "footL": [
+          13.2,
+          27.0
+        ],
+        "footR": [
+          18.8,
+          27.0
+        ]
+      },
+      "walkA": {
+        "handL": [
+          10.4,
+          21.5
+        ],
+        "handR": [
+          21.6,
+          20.5
+        ],
+        "footL": [
+          13.2,
+          27.9
+        ],
+        "footR": [
+          18.8,
+          26.1
+        ]
+      },
+      "walkB": {
+        "handL": [
+          10.4,
+          20.5
+        ],
+        "handR": [
+          21.6,
+          21.5
+        ],
+        "footL": [
+          13.2,
+          26.1
+        ],
+        "footR": [
+          18.8,
+          27.9
+        ]
+      }
+    },
+    "notes": "Head, torso, belt and hats never move between frames (no bob). Legs, feet, arms, hands and the held weapon move: legwear, footwear, arms, sleeves and weapon are 3-frame strips (stand, walkA, walkB). perFrame hands here are the one_hand pose; see 'poses' for two_hand. one_hand weapons are gripped in handL."
+  },
+  "sharedBase": {
+    "skins": {
+      "light": [
+        "#8c5a3c",
+        "#c48c64",
+        "#d4c8a0"
+      ],
+      "medium": [
+        "#4e2e22",
+        "#8c5a3c",
+        "#c48c64"
+      ],
+      "dark": [
+        "#2e2418",
+        "#4e2e22",
+        "#8c5a3c"
+      ]
+    },
+    "hairColours": {
+      "brown": [
+        "#2e2418",
+        "#5e4a30",
+        "#96784c"
+      ],
+      "ginger": [
+        "#3e1410",
+        "#862c1c",
+        "#c65a30"
+      ],
+      "black": [
+        "#120a0a",
+        "#26262a",
+        "#4e5054"
+      ],
+      "blond": [
+        "#5e4a30",
+        "#96784c",
+        "#d4c8a0"
+      ],
+      "grey": [
+        "#4e5054",
+        "#8c8c86",
+        "#d4c8a0"
+      ]
+    },
+    "hairStyles": [
+      "crop",
+      "shag",
+      "tied"
+    ],
+    "files": "grunt_options/base/",
+    "hairOutlineRule": "hair / facial hair have no black outline where they overlap the face",
+    "arms": {
+      "one_hand": "grunt_options/base/arms_<skin>.png",
+      "two_hand": "grunt_options/base/arms_<skin>_two_hand.png",
+      "two_hand_rifle": "grunt_options/base/arms_<skin>_two_hand_rifle.png"
+    }
+  },
+  "defaultLook": {
+    "skin": "medium",
+    "hair": "crop",
+    "hairColour": "brown",
+    "base": "e_mannequin"
+  },
+  "options": {
+    "a_scavenger": {
+      "name": "Forest scavenger",
+      "blurb": "patched hooded layers, olive tunic, teal scarf, hatchet",
+      "sprite": "grunt_options/a_scavenger/grunt_a_scavenger.png",
+      "walkStrip": "grunt_options/a_scavenger/grunt_a_scavenger_strip2.png",
+      "clothingLayers": {
+        "legwear": "grunt_options/a_scavenger/05_legwear.png",
+        "footwear": "grunt_options/a_scavenger/06_footwear.png",
+        "torso": "grunt_options/a_scavenger/07_torso.png",
+        "belt": "grunt_options/a_scavenger/09_belt.png",
+        "weapon": "grunt_options/a_scavenger/10_weapon.png",
+        "sleeves": "grunt_options/a_scavenger/13_sleeves.png",
+        "headwear": "grunt_options/a_scavenger/16_headwear.png"
+      }
+    },
+    "b_recruit": {
+      "name": "Militia recruit",
+      "blurb": "linen tunic, teal tabard, belt, plain trousers, wooden spear",
+      "sprite": "grunt_options/b_recruit/grunt_b_recruit.png",
+      "walkStrip": "grunt_options/b_recruit/grunt_b_recruit_strip2.png",
+      "clothingLayers": {
+        "legwear": "grunt_options/b_recruit/05_legwear.png",
+        "footwear": "grunt_options/b_recruit/06_footwear.png",
+        "torso": "grunt_options/b_recruit/07_torso.png",
+        "belt": "grunt_options/b_recruit/09_belt.png",
+        "weapon": "grunt_options/b_recruit/10_weapon.png",
+        "sleeves": "grunt_options/b_recruit/13_sleeves.png"
+      }
+    },
+    "c_woodsman": {
+      "name": "Rugged woodsman",
+      "blurb": "quilted rust jacket, sheepskin collar, teal neckerchief, felling axe",
+      "sprite": "grunt_options/c_woodsman/grunt_c_woodsman.png",
+      "walkStrip": "grunt_options/c_woodsman/grunt_c_woodsman_strip2.png",
+      "clothingLayers": {
+        "legwear": "grunt_options/c_woodsman/05_legwear.png",
+        "footwear": "grunt_options/c_woodsman/06_footwear.png",
+        "torso": "grunt_options/c_woodsman/07_torso.png",
+        "belt": "grunt_options/c_woodsman/09_belt.png",
+        "weapon": "grunt_options/c_woodsman/10_weapon.png",
+        "sleeves": "grunt_options/c_woodsman/13_sleeves.png"
+      }
+    },
+    "d_teal": {
+      "name": "Teal grunt, refreshed",
+      "blurb": "the current teal poncho + head wrap, goggles pushed up, pipe rifle",
+      "sprite": "grunt_options/d_teal/grunt_d_teal.png",
+      "walkStrip": "grunt_options/d_teal/grunt_d_teal_strip2.png",
+      "clothingLayers": {
+        "legwear": "grunt_options/d_teal/05_legwear.png",
+        "footwear": "grunt_options/d_teal/06_footwear.png",
+        "torso": "grunt_options/d_teal/07_torso.png",
+        "belt": "grunt_options/d_teal/09_belt.png",
+        "weapon": "grunt_options/d_teal/10_weapon.png",
+        "sleeves": "grunt_options/d_teal/13_sleeves.png",
+        "headwear": "grunt_options/d_teal/16_headwear.png"
+      }
+    },
+    "e_mannequin": {
+      "name": "Mannequin base",
+      "blurb": "plain undershirt + shorts, barefoot, teal wristband; the paper-doll base",
+      "sprite": "grunt_options/e_mannequin/grunt_e_mannequin.png",
+      "walkStrip": "grunt_options/e_mannequin/grunt_e_mannequin_strip2.png",
+      "clothingLayers": {
+        "legwear": "grunt_options/e_mannequin/05_legwear.png",
+        "torso": "grunt_options/e_mannequin/07_torso.png",
+        "sleeves": "grunt_options/e_mannequin/13_sleeves.png"
+      }
+    }
+  },
+  "layerRoles": {
+    "cosmetic": [
+      "body",
+      "underwear",
+      "face",
+      "arms",
+      "hair",
+      "facial_hair"
+    ],
+    "slots": {
+      "head": [
+        "headwear"
+      ],
+      "body": [
+        "legwear",
+        "footwear",
+        "torso",
+        "belt",
+        "sleeves"
+      ],
+      "backpack": [
+        "pack_back",
+        "pack_straps"
+      ],
+      "weapon": [
+        "weapon"
+      ]
+    },
+    "reserved": {
+      "offhand": "RESERVED, not drawn: dual wield / shields, in handR (one_hand weapons are in handL). Drawn right after weapon, under arms (the hand closes over its grip). Blocked by any two_hand weapon (blocksOffhand).",
+      "stowed": "RESERVED, not drawn: the backup weapon set slung on the back. Drawn right after pack_back and before body: in front of a pack, behind the Grunt, so a long gun pokes out over a shoulder / below the hip. Belt-carried backups (holster, sheath) would need a second spot after belt; left for later."
+    },
+    "why": {
+      "pack_back first": "the pack is behind everything, so only its edges show past the arms/torso and above the shoulders (bedroll ends either side of the head)",
+      "pack_straps after torso, before belt": "straps sit on the outfit; the belt and scarf ends go over their bottom ends; sleeves/arms still cover the shoulders",
+      "weapon before arms": "the hand (arms layer) closes over the grip",
+      "headwear last": "over hair; hair above the hat top edge is clipped per column (clipsHairAbove)"
+    },
+    "noOutline": [
+      "face",
+      "pack_straps"
+    ]
+  },
+  "slotMapping": {
+    "source": "data/items.js slots weapon | head | body | backpack; data/config.js grunts.slots {weapon: [weapon], gear: [head, body, backpack]}",
+    "head": "headwear layer. hides_hair -> skip the hair layer (hoods, full helmets). hides_facial_hair reserved for full masks (horse mask).",
+    "body": "ONE outfit set filling torso + sleeves + belt + legwear + footwear. No standalone leg/foot gear. hides_legwear (robes, dresses) -> skip legwear.",
+    "backpack": "pack_back + pack_straps",
+    "weapon": "weapon (active main set), with pose one_hand (handL) | two_hand (both hands, blocksOffhand). offhand/stowed reserved; the belt holster spot comes later.",
+    "emptySlot": {
+      "head": "nothing drawn (hair shows)",
+      "body": "mannequin undershirt + shorts, barefoot (gear/empty_body/)",
+      "backpack": "nothing drawn",
+      "weapon": "nothing drawn (bare hands = nat_fists)"
+    }
+  },
+  "poses": {
+    "rule": "weapon.pose is one_hand | two_hand. weapon.armVariant (one_hand | two_hand | two_hand_rifle) picks the arms + sleeves files (empty weapon slot = one_hand). A two_hand weapon blocksOffhand: the offhand layer is not drawn and nothing can be equipped there.",
+    "variantLayers": [
+      "arms",
+      "sleeves"
+    ],
+    "armVariants": [
+      "one_hand",
+      "two_hand",
+      "two_hand_rifle"
+    ],
+    "one_hand": {
+      "pose": "one_hand",
+      "weaponGrip": "handL",
+      "offhandGrip": "handR (reserved)",
+      "arms": "hanging (straight shoulder -> hand)",
+      "files": {
+        "arms": "grunt_options/base/arms_<skin>.png",
+        "emptyBodySleeves": "grunt_options/gear/empty_body/13_sleeves.png",
+        "bodySleeves": "grunt_options/gear/body/<id>/13_sleeves.png"
+      },
+      "usedBy": [
+        "recruit_spear",
+        "scav_hatchet",
+        "nat_shiv"
+      ],
+      "perFrame": {
+        "stand": {
+          "handL": [
+            10.4,
+            21.0
+          ],
+          "handR": [
+            21.6,
+            21.0
+          ]
+        },
+        "walkA": {
+          "handL": [
+            10.4,
+            21.5
+          ],
+          "handR": [
+            21.6,
+            20.5
+          ]
+        },
+        "walkB": {
+          "handL": [
+            10.4,
+            20.5
+          ],
+          "handR": [
+            21.6,
+            21.5
+          ]
+        }
+      }
+    },
+    "two_hand": {
+      "pose": "two_hand",
+      "weaponGrip": "haft grip: handR (rear, at the right hip) + handL (front, low-left)",
+      "blocksOffhand": true,
+      "arms": "elbows out, forearms in: shoulder -> elbow -> hand; hands bob 0.6px with the walk",
+      "files": {
+        "arms": "grunt_options/base/arms_<skin>_two_hand.png",
+        "emptyBodySleeves": "grunt_options/gear/empty_body/13_sleeves_two_hand.png",
+        "bodySleeves": "grunt_options/gear/body/<id>/13_sleeves_two_hand.png"
+      },
+      "usedBy": [
+        "felling_axe"
+      ],
+      "perFrame": {
+        "stand": {
+          "elbowL": [
+            9.8,
+            18.8
+          ],
+          "handL": [
+            12.8,
+            23.4
+          ],
+          "elbowR": [
+            22.4,
+            17.2
+          ],
+          "handR": [
+            20.2,
+            19.4
+          ]
+        },
+        "walkA": {
+          "elbowL": [
+            9.8,
+            19.1
+          ],
+          "handL": [
+            12.8,
+            24.0
+          ],
+          "elbowR": [
+            22.4,
+            17.5
+          ],
+          "handR": [
+            20.2,
+            20.0
+          ]
+        },
+        "walkB": {
+          "elbowL": [
+            9.8,
+            18.5
+          ],
+          "handL": [
+            12.8,
+            22.8
+          ],
+          "elbowR": [
+            22.4,
+            16.9
+          ],
+          "handR": [
+            20.2,
+            18.8
+          ]
+        }
+      }
+    },
+    "two_hand_rifle": {
+      "pose": "two_hand",
+      "weaponGrip": "gun grip: handR on the pistol grip just outside the right hip, handL on the fore-end beside the left hip",
+      "blocksOffhand": true,
+      "arms": "nearly straight, hands at the waist, so nothing crosses the gun: the stock sticks out past the right side and the barrel past the left hip; hands (and the gun) bob 0.6px with the walk",
+      "files": {
+        "arms": "grunt_options/base/arms_<skin>_two_hand_rifle.png",
+        "emptyBodySleeves": "grunt_options/gear/empty_body/13_sleeves_two_hand_rifle.png",
+        "bodySleeves": "grunt_options/gear/body/<id>/13_sleeves_two_hand_rifle.png"
+      },
+      "usedBy": [
+        "militia_carbine",
+        "pipe_rifle"
+      ],
+      "perFrame": {
+        "stand": {
+          "elbowL": [
+            10.2,
+            17.8
+          ],
+          "handL": [
+            11.0,
+            21.2
+          ],
+          "elbowR": [
+            22.6,
+            16.2
+          ],
+          "handR": [
+            21.4,
+            18.6
+          ]
+        },
+        "walkA": {
+          "elbowL": [
+            10.2,
+            18.1
+          ],
+          "handL": [
+            11.0,
+            21.8
+          ],
+          "elbowR": [
+            22.6,
+            16.5
+          ],
+          "handR": [
+            21.4,
+            19.2
+          ]
+        },
+        "walkB": {
+          "elbowL": [
+            10.2,
+            17.5
+          ],
+          "handL": [
+            11.0,
+            20.6
+          ],
+          "elbowR": [
+            22.6,
+            15.9
+          ],
+          "handR": [
+            21.4,
+            18.0
+          ]
+        }
+      }
+    }
+  },
+  "composer": {
+    "reference": "assets/src/grunt_gear.py layers(loadout, look, step): the loadout composer used for every sprite here",
+    "steps": [
+      "armVariant = gear.weapon[loadout.weapon].armVariant, or one_hand when the weapon slot is empty",
+      "for each layer in layerOrder: skip reserved layers (stowed, offhand); a two_hand weapon also blocks offhand (blocksOffhand), so the offhand stays empty",
+      "arms -> sharedBase.arms[armVariant] for the look's skin; sleeves -> gear.body[id].layers.sleeves[armVariant] (or the empty_body sleeves for that variant)",
+      "every other layer has one file; take the frame (stand | walkA | walkB) column from the 3-frame strips",
+      "hides_hair / hides_facial_hair / hides_legwear drop those layers; composite bottom -> top"
+    ]
+  },
+  "gear": {
+    "head": {
+      "militia_helmet": {
+        "name": "Militia helmet",
+        "set": "militia",
+        "items": [
+          "militia_helmet"
+        ],
+        "layers": {
+          "headwear": "grunt_options/gear/head/militia_helmet/16_headwear.png"
+        },
+        "onMannequin": "grunt_options/gear/head/militia_helmet/on_mannequin.png",
+        "hides_hair": false,
+        "hides_facial_hair": false,
+        "clipsHairAbove": true
+      },
+      "woodsman_beanie": {
+        "name": "Woodsman beanie",
+        "set": "woodsman",
+        "items": [
+          "woodsman_beanie"
+        ],
+        "layers": {
+          "headwear": "grunt_options/gear/head/woodsman_beanie/16_headwear.png"
+        },
+        "onMannequin": "grunt_options/gear/head/woodsman_beanie/on_mannequin.png",
+        "hides_hair": false,
+        "hides_facial_hair": false,
+        "clipsHairAbove": true
+      },
+      "scav_hood": {
+        "name": "Scavenger hood",
+        "set": "scav",
+        "items": [
+          "scav_hood"
+        ],
+        "layers": {
+          "headwear": "grunt_options/gear/head/scav_hood/16_headwear.png"
+        },
+        "onMannequin": "grunt_options/gear/head/scav_hood/on_mannequin.png",
+        "hides_hair": true,
+        "hides_facial_hair": false,
+        "clipsHairAbove": true
+      },
+      "starter_wrap": {
+        "name": "Teal head wrap + goggles",
+        "set": "starter",
+        "items": [],
+        "layers": {
+          "headwear": "grunt_options/gear/head/starter_wrap/16_headwear.png"
+        },
+        "onMannequin": "grunt_options/gear/head/starter_wrap/on_mannequin.png",
+        "hides_hair": false,
+        "hides_facial_hair": false,
+        "clipsHairAbove": true
+      },
+      "wool_cap": {
+        "name": "Wool cap",
+        "set": "village_starter",
+        "items": [
+          "wool_cap"
+        ],
+        "layers": {
+          "headwear": "grunt_options/gear/head/wool_cap/16_headwear.png"
+        },
+        "onMannequin": "grunt_options/gear/head/wool_cap/on_mannequin.png",
+        "hides_hair": false,
+        "hides_facial_hair": false,
+        "clipsHairAbove": true
+      }
+    },
+    "body": {
+      "militia_tabard": {
+        "name": "Militia tabard set",
+        "set": "militia",
+        "items": [
+          "militia_tabard"
+        ],
+        "layers": {
+          "legwear": "grunt_options/gear/body/militia_tabard/05_legwear.png",
+          "footwear": "grunt_options/gear/body/militia_tabard/06_footwear.png",
+          "torso": "grunt_options/gear/body/militia_tabard/07_torso.png",
+          "belt": "grunt_options/gear/body/militia_tabard/09_belt.png",
+          "sleeves": {
+            "one_hand": "grunt_options/gear/body/militia_tabard/13_sleeves.png",
+            "two_hand": "grunt_options/gear/body/militia_tabard/13_sleeves_two_hand.png",
+            "two_hand_rifle": "grunt_options/gear/body/militia_tabard/13_sleeves_two_hand_rifle.png"
+          }
+        },
+        "onMannequin": "grunt_options/gear/body/militia_tabard/on_mannequin.png",
+        "hides_legwear": false
+      },
+      "quilted_jacket": {
+        "name": "Quilted woodsman set",
+        "set": "woodsman",
+        "items": [
+          "quilted_jacket"
+        ],
+        "layers": {
+          "legwear": "grunt_options/gear/body/quilted_jacket/05_legwear.png",
+          "footwear": "grunt_options/gear/body/quilted_jacket/06_footwear.png",
+          "torso": "grunt_options/gear/body/quilted_jacket/07_torso.png",
+          "belt": "grunt_options/gear/body/quilted_jacket/09_belt.png",
+          "sleeves": {
+            "one_hand": "grunt_options/gear/body/quilted_jacket/13_sleeves.png",
+            "two_hand": "grunt_options/gear/body/quilted_jacket/13_sleeves_two_hand.png",
+            "two_hand_rifle": "grunt_options/gear/body/quilted_jacket/13_sleeves_two_hand_rifle.png"
+          }
+        },
+        "onMannequin": "grunt_options/gear/body/quilted_jacket/on_mannequin.png",
+        "hides_legwear": false
+      },
+      "scav_coat": {
+        "name": "Hooded scavenger coat set",
+        "set": "scav",
+        "items": [
+          "scav_poncho"
+        ],
+        "layers": {
+          "legwear": "grunt_options/gear/body/scav_coat/05_legwear.png",
+          "footwear": "grunt_options/gear/body/scav_coat/06_footwear.png",
+          "torso": "grunt_options/gear/body/scav_coat/07_torso.png",
+          "belt": "grunt_options/gear/body/scav_coat/09_belt.png",
+          "sleeves": {
+            "one_hand": "grunt_options/gear/body/scav_coat/13_sleeves.png",
+            "two_hand": "grunt_options/gear/body/scav_coat/13_sleeves_two_hand.png",
+            "two_hand_rifle": "grunt_options/gear/body/scav_coat/13_sleeves_two_hand_rifle.png"
+          }
+        },
+        "onMannequin": "grunt_options/gear/body/scav_coat/on_mannequin.png",
+        "hides_legwear": false
+      },
+      "starter_poncho": {
+        "name": "Teal poncho starter set",
+        "set": "starter",
+        "items": [],
+        "layers": {
+          "legwear": "grunt_options/gear/body/starter_poncho/05_legwear.png",
+          "footwear": "grunt_options/gear/body/starter_poncho/06_footwear.png",
+          "torso": "grunt_options/gear/body/starter_poncho/07_torso.png",
+          "belt": "grunt_options/gear/body/starter_poncho/09_belt.png",
+          "sleeves": {
+            "one_hand": "grunt_options/gear/body/starter_poncho/13_sleeves.png",
+            "two_hand": "grunt_options/gear/body/starter_poncho/13_sleeves_two_hand.png",
+            "two_hand_rifle": "grunt_options/gear/body/starter_poncho/13_sleeves_two_hand_rifle.png"
+          }
+        },
+        "onMannequin": "grunt_options/gear/body/starter_poncho/on_mannequin.png",
+        "hides_legwear": false
+      },
+      "patched_tunic": {
+        "name": "Patched tunic",
+        "set": "village_starter",
+        "items": [
+          "patched_tunic"
+        ],
+        "layers": {
+          "legwear": "grunt_options/gear/body/patched_tunic/05_legwear.png",
+          "footwear": "grunt_options/gear/body/patched_tunic/06_footwear.png",
+          "torso": "grunt_options/gear/body/patched_tunic/07_torso.png",
+          "belt": "grunt_options/gear/body/patched_tunic/09_belt.png",
+          "sleeves": {
+            "one_hand": "grunt_options/gear/body/patched_tunic/13_sleeves.png",
+            "two_hand": "grunt_options/gear/body/patched_tunic/13_sleeves_two_hand.png",
+            "two_hand_rifle": "grunt_options/gear/body/patched_tunic/13_sleeves_two_hand_rifle.png"
+          }
+        },
+        "onMannequin": "grunt_options/gear/body/patched_tunic/on_mannequin.png",
+        "hides_legwear": false
+      },
+      "hide_vest": {
+        "name": "Hide vest",
+        "set": "village_starter",
+        "items": [
+          "hide_vest"
+        ],
+        "layers": {
+          "legwear": "grunt_options/gear/body/hide_vest/05_legwear.png",
+          "footwear": "grunt_options/gear/body/hide_vest/06_footwear.png",
+          "torso": "grunt_options/gear/body/hide_vest/07_torso.png",
+          "belt": "grunt_options/gear/body/hide_vest/09_belt.png",
+          "sleeves": {
+            "one_hand": "grunt_options/gear/body/hide_vest/13_sleeves.png",
+            "two_hand": "grunt_options/gear/body/hide_vest/13_sleeves_two_hand.png",
+            "two_hand_rifle": "grunt_options/gear/body/hide_vest/13_sleeves_two_hand_rifle.png"
+          }
+        },
+        "onMannequin": "grunt_options/gear/body/hide_vest/on_mannequin.png",
+        "hides_legwear": false
+      }
+    },
+    "backpack": {
+      "military_ruck": {
+        "name": "Military ruck",
+        "set": "scav",
+        "items": [
+          "military_ruck"
+        ],
+        "layers": {
+          "pack_back": "grunt_options/gear/backpack/military_ruck/00_pack_back.png",
+          "pack_straps": "grunt_options/gear/backpack/military_ruck/08_pack_straps.png"
+        },
+        "onMannequin": "grunt_options/gear/backpack/military_ruck/on_mannequin.png"
+      },
+      "school_bag": {
+        "name": "School bag",
+        "set": null,
+        "items": [
+          "school_bag"
+        ],
+        "layers": {
+          "pack_back": "grunt_options/gear/backpack/school_bag/00_pack_back.png",
+          "pack_straps": "grunt_options/gear/backpack/school_bag/08_pack_straps.png"
+        },
+        "onMannequin": "grunt_options/gear/backpack/school_bag/on_mannequin.png"
+      }
+    },
+    "weapon": {
+      "militia_carbine": {
+        "name": "Militia carbine",
+        "set": "militia",
+        "items": [
+          "militia_carbine"
+        ],
+        "layers": {
+          "weapon": "grunt_options/gear/weapon/militia_carbine/10_weapon.png"
+        },
+        "onMannequin": "grunt_options/gear/weapon/militia_carbine/on_mannequin.png",
+        "pose": "two_hand",
+        "armVariant": "two_hand_rifle",
+        "blocksOffhand": true,
+        "grip": "handR on the grip (right hip) + handL on the fore-end (chest)"
+      },
+      "pipe_rifle": {
+        "name": "Pipe rifle",
+        "set": "starter",
+        "items": [
+          "pipe_rifle"
+        ],
+        "layers": {
+          "weapon": "grunt_options/gear/weapon/pipe_rifle/10_weapon.png"
+        },
+        "onMannequin": "grunt_options/gear/weapon/pipe_rifle/on_mannequin.png",
+        "pose": "two_hand",
+        "armVariant": "two_hand_rifle",
+        "blocksOffhand": true,
+        "grip": "handR on the grip (right hip) + handL on the fore-end (chest)"
+      },
+      "felling_axe": {
+        "name": "Felling axe (big)",
+        "set": "woodsman",
+        "items": [
+          "felling_axe"
+        ],
+        "layers": {
+          "weapon": "grunt_options/gear/weapon/felling_axe/10_weapon.png"
+        },
+        "onMannequin": "grunt_options/gear/weapon/felling_axe/on_mannequin.png",
+        "pose": "two_hand",
+        "armVariant": "two_hand",
+        "blocksOffhand": true,
+        "grip": "handR (hip) + handL (low-left): haft grip"
+      },
+      "recruit_spear": {
+        "name": "Recruit spear",
+        "set": null,
+        "items": [],
+        "layers": {
+          "weapon": "grunt_options/gear/weapon/recruit_spear/10_weapon.png"
+        },
+        "onMannequin": "grunt_options/gear/weapon/recruit_spear/on_mannequin.png",
+        "pose": "one_hand",
+        "armVariant": "one_hand",
+        "blocksOffhand": false,
+        "grip": "handL"
+      },
+      "scav_hatchet": {
+        "name": "Scav hatchet",
+        "set": "scav",
+        "items": [],
+        "layers": {
+          "weapon": "grunt_options/gear/weapon/scav_hatchet/10_weapon.png"
+        },
+        "onMannequin": "grunt_options/gear/weapon/scav_hatchet/on_mannequin.png",
+        "pose": "one_hand",
+        "armVariant": "one_hand",
+        "blocksOffhand": false,
+        "grip": "handL"
+      },
+      "nat_shiv": {
+        "name": "Shiv",
+        "set": null,
+        "items": [
+          "nat_shiv"
+        ],
+        "layers": {
+          "weapon": "grunt_options/gear/weapon/nat_shiv/10_weapon.png"
+        },
+        "onMannequin": "grunt_options/gear/weapon/nat_shiv/on_mannequin.png",
+        "pose": "one_hand",
+        "armVariant": "one_hand",
+        "blocksOffhand": false,
+        "grip": "handL"
+      }
+    }
+  },
+  "sets": {
+    "starter": {
+      "name": "Basic starter kit (teal grunt refresh)",
+      "head": "starter_wrap",
+      "body": "starter_poncho",
+      "weapon": "pipe_rifle",
+      "sprite": "grunt_options/sets/grunt_set_starter.png",
+      "walkStrip": "grunt_options/sets/grunt_set_starter_strip2.png"
+    },
+    "militia": {
+      "name": "Militia recruit",
+      "head": "militia_helmet",
+      "body": "militia_tabard",
+      "weapon": "militia_carbine",
+      "sprite": "grunt_options/sets/grunt_set_militia.png",
+      "walkStrip": "grunt_options/sets/grunt_set_militia_strip2.png"
+    },
+    "woodsman": {
+      "name": "Woodsman",
+      "head": "woodsman_beanie",
+      "body": "quilted_jacket",
+      "weapon": "felling_axe",
+      "sprite": "grunt_options/sets/grunt_set_woodsman.png",
+      "walkStrip": "grunt_options/sets/grunt_set_woodsman_strip2.png"
+    },
+    "scav": {
+      "name": "Hooded scavenger",
+      "head": "scav_hood",
+      "body": "scav_coat",
+      "weapon": "scav_hatchet",
+      "backpack": "military_ruck",
+      "sprite": "grunt_options/sets/grunt_set_scav.png",
+      "walkStrip": "grunt_options/sets/grunt_set_scav_strip2.png"
+    }
+  },
+  "loadouts": {
+    "fuel_pump_recruit": {
+      "name": "Fuel-pump recruit, shiv only",
+      "weapon": "nat_shiv",
+      "sprite": "grunt_options/loadouts/grunt_fuel_pump_recruit.png"
+    },
+    "mannequin": {
+      "name": "Empty slots (mannequin)",
+      "sprite": "grunt_options/loadouts/grunt_mannequin.png"
+    }
+  },
+  "starterKit": {
+    "note": "Vixie (Slice 4): Grunts 1 and 2 start in a white Patched Tunic; the Wool Cap and Hide Vest are white loot. Gear ids = the item base keys in data/items.js, so G.GruntGear.partFor picks these layers by key.",
+    "startBody": "patched_tunic",
+    "loot": {
+      "head": [
+        "wool_cap"
+      ],
+      "body": [
+        "hide_vest"
+      ]
+    },
+    "preview": "grunt_options/preview_starter_kit.png"
+  }
+}

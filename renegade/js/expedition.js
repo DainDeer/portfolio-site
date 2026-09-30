@@ -114,6 +114,22 @@
     return null;
   };
 
+  // Vixie (Slice 4): the names of the loadout's units that would fight with bare fists (no weapon, and their own
+  // fallback is the Fists: the Basic body / Vanguard with an empty weapon slot; a Grunt has its Shiv). gear: a run's
+  // taken gear (else the loadout's, looked up in the stash).
+  X.unarmedUnits = function (lo, gear) {
+    const s = G.State && G.state, out = [], fists = (w) => !w || w === "nat_fists";
+    if (!s || !lo) return out;
+    const body = G.State.body(lo.bodyId);
+    if (body) {
+      const has = gear ? !!gear.weapon : !!(lo.gear && lo.gear.weapon && s.stash.items.some((i) => i.uid === lo.gear.weapon));
+      const tpl = (body.cls && DATA.bodies.classes[body.cls]) || DATA.bodies.basicBody, nat = tpl.naturalWeapon || "nat_fists";   // as G.Battle.unitFromBody
+      if (!has && fists(nat)) out.push(body.name || G.State.bodyTitle(body));
+    }
+    for (const gid of lo.grunts || []) { const g = s.grunts.find((x) => x.uid === gid); if (!g) continue;
+      if (!(g.gear && g.gear.weapon) && fists(g.weapon)) out.push(G.Allies ? G.Allies.name(g) : g.name); }
+    return out;
+  };
   X.start = function (lo, seed, zone) {
     const s = G.state;
     zone = zone || lo.zone || "a";
@@ -126,9 +142,8 @@
     const take = (uid) => { const i = s.stash.items.findIndex((x) => x.uid === uid); return i >= 0 ? s.stash.items.splice(i, 1)[0] : null; };
     const gear = {};
     for (const slot in lo.gear) if (lo.gear[slot]) { const it = take(lo.gear[slot]); if (it) gear[slot] = it; }
-    // no weapon equipped -> free fallback weapon from the outpost (config.deploy.fallbackWeapon), one per deploy
-    const FW = CFG().deploy.fallbackWeapon; let fallback = null;
-    if (!gear.weapon && FW) { gear.weapon = fallback = G.Items.make(FW.base, FW.rarity, FW.ilvl, G.rng); }
+    // Vixie (Slice 4): no free weapon any more; an unarmed unit fights with bare fists (config.unarmed). The deploy
+    // button asks first (X.unarmedUnits).
     // every run starts with a basic backpack (config.deploy.freeBackpack): none picked -> one from the stash, else a free one
     const FB = CFG().deploy.freeBackpack; let freePack = null;
     if (!gear.backpack && FB) { const own = s.stash.items.find((i) => i.base === FB.base); if (own) gear.backpack = take(own.uid); else gear.backpack = freePack = G.Items.make(FB.base, FB.rarity, FB.ilvl, G.rng); }
@@ -164,7 +179,7 @@
     X.log(`Expedition ${s.runCount} begins in ${G.State.bodyTitle(body)}, ${DATA.zones.list[zone].name}. Seed ${seed}.`);
     if (freePack) { s.run.freeBackpack = freePack.uid; X.log(`No backpack: the outpost hands you a ${DATA.items.bases[freePack.base].name} (free).`, "good"); }
     else if (gear.backpack && !(lo.gear || {}).backpack) X.log(`You grab your ${DATA.items.bases[gear.backpack.base].name} from the stash.`);
-    if (fallback) { s.run.fallbackWeapon = fallback.uid; X.log(`No weapon equipped: the outpost hands you a ${G.Items.displayName ? G.Items.displayName(fallback) : DATA.items.bases[fallback.base].name} (free, one per deploy).`, "good"); }
+    for (const n of X.unarmedUnits(lo, gear)) X.log(`${n} is unarmed: bare fists.`, "warn");
     // a zone whose insertion point is a location (Zone B: B1) rolls its arrival there (ASSUMPTION)
     const insNode = s.maps[zone].nodes[ins];
     if (G.Map.loc(insNode)) X.arrive(insNode, false);

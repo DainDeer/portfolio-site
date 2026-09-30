@@ -3,7 +3,9 @@
 // slot, composited at runtime (js/gruntlook.js) in layerOrder. Paths are relative to assets/grunt_options/.
 //   parts.head[id]     { headwear, hidesHair }          parts.body[id] { legwear, footwear, torso, belt, sleeves{armVariant} }
 //   parts.backpack[id] { pack_back, pack_straps }        parts.weapon[id] { weapon, armVariant (one_hand | two_hand | two_hand_rifle) }
-//   items.<slot>[itemBase] = part id (an item without an entry uses fallback.<slot>; a weapon falls back to wtype_<wtype>)
+//   A part whose id IS the item's base key wins, so Smudge's own layers for an item take over as soon as they're in
+//   grunt_options.json (js/gruntgear.js merges its "gear" at load; a gear entry's "items" list maps too). Else
+//   items.<slot>[itemBase] = part id (a stand-in); else fallback.<slot>; a weapon falls back to wtype_<wtype>.
 // Empty slots: head / pack nothing, body the mannequin undershirt + shorts (barefoot), weapon the Grunt's own (innate) weapon.
 window.DATA = window.DATA || {};
 DATA.gruntLook = {
@@ -57,6 +59,8 @@ DATA.gruntLook = {
   // helmet, Hunter's Mask -> the hood, Padded Vest -> the quilted jacket, Hunter's Coat -> the scav coat, Scav Satchel ->
   // the school bag); the woodsman beanie / quilted jacket / starter wrap + poncho have art but no item yet.
   items: {
+    // Vixie's starter / basic items (patched_tunic, hide_vest, wool_cap) need no entry: Smudge's layers (26801b2) are in
+    // grunt_options.json under the item's own key, merged at load.
     head: { militia_helmet: "militia_helmet", scav_hood: "scav_hood", scrap_helmet: "militia_helmet", hunter_mask: "scav_hood" },
     body: { militia_vest: "militia_tabard", scav_poncho: "scav_coat", padded_vest: "quilted_jacket", hunter_coat: "scav_coat" },
     backpack: { school_bag: "school_bag", military_ruck: "military_ruck", scav_satchel: "school_bag" },

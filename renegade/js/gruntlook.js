@@ -6,6 +6,10 @@
   const G = root.G, SP = G.Sprites, GG = G.GruntGear;
   const GL = G.GruntLook = { imgs: {}, state: {} };
   const FS = () => DATA.gruntLook.frameSize;
+  // Smudge's grunt_options.json: new gear entries (her real layers for an item, keyed by its base) take over the
+  // stand-ins without a code change (G.GruntGear.mergeOptions). Until it has loaded, the static DATA.gruntLook parts draw.
+  GL.options = (typeof fetch === "function" ? fetch(DATA.sprites.basePath + DATA.gruntLook.base + "grunt_options.json").then((r) => (r.ok ? r.json() : null)).catch(() => null) : Promise.resolve(null))
+    .then((j) => { const added = j && GG ? GG.mergeOptions(j) : []; if (added.length && G.state && G.UI && G.UI.render) G.UI.render(); return added; });
   const load = (file) => GL.imgs[file] || (GL.imgs[file] = new Promise((res) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = DATA.sprites.basePath + file; }));
   // headwear clipsHairAbove: per column, hair above the hat's top edge is cut
   function clipHair(hairC, hat) {

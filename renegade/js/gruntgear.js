@@ -9,12 +9,41 @@
     const K = L().looks, x = hash(String((g && (g.uid || g.name)) || "grunt"));
     return { skin: K.skins[x % K.skins.length], hair: K.hair[(x >>> 4) % K.hair.length], hairColour: K.hairColours[(x >>> 8) % K.hairColours.length], beard: ((x >>> 12) % 100) < K.beardPct };
   };
+  // item -> part id: a part keyed by the item's base (Smudge's own layers) > one listing it in its grunt_options.json
+  // "items" > the stand-in map (DATA.gruntLook.items) > wtype_<wtype> (weapons) / fallback.<slot>
   GG.partFor = function (slot, item) {
-    const P = L().parts, I = L().items, key = slot === "pack" ? "backpack" : slot;
+    const P = L().parts, I = L().items, J = GG.optItems, key = slot === "pack" ? "backpack" : slot;
     if (!item) return null;
     const base = typeof item === "string" ? item : item.base, bd = G.Items.base(base) || {};
+    if (P[key] && P[key][base]) return base;
+    const j = (J[key] || {})[base]; if (j && P[key][j]) return j;
     if (key === "weapon") { const id = I.weapon[base] || (bd.wtype && P.weapon["wtype_" + bd.wtype] ? "wtype_" + bd.wtype : null); return id && P.weapon[id] ? id : null; }
     const id = (I[key] || {})[base] || L().fallback[key]; return id && P[key][id] ? id : null;
+  };
+  // Smudge's assets/grunt_options/grunt_options.json (fetched at load by js/gruntlook.js; read from disk by the headless
+  // tests and tools/asset-manifest.js): every gear entry not already in DATA.gruntLook.parts is added (paths made
+  // relative to grunt_options/), and each entry's "items" list maps those item bases to it. Returns the ids added.
+  GG.optItems = {};
+  GG.mergeOptions = function (opt) {
+    const added = [], P = L().parts, strip = (p) => (typeof p === "string" ? p.replace(/^grunt_options\//, "") : p);
+    const gear = (opt && opt.gear) || {};
+    for (const slot in gear) {
+      if (!P[slot]) continue;
+      for (const id in gear[slot]) {
+        const e = gear[slot][id] || {}, ly = e.layers || {};
+        if (!P[slot][id]) {
+          let part = null;
+          if (slot === "head" && ly.headwear) part = { headwear: strip(ly.headwear), hidesHair: !!e.hides_hair };
+          else if (slot === "body" && ly.torso) { part = {}; for (const k of ["legwear", "footwear", "torso", "belt"]) if (ly[k]) part[k] = strip(ly[k]);
+            if (ly.sleeves) { part.sleeves = {}; for (const v in ly.sleeves) part.sleeves[v] = strip(ly.sleeves[v]); } if (e.hides_legwear) delete part.legwear; }
+          else if (slot === "backpack" && (ly.pack_back || ly.pack_straps)) part = { pack_back: strip(ly.pack_back), pack_straps: strip(ly.pack_straps) };
+          else if (slot === "weapon" && ly.weapon) part = { weapon: strip(ly.weapon), armVariant: e.armVariant || (e.pose === "two_hand" ? "two_hand" : "one_hand") };
+          if (part) { P[slot][id] = part; added.push(slot + "/" + id); }
+        }
+        if (P[slot][id]) for (const b of e.items || []) { (GG.optItems[slot] = GG.optItems[slot] || {})[b] = id; }
+      }
+    }
+    return added;
   };
   // the look spec + its sprite key ("gl_" + a hash of the spec). null for Veterans / the core ally (they keep their sprites)
   GG.look = function (g) {

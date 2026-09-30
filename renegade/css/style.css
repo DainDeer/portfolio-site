@@ -392,3 +392,8 @@ button.promote { background: #6a5a1a; }
 .gear-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 2px; border: 1px solid #4a4030; border-radius: 4px; background: #221f16; font-size: 12px; }
 .gear-chip.empty { opacity: .7; }
 .grunt-gear-btn { margin-left: 6px; padding: 1px 8px; font-size: 12px; }
+/* Vixie (Slice 4): the unarmed deploy confirm; 44 px tap targets */
+.confirm-unarmed { max-width: 420px; }
+.confirm-unarmed .unarmed-list { margin: 6px 0 12px 18px; }
+.confirm-row { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+.confirm-btn { min-height: 44px; min-width: 96px; padding: 0 18px; font-size: 15px; }

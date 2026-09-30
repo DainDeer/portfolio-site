@@ -31,8 +31,17 @@ DATA.items = {
     ar16_stoner:   { name: "AR-16 \"Stoner\"",  slot: "weapon", family: "prefall",   style: "gun",    skill: "marksmanship", dmg: 7,  type: "kinetic", interval: 0.3, range: 32, acc: 62, mag: 30, reload: 2.3, jam: 5,  weight: 3.3, req: 10, dropWeight: 2,  sfx: "sfx_shot_rifle" },
     rust_machete:  { name: "Rust Machete",      slot: "weapon", family: "wasteland", style: "blades", skill: "blades",       dmg: 11, type: "kinetic", interval: 0.7, range: 1.5,acc: 65, mag: 0,  reload: 0,   jam: 0,  weight: 1.5, req: 1,  dropWeight: 8,  tag: "bleed", sfx: "sfx_melee_hit" },
     knuckle_wraps: { name: "Knuckle Wraps",     slot: "weapon", family: "wasteland", style: "fists",  skill: "brawling",     dmg: 7,  type: "kinetic", interval: 0.6, range: 1.0,acc: 70, mag: 0,  reload: 0,   jam: 0,  weight: 0.3, req: 1,  dropWeight: 6,  tag: "stagger", sfx: "sfx_melee_hit" },
-    scrap_helmet:  { name: "Scrap Helmet",      slot: "head",     armor: 1, domedBonus: 3, weight: 1.2, req: 0, dropWeight: 7 },
-    padded_vest:   { name: "Padded Vest",       slot: "body",     armor: 2, weight: 3.0, req: 0, dropWeight: 7 },
+    scrap_helmet:  { name: "Scrap Helmet",      slot: "head",     armor: 1, domedBonus: 3, weight: 1.2, req: 0, dropWeight: 4 },   // 7 -> 4: shares the basic-head weight with the Wool Cap (3)
+    padded_vest:   { name: "Padded Vest",       slot: "body",     armor: 2, weight: 3.0, req: 0, dropWeight: 4 },   // 7 -> 4: shares the basic-body weight with the Hide Vest (3)
+    // Vixie (Slice 4) starter kit + basics. [DRAFT] stats at the bottom of the white bands: the Tunic is the weakest body
+    // item (armor 1, nothing else; the Scav Poncho is armor 1 + 3 evasion) and never drops (starter kit / looted off a
+    // Grunt); the Cap is the Scrap Helmet without its dome bonus, lighter; the Hide Vest is the Padded Vest's armor, heavier.
+    // Drop weights: the new basics split the old basic weight (Helmet / Vest 7 -> 4 + 3), so set pieces (~5.8% of drops)
+    // and the basic share of each slot don't move.
+    // Art: Smudge's 26801b2 (icons item_<id>, paper-doll layers in grunt_options.json under the same ids).
+    patched_tunic: { name: "Patched Tunic",     slot: "body",     armor: 1, weight: 1.0, req: 0, dropWeight: 0, sprite: "item_patched_tunic" },
+    wool_cap:      { name: "Wool Cap",          slot: "head",     armor: 1, weight: 0.4, req: 0, dropWeight: 3, sprite: "item_wool_cap" },
+    hide_vest:     { name: "Hide Vest",         slot: "body",     armor: 2, weight: 3.5, req: 0, dropWeight: 3, sprite: "item_hide_vest" },
     school_bag:    { name: "School Bag",        slot: "backpack", carryKg: 8,  weight: 0.8, req: 0, dropWeight: 4, noScale: true },
     military_ruck: { name: "Military Ruck",     slot: "backpack", carryKg: 20, moveSpeedPct: -3, weight: 2.0, req: 0, dropWeight: 2, noScale: true },
     // Slice 3 §5 set pieces (data/sets.js). evasion / checkSkill are base stats like armor (evasion scales with ilvl).
@@ -55,7 +64,7 @@ DATA.items = {
     quest_pump_valve:  { name: "Pump valve",    slot: "quest", quest: "dunn_pump_house", weight: 3,   dropWeight: 0, noScale: true, sprite: "item_quest_valve" },
     quest_ilse_ledger: { name: "Ilse's ledger", slot: "quest", quest: "ilse_ledger",     weight: 0.5, dropWeight: 0, noScale: true, sprite: "item_quest_ledger" },
     // natural / enemy weapons (not lootable: dropWeight 0)
-    nat_fists:     { name: "Fists",             slot: "weapon", natural: true, style: "fists",  skill: "brawling",     dmg: 4, type: "kinetic", interval: 0.7, range: 1.0, acc: 65, mag: 0, reload: 0, jam: 0, weight: 0, dropWeight: 0, sprite: "item_fists", sfx: "sfx_melee_hit" },
+    nat_fists:     Object.assign({ name: "Fists",   slot: "weapon", natural: true, style: "fists",  skill: "brawling",     dmg: 4, type: "kinetic", interval: 0.7, range: 1.0, acc: 65, mag: 0, reload: 0, jam: 0, weight: 0, dropWeight: 0, sprite: "item_fists", sfx: "sfx_melee_hit" }, (DATA.config && DATA.config.unarmed) || {}),   // Vixie: stats from config.unarmed
     nat_shiv:      { name: "Shiv",              slot: "weapon", natural: true, style: "blades", skill: "blades",       dmg: 6, type: "kinetic", interval: 0.6, range: 1.2, acc: 65, mag: 0, reload: 0, jam: 0, weight: 0, dropWeight: 0, sprite: "item_rust_machete", sfx: "sfx_melee_hit" },
     nat_pistol:    { name: "Scrap Pistol",      slot: "weapon", natural: true, style: "gun",    skill: "marksmanship", dmg: 6, type: "kinetic", interval: 0.8, range: 12, acc: 50, mag: 6, reload: 2.0, jam: 8, weight: 0, dropWeight: 0, sprite: "item_glokk_17", sfx: "sfx_shot_pistol" },
     bone_claws:    { name: "Bone Claws",        slot: "weapon", natural: true, style: "feral",  skill: "feral",        dmg: 7, type: "bio", interval: 0.8, range: 1.2, acc: 65, mag: 0, reload: 0, jam: 0, weight: 0, dropWeight: 0, sfx: "sfx_claw" },

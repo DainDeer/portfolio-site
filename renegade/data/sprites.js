@@ -395,6 +395,9 @@ DATA.sprites = {
   item_bass_guitar:      { file: "items/item_bass_guitar.png",      shape: "bar",      color: "#a03a2a", size: 1, pad: 2 },
   item_scrap_helmet:     { file: "items/item_scrap_helmet.png",     shape: "circle",   color: "#7a7a6a", size: 1, pad: 2 },
   item_padded_vest:      { file: "items/item_padded_vest.png",      shape: "square",   color: "#6a5a4a", size: 1, pad: 2 },
+  item_patched_tunic:    { file: "items/item_patched_tunic.png",    shape: "square",   color: "#b49e70", size: 1, pad: 2 },   // Vixie's starter kit (Smudge 26801b2)
+  item_hide_vest:        { file: "items/item_hide_vest.png",        shape: "square",   color: "#5e4a30", size: 1, pad: 2 },
+  item_wool_cap:         { file: "items/item_wool_cap.png",         shape: "circle",   color: "#4a5636", size: 1, pad: 2 },
   item_school_bag:       { file: "items/item_school_bag.png",       shape: "square",   color: "#c05050", size: 1, pad: 2 },
   item_military_ruck:    { file: "items/item_military_ruck.png",    shape: "square",   color: "#5a6a3a", size: 1, pad: 2 },
   item_fists:            { file: "items/item_fists.png",            shape: "circle",   color: "#d0b090", size: 1, pad: 2 },

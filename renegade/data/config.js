@@ -25,9 +25,9 @@ DATA.config = {
     earlyScore: 8,            // ASSUMPTION: after the tutorial (first human body) score jumps to doc's "Early 8-12" low end
     gruntCost: 1,
     startingGrunts: 2,
-    tutorialReissueStarterGear: true, // ASSUMPTION: lost starter Pipe Rifle is re-issued while still in the tutorial
-    // Design call on ff17090: deploying with no weapon equipped -> the outpost issues this one for free (unlimited, one per deploy)
-    fallbackWeapon: { base: "pipe_rifle", rarity: "white", ilvl: 1 },
+    tutorialReissueStarterGear: true, // ASSUMPTION: the lost starter pistol (Zip Gun, DATA.items.startingGear) is re-issued while still in the tutorial
+    // Vixie (Slice 4): no more free Pipe Rifle for an unarmed deploy. A unit with no weapon fights with bare fists
+    // (DATA.config.unarmed); the deploy button asks first ("<Name> is unarmed. Deploy anyway?").
     // Megan's playtest: every run starts with a basic backpack. No backpack picked -> a School Bag from the stash is
     // put on if you have one (no duplicates), otherwise the outpost issues this one free. Kept if you extract.
     freeBackpack: { base: "school_bag", rarity: "white", ilvl: 1 }
@@ -35,6 +35,10 @@ DATA.config = {
   // Grunt recruiting (design call on b00ebee, replaces the old free refill; v0.4 §9.1/§11.3: recruits cost Food + Water).
   // During the tutorial the roster is topped up to deploy.startingGrunts for free. After it, dead Grunts are gone until
   // you recruit more at the Recruitment lot (town view) for recruitCost from the stockpile, up to rosterCap Grunts.
+  // Vixie (Slice 4): bare fists, what a unit with no weapon fights with (DATA.items.bases.nat_fists takes these; not an
+  // item: never dropped, looted or stashed). [DRAFT] weak on purpose: was dmg 4 / 0.7 s / acc 65 (~5.7 dps), now ~3.8 dps
+  // (the Shiv, a Grunt's innate weapon, is 10).
+  unarmed: { dmg: 3, interval: 0.8, range: 1.0, acc: 60 },
   grunts: {
     recruitCost: { food: 3, water: 3 },
     rosterCap: 5,
@@ -42,9 +46,10 @@ DATA.config = {
     // stash at the outpost through the paper doll. Gear on a Grunt that dies in battle stays on its body in the location.
     slots: { weapon: ["weapon"], head: ["head"], body: ["body"], pack: ["backpack"] },
     innateWeapon: "nat_shiv",        // §F: what a Grunt fights with when its weapon slot is empty (new recruits: just a shiv)
-    // §F starting kit: the new game's Grunts (and the tutorial's free top-ups) get these equipped, by roster position.
-    // [JUDGMENT] no basic head / body item exists in data (the starter wrap + poncho art has no item), so weapons only.
-    startKit: [{ weapon: { base: "pipe_rifle", rarity: "white", ilvl: 1 } }, { weapon: { base: "rust_machete", rarity: "white", ilvl: 1 } }],
+    // §F starting kit: the new game's Grunts (and the tutorial's free top-ups) get these equipped, by roster position
+    // (Vixie: fixed, no randomness; both wear a white Patched Tunic). Recruits get nothing (mannequin + the innate shiv).
+    startKit: [{ weapon: { base: "pipe_rifle", rarity: "white", ilvl: 1 }, body: { base: "patched_tunic", rarity: "white", ilvl: 1 } },
+               { weapon: { base: "rust_machete", rarity: "white", ilvl: 1 }, body: { base: "patched_tunic", rarity: "white", ilvl: 1 } }],
     gearCountsTowardCarry: false,    // [JUDGMENT] today's rule kept: a Grunt's gear isn't in your carried kg (its pack adds capacity)
     nameMaxLen: 28           // "First Last" (Slice 3 §1; the nickname is shown separately)
   },
