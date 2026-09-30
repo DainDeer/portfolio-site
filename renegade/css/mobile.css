@@ -93,6 +93,7 @@
      room is drawn bigger (min-width 800 px, 820 portrait) and scrolls inside its box like the zone map; js/touch.js centres it on
      the wheels when you walk in and keeps the scroll while you turn them. */
   .site-obj.wheel .wheel-btns { gap: 4px; }
+  .site-obj.exit, .site-obj.extract { z-index: 2; }   /* Slice 5 D: the way out + the extraction hotspot keep their whole 44 px hit area (a neighbour's ::after overlapped it; wheels stay above at 3) */
   .site-obj.wheel .wheel-btns .wheel-btn { width: 44px; height: 44px; }   /* the spin-button art scales with it */
   .exp-map:has(> .site-wrap .site-obj.wheel) { overflow: auto; overscroll-behavior: contain; }
   .exp-map > .site-wrap:has(.site-obj.wheel) { flex: none; min-width: 800px; }   /* 700 px left the wheel buttons over the mural centre in ~1 save in 3 */
@@ -120,6 +121,11 @@
   .tc-esc.queued { outline: 2px solid #ffe080; }
   .tc-esc.disabled { opacity: .45; }
   .tc-cancel { background: #4a1c1c; border-color: #d06050; color: #ffd8d0; }   /* shown only while aiming (BV.updateTouch) */
+
+  /* Slice 4 §F paper doll (Gear… / Equip… / the Grunt screen): the modal's desktop min-width (min(92vw, 640px)) is
+     wider than a portrait modal's content box, so the item list ran 7 px out of it (sideways scroll) */
+  .doll-modal { min-width: 0; }
+  .doll-list { min-width: 0; }
 }
 
 /* ---------- landscape phones (main target) ---------- */
@@ -150,6 +156,20 @@
   .abl-btn { flex-basis: 100%; }
   .tp-panel { max-height: 45dvh; overflow-y: auto; display: flex; flex-direction: column; }
   .tp-panel > .tp-items, .tp-panel > .tp-queue { order: -1; }   /* kits + queue above the help text, so the queue isn't below the fold */
+
+  /* Slice 4 §G/§H title screen (css/title.css, loaded after this file: hence the extra "body"). A new save's difficulty
+     panel is 342 px tall and covered the whole logo on a landscape phone (the fields panel fits under it). Here the
+     panel goes to the right (clear of the sound toggle's column) and the logo to the middle of the space left of it. */
+  body #title:has(.title-panel.diff) .title-panel { left: auto; right: max(56px, calc(env(safe-area-inset-right) + 50px)); transform: none; }
+  body #title:has(.title-panel.diff) .title-logo { left: calc((100vw - 392px - 56px) / 2); top: 50%; transform: translate(-50%, -50%) scale(.667); transform-origin: 50% 50%; }   /* 2x native, as in title.css landscape */
+}
+@media (pointer: coarse) and (max-height: 500px) and (orientation: landscape) and (max-width: 800px) {
+  body #title:has(.title-panel.diff) .title-logo { transform: translate(-50%, -50%) scale(.5); }   /* 740 px: 1.5x native to fit left of the panel */
+}
+/* the title screen's corner bits stay clear of a landscape notch / rounded corners (env() is 0 everywhere else) */
+@media (pointer: coarse) and (max-width: 940px), (pointer: coarse) and (max-height: 500px) {
+  body #title .title-sound { right: max(6px, env(safe-area-inset-right)); }
+  body #title .title-version { left: max(10px, env(safe-area-inset-left)); }
 }
 
 /* ---------- portrait phones: usable, stacked ---------- */

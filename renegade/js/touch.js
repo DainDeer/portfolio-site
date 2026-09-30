@@ -72,10 +72,44 @@
     box.scrollLeft += cx - (b.left + b.width / 2); box.scrollTop += cy - (b.top + b.height / 2);
     T.siteScroll = { key, x: box.scrollLeft, y: box.scrollTop };
   };
+  // phones: each pods wheel's ↺ / ↻ pair (44 px buttons, css/mobile.css) hangs under the wheel by default. In some saves
+  // that is right over the mural (2 in 10 fresh saves at 844x390 covered its middle: half the mural took no tap) or
+  // another wheel. After each render pick, per wheel, a spot that keeps the pair inside the room view and off the mural,
+  // the other wheels and the other pairs: under or over the wheel, slid sideways by as little as it takes (at most half
+  // the pair, so it still reads as that wheel's pair). The way out and the extraction hotspot (Slice 5 D) count like the
+  // mural. Grazing another object's 44 px hit area costs its area; each px slid costs
+  // 10 (a pair far off its wheel reads as the neighbour's). Inline styles; no rng.
+  T.placeWheelBtns = function () {
+    const wrap = document.querySelector(".exp-map > .site-wrap"); if (!wrap) return;
+    const pairs = [...wrap.querySelectorAll(".site-obj.wheel > .wheel-btns")];
+    if (!pairs.length || getComputedStyle(pairs[0]).display === "none") return;   // mouse: no buttons, nothing to place
+    const R = (e) => e.getBoundingClientRect(), W = R(wrap);
+    const area = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+    const hit = (r) => { const w = Math.max(r.width, 44), h = Math.max(r.height, 44), x = r.left + r.width / 2, y = r.top + r.height / 2; return { left: x - w / 2, right: x + w / 2, top: y - h / 2, bottom: y + h / 2 }; };   // the 44 px hit area (mobile.css ::after)
+    const objs = [...wrap.querySelectorAll(".site-obj")].map((e) => ({ e, r: hit(R(e)), hard: ["mural", "wheel", "exit", "extract"].some((k) => e.classList.contains(k)) })), done = [];
+    const put = (b, up, dx) => { Object.assign(b.style, up ? { top: "auto", bottom: "72%" } : { top: "", bottom: "" }); b.style.marginLeft = dx ? dx + "px" : ""; };
+    for (const b of pairs) {
+      const wheel = b.parentElement, half = Math.round(b.offsetWidth / 2); let best = null;
+      const cost = (up, dx) => {
+        put(b, up, dx); const r = R(b); let hard = r.width * r.height - area(r, W), soft = Math.abs(dx) * 10;
+        for (const o of objs) if (o.e !== wheel) { if (o.hard) hard += area(r, o.r); else soft += area(r, o.r); }
+        for (const d of done) hard += area(r, d);
+        return (hard > 0.5 ? 1e6 + hard * 100 : 0) + soft;
+      };
+      for (let m = 0; m <= half; m += 2) {
+        for (const up of [0, 1]) for (const dx of m ? [-m, m] : [0]) { const c = cost(up, dx); if (!best || c < best.c - 0.5) best = { up, dx, c }; }
+        if (best.c <= (m + 2) * 10) break;   // anything slid further costs more
+      }
+      put(b, best.up, best.dx);
+      b.dataset.spot = (best.up ? "up" : "down") + (best.dx ? (best.dx < 0 ? "" : "+") + best.dx : "");
+      done.push(R(b));
+    }
+  };
+  root.addEventListener("resize", () => T.placeWheelBtns());
   document.addEventListener("scroll", (e) => {
     const b = e.target; if (T.siteScroll && b && b.classList && b.classList.contains("exp-map") && b.querySelector(":scope > .site-wrap")) { T.siteScroll.x = b.scrollLeft; T.siteScroll.y = b.scrollTop; }
   }, { capture: true, passive: true });
-  new MutationObserver(() => { T.centerMap(); T.centerSite(); }).observe(document.getElementById("screen"), { childList: true });
+  new MutationObserver(() => { T.centerMap(); T.placeWheelBtns(); T.centerSite(); }).observe(document.getElementById("screen"), { childList: true });
   // older iOS Safari ignores user-scalable=no: block its pinch gesture events, on touch devices only
   // (desktop Safari fires them for trackpad pinch: left alone there, so pinch-zoom on a Mac still works)
   const coarse = root.matchMedia ? root.matchMedia("(pointer: coarse)") : null;

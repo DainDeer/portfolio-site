@@ -68,6 +68,7 @@
         if (x && I.isHandItem(x)) { const fit = I.handFit(is, x, getB); if (fit.why) return UI.fail(fit.why); for (const k of fit.clear) delete lo.gear[k]; }   // Slice 5 §E
         if (uid) lo.gear[is] = uid; else delete lo.gear[is]; if ((lo.pouch || []).some((p) => p.uid === uid)) lo.pouch = []; G.State.save(); }
       if (G.Sfx) G.Sfx.play("sfx_ui_click");
+      if (G.Touch && G.Touch.layout()) UI.hideTip();   // phones: the tap also opened the row's item tooltip, which stayed over the redrawn doll
       redraw();
     };
     const box = h("div", { class: "doll", "data-doll": tid });

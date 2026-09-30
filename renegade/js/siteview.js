@@ -14,7 +14,8 @@
     SV.paint(cv, site);
     // Slice 4 §E: scenery props are canvas decor: hover (tap on phones) the nearest one for its examine line
     const propAt = (e) => { const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * W, y = (e.clientY - r.top) / r.height * H;
-      let best = null, bd = DATA.searchables.view.propHitPx ** 2; for (const p of site.props) { if (!site.rooms[p.room] || !site.rooms[p.room].open) continue; const d = (p.x - x) ** 2 + (p.y - y) ** 2; if (d < bd) { bd = d; best = p; } } return best; };
+      // phones: at least a 44 px (css) circle, the tap-target minimum (the view is drawn at 0.4-0.6x there)
+      let best = null, bd = Math.max(DATA.searchables.view.propHitPx, TL() ? 22 * W / r.width : 0) ** 2; for (const p of site.props) { if (!site.rooms[p.room] || !site.rooms[p.room].open) continue; const d = (p.x - x) ** 2 + (p.y - y) ** 2; if (d < bd) { bd = d; best = p; } } return best; };
     let propTip = null;
     cv.addEventListener("mousemove", (e) => { const p = propAt(e);
       if (p) { const i = X.propInfo(p.sprite); propTip = p; G.UI.showTip(`<b>${i.name}</b><br><span class="examine">${i.examine}</span>`, e.clientX, e.clientY); }
@@ -82,8 +83,11 @@
     if (why || busy) { el.classList.add("done"); el.addEventListener("mousemove", (e) => G.UI.showTip(`<b>${o.name}</b><br><i>${why || ""}</i>`, e.clientX, e.clientY)); el.addEventListener("mouseleave", () => G.UI.hideTip()); return; }
     el.classList.add("spinnable");
     const spin = (dir) => G.UI.spinWheel(o, dir);
-    el.addEventListener("mousemove", (e) => { const r = el.getBoundingClientRect(), left = e.clientX < r.left + r.width / 2, v = TL() ? "Tap" : "Click"; el.dataset.half = left ? "l" : "r";
-      G.UI.showTip(`<b>${o.name}</b> · pointing ${P.arrows[o.pos]}<br><span class="examine">${G.Exp.examine(o)}</span><br>${left ? `↺ ${v} to turn counterclockwise` : `↻ ${v} to turn clockwise`}`, e.clientX, e.clientY); });
+    // how to turn it: where the ↺ / ↻ buttons show (touch screens, css/style.css) only they turn it, so say so ("Tap" on
+    // the phone layout); with a mouse there are no buttons and the wheel's own halves turn it (text unchanged)
+    const how = (left) => (touch ? `${TL() ? "Tap" : "Click"} ↺ / ↻ to turn` : left ? "↺ Click to turn counterclockwise" : "↻ Click to turn clockwise");
+    el.addEventListener("mousemove", (e) => { const r = el.getBoundingClientRect(), left = e.clientX < r.left + r.width / 2; el.dataset.half = left ? "l" : "r";
+      G.UI.showTip(`<b>${o.name}</b> · pointing ${P.arrows[o.pos]}<br><span class="examine">${G.Exp.examine(o)}</span><br>${how(left)}`, e.clientX, e.clientY); });
     el.addEventListener("mouseleave", () => { delete el.dataset.half; G.UI.hideTip(); });
     el.addEventListener("click", (e) => { e.stopPropagation(); if (touch) return; const r = el.getBoundingClientRect(); spin(e.clientX < r.left + r.width / 2 ? -1 : 1); });
     const btns = document.createElement("div"); btns.className = "wheel-btns";

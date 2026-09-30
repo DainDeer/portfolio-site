@@ -68,15 +68,26 @@
     el.querySelector(".tut-n").textContent = TV.cur.steps.length > 1 ? `${TV.cur.i + 1}/${TV.cur.steps.length}` : "";
     el.dataset.step = st.id;
     if (G.Sfx) G.Sfx.play("sfx_tutorial_pop");   // Slice 4 SFX: each step appears
-    const t = targetsOf(st); if (t[0] && t[0].scrollIntoView) { try { t[0].scrollIntoView({ block: "nearest", inline: "nearest" }); } catch (e) {} }
+    TV.scrolled = null;   // TV.place scrolls the new step's target into view
     TV.place();
     if (!TV.raf) { const loop = () => { if (!TV.cur) { TV.raf = 0; return; } TV.place(); TV.raf = requestAnimationFrame(loop); }; TV.raf = requestAnimationFrame(loop); }
+  };
+  // Scroll the step's (first) target into view once per target element. A render replaces the DOM and the new panel
+  // starts scrolled to the top (e.g. main.js re-renders the deploy panel when grunt art finishes loading, just after
+  // T1 opens), so a replaced target is scrolled in again. Phones: keep the ring's padding on screen too (scroll-margin).
+  TV.scrollIn = function (t) {
+    const e = t[0]; if (!e || e === TV.scrolled || !e.scrollIntoView) return;
+    TV.scrolled = e;
+    const m = touch() ? ((D().ringPadPx || 6) + 3) + "px" : null, was = e.style.scrollMargin;
+    try { if (m) e.style.scrollMargin = m; e.scrollIntoView({ block: "nearest", inline: "nearest" }); } catch (x) {}
+    if (m) e.style.scrollMargin = was;
   };
   // ring = the union box of every visible match (re-queried every frame: renders replace the DOM)
   TV.place = function () {
     const st = TV.step(), el = TV.el; if (!st || !el) return;
     const vw = window.innerWidth, vh = window.innerHeight, pad = D().ringPadPx || 6;
-    const t = targetsOf(st), ring = el.querySelector(".tut-ring"), dim = el.querySelector(".tut-dim"), arrow = el.querySelector(".tut-arrow"), box = el.querySelector(".tut-box");
+    const t = targetsOf(st); TV.scrollIn(t);
+    const ring = el.querySelector(".tut-ring"), dim = el.querySelector(".tut-dim"), arrow = el.querySelector(".tut-arrow"), box = el.querySelector(".tut-box");
     let R = null;
     if (t.length) {
       let l = 1e9, tp = 1e9, r = -1e9, b = -1e9;
@@ -115,7 +126,7 @@
   };
   TV.skip = function () { G.Tut.setMode("none"); G.State.save(); TV.close(); G.UI.toast("Tutorial off. Settings → Gameplay → Replay tutorial brings it back."); };
   TV.close = function () {
-    TV.cur = null; if (TV.raf) cancelAnimationFrame(TV.raf); TV.raf = 0;
+    TV.cur = null; TV.scrolled = null; if (TV.raf) cancelAnimationFrame(TV.raf); TV.raf = 0;
     window.removeEventListener("keydown", TV.onKey, true);
     if (TV.el) TV.el.remove(); TV.el = null;
     setTimeout(TV.check, 0);   // another sequence may be due right away
