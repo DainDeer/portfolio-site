@@ -113,7 +113,7 @@
     if (old) old.fadeOut();
     SFX.amb = voice;
   };
-  SFX.applySettings = function () { if (SFX.amb) SFX.amb.setVol(SFX.loopVol(SFX.amb.key)); };
+  SFX.applySettings = function () { if (SFX.amb) SFX.amb.setVol(SFX.loopVol(SFX.amb.key)); if (G.Music) G.Music.applySettings(); };   // music: js/music.js, its own channel
 
   // SFX bus: gain -> limiter -> master (loops connect to the master directly)
   SFX.makeBus = function (ctx, out) {
@@ -130,10 +130,18 @@
     if (SFX.unlocked) return; SFX.unlocked = true;
     try { const AC = root.AudioContext || root.webkitAudioContext; if (AC) { SFX.ctx = new AC(); SFX.master = SFX.ctx.createGain(); SFX.master.connect(SFX.ctx.destination); SFX.bus = SFX.makeBus(SFX.ctx, SFX.master); } } catch (x) { SFX.ctx = null; }
     if (SFX.screen) SFX.setScreen(SFX.screen);
+    if (G.Music) G.Music.onUnlock();
+  };
+  // iOS Safari only lets audio start from a touchend / click (not touchstart / pointerdown), can hand back a suspended
+  // context, and suspends it again after an interruption: every gesture resumes it, and the first one plays a 1-sample
+  // silent buffer (the old iOS unlock). Cheap once it's running.
+  SFX.resume = function () {
+    SFX.unlock(); const c = SFX.ctx; if (!c) return;
+    if (c.state !== "running" && c.resume) { try { const p = c.resume(); if (p && p.catch) p.catch(() => {}); } catch (x) {} }
+    if (!SFX._kicked) { SFX._kicked = true; try { const s = c.createBufferSource(); s.buffer = c.createBuffer(1, 1, 22050); s.connect(c.destination); s.start(0); } catch (x) {} }
   };
   if (hasDom) {
-    document.addEventListener("pointerdown", SFX.unlock, { capture: true, once: true });
-    document.addEventListener("keydown", SFX.unlock, { capture: true, once: true });
+    for (const k of ["pointerdown", "pointerup", "touchend", "click", "keydown"]) document.addEventListener(k, SFX.resume, { capture: true, passive: true });
     document.addEventListener("click", (ev) => { const b = ev.target && ev.target.closest && ev.target.closest("button"); if (b && !b.disabled && !b.dataset.nosfx) SFX.play("sfx_ui_click"); }, true);
   }
 })(window);

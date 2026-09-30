@@ -4,7 +4,7 @@ window.DATA = window.DATA || {};
 DATA.audio = {
   enabled: true,                  // SFX on by default (was G.Sfx.enabled = false in Slice 2)
   sfxPath: "sfx/", ambPath: "amb/", ext: ".mp3", loopExts: [".ogg", ".mp3"],   // under DATA.sprites.basePath (assets/); loops prefer .ogg (gapless), .mp3 if the browser can't play ogg or the file is missing
-  defaults: { master: 0.6, sfx: 0.8, ambient: 0.5, mute: false },   // Settings panel, saved with the game (state.settings)
+  defaults: { master: 0.6, sfx: 0.8, ambient: 0.5, music: 0.7, mute: false },   // Settings panel, saved with the game (state.settings); music 0.7: Snare's tracks are -20 LUFS vs the -18 LUFS ambience
   pitchVar: 0.05,                 // ±5% playback rate per play
   retriggerMs: 50,
   missDelayMs: 40,               // sfx_miss plays this long after the shot sound                // the same key can't retrigger within this
@@ -36,5 +36,30 @@ DATA.audio = {
   bus: { gain: 0.8, limiter: { threshold: -6, knee: 4, ratio: 12, attack: 0.003, release: 0.12 }, htmlGunAtten: true },
   // ambient loops: which screen plays which (town view + outpost panels / zone map + location views + battles)
   loops: { amb_outpost: { vol: 0.8 }, amb_wastes: { vol: 0.8 } },
-  screens: { outpost: "amb_outpost", run: "amb_wastes" }
+  screens: { outpost: "amb_outpost", run: "amb_wastes" },
+  // Music (Snare, assets/music_src/README.md): its own channel (gain = master x music slider), separate from SFX and
+  // ambience. Web Audio buffers with loop = true (gapless); .ogg first (sample-exact), .mp3 if the browser can't play
+  // ogg or the ogg fails. Under file:// it falls back to HTMLAudio (no sample-exact sync there).
+  music: {
+    enabled: true,
+    path: "music/", exts: [".ogg", ".mp3"],      // under DATA.sprites.basePath (assets/)
+    // key: { vol (before the Music slider), bpm, beatsPerBar, loopSec (the loop length the files decode to), sync group }
+    // Tracks in the same sync group share one bar grid (same length and tempo): switching between them keeps the
+    // playback position and lands on the grid. Different groups crossfade and restart the incoming track from the top.
+    tracks: {
+      music_outpost:         { vol: 1, bpm: 100, beatsPerBar: 4, loopSec: 76.8 },                      // bar 2.4 s
+      music_hushwood:        { vol: 1, bpm: 75, beatsPerBar: 4, loopSec: 102.4, sync: "hushwood" },  // bar 3.2 s
+      music_hushwood_battle: { vol: 1, bpm: 75, beatsPerBar: 4, loopSec: 102.4, sync: "hushwood" }
+    },
+    // music state -> track. outpost = town view, outpost panels, the run result and body offer; run = zone map, location
+    // views, searches, events and the pre-battle card; battle = the battle screen (placement, fight, summary).
+    states: { outpost: "music_outpost", run: "music_hushwood", battle: "music_hushwood_battle" },
+    zones: {},                                  // per-zone overrides, e.g. b: { run: "...", battle: "..." }; none yet: Hushwood in every zone
+    preload: { run: ["music_hushwood_battle"] },   // decode the battle track as soon as a run starts, so the switch is on time
+    restartFadeSec: 1.75,                       // different groups (outpost <-> Hushwood): equal-power crossfade, incoming from 0
+    toBattle: { quantize: "bar", maxBarWaitSec: 2.4, fadeSec: 0.4 },   // next bar line, or the next beat if the bar line is more than 2.4 s away
+    fromBattle: { quantize: "bar", fadeBars: 1 },                       // starts on the next bar line, one bar long, so it ends on a bar line
+    firstFadeSec: 1.5,                          // fade-in when music starts from silence (first tap / unmute)
+    leadSec: 0.06                               // scheduling headroom for Web Audio start times
+  }
 };

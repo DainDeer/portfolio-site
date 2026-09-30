@@ -72,6 +72,7 @@
     UI.renderTop();
     const s = G.state, scr = $("#screen");
     G.Sfx.setScreen(s.run || UI.battle ? "run" : "outpost");   // ambient loop per screen (crossfades)
+    if (G.Music) G.Music.set(UI.battle ? "battle" : s.run ? "run" : "outpost", s.run ? s.run.zone : null);   // music state (js/music.js)
     if (UI.battle) return; // battle view owns the screen
     if (s.run) { UI.renderExpedition(scr); if (!UI.search) UI.renderStep(); return; }
     UI.renderOutpost(scr);
@@ -492,7 +493,7 @@
       return h("div", { class: "set-row" }, h("label", null, label), h("input", { type: "range", min: 0, max: 100, value: Math.round(st[k] * 100), "data-set": k,
         oninput: (e) => { st[k] = +e.target.value / 100; val.textContent = e.target.value + "%"; G.Sfx.applySettings(); }, onchange: () => { G.State.save(); G.Sfx.play("sfx_ui_click"); } }), val); };
     box.appendChild(h("h3", null, "Audio"));
-    box.appendChild(slider("master", "Master")); box.appendChild(slider("sfx", "Sound effects")); box.appendChild(slider("ambient", "Ambient"));
+    box.appendChild(slider("master", "Master")); box.appendChild(slider("sfx", "Sound effects")); box.appendChild(slider("ambient", "Ambient")); box.appendChild(slider("music", "Music"));
     box.appendChild(h("div", { class: "set-row" }, h("label", null, h("input", { type: "checkbox", "data-set": "mute", checked: !!st.mute, onchange: (e) => { st.mute = e.target.checked; G.Sfx.applySettings(); G.State.save(); } }), " Mute")));
     box.appendChild(h("h3", null, "Battle"));
     const aim = h("select", { "data-set": "aimMode", onchange: (e) => { st.aimMode = e.target.value; G.State.save(); } });
@@ -748,6 +749,7 @@
     const scr = $("#screen");
     UI.battle = { step, b };
     UI.battle.v = G.BattleView.mount(scr, b, { speed: UI.battleSpeed, onEnd: (bb) => UI.battleSummary(step, bb) });
+    if (G.Music) G.Music.set("battle", G.state.run ? G.state.run.zone : null);   // battle music: on the bar grid (js/music.js)
     G.log(`Battle seed ${b.seed}`);
   };
 
