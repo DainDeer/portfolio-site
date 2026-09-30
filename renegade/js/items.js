@@ -24,10 +24,18 @@
   I.isRare = (item) => !!(item && DATA.items.rarities[item.rarity] && DATA.items.rarities[item.rarity].rare);
 
   // opts.setMult { setId: x } (Militia x2 from Gunmen). hunterOnly pieces never come from here: I.rollHunterPiece (Hunter bodies)
+  // Slice 4 §C: opts.zone (default: the current run's zone) applies DATA.items.zoneTypeWeight by wtype; with
+  // DATA.items.slotShares the slot is picked first (Slice 3 proportions), then the base inside it.
+  I.dropWeight = function (id, zone, sm) {
+    const b = DATA.items.bases[id], zt = (DATA.items.zoneTypeWeight || {})[zone] || {};
+    return b.dropWeight * (b.set && sm && sm[b.set] ? sm[b.set] : 1) * (b.wtype && zt[b.wtype] != null ? zt[b.wtype] : 1);
+  };
   I.rollBase = function (rng, opts) {
-    const B = DATA.items.bases, sm = (opts && opts.setMult) || {};
-    const ids = Object.keys(B).filter((k) => !B[k].natural && (B[k].dropWeight || 0) > 0 && !B[k].hunterOnly);
-    return rng.weighted(ids, (k) => B[k].dropWeight * (B[k].set && sm[B[k].set] ? sm[B[k].set] : 1));
+    const B = DATA.items.bases, sm = (opts && opts.setMult) || {}, SS = DATA.items.slotShares;
+    const zone = opts && opts.zone !== undefined ? opts.zone : (G.state && G.state.run ? G.state.run.zone || "a" : null);
+    let ids = Object.keys(B).filter((k) => !B[k].natural && (B[k].dropWeight || 0) > 0 && !B[k].hunterOnly);
+    if (SS) { const slots = Object.keys(SS).filter((s) => SS[s] > 0 && ids.some((k) => B[k].slot === s)); const slot = rng.weighted(slots, (s) => SS[s]); ids = ids.filter((k) => B[k].slot === slot); }
+    return rng.weighted(ids, (k) => I.dropWeight(k, zone, sm));
   };
 
   // tier: basic | advanced | complex, or advanced_top (the top half of the range, Orange) / complex_or_advanced (Purple's 4th line)
@@ -172,6 +180,7 @@
     const sc = b.noScale ? 1 : I.scale(item.ilvl);
     if (b.slot === "weapon") {
       const w = I.weaponStats(item);
+      if (b.wtype && DATA.items.wtypes) lines.push(`${DATA.items.wtypes[b.wtype].name} · ${b.hands === 2 ? "two-handed" : "one-handed"}`);   // Slice 4 §C
       lines.push(`${U.fmt1(w.dmg)} ${DATA.damageTypes[w.type]} · ${w.interval}s · ${w.range} m · Acc ${w.acc}`);
       if (w.mag) lines.push(`Mag ${w.mag} · Reload ${w.reload}s · Jam ${w.jam}`);
       if (w.tags.length) lines.push("Tags: " + w.tags.join(", "));

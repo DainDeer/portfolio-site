@@ -32,7 +32,10 @@ DATA.audio = {
     // Slice 4 (assets/audio_src/README.md "Slice 4 set"): UI sounds x0.8, no group
     sfx_wheel_click: { vol: 0.64 },   // each spin of a pods-room wall wheel (§B1)
     sfx_door_heavy: { vol: 0.8 },     // once, when the wheels match and the sealed door opens
-    sfx_tutorial_pop: { vol: 0.64 }   // a tutorial box appears (each step)
+    sfx_tutorial_pop: { vol: 0.64 },  // a tutorial box appears (each step)
+    // Slice 4 §C weapon sounds (each weapon names one in its sfx; not in the gun group: quiet next to firearms)
+    sfx_shot_bow_1: { vol: 0.95 }, sfx_shot_bow_2: { vol: 1.0 }, sfx_shot_bow_3: { vol: 0.95 }, sfx_shot_crossbow: { vol: 1.0 },
+    sfx_bonk_1: { vol: 1.0 }, sfx_bonk_2: { vol: 1.0 }, sfx_bonk_3: { vol: 0.95 }, sfx_bonk_bass: { vol: 0.8 }
   },
   // SFX bus: every one-shot goes through a gain + limiter (DynamicsCompressor) before the master, so 6 stacked shots
   // don't clip (loops bypass it). Under file:// (HTMLAudio, no Web Audio graph) gunshots are attenuated instead:

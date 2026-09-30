@@ -309,7 +309,7 @@ button.promote { background: #6a5a1a; }
 }
 
 /* Slice 4 §B: the pods room (wall wheels, mural, the big clunk) */
-.site-obj.wheel { cursor: pointer; }
+.site-obj.wheel { cursor: pointer; z-index: 3; }   /* above its neighbours: the phone arrow buttons hang over the slot below */
 .site-obj.wheel .wheel-face { position: absolute; left: 12%; top: 12%; width: 76%; height: 76%; border-radius: 50%; border: 3px solid #9a8a6a; background: radial-gradient(circle, #4a4438 0 55%, #2a2620 56%);
   color: #f0d890; font: bold 22px/1 sans-serif; display: flex; align-items: flex-start; justify-content: center; padding-top: 4%; box-sizing: border-box; transition: transform 0.18s ease-out; pointer-events: none; }
 .site-obj.wheel[data-half="l"] { box-shadow: inset 24px 0 0 -12px rgba(240, 216, 144, 0.35); }

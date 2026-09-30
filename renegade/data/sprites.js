@@ -17,7 +17,7 @@ DATA.sprites = {
   // left/right by heading (the delivered art). "rotate": art faces east and is rotated.
   facingMode: "flip",
   // Keys whose art isn't delivered yet: never requested, placeholder badges only (no 404s). Remove a prefix when its art lands.
-  pendingArt: ["skill_", "stat_", "dmg_", "map_rival", "ui_break_away", "npc_marta", "town_marta", "obj_mural", "obj_wheel"],   // prefixes not delivered yet: drawn as placeholders, never requested (bld_* and quest_available landed in Slice 3 batch 1)
+  pendingArt: ["skill_", "stat_", "dmg_", "map_rival", "ui_break_away", "npc_marta", "town_marta", "obj_mural", "obj_wheel", "wt_bow", "wt_crossbow", "wt_club", "wt_improvised"],   // prefixes not delivered yet: drawn as placeholders, never requested (bld_* and quest_available landed in Slice 3 batch 1)
   pixelArt: true,      // nearest-neighbour scaling for image sprites (crisp pixel art)
   // Battle canvas: every image sprite is drawn at (native px x texelScale), so a 32px unit = 64 canvas px = 2 m at pxPerM 32.
   texelScale: 2,
@@ -342,6 +342,18 @@ DATA.sprites = {
   item_ar16_stoner:      { file: "items/item_ar16_stoner.png",      shape: "bar",      color: "#4a4a4a", size: 1, pad: 2 },
   item_rust_machete:     { file: "items/item_rust_machete.png",     shape: "bar",      color: "#a07050", size: 1, pad: 2 },
   item_knuckle_wraps:    { file: "items/item_knuckle_wraps.png",    shape: "bar",      color: "#c0a080", size: 1, pad: 2 },
+  // Slice 4 §C: one art model per weapon type (data/weapons.js). Until Smudge's type art lands, the gun and blade types
+  // reuse an existing weapon's file (swap `file` to items/wt_<type>.png then); bow / crossbow / club / improvised are
+  // placeholders (pendingArt, never requested).
+  wt_pistol:             { file: "items/item_glokk_17.png",         shape: "bar",      color: "#5a5a5a", size: 1, pad: 2 },
+  wt_rifle:              { file: "items/item_pipe_rifle.png",       shape: "bar",      color: "#8a7a6a", size: 1, pad: 2 },
+  wt_auto:               { file: "items/item_smg.png",              shape: "bar",      color: "#6a6a5a", size: 1, pad: 2 },
+  wt_shotgun:            { file: "items/item_remingon_870.png",     shape: "bar",      color: "#7a5a4a", size: 1, pad: 2 },
+  wt_blade:              { file: "items/item_rust_machete.png",     shape: "bar",      color: "#a07050", size: 1, pad: 2 },
+  wt_bow:                { file: "items/wt_bow.png",                shape: "badge",    color: "#8a6a3a", size: 1, text: "BOW" },
+  wt_crossbow:           { file: "items/wt_crossbow.png",           shape: "badge",    color: "#6a5a3a", size: 1, text: "XB" },
+  wt_club:               { file: "items/wt_club.png",               shape: "badge",    color: "#7a6a5a", size: 1, text: "CLB" },
+  wt_improvised:         { file: "items/wt_improvised.png",         shape: "badge",    color: "#6a7a5a", size: 1, text: "JNK" },
   item_scrap_helmet:     { file: "items/item_scrap_helmet.png",     shape: "circle",   color: "#7a7a6a", size: 1, pad: 2 },
   item_padded_vest:      { file: "items/item_padded_vest.png",      shape: "square",   color: "#6a5a4a", size: 1, pad: 2 },
   item_school_bag:       { file: "items/item_school_bag.png",       shape: "square",   color: "#c05050", size: 1, pad: 2 },
