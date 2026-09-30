@@ -27,11 +27,30 @@
     for (const q of body.quirks) { const qd = DATA.bodies.quirks[q]; if (qd.effect === "carry_base") cap += qd.value; }
     for (const it of gearItems) cap += G.Items.base(it.base).carryKg || 0;
     cap += G.Items.affixSum(gearItems, "carry_kg") + G.Items.setStat(gearItems, "carry_kg");   // + Scav Kit (2)
-    // a pack on a standing Grunt adds its carry capacity to the squad's (Grunt gear doesn't count toward your carried kg)
-    if (G.Allies) cap += G.Allies.squadSum(r, "carryKg");
-    cap += G.Perks.carryKg();   // Mule (Slice 3 §3)   // Pack Rat (Slice 3 §1), standing deployed allies
-    for (const m of (r && r.squad) || []) { if (m.hp <= 0) continue; const pk = G.State.gruntPack(m.g); if (pk) cap += (G.Items.base(pk.base).carryKg || 0) + G.Items.affixSum([pk], "carry_kg"); if (G.State.gruntItems) cap += G.Items.setStat(G.State.gruntItems(m.g), "carry_kg"); }
+    cap += G.Perks.carryKg();   // Mule (Slice 3 §3)
+    for (const m of (r && r.squad) || []) if (m.hp > 0) cap += X.memberCarryKg(m);   // standing teammates (Slice 5 §C)
     return cap;
+  };
+  // what one standing teammate adds to squad capacity: Slice 5 §C's per-teammate kg + the pack it wears (+ its carry
+  // affixes and set bonus) + Pack Rat. (A Grunt's gear doesn't count toward your carried kg.)
+  X.memberCarryKg = function (m) {
+    let kg = CFG().carry.perTeammateKg || 0;
+    const pk = G.State.gruntPack(m.g); if (pk) kg += (G.Items.base(pk.base).carryKg || 0) + G.Items.affixSum([pk], "carry_kg");
+    if (G.State.gruntItems) kg += G.Items.setStat(G.State.gruntItems(m.g), "carry_kg");
+    if (G.Allies) kg += G.Allies.mods(m.g).carryKg || 0;
+    return kg;
+  };
+  // Slice 5 §C: a dying teammate's share of the run bag (frac = its kg / the capacity it was part of). Every resource
+  // stack gives round(n x frac); items (newest first, never quest items) go while they keep the taken weight nearest
+  // frac x the items' weight. Removed from the bag and returned.
+  X.takeBagShare = function (frac) {
+    const r = run(), out = { items: [], res: {} }; if (!(frac > 0)) return out;
+    for (const k in r.bag.res) { const n = Math.min(r.bag.res[k] || 0, Math.round((r.bag.res[k] || 0) * frac)); if (n > 0) { out.res[k] = n; r.bag.res[k] -= n; } }
+    const pool = r.bag.items.filter((it) => !G.Items.isQuest(it)), target = frac * pool.reduce((a, it) => a + G.Items.weight(it), 0);
+    let kg = 0;
+    for (let i = pool.length - 1; i >= 0; i--) { const w = G.Items.weight(pool[i]); if (kg + w - target > target - kg) continue; kg += w; out.items.push(pool[i]); }
+    r.bag.items = r.bag.items.filter((it) => !out.items.includes(it));
+    return out;
   };
   X.carried = function (r) {
     r = r || run();
@@ -214,6 +233,7 @@
   // A move (map click) or a passage crossing (opts.noMoveHeat: the crossing's own Heat was already added)
   X.enterNode = function (nid, opts) {
     const r = run(), node = G.Zones.node(nid);
+    if (X.dropBagsGone) X.dropBagsGone(r.loc);   // Slice 5 §C: a dead teammate's pack left behind is gone
     r.prevLoc = { zone: r.zone, nid: r.loc };   // Break away returns you here
     r.moves++; r.loc = nid; r.view = "map";
     if (!opts.noMoveHeat) X.addHeat(CFG().heat.perMove, "move");
@@ -575,7 +595,7 @@
     if (choice === "heal") { if (med < cc.healMed) return "Not enough Med Supplies."; r.bag.res.med -= cc.healMed; s.hp = max * cc.healHpPct / 100; X.log(`${G.Allies.name(s.g)} is back in action.`); }
     else if (choice === "stabilize") { if (med < cc.stabilizeMed) return "Not enough Med Supplies."; r.bag.res.med -= cc.stabilizeMed; s.hp = max * cc.stabilizeHpPct / 100; X.log(`${G.Allies.name(s.g)} is stabilized.`); if (G.Injuries) G.Injuries.add(s.g, "stabilized"); }   // Slice 3 §10a: stabilized, not healed
     else if (choice === "carry") { s.hp = 0; s.carried = true; r.carriedCritical.push(s.g.uid); X.log(`You carry ${G.Allies.name(s.g)} (${cc.carryKg} kg).`); }
-    else { s.hp = 0; s.left = true; X.log(`You leave ${G.Allies.name(s.g)} behind.`, "bad"); }
+    else { s.hp = 0; s.left = true; X.log(`You leave ${G.Allies.name(s.g)} behind.`, "bad"); X.addGruntBodies((s.died && s.died.where) || r.loc, [s]); }   // Slice 5 §C: they die here: body + pack
     X.next(); return null;
   };
 

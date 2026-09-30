@@ -355,9 +355,10 @@
     const carryLine = h("div", { "data-tut": "carry" });
     function updCarry() {
       const gearItems = Object.values(lo.gear).map((uid) => s.stash.items.find((i) => i.uid === uid)).filter(Boolean);
-      const fake = { gear: Object.fromEntries(gearItems.map((i) => [G.Items.base(i.base).slot, i])), bag: { items: [], res: { med: lo.med } }, pouch: [], carriedCritical: [], ammo: lo.ammo || null };
-      const cap = G.Exp.capacity(fake, body, gearItems), kg = G.Exp.carried(fake);
-      carryLine.textContent = `Carry: ${U.fmt1(kg)} / ${U.fmt1(cap)} kg (${DATA.config.carry.baseKg} base + ${DATA.config.carry.kgPerHaulingLevel}×Hauling ${G.Skills.level(body.skills, "hauling")} + backpack/affixes${body.quirks.includes("light_frame") ? " − 5 Light Frame" : ""})`;
+      const squad = (lo.grunts || []).map((id) => s.grunts.find((x) => x.uid === id)).filter(Boolean).map((g) => ({ g, hp: 1 }));   // Slice 5 §C: teammates add capacity
+      const fake = { gear: Object.fromEntries(gearItems.map((i) => [G.Items.base(i.base).slot, i])), bag: { items: [], res: { med: lo.med } }, pouch: [], carriedCritical: [], ammo: lo.ammo || null, squad };
+      const cap = G.Exp.capacity(fake, body, gearItems), kg = G.Exp.carried(fake), team = squad.reduce((a, m) => a + G.Exp.memberCarryKg(m), 0);
+      carryLine.textContent = `Carry: ${U.fmt1(kg)} / ${U.fmt1(cap)} kg (${DATA.config.carry.baseKg} base + ${DATA.config.carry.kgPerHaulingLevel}×Hauling ${G.Skills.level(body.skills, "hauling")} + backpack/affixes${body.quirks.includes("light_frame") ? " − 5 Light Frame" : ""}` + (squad.length ? ` + ${U.fmt1(team)} from ${squad.length} teammate${squad.length > 1 ? "s" : ""}: ${DATA.config.carry.perTeammateKg} each + their packs` : "") + ")";
     }
     updCarry();
     gsec.appendChild(carryLine);
@@ -670,6 +671,7 @@
     // carry
     const cap = X.capacity(), kg = X.carried(), pct = (kg / cap) * 100;
     const carry = h("section", { class: "panel" }, h("h3", null, `Carry ${U.fmt1(kg)} / ${U.fmt1(cap)} kg`, G.Perks.carryKg() ? h("small", { class: "hint" }, ` (incl. Mule +${G.Perks.carryKg()} kg)`) : null), bar(pct / 150, pct >= 150 ? "#e04040" : pct > 100 ? "#e0a040" : "#6aa0ff", `${Math.round(pct)}%`));
+    if (r.carryDrop && r.carryDrop.nid === r.loc) { const cd = r.carryDrop; carry.classList.add("carry-drop"); carry.appendChild(h("div", { class: "warn carry-drop-note", "data-note": "carry-drop" }, `−${U.fmt1(cd.lostKg)} kg capacity: ${cd.names.join(", ")} died.` + (cd.shareKg > 0 ? ` ${U.fmt1(cd.shareKg)} kg of the bag is on ${cd.names.length > 1 ? "their bodies" : "the body"} here: take it before you move on, or it's gone.` : " Their gear is on the body here: take it before you move on, or it's gone."))); }   // Slice 5 §C
     if (pct > 100) carry.appendChild(h("div", { class: "warn" }, pct >= DATA.config.carry.immobileAtPct ? "Over 150%: you can't move until you drop something." : `Overloaded: −${Math.round(pct - 100)}% Move Speed in battle.`));
     // gear
     const worn = Object.values(r.gear).filter(Boolean);

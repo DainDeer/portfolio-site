@@ -42,7 +42,7 @@ DATA.items = {
     patched_tunic: { name: "Patched Tunic",     slot: "body",     armor: 1, weight: 1.0, req: 0, dropWeight: 0, sprite: "item_patched_tunic" },
     wool_cap:      { name: "Wool Cap",          slot: "head",     armor: 1, weight: 0.4, req: 0, dropWeight: 3, sprite: "item_wool_cap" },
     hide_vest:     { name: "Hide Vest",         slot: "body",     armor: 2, weight: 3.5, req: 0, dropWeight: 3, sprite: "item_hide_vest" },
-    school_bag:    { name: "School Bag",        slot: "backpack", carryKg: 8,  weight: 0.8, req: 0, dropWeight: 4, noScale: true },
+    school_bag:    { name: "School Bag",        slot: "backpack", carryKg: 10, weight: 0.8, req: 0, dropWeight: 4, noScale: true },
     military_ruck: { name: "Military Ruck",     slot: "backpack", carryKg: 20, moveSpeedPct: -3, weight: 2.0, req: 0, dropWeight: 2, noScale: true },
     // Slice 3 §5 set pieces (data/sets.js). evasion / checkSkill are base stats like armor (evasion scales with ilvl).
     scav_hood:        { name: "Scav Hood",         slot: "head",     set: "scav",    evasion: 2, weight: 0.6, req: 0, dropWeight: 1 },

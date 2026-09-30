@@ -82,7 +82,15 @@ DATA.config = {
     immobileAtPct: 150,         // at 150% you cannot move on the map
     equippedCountsTowardCarry: true, // ASSUMPTION
     pouchSlots: 1,              // Vault L1 (Vault upgrades override these, data/outpost.js)
-    pouchMaxKg: 1
+    pouchMaxKg: 1,
+    // Slice 5 §C [DRAFT Vixie call]: every living (standing) teammate on the run adds this toward squad capacity (on top
+    // of any pack it wears). Early generosity: the School Bag went 8 -> 10 kg (data/items.js), the body base stays 20.
+    perTeammateKg: 6,
+    // A teammate who dies in a location (killed in battle, or a Critical left behind) drops its body there holding its
+    // equipped gear + its share of the run bag: the share is its part of the squad's capacity (its kg / capacity before
+    // it died) of every resource stack and of the bag's item weight (newest pickups first; quest items stay with you).
+    // Searchable once. Move to another location without emptying it and it's gone.
+    deadBag: { examine: "[PLACEHOLDER] Their pack's still on them: what they were hauling for the squad.", vanishOnLeave: true }
   },
 
   // §12 Heat. Megan's Slice 2 playtest: Heat is rarer but comes in bigger chunks. Searching gives none, battles a

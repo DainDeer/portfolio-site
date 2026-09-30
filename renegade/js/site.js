@@ -499,16 +499,34 @@
   };
 
   // Megan's playtest: a Grunt killed in battle leaves a body you can search, holding exactly the gear it had equipped.
+  // Slice 5 §C: it also holds the dead teammate's share of the run bag (its part of the squad's capacity), and it's the
+  // one player-facing "their pack" object: searchable once, gone if you move on without emptying it (X.dropBagsGone).
   X.addGruntBodies = function (nid, dead) {
     const site = X.site(nid); if (!site || !dead.length) return;
-    const openRooms = site.rooms.filter((R) => R.open);
-    for (const m of dead) {
-      const items = G.State.gruntItems(m.g).map((it) => U.clone(it));
-      const o = mk(site, { type: "body_human", name: "Body: " + G.Allies.name(m.g), sprite: (m.died && m.died.corpse) || (G.Allies.isVeteran(m.g) ? "corpse_veteran" : SD().types.body_human.sprite), fresh: true, gibbed: !!(m.died && m.died.gibbed), gruntBody: m.g.uid, vet: G.Allies.isVeteran(m.g) || undefined, fixedLoot: { items, res: {} }, rot: Math.round(G.rng() * 360) });
+    const openRooms = site.rooms.filter((R) => R.open), r = run(), DB = CFG().carry.deadBag || {};
+    const lost = dead.map((m) => X.memberCarryKg(m)), capBefore = X.capacity() + lost.reduce((a, b) => a + b, 0), kg0 = X.carried();
+    dead.forEach((m, i) => {
+      const share = X.takeBagShare(lost[i] / (capBefore - lost.slice(0, i).reduce((a, b) => a + b, 0)));
+      const items = G.State.gruntItems(m.g).map((it) => U.clone(it)).concat(share.items), nm = G.Allies.name(m.g);
+      const o = mk(site, { type: "body_human", name: "Body: " + nm, sprite: (m.died && m.died.corpse) || (G.Allies.isVeteran(m.g) ? "corpse_veteran" : SD().types.body_human.sprite), fresh: true, gibbed: !!(m.died && m.died.gibbed), gruntBody: m.g.uid, vet: G.Allies.isVeteran(m.g) || undefined, fixedLoot: { items, res: share.res }, rot: Math.round(G.rng() * 360),
+        deadBag: { share: share.items.length + Object.values(share.res).reduce((a, b) => a + b, 0) }, examine: DB.examine });
       place(site, o, G.rng.pick(openRooms).i, G.rng);
       site.decals.push({ sprite: "fx_blood_pool", x: o.x, y: o.y + 6, room: o.room });
       if (m.g.gear) m.g.gear = G.State.emptyGear(m.g);   // the gear is on the body now
+    });
+    // the HUD's "sudden drop" note (js/ui.js carry panel) for as long as you stay here
+    const cap = X.capacity(), kg = X.carried();
+    r.carryDrop = { nid, names: dead.map((m) => G.Allies.name(m.g)), lostKg: lost.reduce((a, b) => a + b, 0), shareKg: Math.max(0, kg0 - kg), cap, pct: Math.round(kg / cap * 100) };
+    X.log(`Carry −${U.fmt1(r.carryDrop.lostKg)} kg: ${r.carryDrop.names.join(", ")} ${dead.length > 1 ? "are" : "is"} gone. ` + (r.carryDrop.shareKg > 0 ? `${U.fmt1(r.carryDrop.shareKg)} kg of the bag they were carrying is on ${dead.length > 1 ? "their bodies" : "the body"}.` : "Their gear is on the body."), "bad");
+  };
+  // Slice 5 §C: moving on from nid: every dead teammate's body there that still holds something loses it
+  X.dropBagsGone = function (nid) {
+    const site = nid && X.site(nid), r = run(); if (!site || !(CFG().carry.deadBag || {}).vanishOnLeave) return;
+    for (const o of site.objects) if (o.deadBag && !o.deadBag.gone && (!o.searched || X.hasLeft(o))) {
+      o.deadBag.gone = true; o.searched = true; o.left = null; o.fixedLoot = { items: [], res: {} };
+      X.log(`${o.name.replace(/^Body: /, "")}'s pack is gone: you didn't take it.`, "bad");
     }
+    if (r.carryDrop && r.carryDrop.nid === nid) r.carryDrop = null;
   };
 
   // ---------- arrival ----------
