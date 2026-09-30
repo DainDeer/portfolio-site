@@ -21,6 +21,7 @@
   M.complete = function (id) {
     if (M.status(id) === "done") return;
     M.st().quests[id] = "done"; G.log(`Main quest complete: ${M.def(id).name}.`, "good");
+    if (G.Cards && id === DATA.main.order[0]) G.Cards.onQuestDone("marta");   // Slice 4 §D: Marta's card (her first quest is Main 1)
     if (M.def(id).next) M.activate(M.def(id).next);
   };
   // the one objective shown in the Journal: the first quest in order that isn't done (null if it's still locked)

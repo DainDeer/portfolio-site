@@ -30,5 +30,5 @@ DATA.town = {
   questMarker: { sprite: "quest_available", px: 32, offsetY: -18 },   // 32x32 px on the 1000x600 town canvas; centre 18 px above the labelAnchor
   // top-row buttons (same panels as the hotspots). "zones" = zone select (same as the trapdoor)
   nav: [["town", "Town"], ["vault", "Vault"], ["body_lab", "Body Lab"], ["quests", "Quests"], ["stockpile", "Stockpile"], ["recruit", "Recruit"], ["memorial", "Memorial"], ["zones", "Expedition"]],
-  extraNav: [["character", "Character"], ["codex", "Codex"]]   // Slice 3 §3: the Character screen replaces Skills
+  extraNav: [["character", "Character"], ["codex", "Codex"], ["binder", "Binder"]]   // Slice 3 §3: the Character screen replaces Skills
 };

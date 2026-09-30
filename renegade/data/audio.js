@@ -33,6 +33,9 @@ DATA.audio = {
     sfx_wheel_click: { vol: 0.64 },   // each spin of a pods-room wall wheel (§B1)
     sfx_door_heavy: { vol: 0.8 },     // once, when the wheels match and the sealed door opens
     sfx_tutorial_pop: { vol: 0.64 },  // a tutorial box appears (each step)
+    sfx_card_pickup: { vol: 0.48 },   // §D a card drops (0.6 x0.8)
+    sfx_card_foil: { vol: 0.32 },     // §D a Foil drops: plays INSTEAD of sfx_card_pickup (0.4 x0.8)
+    sfx_card_new: { vol: 0.24 },      // §D first copy: layered ~200 ms after pickup/foil (DATA.cards.pop.newDelayMs) (0.3 x0.8)
     // Slice 4 §C weapon sounds (each weapon names one in its sfx; not in the gun group: quiet next to firearms)
     sfx_shot_bow_1: { vol: 0.95 }, sfx_shot_bow_2: { vol: 1.0 }, sfx_shot_bow_3: { vol: 0.95 }, sfx_shot_crossbow: { vol: 1.0 },
     sfx_bonk_1: { vol: 1.0 }, sfx_bonk_2: { vol: 1.0 }, sfx_bonk_3: { vol: 0.95 }, sfx_bonk_bass: { vol: 0.8 }

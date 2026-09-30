@@ -254,6 +254,18 @@ DATA.sprites = {
   // Slice 4 §A1 Old Marta (portrait + town figure; Smudge's art, bb0a635)
   npc_marta:             { file: "ui/npc_marta.png",                shape: "badge",    color: "#4a6a3a", size: 1, text: "M" },
   town_marta:            { file: "town/town_marta.png",             shape: "badge",    color: "#4a6a3a", size: 1, text: "M" },
+  // Slice 4 §D cards + binder (Smudge; assets/slice4_manifest.json "cards"). DOM images: js/cardview.js
+  card_frame_common:     { file: "ui/card_frame_common.png",        shape: "square",   color: "#6a6a5a", size: 1 },   // 80x112, art window [8,8,64,64], name plate [7,77,66,20]
+  card_frame_uncommon:   { file: "ui/card_frame_uncommon.png",      shape: "square",   color: "#3a5a8a", size: 1 },
+  card_frame_rare:       { file: "ui/card_frame_rare.png",          shape: "square",   color: "#a08a2a", size: 1 },
+  card_back:             { file: "ui/card_back.png",                shape: "square",   color: "#4a3a2a", size: 1 },
+  card_foil_strip6:      { file: "ui/card_foil_strip6.png",         shape: "none",     color: "#fff",    size: 1, frames: 6 },
+  card_badge_new:        { file: "ui/card_badge_new.png",           shape: "badge",    color: "#c03a2a", size: 1, text: "NEW" },
+  card_slot_unfound:     { file: "ui/card_slot_unfound.png",        shape: "square",   color: "#2e2418", size: 1 },
+  binder_bg:             { file: "ui/binder_bg.png",                shape: "square",   color: "#3a2a1a", size: 1 },   // 1000x600, 24 pockets per spread
+  binder_page:           { file: "ui/binder_page.png",              shape: "square",   color: "#3a2a1a", size: 1 },   // 420x448, 12 pockets (phones)
+  binder_pocket:         { file: "ui/binder_pocket.png",            shape: "square",   color: "#2a2016", size: 1 },
+  binder_corners:        { file: "ui/binder_corners.png",           shape: "none",     color: "#000",    size: 1 },
   // Slice 4 §B the pods puzzle (Smudge's art, bb0a635; assets/slice4_manifest.json "pods")
   obj_mural:             { file: "objects/obj_mural.png",           shape: "badge",    color: "#6a5a7a", size: 1, text: "MU" },   // 64x32: two slots wide
   obj_door_sealed:       { file: "objects/obj_door_sealed.png",     shape: "badge",    color: "#5a6a6a", size: 1, text: "DR" },

@@ -425,6 +425,7 @@
       if (alarm.hit) X.push({ type: "battle", family: al.family, budgetMult: al.budgetMult, nid: site.nid, why: al.why });
     }
     if (o.searched && o.type !== "door") { X.markPicked(site); site.everPicked = true; }   // Slice 3 §12
+    if (o.searched && o.type !== "door" && G.Cards) G.Cards.onSearch(site.nid, node.loc);   // Slice 4 §D: the location's card (first search here this run)
     const empty = !loot || (!loot.items.length && !Object.keys(loot.res).length);
     if (!empty) X.push({ type: "container", items: loot.items, res: loot.res, opened: true, nid: site.nid, objId: o.id, title: o.name, def: { id: o.type, name: o.name } });
     else if (o.searched && o.type !== "door") texts.push("Nothing useful.");

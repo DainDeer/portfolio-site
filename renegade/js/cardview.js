@@ -1,0 +1,112 @@
+// Slice 4 §D: card DOM (the pickup pop, the Binder panel, the big-card inspect). Logic: js/cards.js. Art: Smudge's
+// card frames (assets/ui/card_*). Every card is laid out in the frame's own 80x112 space as percentages, and the name
+// text scales with the card (container query units), so one element works at any size.
+(function (root) {
+  const G = root.G, UI = G.UI, SP = G.Sprites, h = UI.h;
+  const CV = G.CardView = {};
+  const url = (key) => DATA.sprites.basePath + SP.def(key).file;
+  const img = (key, cls) => h("img", { class: cls, src: url(key), alt: "", draggable: "false" });
+  // a card element. o: { unfound, foil, isNew, px (card width) }
+  CV.card = function (c, o) {
+    o = o || {};
+    const el = h("div", { class: "tcard" + (o.unfound ? " unfound" : "") + (o.foil ? " foil" : ""), "data-card": c.id, "data-rarity": c.rarity });
+    el.style.width = (o.px || 80) + "px";
+    el.appendChild(img(o.unfound ? "card_slot_unfound" : DATA.cards.rarities[c.rarity].frame, "tc-frame"));
+    const win = h("div", { class: "tc-art" + (c.portrait ? " portrait" : "") }); win.appendChild(SP.icon(c.sprite, c.portrait ? 64 : 32)); el.appendChild(win);
+    if (o.foil && !o.unfound) el.appendChild(h("div", { class: "tc-foil" }));
+    el.appendChild(h("div", { class: "tc-name" }, o.unfound ? "???" : c.name));
+    if (o.isNew) el.appendChild(img("card_badge_new", "tc-new"));
+    return el;
+  };
+  // ---- pickup pop (corner): back -> flip -> front; NEW! on a first copy ----
+  const queue = []; let showing = false;
+  CV.pickup = function (info) { queue.push(info); if (!showing) next(); };
+  function next() {
+    const info = queue.shift(); if (!info) { showing = false; return; }
+    showing = true;
+    const P = DATA.cards.pop, px = root.innerWidth >= 900 && root.innerHeight >= 600 ? 160 : 80;   // whole-pixel scales only (2x / 1x)
+    const box = h("div", { class: "card-pop", "data-card": info.card.id, style: `--flip:${P.flipMs}ms;--cw:${px}px` });
+    const flip = h("div", { class: "cp-flip" }, img("card_back", "cp-back"), CV.card(info.card, { foil: info.foil, isNew: info.isNew, px }));
+    box.appendChild(flip);
+    box.appendChild(h("div", { class: "cp-cap" }, info.isNew ? "New card!" : `${info.card.name} ×${info.n}`, info.foil ? h("b", null, " Foil") : null));
+    box.onclick = () => { box.remove(); clearTimeout(box._t); next(); };
+    document.body.appendChild(box);
+    if (G.Sfx) { G.Sfx.play(info.foil ? "sfx_card_foil" : "sfx_card_pickup"); if (info.isNew) setTimeout(() => G.Sfx.play("sfx_card_new"), P.newDelayMs); }
+    requestAnimationFrame(() => box.classList.add("in"));
+    setTimeout(() => flip.classList.add("flipped"), 260);
+    box._t = setTimeout(() => { box.classList.add("out"); setTimeout(() => { box.remove(); next(); }, 300); }, P.holdMs);
+  }
+  G.Cards.onPickup = (info) => CV.pickup(info);
+  // ---- binder panel ----
+  CV.pages = function () {
+    const list = G.Cards.list(), have = G.Cards.st().have, pages = [];
+    for (const [gid, gname] of DATA.cards.groups) {
+      const cs = list.filter((c) => c.group === gid), got = cs.filter((c) => have[c.id]).length;
+      for (let i = 0; i < cs.length; i += 12) pages.push({ group: gid, name: gname, cards: cs.slice(i, i + 12), got, total: cs.length, part: i / 12 + 1, parts: Math.ceil(cs.length / 12) });
+    }
+    return pages;
+  };
+  CV.page = 0;
+  UI.panels.binder = ["Binder", (el) => CV.panel(el)];
+  CV.panel = function (el) {
+    // layouts: "spread" (binder_bg, 2 pages), "page" (binder_page, portrait phones), "grid" (binder_pocket sleeves 6x2, short / landscape phones)
+    const mode = root.innerHeight < 600 ? "grid" : root.innerWidth < 760 ? "page" : "spread";
+    const pages = CV.pages(), per = mode === "spread" ? 2 : 1, cnt = G.Cards.count(), have = G.Cards.st().have;
+    CV.page = Math.max(0, Math.min(CV.page - (CV.page % per), pages.length - 1));
+    const wrap = h("div", { class: "binder " + mode });
+    const head = h("div", { class: "binder-head" }, h("b", { "data-binder-count": cnt.have + "/" + cnt.total }, `Series ${DATA.cards.series} · ${cnt.have}/${cnt.total} found`));
+    const go = (d) => { CV.page = Math.max(0, Math.min(pages.length - 1, CV.page + d * per)); UI.render(); };
+    head.appendChild(h("span", { class: "binder-nav" },
+      h("button", { "data-act": "binder-prev", disabled: CV.page === 0 ? "" : null, onclick: () => go(-1) }, "◀"),
+      h("span", null, `${Math.floor(CV.page / per) + 1} / ${Math.ceil(pages.length / per)}`),
+      h("button", { "data-act": "binder-next", disabled: CV.page + per >= pages.length ? "" : null, onclick: () => go(1) }, "▶")));
+    for (const [gid, gname] of DATA.cards.groups) { const i = pages.findIndex((p) => p.group === gid); head.appendChild(h("button", { class: "binder-tab" + (pages[CV.page] && pages[CV.page].group === gid ? " on" : ""), "data-tab": gid, onclick: () => { CV.page = i - (i % per); UI.render(); } }, gname)); }
+    wrap.appendChild(head);
+    if (mode === "grid") { CV.grid(wrap, pages[CV.page], have); el.appendChild(wrap); return; }
+    const spread = h("div", { class: "binder-spread", "data-per": per }); spread.appendChild(img(per === 1 ? "binder_page" : "binder_bg", "binder-bgimg"));
+    const M = per === 1 ? { pockets: [[16, 44], [116, 44], [216, 44], [316, 44], [16, 178], [116, 178], [216, 178], [316, 178], [16, 312], [116, 312], [216, 312], [316, 312]], headers: [[12, 10, 396, 24]], W: 420, H: 448 }
+      : { pockets: [[80, 120], [180, 120], [280, 120], [380, 120], [80, 254], [180, 254], [280, 254], [380, 254], [80, 388], [180, 388], [280, 388], [380, 388], [532, 120], [632, 120], [732, 120], [832, 120], [532, 254], [632, 254], [732, 254], [832, 254], [532, 388], [632, 388], [732, 388], [832, 388]], headers: [[76, 86, 396, 24], [528, 86, 396, 24]], W: 1000, H: 600 };
+    const pct = (x, W) => (x / W * 100) + "%";
+    for (let s = 0; s < per; s++) {
+      const pg = pages[CV.page + s]; if (!pg) continue;
+      const [hx, hy, hw, hh] = M.headers[s];
+      spread.appendChild(h("div", { class: "binder-ph", style: `left:${pct(hx, M.W)};top:${pct(hy, M.H)};width:${pct(hw, M.W)};height:${pct(hh, M.H)}` }, `${pg.name}${pg.parts > 1 ? ` (${pg.part}/${pg.parts})` : ""}`, h("span", null, `${pg.got}/${pg.total}`)));
+      pg.cards.forEach((c, i) => {
+        const [px, py] = M.pockets[s * 12 + i], hv = have[c.id];
+        const pk = h("div", { class: "binder-pocket" + (hv ? " filled" : ""), style: `left:${pct(px + 4, M.W)};top:${pct(py + 4, M.H)};width:${pct(80, M.W)}`, onclick: () => CV.inspect(c) });
+        const card = CV.card(c, { unfound: !hv, foil: hv && hv.foil > 0 }); card.style.width = "100%"; pk.appendChild(card);
+        if (hv) { pk.appendChild(img("binder_corners", "binder-corners")); if (hv.n > 1) pk.appendChild(h("span", { class: "binder-n" }, "×" + hv.n)); }
+        spread.appendChild(pk);
+      });
+    }
+    wrap.appendChild(spread);
+    el.appendChild(wrap);
+  };
+  CV.grid = function (wrap, pg, have) {
+    const ph = Math.max(80, Math.min(120, Math.floor((root.innerHeight - 190) / 2)));   // two rows of sleeves fit the height
+    const g = h("div", { class: "binder-grid", style: `--ph:${ph}px` });
+    g.appendChild(h("div", { class: "binder-ph" }, `${pg.name}${pg.parts > 1 ? ` (${pg.part}/${pg.parts})` : ""}`, h("span", null, `${pg.got}/${pg.total}`)));
+    const cells = h("div", { class: "binder-cells" });
+    pg.cards.forEach((c) => { const hv = have[c.id];
+      const pk = h("div", { class: "binder-sleeve" + (hv ? " filled" : ""), onclick: () => CV.inspect(c) }, img("binder_pocket", "binder-sleeve-bg"));
+      const card = CV.card(c, { unfound: !hv, foil: hv && hv.foil > 0 }); card.style.width = ""; card.classList.add("in-sleeve"); pk.appendChild(card);
+      if (hv) { pk.appendChild(img("binder_corners", "binder-corners")); if (hv.n > 1) pk.appendChild(h("span", { class: "binder-n" }, "×" + hv.n)); }
+      cells.appendChild(pk); });
+    g.appendChild(cells); wrap.appendChild(g);
+  };
+  CV.inspect = function (c) {
+    const hv = G.Cards.st().have[c.id], R = DATA.cards.rarities[c.rarity];
+    const box = h("div", { class: "card-inspect", "data-inspect": c.id });
+    box.appendChild(CV.card(c, { unfound: !hv, foil: hv && hv.foil > 0, px: 240 }));
+    const info = h("div", { class: "ci-info" });
+    if (hv) {
+      info.appendChild(h("h2", null, c.name));
+      info.appendChild(h("p", { class: "ci-rarity r-" + c.rarity }, `${R.name} · ${DATA.cards.groups.find((g) => g[0] === c.group)[1]}`));
+      info.appendChild(h("p", null, `Copies: ${hv.n}` + (hv.foil ? ` · Foil: ${hv.foil}` : "")));
+      info.appendChild(h("p", { class: "hint" }, c.blurb));
+    } else { info.appendChild(h("h2", null, "???")); info.appendChild(h("p", { class: "hint" }, "Not found yet.")); }
+    info.appendChild(h("button", { class: "primary", onclick: () => UI.closeModal() }, "Close"));
+    box.appendChild(info);
+    UI.modal(box, "card-modal");
+  };
+})(window);

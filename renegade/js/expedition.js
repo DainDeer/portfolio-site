@@ -479,6 +479,7 @@
     G.Allies.afterBattle(step, b, r);   // Slice 3 §1: kills, history, nickname moments, Field Dresser
     const deadEnemies = b.units.filter((u) => u.side === 1 && u.state === "dead");
     r.stats.kills += deadEnemies.length;
+    if (G.Cards) G.Cards.onKills(deadEnemies);   // Slice 4 §D: card drops
     // kill quests count at the kill, before death is handled (Slice 2 §9)
     for (const qid of G.Quests.onKills(r.zone, deadEnemies.map((u) => ({ eid: u.eid, family: u.family })))) {
       const qh = G.Quests.objectiveHeat(qid); if (qh) { X.addHeat(qh, "quest"); X.log(`Quest objective done: ${G.Quests.def(qid).name}. +${qh} Heat`, "heat"); }
@@ -528,6 +529,7 @@
     G.Allies.afterBattle(step, b, r);
     if (G.Hunters && G.Hunters.captainMark) G.Hunters.captainMark(b);   // a Captain you killed before breaking away still marks you
     const deadEnemies = b.units.filter((u) => u.side === 1 && u.state === "dead"); r.stats.kills += deadEnemies.length;
+    if (G.Cards) G.Cards.onKills(deadEnemies);
     for (const qid of G.Quests.onKills(r.zone, deadEnemies.map((u) => ({ eid: u.eid, family: u.family })))) { const qh = G.Quests.objectiveHeat(qid); if (qh) X.addHeat(qh, "quest"); }
     // the fight stays here: the enemies still standing wait at this location (this run). A Hunter pack keeps its own state.
     const site = X.site(nid), left = b.units.filter((u) => u.side === 1 && (u.state === "alive" || u.state === "retreating"));

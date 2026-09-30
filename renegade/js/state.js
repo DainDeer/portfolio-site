@@ -120,7 +120,7 @@
       grunts: [], fallenGrunts: [], perks: {}, stash: { items: [], res: U.clone(DATA.items.startingStash.resources) },
       loadout: { bodyId: "body_basic", gear: {}, pouch: [], grunts: [] },
       tutorialDone: false, humanOffer: null, runCount: 0, extractions: 0, deaths: 0, lore: [],
-      run: null, lastResult: null, settings: St.defaultSettings(), tut: G.Tut ? G.Tut.fresh() : null, main: null
+      run: null, lastResult: null, settings: St.defaultSettings(), tut: G.Tut ? G.Tut.fresh() : null, main: null, cards: G.Cards ? G.Cards.fresh() : null
     };
     if (G.Main) { const prev = G.state; G.state = s; G.Main.st(); G.state = prev; }   // Slice 4 §B: main quests + the pods solution
     { const prev = G.state; G.state = s; for (let i = 0; i < DATA.config.deploy.startingGrunts; i++) s.grunts.push(St.makeGrunt(rng)); G.state = prev; }

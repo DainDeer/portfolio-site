@@ -81,6 +81,7 @@
     const after = Q.repLevel(q.giver);
     if (after > before) Q.onRepLevel(q.giver, after);
     G.log(`Quest complete: ${q.name}. Reward: ${Q.rewardText(rw)}.`);
+    if (G.Cards) G.Cards.onQuestDone(q.giver);   // Slice 4 §D: the NPC's card on their first quest
     return { quest: q, items: got, repUp: after > before ? after : 0 };
   };
   Q.repLevel = function (g) { const rep = Q.st().rep[g] || 0, L = D().repLevels; let lvl = 0; for (let i = 0; i < L.length; i++) if (rep >= L[i]) lvl = i + 1; return lvl; };
