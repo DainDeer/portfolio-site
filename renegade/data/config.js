@@ -39,6 +39,25 @@ DATA.config = {
   // item: never dropped, looted or stashed). [DRAFT] weak on purpose: was dmg 4 / 0.7 s / acc 65 (~5.7 dps), now ~3.8 dps
   // (the Shiv, a Grunt's innate weapon, is 10).
   unarmed: { dmg: 3, interval: 0.8, range: 1.0, acc: 60 },
+  // Slice 4 §H (Megan): difficulty, picked on the start screen for a new save and locked for it. Combat, weapons,
+  // enemies, loot and Heat are the same in all three; only the death rules change. Old saves are Standard.
+  difficulty: {
+    order: ["casual", "standard", "hardcore"],
+    default: "standard",   // saves from before §H, and a new game made without the start screen (?notitle, tests)
+    list: {
+      casual: { name: "Casual", keepEquipped: true, foundLossPct: 50, foundResLossPct: 50, retries: -1,
+        // keepEquipped: the body's equipped items always come home. foundLossPct: each item found that run (the bag) is
+        // lost on its own roll. foundResLossPct [DRAFT, Rivet]: each found resource type (the whole stack) the same way.
+        // retries: "Retry fight" on the defeat screen restarts that battle from its start (-1 = unlimited).
+        desc: "Casual: death keeps your equipped gear. Each thing you found that run has a 50% chance to be lost. Retry a lost fight as often as you like." },
+      standard: { name: "Standard", desc: "Standard: today's rules. A body that dies goes on its restore timer." },
+      hardcore: { name: "Hardcore", permadeath: true,
+        // permadeath: a body that dies is gone for good (no restore timer, its stats with it). You go on in another body;
+        // if the Basic body dies a fresh level-1 husk takes its place, so there's always one.
+        desc: "Hardcore: a body that dies is gone for good, stats and all. You go on in another body." }
+    },
+    pickHint: "Pick a difficulty. It is locked for this save."
+  },
   grunts: {
     recruitCost: { food: 3, water: 3 },
     rosterCap: 5,

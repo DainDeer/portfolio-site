@@ -397,3 +397,7 @@ button.promote { background: #6a5a1a; }
 .confirm-unarmed .unarmed-list { margin: 6px 0 12px 18px; }
 .confirm-row { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
 .confirm-btn { min-height: 44px; min-width: 96px; padding: 0 18px; font-size: 15px; }
+/* Slice 4 §H: the difficulty badge (Smudge's 16x16 _hud sigil at x2) */
+.diff-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #d4c8a0; white-space: nowrap; }
+.diff-badge img, .diff-badge canvas { image-rendering: pixelated; width: 32px; height: 32px; }
+.diff-badge.diff-hardcore { color: #e0a080; }

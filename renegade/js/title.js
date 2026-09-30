@@ -53,10 +53,39 @@
     const field = (label, labelImg, type) => h("div", { class: "title-row" },
       h("label", { class: "title-label" }, h("img", { src: url(labelImg.file), alt: label, draggable: "false" })),
       h("div", { class: "title-field" }, h("input", { type, disabled: true, placeholder: "", "aria-label": label + " (coming later)", tabindex: "-1" }), h("img", { class: "title-lock", src: url(A.lock.file), alt: "", draggable: "false" })));
-    const kids = [field("Username", A.labelUser, "text"), field("Password", A.labelPass, "password"), h("div", { class: "title-divider" })];
-    if (T.extra) kids.push(T.extra(h));   // Slice 4 §H: the difficulty choice on a new save
+    const diff = T.diffPending();
+    const kids = diff ? [T.diffPicker(h), h("div", { class: "title-divider" })]   // Slice 4 §H: a new save picks its difficulty (Smudge's layout: in place of the fields)
+      : [field("Username", A.labelUser, "text"), field("Password", A.labelPass, "password"), h("div", { class: "title-divider" })];
     kids.push(h("button", { class: "title-play", "data-act": "play", "data-nosfx": "1", "aria-label": "Play", onclick: () => T.play() }, h("span", { class: "title-play-art" })));
-    return h("div", { class: "title-panel" }, kids);
+    return h("div", { class: "title-panel" + (diff ? " diff" : "") }, kids);
+  };
+  // ---- Slice 4 §H: difficulty (config.difficulty; Smudge's sigils, assets/ui/difficulty) ----
+  T.diffPending = () => !!(G.Difficulty && G.state && G.Difficulty.pending());
+  T.choice = null;
+  const FPS = { casual: 5, standard: 4, hardcore: 8 };   // Smudge's strip speeds (difficulty_manifest.json)
+  const abs = (f) => new URL(url(f), document.baseURI).href;
+  T.diffPicker = function (h) {
+    const D = DATA.config.difficulty, box = h("div", { class: "t-diffs-wrap", "data-panel": "difficulty" });
+    const desc = h("p", { class: "t-diff-desc", "aria-live": "polite" }, T.choice ? D.list[T.choice].desc : D.pickHint);
+    const cols = h("div", { class: "t-diffs", role: "radiogroup", "aria-label": "Difficulty" });
+    const paint = () => { for (const c of cols.children) { const id = c.dataset.diff; c.classList.toggle("sel", T.choice === id); c.classList.toggle("dim", !!T.choice && T.choice !== id); c.setAttribute("aria-checked", T.choice === id ? "true" : "false"); }
+      desc.textContent = T.choice ? D.list[T.choice].desc : D.pickHint; desc.classList.remove("warn"); };
+    for (const id of D.order) {
+      const c = h("button", { class: "t-diff", "data-diff": id, "data-act": "diff-" + id, role: "radio", "aria-checked": "false", onclick: () => { T.choice = id; paint(); } },
+        h("span", { class: "t-diff-label" }, D.list[id].name), h("span", { class: "t-sigil" }));
+      const v = (k, key) => c.style.setProperty(k, `url("${abs(DATA.sprites[key].file)}")`);
+      v("--d-anim", `diff_${id}_anim`); v("--d-sel-anim", `diff_${id}_sel_anim`); v("--d-hover", `diff_${id}_hover`); v("--d-dim", `diff_${id}_dim`); v("--d-still", `diff_${id}`); v("--d-sel", `diff_${id}_sel`);
+      c.style.setProperty("--d-dur", (4 / FPS[id]).toFixed(3) + "s");
+      cols.appendChild(c);
+    }
+    box.append(h("div", { class: "t-diff-head" }, "DIFFICULTIES:"), cols, desc); T._paint = paint; T._desc = desc;
+    setTimeout(paint, 0);
+    return box;
+  };
+  T.beforePlay = function () {
+    if (!T.diffPending()) return true;
+    if (!T.choice) { if (T._desc) { T._desc.textContent = DATA.config.difficulty.pickHint; T._desc.classList.remove("warn"); void T._desc.offsetWidth; T._desc.classList.add("warn"); } return false; }
+    G.Difficulty.set(T.choice); G.Difficulty.lock(); G.State.save(); return true;
   };
   T.show = function () {
     if (T.open) return; T.open = true;
@@ -67,7 +96,7 @@
     v("--t-snd-on", A.soundOn.file); v("--t-snd-on-h", A.soundOnHover.file); v("--t-snd-off", A.soundOff.file); v("--t-snd-off-h", A.soundOffHover.file); v("--t-tag", A.versionTag.file);
     root.append(h("div", { class: "title-still" }), h("canvas", { class: "title-gl" }), h("div", { class: "title-shade" }),
       h("h1", { class: "title-logo", "aria-label": "Renegade" }), T.panel(),
-      h("div", { class: "title-version", "data-note": "build" }, T.buildLabel()),
+      h("div", { class: "title-version", "data-note": "build" }, !T.diffPending() && G.Difficulty && G.state ? h("img", { class: "title-diff", src: url(DATA.sprites["diff_" + G.Difficulty.id() + "_hud"].file), alt: G.Difficulty.name(), title: "Difficulty: " + G.Difficulty.name() }) : null, T.buildLabel()),
       h("button", { class: "title-sound", "data-act": "title-sound", "data-nosfx": "1", onclick: (e) => { e.stopPropagation(); T.toggleSound(); } }));
     document.body.appendChild(root); document.body.classList.add("title-open");
     T.keys = (e) => { if ((e.key === "Enter" || e.key === " ") && T.open && !document.querySelector("#modal-root .modal")) { e.preventDefault(); T.play(); } };
@@ -85,7 +114,7 @@
   };
   T.play = function () {
     if (!T.open) return;
-    if (T.beforePlay && T.beforePlay() === false) return;   // Slice 4 §H: the new save's difficulty
+    if (T.beforePlay() === false) return;   // Slice 4 §H: a new save picks its difficulty first
     if (G.Sfx && G.Sfx.play) G.Sfx.play("sfx_ui_click");
     T.close(); G.UI.render();   // the render's music state is outpost / run: title -> outpost crossfades on the bar line
   };

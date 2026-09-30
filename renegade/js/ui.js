@@ -56,6 +56,7 @@
   UI.renderTop = function () {
     const s = G.state, t = $("#topbar"); t.innerHTML = "";
     t.appendChild(h("span", { class: "brand" }, "RENEGADE", h("small", null, " [working title] · Slice 3")));
+    if (G.Difficulty && !G.Difficulty.pending(s)) { const d = G.Difficulty.id(s); t.appendChild(h("span", { class: "diff-badge diff-" + d, "data-diff": d, title: `Difficulty: ${G.Difficulty.name(s)} (locked for this save). ${G.Difficulty.def(s).desc.replace(/^[^:]+: /, "")}` }, SP.icon("diff_" + d + "_hud", 32), G.Difficulty.name(s))); }   // Slice 4 §H
     const res = s.run ? s.run.bag.res : s.stash.res;
     const box = h("span", { class: "res" }, s.run ? "Bag: " : "Stockpile: ");
     for (const k in DATA.items.resources) if (!DATA.items.resources[k].hidden) box.appendChild(h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " + (res[k] || 0)));
@@ -392,7 +393,7 @@
     if (UI.ablText(b)) t += `Abilities: ${UI.ablText(b)}<br>`;
     if (b.quirks.length) t += "Quirks: " + b.quirks.map((q) => `${DATA.bodies.quirks[q].name} (${DATA.bodies.quirks[q].desc})`).join("; ") + "<br>";
     t += Object.entries(b.skills).filter(([, v]) => v.lvl > 1).map(([k, v]) => `${DATA.skills[k].name} ${v.lvl}`).join(", ") || "All body skills 1";
-    const ms = G.State.restoreMs(b); t += `<br>Restore time if killed: ${ms ? U.fmtTime(ms) : "none"}`;
+    const ms = G.State.restoreMs(b); t += G.Difficulty && G.Difficulty.def().permadeath ? "<br>Hardcore: if killed, it's gone for good" : `<br>Restore time if killed: ${ms ? U.fmtTime(ms) : "none"}`;
     return t;
   };
 
@@ -590,8 +591,15 @@
     } else {
       box.appendChild(h("h2", { class: "bad" }, "YOUR BODY DIED"));
       box.appendChild(h("p", null, lr.why));
-      box.appendChild(h("p", null, `Lost ${lr.lost} carried/equipped items. XP is kept.` + (lr.kept.length ? ` Secure Pouch saved: ${lr.kept.join(", ")}.` : "")));
-      box.appendChild(h("p", null, lr.restoreMs ? `${lr.body} enters the Restore Queue: ${U.fmtTime(lr.restoreMs)}.` : `${lr.body} has no restore timer.`));
+      if (lr.casual) {   // Slice 4 §H: Casual
+        const c = lr.casual, rs = (o) => Object.keys(o).map((k) => `${o[k]} ${DATA.items.resources[k] ? DATA.items.resources[k].name : k}`);
+        box.appendChild(h("p", { "data-death": "casual" }, `Casual: your equipped gear came home${c.keptGear.length ? " (" + c.keptGear.join(", ") + ")" : ""}. Each find had a ${DATA.config.difficulty.list.casual.foundLossPct}% chance to be lost. XP is kept.`));
+        if (c.foundKept.length || Object.keys(c.resKept).length) box.appendChild(h("p", { class: "good" }, "Kept: " + c.foundKept.concat(rs(c.resKept)).join(", ") + "."));
+        if (c.foundLost.length || Object.keys(c.resLost).length) box.appendChild(h("p", { class: "bad" }, "Lost: " + c.foundLost.concat(rs(c.resLost)).join(", ") + "."));
+        if (lr.kept.length) box.appendChild(h("p", null, `Secure Pouch saved: ${lr.kept.join(", ")}.`));
+      } else box.appendChild(h("p", null, `Lost ${lr.lost} carried/equipped items. XP is kept.` + (lr.kept.length ? ` Secure Pouch saved: ${lr.kept.join(", ")}.` : "")));
+      if (lr.permadeath) box.appendChild(h("p", { class: "bad", "data-death": "hardcore" }, `Hardcore: ${lr.body} is gone for good, with everything it learned. You go on as ${lr.permadeath.next}.`));
+      else box.appendChild(h("p", null, lr.restoreMs ? `${lr.body} enters the Restore Queue: ${U.fmtTime(lr.restoreMs)}.` : `${lr.body} has no restore timer.`));
     }
     if (lr.ammo) box.appendChild(h("p", { "data-ammo-result": lr.ammo.used }, `${G.Items.base(lr.ammo.base).name}: ${lr.ammo.used} pack${lr.ammo.used === 1 ? "" : "s"} used` + (lr.kind === "extracted" ? `, ${lr.ammo.left} back in the stash.` : lr.ammo.lost ? `, ${lr.ammo.lost} lost with your body.` : ".")));
     // XP earned this run, one line per skill (floating "+N XP" next to each line, Slice 2 §10)
@@ -833,10 +841,21 @@
     const sm = G.Battle.summary(b);
     const tbl = h("table", { class: "summary" }, h("tr", null, ...["Unit", "State", "Dmg", "Hits", "Misses", "Jams", "Kills", "Heals"].map((x) => h("th", null, x))));
     for (const r of sm.rows) tbl.appendChild(h("tr", { class: r.side ? "enemy" : "" }, ...[r.name, r.state, r.dmg, r.hits, r.misses, r.jams, r.kills, r.heals].map((x) => h("td", null, String(x)))));
+    const lost = b.result !== "win" && b.result !== "escape", retry = lost && G.Difficulty && G.Difficulty.canRetry();   // Slice 4 §H: Casual
     const box = h("div", null, h("h2", { class: b.result === "win" ? "good" : "bad" }, b.result === "win" ? "VICTORY" : b.result === "escape" ? "BROKE AWAY" : "DEFEAT"), h("p", null, `Duration ${Math.round(b.t)} s · seed ${b.seed}`), tbl,
       h("div", { class: "blog" }, ...sm.log.map((l) => h("div", null, l))),
-      h("button", { class: "primary", onclick: () => { G.BattleView.unmount(UI.battle.v); UI.battle = null; UI.closeModal(); G.Exp.finishBattle(step, b); UI.render(); } }, "Continue"));
+      retry ? h("p", { class: "hint", "data-note": "retry" }, "Casual: retry this fight from its start, as often as you like. Continue accepts the defeat.") : null,
+      h("div", { class: "confirm-row" },
+        retry ? h("button", { class: "primary confirm-btn", "data-act": "retry-fight", onclick: () => UI.retryFight() }, "↻ Retry fight") : null,
+        h("button", { class: (retry ? "" : "primary ") + "confirm-btn", "data-act": "battle-continue", onclick: () => { G.BattleView.unmount(UI.battle.v); UI.battle = null; UI.closeModal(); G.Exp.finishBattle(step, b); UI.render(); } }, "Continue")));
     UI.modal(box, "wide");
+  };
+
+  // Slice 4 §H: Casual's Retry fight: back to the save as it was when this battle was built, and the same battle again
+  UI.retryFight = function () {
+    if (UI.battle) { G.BattleView.unmount(UI.battle.v); UI.battle = null; } UI.closeModal();
+    const step = G.Difficulty.retry(); if (!step) { UI.render(); return; }
+    UI.renderTop(); UI.startBattle(step);
   };
 
   UI.checkLabel = function (info) {

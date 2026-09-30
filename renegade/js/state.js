@@ -121,6 +121,7 @@
       grunts: [], fallenGrunts: [], perks: {}, stash: { items: [], res: U.clone(DATA.items.startingStash.resources) },
       loadout: { bodyId: "body_basic", gear: {}, pouch: [], grunts: [] },
       tutorialDone: false, humanOffer: null, runCount: 0, extractions: 0, deaths: 0, lore: [],
+      difficulty: DATA.config.difficulty.default, difficultyLocked: false,   // Slice 4 §H: picked on the start screen, locked at Play / the first deploy
       run: null, lastResult: null, settings: St.defaultSettings(), tut: G.Tut ? G.Tut.fresh() : null, main: null, cards: G.Cards ? G.Cards.fresh() : null
     };
     if (G.Main) { const prev = G.state; G.state = s; G.Main.st(); G.state = prev; }   // Slice 4 §B: main quests + the pods solution
@@ -306,6 +307,7 @@
       }
       if (s.run && s.run.squad) for (const m of s.run.squad) { const g = s.grunts.find((x) => x.uid === m.g.uid); if (g) m.g = g; }
       G.state = prev; }
+    if (!s.difficulty || !DATA.config.difficulty.list[s.difficulty]) { s.difficulty = DATA.config.difficulty.default; s.difficultyLocked = true; }   // Slice 4 §H: older saves are Standard
     s.loadout = s.loadout || { bodyId: "body_basic", gear: {}, pouch: [], grunts: [] };
     s.loadout.gear = s.loadout.gear || {}; s.loadout.pouch = s.loadout.pouch || []; s.loadout.grunts = s.loadout.grunts || [];
     return s;

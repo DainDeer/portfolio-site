@@ -167,7 +167,7 @@
     const seedIn = h("input", { type: "number", value: s.maps.a.seed, style: "width:110px" });
     const reseed = (v) => { if (r) return "Finish the expedition first."; s.maps.a = G.Map.generate(v >>> 0); s.seed = s.maps.a.seed; s.everSeen = {}; return "Zone A regenerated."; };
     sd.appendChild(h("div", null, seedIn, btn("Reseed map", () => reseed(+seedIn.value)), btn("Random", () => reseed(U.randomSeed()))));
-    sd.appendChild(btn("NEW GAME (wipe save)", () => { if (!confirm("Wipe the save and start over?")) return; if (G.UI.battle) { G.BattleView.unmount(G.UI.battle.v); G.UI.battle = null; } G.UI.closeModal(); G.State.newGame(+seedIn.value >>> 0); G.UI.panel = null; return "New game."; }));
+    sd.appendChild(btn("NEW GAME (wipe save)", () => { if (!confirm("Wipe the save and start over?")) return; if (G.UI.battle) { G.BattleView.unmount(G.UI.battle.v); G.UI.battle = null; } G.UI.closeModal(); G.State.newGame(+seedIn.value >>> 0); G.UI.panel = null; if (G.Title && G.Title.shouldShow()) { G.Title.choice = null; G.Title.show(); } return "New game."; }));
     el.appendChild(sd);
     // tuning
     const tu = h("div", { class: "dbg-sec" }, h("h4", null, "Tuning (live; saved as overrides in this browser)"));

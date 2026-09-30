@@ -47,3 +47,30 @@ body.title-open { overflow: hidden; }
 #title .title-sound.on { background-image: var(--t-snd-on); }
 #title .title-sound.on:hover { background-image: var(--t-snd-on-h); }
 @media (prefers-reduced-motion: reduce) { #title .title-logo { animation: none; } }
+/* Slice 4 §H: the new save's difficulty (Smudge's sigils, 40x40 at x2; columns 52 native, 44 on narrow phones) */
+#title .title-panel.diff { width: 392px; }
+#title.phone .title-panel.diff { width: 352px; }
+@media (max-width: 370px) { #title.phone .title-panel.diff { width: 344px; } }
+#title .t-diff-head { color: #8e8e8c; text-shadow: 2px 2px 0 #120a0a; font-size: 15px; letter-spacing: .5px; margin: 0 0 6px 2px; }
+#title .t-diffs { display: flex; justify-content: center; }
+#title .t-diff { width: 104px; min-height: 44px; padding: 0; border: 0; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; color: inherit; }
+#title.phone .t-diff { width: 88px; }
+#title .t-diff:focus { outline: none; }
+#title .t-diff-label { font-size: 15px; color: #d4c8a0; text-shadow: 2px 2px 0 #120a0a; margin-bottom: 6px; white-space: nowrap; }
+#title.phone .t-diff-label { font-size: 13px; }
+#title .t-diff.sel .t-diff-label { color: #f8dc5a; }
+#title .t-sigil { display: block; width: 80px; height: 80px; image-rendering: pixelated; background: var(--d-anim) 0 0 / 320px 80px no-repeat; animation: t-sig var(--d-dur) steps(4) infinite; }
+@keyframes t-sig { from { background-position: 0 0; } to { background-position: -320px 0; } }
+#title .t-diff:hover .t-sigil, #title .t-diff:focus-visible .t-sigil { background: var(--d-hover) 0 0 / 80px 80px no-repeat; animation: none; }
+#title .t-diff.dim .t-sigil { background: var(--d-dim) 0 0 / 80px 80px no-repeat; animation: none; }
+#title .t-diff.dim:hover .t-sigil, #title .t-diff.dim:focus-visible .t-sigil { background: var(--d-hover) 0 0 / 80px 80px no-repeat; }
+#title .t-diff.sel .t-sigil, #title .t-diff.sel:hover .t-sigil { background: var(--d-sel-anim) 0 0 / 320px 80px no-repeat; animation: t-sig var(--d-dur) steps(4) infinite; }
+#title .t-diff-desc { min-height: 60px; margin: 8px 2px 0; font-size: 14px; line-height: 20px; color: #d4c8a0; text-shadow: 2px 2px 0 #120a0a; }
+#title .t-diff-desc.warn { color: #f8dc5a; animation: t-warn .4s; }
+@keyframes t-warn { 0%, 100% { transform: none; } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+#title .title-version { display: flex; align-items: center; gap: 4px; }
+#title .title-diff { width: 32px; height: 32px; image-rendering: pixelated; }
+@media (prefers-reduced-motion: reduce) {
+  #title .t-sigil { animation: none !important; background-position: 0 0 !important; }   /* frame 0 = the still */
+  #title .t-diff-desc.warn { animation: none; }
+}
