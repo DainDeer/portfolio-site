@@ -68,6 +68,7 @@
   // ---------- main render ----------
   UI.render = function () {
     UI.hideTip();
+    if (G.TutView) setTimeout(G.TutView.check, 0);   // Slice 4 §A: a tutorial step due on the new screen (js/tutorialview.js)
     if (G.State.loadNotice) { const n = G.State.loadNotice; G.State.loadNotice = null; setTimeout(() => UI.modal(h("div", null, h("h2", null, "Save"), h("p", null, n), h("button", { class: "primary", onclick: () => UI.render() }, "OK"))), 0); }
     UI.renderTop();
     const s = G.state, scr = $("#screen");
@@ -89,6 +90,8 @@
   };
   UI.openPanel = function (id) {
     if (id === "town") id = null;
+    // Slice 4 §A1: Old Marta stands by the trapdoor; opening it before you've talked to her opens her first
+    if ((id === "zones" || id === "deploy") && G.Tut && G.Tut.needsMarta()) { UI.showMarta(() => UI.openPanel(id)); return; }
     UI.panel = id; UI.render();
   };
   UI.renderOutpost = function (scr) {
@@ -105,6 +108,7 @@
     const stage = G.TownView.render(town, (opens) => {
       // Slice 3 §10c: clicking the Water Still collects what's waiting (then opens its panel)
       if (opens === "still" && G.Outpost.built("still")) { const got = G.Outpost.collect("still"); if (Object.keys(got).length) { UI.toast("Collected " + G.Buildings.resText(got) + "."); G.Sfx.play("sfx_ui_click"); G.State.save(); } }
+      if (opens === "marta") { UI.showMarta(); return; }   // Slice 4 §A1
       UI.openPanel(opens);
     });
     if (UI.panel === "zones" || UI.panel === "deploy") stage.classList.add("trapdoor-open");
@@ -310,7 +314,7 @@
     // squad
     let used = G.State.bodyCost(body);
     for (const id of lo.grunts) { const g = s.grunts.find((x) => x.uid === id); used += G.State.gruntTpl(g).deployCost; }
-    const ssec = h("section", { class: "panel" }, h("h3", null, `2 · Squad — Deployment Score ${used} / ${score}` + (G.Perks.deployScore() ? ` (incl. +${G.Perks.deployScore()} Squad Leader)` : "")));
+    const ssec = h("section", { class: "panel", "data-tut": "squad" }, h("h3", null, `2 · Squad — Deployment Score ${used} / ${score}` + (G.Perks.deployScore() ? ` (incl. +${G.Perks.deployScore()} Squad Leader)` : "")));
     for (const g of s.grunts) {
       const on = lo.grunts.includes(g.uid), cost = G.State.gruntTpl(g).deployCost;
       const cb = h("input", { type: "checkbox", checked: on, disabled: !on && used + cost > score, onchange: () => { if (on) lo.grunts = lo.grunts.filter((x) => x !== g.uid); else lo.grunts.push(g.uid); UI.render(); } });
@@ -343,7 +347,7 @@
     }
     // updates in place (no full re-render): a blur-triggered re-render would swallow the click on "Start"
     const medIn = h("input", { type: "number", min: 0, max: s.stash.res.med || 0, value: lo.med, oninput: (e) => { lo.med = U.clamp(+e.target.value || 0, 0, s.stash.res.med || 0); updCarry(); G.State.save(); } });
-    gsec.appendChild(h("div", { class: "gear-row" }, h("span", { class: "slot" }, "Med Supplies"), medIn, h("small", null, ` of ${s.stash.res.med || 0} in the stockpile (${DATA.resources.med.kgPerUnit} kg each, carried in the bag)`)));
+    gsec.appendChild(h("div", { class: "gear-row", "data-tut": "med" }, h("span", { class: "slot" }, "Med Supplies"), medIn, h("small", null, ` of ${s.stash.res.med || 0} in the stockpile (${DATA.resources.med.kgPerUnit} kg each, carried in the bag)`)));
     // Slice 3 §9 ammo: one type (or none) + how many packs to carry; 1 pack is used at the start of each battle
     { const W = G.Workbench, types = W.ammoTypes().filter((k) => W.ammoCount(k) > 0);
       if (lo.ammo && (!lo.ammo.base || W.ammoCount(lo.ammo.base) <= 0)) lo.ammo = null;
@@ -353,7 +357,7 @@
       const aN = lo.ammo ? h("input", { type: "number", "data-ammo": "n", min: 1, max: W.ammoCount(lo.ammo.base), value: lo.ammo.n, oninput: (e) => { lo.ammo.n = U.clamp(+e.target.value || 1, 1, W.ammoCount(lo.ammo.base)); updCarry(); G.State.save(); } }) : null;
       gsec.appendChild(h("div", { class: "gear-row", "data-row": "ammo" }, h("span", { class: "slot" }, "Ammo"), aSel, aN ? " packs: " : null, aN, h("small", null, ` 1 pack per battle, every gun in the squad; ${G.Items.base(W.ammoTypes()[0]).weight} kg each; leftovers come back if you extract`))); }
     // carry preview
-    const carryLine = h("div");
+    const carryLine = h("div", { "data-tut": "carry" });
     function updCarry() {
       const gearItems = Object.values(lo.gear).map((uid) => s.stash.items.find((i) => i.uid === uid)).filter(Boolean);
       const fake = { gear: Object.fromEntries(gearItems.map((i) => [G.Items.base(i.base).slot, i])), bag: { items: [], res: { med: lo.med } }, pouch: [], carriedCritical: [], ammo: lo.ammo || null };
@@ -485,6 +489,20 @@
     el.appendChild(p);
   };
 
+  // Slice 4 §A1: Old Marta. First talk: her 3 help choices (the tutorial mode). After that: a short line.
+  UI.showMarta = function (after) {
+    const M = DATA.tutorial.marta, first = G.Tut.needsMarta();
+    const box = h("div", { class: "marta", "data-panel": "marta" }, h("div", { class: "marta-talk" }, SP.icon(M.portrait, 64),
+      h("div", null, h("h2", null, M.name, h("small", null, " · " + M.title)), h("p", null, first ? M.greeting : M.talkAgain))));
+    const done = (msg) => { UI.closeModal(); if (msg) UI.toast(`${M.name}: "${msg}"`); UI.render(); if (after) after(); };
+    if (first) {
+      const ch = h("div", { class: "marta-choices" });
+      for (const c of M.choices) ch.appendChild(h("button", { "data-marta-choice": c.mode, onclick: () => { G.Tut.setMode(c.mode); G.State.save(); done(M.afterChoice[c.mode]); } }, `“${c.label}”`));
+      box.appendChild(ch);
+    } else box.appendChild(h("button", { class: "primary", onclick: () => done() }, "Bye"));
+    UI.modal(box);
+  };
+
   // ---------- run result / body offer ----------
   // Slice 3 §8 / §2: Settings panel (audio sliders + mute, aim mode). Saved with the game (state.settings).
   UI.showSettings = function () {
@@ -499,6 +517,14 @@
     const aim = h("select", { "data-set": "aimMode", onchange: (e) => { st.aimMode = e.target.value; G.State.save(); } });
     for (const [v, l] of [["slowmo", "Slow-mo 25% while aiming"], ["pause", "Full pause while aiming"]]) aim.appendChild(h("option", { value: v, selected: st.aimMode === v }, l));
     box.appendChild(h("div", { class: "set-row" }, h("label", null, "Aim mode"), aim));
+    // Slice 4 §A: tutorial level (Marta's choice) + Replay tutorial (re-arms every step for the next run)
+    if (G.Tut) {
+      box.appendChild(h("h3", null, "Gameplay"));
+      const tm = h("select", { "data-set": "tutorial", onchange: (e) => { G.Tut.setMode(e.target.value); G.State.save(); } });
+      for (const [v, l] of [["full", "Full tutorial"], ["tips", "Tips when they come up"], ["none", "Off"]]) tm.appendChild(h("option", { value: v, selected: (G.Tut.mode() || "full") === v }, l));
+      box.appendChild(h("div", { class: "set-row" }, h("label", null, "Tutorial"), tm));
+      box.appendChild(h("div", { class: "set-row" }, h("label", null, ""), h("button", { "data-act": "replay-tutorial", onclick: () => { G.Tut.replay(); G.State.save(); tm.value = G.Tut.mode(); UI.toast("Tutorial re-armed: every step shows again."); } }, "Replay tutorial")));
+    }
     box.appendChild(h("p", { class: "hint" }, "Audio starts after your first click. Missing sound files are skipped silently."));
     box.appendChild(h("button", { class: "primary", onclick: () => { UI.closeModal(); UI.render(); } }, "Done"));
     UI.modal(box);
@@ -510,6 +536,7 @@
     const box = h("div");
     if (lr.kind === "extracted") {
       box.appendChild(h("h2", { class: "good" }, "EXTRACTED"));
+      if (lr.marta) box.appendChild(h("p", { class: "marta-line", "data-marta": "not-dead" }, SP.icon(DATA.tutorial.marta.portrait, 24), ` ${DATA.tutorial.marta.name}: "${lr.marta}"`));   // Slice 4 §A1
       box.appendChild(h("p", null, `Moves ${lr.moves} · final Heat ${lr.heat} · battles ${lr.stats.battles} · kills ${lr.stats.kills}`));
       box.appendChild(h("p", null, "Brought home: " + (lr.items.map((i) => `${i.name} (${DATA.items.rarities[i.rarity].name} i${i.ilvl})`).join(", ") || "no new items")));
       const rs = Object.entries(lr.res).filter(([, n]) => n).map(([k, n]) => `${n} ${DATA.items.resources[k].name}`); if (rs.length) box.appendChild(h("p", null, "Resources: " + rs.join(", ")));
@@ -578,7 +605,7 @@
     const side = h("div", { class: "exp-side" });
     // heat
     const t = X.heatTier();
-    const heat = h("section", { class: "panel" }, h("h3", null, `Heat ${r.heat} — ${t.name}`), bar(r.heat / DATA.config.heat.max, t.color, `${r.heat}/100`));
+    const heat = h("section", { class: "panel", "data-tut": "heat" }, h("h3", null, `Heat ${r.heat} — ${t.name}`), bar(r.heat / DATA.config.heat.max, t.color, `${r.heat}/100`));
     const marks = h("div", { class: "heat-marks" }); for (const th of DATA.config.heat.thresholds) marks.appendChild(h("span", { style: `left:${th.min}%` }, "|" + th.name));
     heat.appendChild(marks);
     { const rh = X.carriedResHeat(); heat.appendChild(h("small", { class: "heat-move", "data-heat-move": String(DATA.config.heat.perMove + rh) }, `Each move: +${DATA.config.heat.perMove}` + (rh ? ` · Relic Tech: +${rh} (+${DATA.resources.relic.heatPerMove} per unit carried)` : "") + " Heat")); heat.appendChild(h("br")); }

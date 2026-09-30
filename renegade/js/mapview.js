@@ -60,6 +60,7 @@
       const iconKey = !loc ? "loc_insertion" : (wIcon || loc.icon);
       el.appendChild(SP.icon(iconKey, 32));
       el.dataset.nid = nid;
+      if (loc && loc.extraction) el.classList.add("extract");   // Slice 4 §A: tutorial T2 rings extraction points
       // passage icon (once found), quest marker (an active find quest's object is here and holds the item)
       if (loc && loc.passage && G.Zones.passageVisible(loc.passage, map.zone || "a")) { const pi = SP.icon(DATA.zones.passages[loc.passage].mapIcon, 20, "mn-passage"); pi.title = DATA.zones.passages[loc.passage].name + ": leads to " + DATA.zones.list[G.Zones.otherEnd(loc.passage, map.zone || "a")].name; el.appendChild(pi); }
       if (loc && G.Quests.findObjectsAt(map.zone || "a", n.loc).some((q) => G.Quests.itemAvailable(q))) { const qm = document.createElement("div"); qm.className = "mn-quest"; qm.textContent = "!"; qm.title = "Quest objective here"; el.appendChild(qm); }

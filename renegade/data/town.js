@@ -18,6 +18,8 @@ DATA.town = {
     { id: "lot_recruit", label: "Recruitment (empty lot)", opens: "recruit", x: 770, y: 440, w: 130, h: 90, sprite: "town_lot_recruit", state: "active", tip: "Hire Grunts for Food + Water" },
     { id: "memorial",    label: "Memorial Wall",              opens: "memorial",  x: 660, y: 64,  w: 130, h: 64,  sprite: "town_memorial",  state: "active", tip: "The fallen, newest first" },
     { id: "lot_comms",   label: "Empty lot (Comms Array)",    opens: "radio", x: 820, y: 60,  w: 120, h: 90,  sprite: "town_lot_comms",       state: "active", tip: "Build the Radio" },
+    // Slice 4 §A1: Old Marta by the trapdoor (DATA.tutorial.marta). Placeholder figure until town_marta art lands.
+    { id: "marta",       label: "Old Marta",                  opens: "marta", x: 374, y: 452, w: 70,  h: 84,  sprite: "town_marta", state: "active", npc: "marta" },
     { id: "lot_still",   label: "Empty lot (Water Still)",    opens: "still", x: 460, y: 300, w: 120, h: 80,  sprite: "town_lot_still",       state: "active", tip: "Build the Water Still" }
   ],
   // Floating quest marker over a giver's building while it has a quest you can take now (data/quests.js givers[].hotspot).

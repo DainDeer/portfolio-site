@@ -602,6 +602,7 @@
     s.lastResult = { kind: "extracted", items: got.map((i) => ({ name: G.Items.name(i), rarity: i.rarity, ilvl: i.ilvl })), res: resGot, grunts: newGrunts, bodies: r.claimedBodies.map((b) => G.State.bodyTitle(b)),
                      heat: r.heat, moves: r.moves, stats: r.stats, offer: !!offer, xp: r.xpTally || {}, zone: r.zone, nickOffers: s.nickOffers.map((o) => o.uid),
                      ammo: r.ammo ? { base: r.ammo.base, used: r.ammo.used, left: r.ammo.n } : null, bounties: bounties.map((b) => G.Radio.text(b)) };
+    if (G.Tut) { const ml = G.Tut.onExtracted(); if (ml) s.lastResult.marta = ml; }   // Slice 4 §A1: "I've got this" + a successful extraction
     X.endRun();
   };
 
