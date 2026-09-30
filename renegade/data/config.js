@@ -176,7 +176,11 @@ DATA.config = {
     // while the others fight on. Win -> the run continues at downedReviveHp HP. No ally left standing -> normal death.
     downedEnabled: true,
     downedReviveHp: 10,        // safety: draw -> treated as a loss for the side with less HP% (ASSUMPTION)
-    speeds: [1, 2, 4],
+    // Slice 4 §A2 combat speed slider (replaces the 1x / 2x / 4x buttons). Slider position p in 0..1 -> speed =
+    // max x p^curve (curve 2: the slow end gets more travel; the middle of the track = 1x), rounded to `step`, and a
+    // position within `snapPos` of a snap's position snaps to it. 0x = the sim doesn't advance (not the tactical pause:
+    // Space still does that). Double-click / double-tap resets to 1x. A 0x speed resets to 1x when the next battle mounts.
+    speedSlider: { min: 0, max: 4, step: 0.05, snaps: [0.25, 1, 2, 4], snapPos: 0.025, curve: 2 },
     slowMoOnKill: 0.35, slowMoSec: 0.25, shakeOnCrit: 4,
     // Tactical pause (Megan, Sep 29): Space / the Pause button freezes the fight. While paused you aim abilities and use
     // carried Med kits on your units; they queue and run in queue order when you resume. Each item use channels for

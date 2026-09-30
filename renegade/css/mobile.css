@@ -92,7 +92,7 @@
   /* battle: bigger buttons, the keyboard badges go (1 / 2 / B), the on-screen Pause / Break away show */
   .battle-hud { flex-wrap: wrap; gap: 6px; padding: 0 0 4px; }
   .bh-title { font-size: 12px; } .bh-timer { min-width: 56px; }
-  .bh-speeds button { min-width: 44px; padding: 4px 8px; }
+  .bh-speeds .bh-speed { height: 44px; }   /* Slice 4 §A2 speed slider (was the 1x/2x/4x buttons); 44 px thumb in style.css */
   .bh-pause, .abl-btn.esc-btn { display: none; }   /* replaced by .touch-ctl */
   .abl-key { display: none; }
   .ability-bar { flex-wrap: wrap; gap: 6px; padding: 4px 0; }

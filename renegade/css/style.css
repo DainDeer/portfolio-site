@@ -294,3 +294,15 @@ button.promote { background: #6a5a1a; }
 .marta-talk .icon { flex: none; }
 .marta-choices { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
 .marta-choices button { text-align: left; min-height: 44px; }
+/* Slice 4 §A2: combat speed slider (js/battleview.js BV.speedSlider) */
+.bh-speeds { display: inline-flex; align-items: center; gap: 6px; }
+.bh-speed { width: 150px; height: 24px; margin: 0; accent-color: #b08a3a; cursor: pointer; touch-action: none; }
+.bh-speed-val { min-width: 44px; font-variant-numeric: tabular-nums; color: #ffe8a8; }
+.bh-speeds.stopped .bh-speed-val { color: #ff8060; }
+@media (pointer: coarse) {
+  .bh-speed { width: 170px; -webkit-appearance: none; appearance: none; background: transparent; }
+  .bh-speed::-webkit-slider-runnable-track { height: 6px; background: #5a5040; border-radius: 3px; }
+  .bh-speed::-webkit-slider-thumb { -webkit-appearance: none; width: 44px; height: 44px; margin-top: -19px; border-radius: 50%; background: #b08a3a; border: 3px solid #ffe8a8; }
+  .bh-speed::-moz-range-track { height: 6px; background: #5a5040; border-radius: 3px; }
+  .bh-speed::-moz-range-thumb { width: 44px; height: 44px; border-radius: 50%; background: #b08a3a; border: 3px solid #ffe8a8; }
+}

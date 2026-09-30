@@ -493,7 +493,7 @@
       const foes = enemiesOf(b, u);
       if (!foes.length) continue;
       // target: nearest enemy (Taunt forces the taunter; Suppressing Fire prefers enemies in its zone)
-      if (!u.target || !alive(u.target) || b.rng() < 0.02) u.target = pickTarget(u, foes);
+      if (!u.target || !alive(u.target) || b.rng() < 1 - Math.pow(0.98, dt * 60)) u.target = pickTarget(u, foes);   // Slice 4 §A2: 2% per 1/60 s of sim time (was 2% per step: tiny speeds took tiny steps)
       if (u.beh && G.EnemyAI) { const et = G.EnemyAI.target(b, u, foes); if (et) u.target = et; }   // Slice 3 §4 targeting rules
       if (u.buffs.taunt && alive(u.buffs.taunt.src)) u.target = u.buffs.taunt.src;
       u.supFiring = false;
@@ -574,6 +574,14 @@
   };
 
   // Slice 3 §2: advance by real seconds at the view's speed (aiming: 25% of 1x absolute, or 0 in Full pause). Returns sim seconds.
+  // Slice 4 §A2: speed slider mapping (DATA.config.battle.speedSlider). pos 0..1 <-> speed
+  B.speedPos = function (speed) { const S = C().speedSlider; return Math.pow(U.clamp(speed, 0, S.max) / S.max, 1 / S.curve); };
+  B.speedAt = function (pos) {
+    const S = C().speedSlider; pos = U.clamp(pos, 0, 1);
+    for (const s of S.snaps) if (Math.abs(B.speedPos(s) - pos) <= S.snapPos) return s;
+    const v = Math.round(S.max * Math.pow(pos, S.curve) / S.step) * S.step;
+    return U.clamp(+v.toFixed(2), S.min, S.max);
+  };
   B.advance = function (b, realDt, speed, slowmo) {
     let sim = realDt * (G.Abilities ? G.Abilities.timeScale(b, speed, slowmo) : speed * (slowmo || 1)), done = 0;
     while (sim > 1e-9 && !b.over) { const s = Math.min(1 / 60, sim); B.step(b, s); sim -= s; done += s; }

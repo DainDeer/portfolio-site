@@ -48,13 +48,7 @@
     title.textContent = b.phase === "place" ? "PLACEMENT — drag your units on the grid, then Fight" : (b.mode === "defense" ? "DEFEND THE EXTRACTION" : "BATTLE");
     v.hud.appendChild(title);
     const timer = document.createElement("span"); timer.className = "bh-timer"; v.timerEl = timer; v.hud.appendChild(timer);
-    const speeds = document.createElement("span"); speeds.className = "bh-speeds";
-    for (const s of C().speeds) {
-      const btn = document.createElement("button"); btn.textContent = s + "x"; btn.className = s === v.speed ? "on" : "";
-      btn.onclick = () => { v.speed = s; G.UI.battleSpeed = s; BV.renderHud(v); };
-      speeds.appendChild(btn);
-    }
-    v.hud.appendChild(speeds);
+    v.hud.appendChild(BV.speedSlider(v));
     if (b.phase === "fight" && G.Tactical && G.Tactical.on()) {   // tactical pause (Space)
       const pb = document.createElement("button"); pb.className = "bh-pause" + (b.paused ? " on" : ""); pb.dataset.act = "pause";
       pb.textContent = b.paused ? "▶ Resume (Space)" : "⏸ Pause (Space)"; pb.onclick = () => { pb.blur(); BV.togglePause(v); }; v.hud.appendChild(pb);
@@ -68,6 +62,33 @@
       const ar = document.createElement("button"); ar.textContent = "Auto-resolve"; ar.onclick = () => { if (b.phase === "place") G.Battle.start(b); while (!b.over) { G.Battle.step(b, 1 / 30); } BV.renderHud(v); };
       v.hud.appendChild(ar);
     }
+  };
+
+  // Slice 4 §A2: combat speed slider, 0x (stopped) to 4x, live value, gentle snaps (DATA.config.battle.speedSlider).
+  // Double-click / double-tap resets to 1x. 0x only stops the sim (b.paused and the tactical queue are untouched).
+  const fmtSpeed = (s) => (s === 0 ? "0" : s < 1 ? s.toFixed(2) : String(+s.toFixed(2))) + "x";
+  BV.setSpeed = function (v, s) { v.speed = s; G.UI.battleSpeed = s; if (v.speedIn) { v.speedIn.value = String(Math.round(G.Battle.speedPos(s) * 1000)); v.speedVal.textContent = fmtSpeed(s); v.speedWrap.classList.toggle("stopped", s === 0); } };
+  BV.speedSlider = function (v) {
+    const wrap = document.createElement("span"); wrap.className = "bh-speeds"; wrap.title = "Combat speed (double-click: 1x)";
+    const inp = document.createElement("input"); inp.type = "range"; inp.min = "0"; inp.max = "1000"; inp.step = "1"; inp.className = "bh-speed"; inp.dataset.act = "speed";
+    inp.setAttribute("aria-label", "Combat speed");
+    const val = document.createElement("b"); val.className = "bh-speed-val";
+    v.speedIn = inp; v.speedVal = val; v.speedWrap = wrap;
+    inp.addEventListener("input", () => { const s = G.Battle.speedAt(+inp.value / 1000); v.speed = s; G.UI.battleSpeed = s; val.textContent = fmtSpeed(s); wrap.classList.toggle("stopped", s === 0); });
+    inp.addEventListener("change", () => { BV.setSpeed(v, v.speed); inp.blur(); });   // settle the thumb on the snapped value
+    inp.addEventListener("dblclick", () => BV.setSpeed(v, 1));
+    // double-tap (touch browsers don't send dblclick on a range reliably). The range moves on the tap's own (later)
+    // events, so the reset lands just after them. The slider never keeps focus: Space / 1-4 / B stay battle keys.
+    let lastTap = 0, tapX = 0;
+    inp.addEventListener("pointerup", (e) => {
+      setTimeout(() => inp.blur(), 0);
+      if (e.pointerType !== "touch") return;
+      const t = performance.now();
+      if (t - lastTap < 350 && Math.abs(e.clientX - tapX) < 30) { lastTap = 0; setTimeout(() => BV.setSpeed(v, 1), 60); } else { lastTap = t; tapX = e.clientX; }
+    });
+    wrap.appendChild(inp); wrap.appendChild(val);
+    BV.setSpeed(v, v.speed);
+    return wrap;
   };
 
   // On-screen Pause / Break away for touch (shown on phones only by css/mobile.css). They call exactly what the
@@ -419,11 +440,11 @@
     if (b.phase === "fight" && !v.tutSeen && G.TutView) { v.tutSeen = true; G.TutView.check(); }   // Slice 4 §A T3: first frame of the fight
     const held = !!(G.TutView && G.TutView.holds());   // a tutorial step is showing: the fight holds (b.paused untouched)
     if (b.phase === "fight" && !held) G.Battle.advance(b, dt, v.speed, timeScale);   // aiming: 25% of 1x (or paused), see G.Abilities.timeScale
-    for (const e of v.booms) e.age += dt; v.booms = v.booms.filter((e) => e.age < 0.4);
+    for (const e of v.booms) e.age += dt * v.speed * timeScale; v.booms = v.booms.filter((e) => e.age < 0.4);
     BV.drainFx(v);
     if (v.barEls) BV.updateBar(v);
     if (v.touchCancel) BV.updateTouch(v);
-    BV.updateParticles(v, dt * Math.max(1, v.speed * timeScale));
+    BV.updateParticles(v, dt * v.speed * timeScale);   // Slice 4 §A2: effects crawl / freeze with the speed slider (kill slow-mo on top)
     BV.draw(v);
     if (v.timerEl) v.timerEl.textContent = b.phase === "fight" || b.phase === "over" ? (b.mode === "defense" ? `Hold: ${Math.max(0, Math.ceil(b.surviveSec - b.t))} s` : `${b.t.toFixed(1)} s`) : "";
     if (b.over && !v.ended) { v.ended = true; setTimeout(() => v.opts.onEnd && v.opts.onEnd(b), 900); }

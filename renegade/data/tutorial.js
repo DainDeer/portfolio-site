@@ -50,7 +50,7 @@ DATA.tutorial = {
     t3_battle: { trigger: "battle", modes: ["full", "tips"], steps: [
       { id: "t3_auto", target: ".battle-canvas", text: "In RENEGADE, your units fight automatically. But you can pause ({key:Space}) or slow down time whenever you want to plan.",
         textTouch: "In RENEGADE, your units fight automatically. But you can pause or slow down time whenever you want to plan." },
-      { id: "t3_speed", target: ".bh-speeds, .bh-pause", targetTouch: ".bh-speeds, .tc-pause", text: "Speed it up, slow it down, or pause here." },   // [PLACEHOLDER] (the spec only says "ring them"),
+      { id: "t3_speed", target: ".bh-speeds, .bh-pause", targetTouch: ".bh-speeds, .tc-pause", text: "Slide to speed the fight up or slow it down (all the way left stops it). Pause is next to it." },   // [PLACEHOLDER] (the spec only says "ring them"; A2 slider),
       { id: "t3_abl", target: ".ability-bar .abl-btn:not(.esc-btn)", fallback: ".bh-pause", text: "While paused, queue abilities and Med kits. They fire the moment you unpause." },
       { id: "t3_break", target: ".esc-btn", targetTouch: ".tc-esc", fallback: ".esc-btn", text: "Losing? Break away ({key:B}) to run for it. Not everyone always makes it." }
     ] },
