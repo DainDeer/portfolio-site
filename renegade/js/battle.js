@@ -18,11 +18,74 @@
   function withWeapon(u, weaponItemOrId) {
     u.weapon = G.Items.weaponStats(weaponItemOrId);
     u.ammo = u.weapon.mag;
-    const aiFromStyle = u.weapon.style === "gun" ? "ranged" : "melee";
-    if (u.ai === "auto") u.ai = aiFromStyle;
-    if (u.ai === "ranged" && u.weapon.style !== "gun") u.ai = "melee";
-    if (u.ai === "melee" && u.weapon.style === "gun") u.ai = "ranged";
+    if (u.ai0 == null) u.ai0 = u.ai;
+    setAi(u);
     return u;
+  }
+  // the AI follows the weapon in hand (Slice 5 §E: re-run on a set swap): auto / ranged / melee -> by its style
+  function setAi(u) {
+    const base = u.ai0 != null ? u.ai0 : u.ai, gun = u.weapon.style === "gun";
+    u.ai = base === "auto" ? (gun ? "ranged" : "melee") : base === "ranged" && !gun ? "melee" : base === "melee" && gun ? "ranged" : base;
+  }
+
+  // ---------- Slice 5 §E: weapon sets, dual wielding, shields ----------
+  const WS = () => DATA.config.battle.weaponSets;
+  // one set from its two hand items (natural: the fallback weapon). A lone off-hand weapon fights as the main.
+  function mkSet(main, off, natural) {
+    const I = G.Items; let m = main, o = off;
+    if (!m && o && I.hands(I.base(o.base)) === 1) { m = o; o = null; }
+    const ob = o && I.base(o.base), sh = !!(ob && ob.slot === "shield");
+    return { main: I.weaponStats(m || natural), off: o && !sh ? I.weaponStats(o) : null,
+      shield: sh ? { pct: ob.blockPct || 0, armor: Math.round((ob.armor || 0) * (ob.noScale ? 1 : I.scale(o.ilvl))), movePct: ob.moveSpeedPct || 0, name: ob.name, base: o.base } : null };
+  }
+  B.weaponsOf = (u) => (u.sets ? u.sets.filter(Boolean).reduce((a, S) => a.concat(S.off ? [S.main, S.off] : [S.main]), []) : [u.weapon]);
+  // untrained Dual Wielding = the full penalty; gone at penaltyZeroAt
+  B.dualPen = (u) => { const D = WS().dual, lv = (u.skills && u.skills.dual_wielding) || 1; return U.clamp(1 - (lv - 1) / Math.max(1, D.penaltyZeroAt - 1), 0, 1); };
+  // arm set i (0 Main, 1 Backup): hands, block, ammo left in each weapon, the shield's Armor / Move Speed
+  function armSet(u, i) {
+    const S = u.sets[i], old = u.sets[u.setIdx], osh = old && u.setIdx != null && u.setIdx !== i ? old.shield : null;
+    if (u.weapon && u.setIdx != null) { u.weapon.ammoLeft = u.ammo; }
+    if (osh) { u.armor -= osh.armor; u.speed /= Math.max(0.05, 1 + osh.movePct / 100); }
+    if (S.shield && u.setIdx != null && u.setIdx !== i) { u.armor += S.shield.armor; u.speed *= Math.max(0.05, 1 + S.shield.movePct / 100); }
+    u.setIdx = i; u.weapon = S.main; u.offW = S.off; u.dual = !!S.off; u.block = S.shield ? { pct: S.shield.pct, name: S.shield.name } : null;
+    u.ammo = u.weapon.ammoLeft != null ? u.weapon.ammoLeft : u.weapon.mag;
+    setAi(u);
+  }
+  B.armSets = function (u, main, off, main2, off2, natural) {
+    u.sets = [mkSet(main, off, natural), main2 || off2 ? mkSet(main2, off2, natural) : null];
+    u.setIdx = null; if (u.ai0 == null) u.ai0 = u.ai; armSet(u, 0); u.swapCd = 0;
+  };
+  // dual wield: the other hand is up (its ammo travels with it)
+  function swapHands(u) { if (!u.offW) return; u.weapon.ammoLeft = u.ammo; const w = u.weapon; u.weapon = u.offW; u.offW = w; u.ammo = u.weapon.ammoLeft != null ? u.weapon.ammoLeft : u.weapon.mag; }
+  B.swapHands = swapHands;
+  B.canSwap = (b, u) => !!(u && u.sets && u.sets[1] && alive(u) && b.phase === "fight" && !u.swapping && !(u.swapCd > 0));
+  // swap to the other set: baseSec / Attack Speed + a Handling roll (the incoming weapon's fumble chance)
+  B.swapSet = function (b, u, why) {
+    if (!B.canSwap(b, u)) return false;
+    const SW = WS().swap;
+    u.reloadT = 0; armSet(u, 1 - u.setIdx);
+    const f = fumbleChance(u), roll = b.rng() * 100;
+    xp(u, u.weapon.skill, XP().handlingRoll);
+    u.reloadT = SW.baseSec / attackSpeedMult(u); u.swapping = true; u.swapCd = SW.cooldownSec; u.atk = Math.max(u.atk, 0);
+    B.fx(b, { t: "sfx", key: "sfx_reload" });
+    if (roll < f) { u.reloadT += R().fumblePenaltySec; u.stats.jams++; floatText(b, u, "FUMBLED SWAP!", "#ff5050"); b.log.push(`${u.name} fumbled the weapon swap (${U.fmt1(f)}% chance)`); }
+    else floatText(b, u, u.setIdx ? "BACKUP SET" : "MAIN SET", "#c8d8ff");
+    b.log.push(`${u.name} swaps to the ${u.setIdx ? "Backup" : "Main"} set (${u.weapon.name || "?"})${why ? " [" + why + "]" : ""}`);
+    return true;
+  };
+  // the class AI's swaps (your body; config.battle.weaponSets.swap): range / melee, or instead of a slow reload
+  function aiSwapWhy(b, u, tgt, d, foes) {
+    const SW = WS().swap, o = u.sets[1 - u.setIdx]; if (!o) return null;
+    const gun = u.weapon.style === "gun", oGun = o.main.style === "gun";
+    if (gun && !oGun) { const near = foes.reduce((m, f) => Math.min(m, U.dist(u, f) - u.r - f.r), 99); if (near <= SW.meleeSwapM) return "in melee range"; }
+    if (!gun && oGun && d > u.weapon.range + u.r + tgt.r + SW.rangeSwapM) return "out of reach";
+    return null;
+  }
+  function reloadSwap(b, u) {
+    const SW = WS().swap, o = u.sets && u.sets[1 - u.setIdx];
+    if (!o || !SW.aiSwap || u.side !== 0 || u.rank !== "body" || !B.canSwap(b, u)) return false;
+    const loaded = o.main.mag === 0 || (o.main.ammoLeft != null ? o.main.ammoLeft : o.main.mag) > 0;
+    return loaded && SW.baseSec < u.weapon.reload && B.swapSet(b, u, "empty: faster than a reload");
   }
 
   // Slice 3 §5-6: set flags / jam, and the Complex affixes (u.cx) on one unit's items
@@ -39,7 +102,7 @@
     if (!G.Injuries || !rec || !rec.injuries || !rec.injuries.length) return;
     const m = G.Injuries.mods(rec);
     u.maxHp *= Math.max(0.05, 1 + m.hpPct / 100); u.accBonus += m.acc; u.speed = Math.max(0.3, u.speed * (1 + m.movePct / 100)); u.asPct += m.asPct;
-    if (u.weapon && m.jam) u.weapon.jam += m.jam;
+    if (u.weapon && m.jam) for (const w of B.weaponsOf(u)) w.jam += m.jam;
     u.injuries = rec.injuries.map((x) => x.id);
   }
   B.injure = injure;
@@ -47,7 +110,7 @@
   B.unitFromBody = function (body, gear, ctx) {
     const cls = body.cls ? DATA.bodies.classes[body.cls] : null;
     const tpl = cls || DATA.bodies.basicBody;
-    const st = tpl.stats, items = Object.values(gear || {}).filter(Boolean);
+    const BK = G.Items.BACKUP_SLOTS, st = tpl.stats, items = Object.entries(gear || {}).filter(([k, v]) => v && !BK.includes(k)).map(([, v]) => v);   // Slice 5 §E: the Backup set counts when it's in hand (B.swapSet)
     const lv = (k) => G.Skills.level(body.skills, k);
     let armor = st.armor, hp = st.max_hp, eva = st.evasion, movePct = 0;
     for (const it of items) {
@@ -72,6 +135,7 @@
       domedBonus: items.reduce((s, it) => s + (G.Items.base(it.base).domedBonus || 0), 0)
     });
     withWeapon(u, gear && gear.weapon ? gear.weapon : tpl.naturalWeapon);
+    const gg = gear || {}; B.armSets(u, gg.weapon, gg.offhand, gg.weapon2, gg.offhand2, tpl.naturalWeapon);   // Slice 5 §E
     gearUp(u, items);
     injure(u, body);
     // Slice 3 §3 perks on your body: Thick Skin / Glass Mind HP, Quick Hands AS, Glass Mind damage, Gun Nut (squad),
@@ -107,9 +171,10 @@
       accBonus: G.Items.affixSum(items, "accuracy") + G.Items.setStat(items, "accuracy") + (tm ? tm.acc : 0), traits: (g.traits || []).slice(), tm
     });
     withWeapon(u, gw || g.weapon);
+    B.armSets(u, gw, g.gear && g.gear.offhand, null, null, g.weapon);   // Slice 5 §E: Grunts have the Main set only
     gearUp(u, items);
     if (G.GruntGear && !(opts && opts.rival)) u.look = G.GruntGear.lookKey(g);   // Slice 4 §F: the paper-doll sprite (drawn by js/battleview.js when composited)
-    if (tm && tm.jam) u.weapon.jam += tm.jam;   // "Jam rating": added to the weapon's own
+    if (tm && tm.jam) for (const w of B.weaponsOf(u)) w.jam += tm.jam;   // "Jam rating": added to the weapon's own
     injure(u, g);
     if (G.Perks && !(opts && opts.rival)) { u.jamMult = G.Perks.jamMult(); if (u.rank === "grunt") u.dmgPct += G.Perks.gruntDmgPct(); }   // Gun Nut (squad), Expendables (Grunts only)
     u.hp = hp != null ? Math.min(hp, u.maxHp) : u.maxHp;
@@ -248,7 +313,7 @@
   function hitChance(att, def, extraAcc) {
     const r = R();
     // zoneAcc / zoneEva: Suppressing Fire (-Accuracy) and Smoke (+Evasion) this tick (B.applyZones)
-    const raw = att.weapon.acc + att.accBonus + (extraAcc || 0) + (att.zoneAcc || 0) + (att.skills[att.weapon.skill] || 0) / r.hitSkillDiv - def.eva - (def.zoneEva || 0) - (def.skills.acrobatics || 0) / r.hitAcroDiv + (G.EnemyAI ? G.EnemyAI.accMod(att, def) : 0);
+    const raw = att.weapon.acc + att.accBonus - (att.dual ? WS().dual.accPenalty * B.dualPen(att) : 0) + (extraAcc || 0) + (att.zoneAcc || 0) + (att.skills[att.weapon.skill] || 0) / r.hitSkillDiv - def.eva - (def.zoneEva || 0) - (def.skills.acrobatics || 0) / r.hitAcroDiv + (G.EnemyAI ? G.EnemyAI.accMod(att, def) : 0);
     return U.clamp(raw, r.hitMin, r.hitMax);
   }
   B.hitChance = hitChance;
@@ -256,7 +321,7 @@
   function fumbleChance(u) {
     const r = R();
     const raw = (u.weapon.jam * (1 - u.weapon.jamReducePct / 100) - (u.skills[u.weapon.skill] || 0) / r.fumbleSkillDiv) * (u.jamMult != null ? u.jamMult : 1) * (u.jamSetMult != null ? u.jamSetMult : 1) * (u.ammoJamMult != null ? u.ammoJamMult : 1);   // Gun Nut, Militia Issue (3), Hand-loads (Slice 3 §9)
-    return Math.max(r.fumbleMin, raw);
+    return Math.max(r.fumbleMin, raw + (u.dual ? WS().dual.fumblePenalty * B.dualPen(u) : 0));   // Slice 5 §E: clumsy with two
   }
   B.fumbleChance = fumbleChance;
   const attackSpeedMult = (u) => 1 + (u.asPct + (u.buffs.stim ? u.buffs.stim.pct : 0) + (u.buffs.expend ? u.buffs.expend.pct : 0) + (u.buffs.allyDown ? u.buffs.allyDown.pct : 0) + (u.buffs.closeIn ? u.buffs.closeIn.pct : 0) + (u.supFiring ? u.supZone.attackSpeedPct : 0)) / 100;
@@ -373,6 +438,14 @@
     B.fx(b, { t: "shot", x1: u.x, y1: u.y, x2: tgt.x, y2: tgt.y, proj: w.projectile, melee: w.style !== "gun", hit: roll < chance, sfx: w.sfx });
     const math = b.rollMath ? ` (${Math.round(roll)}/${Math.round(chance)})` : "";
     if (roll >= chance) { u.stats.misses++; floatText(b, tgt, "MISS" + math, "#aaaaaa"); return; }
+    // Slice 5 §E: a shield stops a hit from the front (its blockPct inside blockArcDeg of its facing); trains Brawling
+    if (tgt.block && alive(tgt) && !opts.noBlock) {
+      const ang = Math.abs(Math.atan2(Math.sin(Math.atan2(u.y - tgt.y, u.x - tgt.x) - tgt.facing), Math.cos(Math.atan2(u.y - tgt.y, u.x - tgt.x) - tgt.facing))) * 180 / Math.PI;
+      if (ang <= WS().shield.blockArcDeg / 2 && b.rng() * 100 < tgt.block.pct) {
+        tgt.stats.blocks = (tgt.stats.blocks || 0) + 1; floatText(b, tgt, "BLOCK", "#c8d8ff"); B.fx(b, { t: "shield", x: tgt.x, y: tgt.y, rot: tgt.facing });
+        xp(tgt, "brawling", WS().shield.xpPerBlock); return;
+      }
+    }
     // Riposte (Slice 3 §2): every melee attack is parried (no roll) and countered for 100% weapon damage
     if (w.style !== "gun" && tgt.buffs.riposte && alive(tgt)) {
       floatText(b, tgt, "RIPOSTE", "#80d0ff", true); xp(tgt, "blades", XP().combatRoll);
@@ -562,13 +635,20 @@
       if (u.beh && u.beh.shield && u.beh.shield.turnDegPerSec && G.EnemyAI) u.facing = G.EnemyAI.turn(f0, u.facing, u.beh.shield.turnDegPerSec, dt);   // the Warden turns slowly
       if (u.buffs.flee) continue;
       // attacking
-      if (u.reloadT > 0) { u.reloadT -= dt; if (u.reloadT <= 0) { u.reloadT = 0; u.ammo = u.weapon.mag; } continue; }
+      if (u.swapCd > 0) u.swapCd -= dt;
+      if (u.reloadT > 0) { u.reloadT -= dt; if (u.reloadT <= 0) { u.reloadT = 0; if (u.swapping) { u.swapping = false; if (u.weapon.mag > 0 && u.ammo <= 0) startReload(b, u); } else u.ammo = u.weapon.mag; } continue; }
+      // Slice 5 §E: your body's class AI swaps sets for range; a dual wielder uses whichever hand reaches
+      if (u.sets && u.sets[1] && u.side === 0 && u.rank === "body" && WS().swap.aiSwap && B.canSwap(b, u)) { const why = aiSwapWhy(b, u, tgt, d, foes); if (why && B.swapSet(b, u, why)) continue; }
+      if (u.dual && d > reach && d <= u.offW.range + u.r + tgt.r) swapHands(u);
       u.atk -= dt;
-      if (u.atk <= 0 && U.dist(u, tgt) <= reach && !u.buffs.charge) {
+      if (u.atk <= 0 && U.dist(u, tgt) <= u.weapon.range + u.r + tgt.r && !u.buffs.charge) {
         if (u.beh && G.EnemyAI && G.EnemyAI.startAttack(b, u, tgt)) continue;   // Marksman: aim first
         attack(b, u, tgt);
-        u.atk = u.weapon.interval / attackSpeedMult(u);
-        if (u.weapon.mag > 0) { u.ammo--; if (u.ammo <= 0) startReload(b, u); }
+        const used = u.weapon;
+        u.atk = used.interval * (u.dual ? WS().dual.intervalMult : 1) / attackSpeedMult(u);   // dual: the hands alternate
+        if (used.mag > 0) u.ammo--;
+        if (u.dual) { xp(u, "dual_wielding", WS().dual.xpPerAttack); swapHands(u); }
+        if (u.weapon.mag > 0 && u.ammo <= 0 && !reloadSwap(b, u)) startReload(b, u);
       }
     }
     B.checkEnd(b);
@@ -611,7 +691,7 @@
     return b.result;
   };
 
-  B._ = { attack, startReload, applyDamage, kill, floatText, xp, XP, enemiesOf, alliesOf, attackSpeedMult };   // for js/abilities.js
+  B._ = { armSet, attack, startReload, applyDamage, kill, floatText, xp, XP, enemiesOf, alliesOf, attackSpeedMult };   // for js/abilities.js
 
   B.summary = function (b) {
     const rows = b.units.filter((u) => u.side === 0 || u.stats.dmg > 0).map((u) => ({

@@ -30,7 +30,7 @@ DATA.items.zoneTypeWeight = {
   a: { pistol: 0.15, rifle: 0.15, auto: 0.15, shotgun: 0.15 },   // first zone (and the tutorial): guns are a lucky find
   b: { pistol: 0.6,  rifle: 0.6,  auto: 0.6,  shotgun: 0.6 }
 };
-DATA.items.slotShares = { weapon: 66, head: 9, body: 9, backpack: 7 };
+DATA.items.slotShares = { weapon: 66, head: 9, body: 9, backpack: 7, shield: 4 };   // Slice 5 §E: + shields
 
 // the Slice 1-3 weapons: type + hands (stats unchanged)
 (function () {

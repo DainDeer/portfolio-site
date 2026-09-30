@@ -5,7 +5,8 @@ DATA.skills = {
   acrobatics:   { name: "Acrobatics",   kind: "body", active: true,  desc: "Lowers enemy Hit chance (Acrobatics/4)." },
   endurance:    { name: "Endurance",    kind: "body", active: true,  desc: "Lowers Domed chance (Endurance/20)." },
   hauling:      { name: "Hauling",      kind: "body", active: true,  desc: "+0.5 kg carry per level." },
-  brawling:     { name: "Brawling",     kind: "body", active: true,  desc: "Hit with fists." },
+  brawling:     { name: "Brawling",     kind: "body", active: true,  desc: "Hit with fists. Shields (blocks train it)." },
+  dual_wielding: { name: "Dual Wielding", kind: "body", active: true, desc: "Two one-handed weapons. Untrained: -25 Hit and +15 fumble on both; the penalty is gone by level 20." },   // Slice 5 §E: config.weaponSets.dual
   blades:       { name: "Blades",       kind: "body", active: true,  desc: "Hit with blades. Parry (contested)." },
   marksmanship: { name: "Marksmanship", kind: "body", active: true,  desc: "Hit and Handling with guns." },
   feral:        { name: "Feral",        kind: "body", active: false, desc: "Hit with feral attacks (enemy beasts use it)." },

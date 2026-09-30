@@ -312,15 +312,24 @@
   X.takeAll = function (step) { while (step.items.length) X.takeItem(step, 0); for (const k of Object.keys(step.res)) X.takeRes(step, k); };
   X.dropItem = function (uid) { const r = run(); const i = r.bag.items.findIndex((x) => x.uid === uid); if (i >= 0) { const it = r.bag.items.splice(i, 1)[0]; X.log(`Dropped ${G.Items.name(it)}.`); } };
   X.dropRes = function (k, n) { const r = run(); r.bag.res[k] = Math.max(0, (r.bag.res[k] || 0) - n); };
-  X.equipFromBag = function (uid) {
-    const r = run(); const i = r.bag.items.findIndex((x) => x.uid === uid); if (i < 0) return;
-    const it = r.bag.items[i], slot = G.Items.base(it.base).slot;
+  // set: "main" | "backup" (Slice 5 §E: weapons / shields go to a hand slot of that set, I.autoSlot; key forces one)
+  X.equipFromBag = function (uid, set, key) {
+    const r = run(); const i = r.bag.items.findIndex((x) => x.uid === uid); if (i < 0) return "Not in the bag.";
+    const it = r.bag.items[i], I = G.Items, get = (k) => r.gear[k] || null;
+    const slot = key || I.autoSlot(it, get, set);
+    if (I.isHandItem(it)) { const fit = I.handFit(slot, it, get); if (fit.why) return fit.why; for (const k of fit.clear) { r.bag.items.push(r.gear[k]); delete r.gear[k]; } }
     r.bag.items.splice(i, 1);
     if (r.gear[slot]) r.bag.items.push(r.gear[slot]);
     const oldMax = G.Battle.unitFromBody(X.body(), r.gear, {}).maxHp;
     r.gear[slot] = it;
     const newMax = G.Battle.unitFromBody(X.body(), r.gear, {}).maxHp;
     r.bodyHp = Math.max(1, Math.min(newMax, r.bodyHp + Math.max(0, newMax - oldMax)));
+  };
+  // Slice 5 §E: out of a fight, trade the Main and Backup sets (free; in a fight it's the Swap button)
+  X.swapSets = function () {
+    const r = run(), g = r.gear, a = [g.weapon, g.offhand]; g.weapon = g.weapon2 || null; g.offhand = g.offhand2 || null; g.weapon2 = a[0] || null; g.offhand2 = a[1] || null;
+    for (const k of G.Items.HAND_SLOTS) if (!g[k]) delete g[k];
+    const m = G.Battle.unitFromBody(X.body(), g, {}).maxHp; r.bodyHp = Math.min(r.bodyHp, m);
   };
   X.unequip = function (slot) { const r = run(); if (r.gear[slot]) { r.bag.items.push(r.gear[slot]); delete r.gear[slot]; const m = G.Battle.unitFromBody(X.body(), r.gear, {}).maxHp; r.bodyHp = Math.min(r.bodyHp, m); } };
   X.toPouch = function (uid) {

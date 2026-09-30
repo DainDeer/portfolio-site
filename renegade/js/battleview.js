@@ -144,9 +144,10 @@
   const AB = () => G.Abilities;
   BV.body = (v) => AB().body(v.b);
   BV.renderBar = function (v) {
-    const bar = v.bar, u = BV.body(v); bar.innerHTML = ""; v.barEls = []; v.escEl = null;
+    const bar = v.bar, u = BV.body(v); bar.innerHTML = ""; v.barEls = []; v.escEl = null; v.swapEl = null;
     const esc = G.Escape && G.Escape.on(v.b);
-    if (!u || ((!u.abl || !u.abl.length) && !esc)) { bar.style.display = "none"; return; }
+    const sw = !!(u && u.sets && u.sets[1]);   // Slice 5 §E: a Backup set = the Swap button
+    if (!u || ((!u.abl || !u.abl.length) && !esc && !sw)) { bar.style.display = "none"; return; }
     bar.style.display = "";
     (u.abl || []).forEach((s, i) => {
       const d = s.d, key = DATA.abilities.hotkeys[i] || "";
@@ -176,6 +177,18 @@
       btn.onmouseleave = () => G.UI.hideTip();
       bar.appendChild(btn); v.escEl = { btn, ring, cdt, odds: nm.querySelector(".esc-odds") };
     }
+    if (sw) {
+      const SW = DATA.config.battle.weaponSets.swap, btn = document.createElement("div"); btn.className = "abl-btn swap-btn"; btn.dataset.act = "swap-set";
+      const icw = document.createElement("div"); icw.className = "abl-icw esc-ico"; icw.textContent = "⇄";
+      const ring = document.createElement("div"); ring.className = "abl-ring"; icw.appendChild(ring);
+      const cdt = document.createElement("span"); cdt.className = "abl-cd"; icw.appendChild(cdt);
+      const hk = document.createElement("span"); hk.className = "abl-key"; hk.textContent = SW.key.toUpperCase(); icw.appendChild(hk);
+      const nm = document.createElement("div"); nm.className = "abl-name"; nm.innerHTML = 'Swap set<br><small class="swap-cur"></small>';
+      btn.appendChild(icw); btn.appendChild(nm); btn.onclick = () => BV.pressSwap(v);
+      btn.onmouseenter = (e) => { const o = u.sets[1 - u.setIdx]; G.UI.showTip(`<b>Swap weapon set</b> <small>${TL() ? "" : `[${SW.key.toUpperCase()}] · `}${U.fmt1(SW.baseSec)} s (faster with Attack Speed) · ${SW.cooldownSec} s cooldown</small><br>To: ${o.main.name}${o.off ? " + " + o.off.name : ""}${o.shield ? " + " + o.shield.name : ""}. A Handling roll: a fumble costs ${DATA.config.rolls.fumblePenaltySec} s.<br><i>Your class also swaps by itself: for range, or when the backup is loaded and a reload would take longer.</i>`, e.clientX, e.clientY - 120); };
+      btn.onmouseleave = () => G.UI.hideTip();
+      bar.appendChild(btn); v.swapEl = { btn, ring, cdt, cur: nm.querySelector(".swap-cur") };
+    } else v.swapEl = null;
     const feed = document.createElement("div"); feed.className = "combat-feed"; bar.appendChild(feed); v.feedEl = feed; v.feedN = -1;
     BV.updateBar(v);
   };
@@ -193,7 +206,10 @@
       const TE = v.touchEsc;   // the touch Break away button mirrors it
       if (TE) { const cd = E.cdt.textContent; TE.odds.textContent = E.odds.textContent + (cd === "!" ? " · stumbling" : cd ? ` · ${cd} s` : ""); TE.btn.classList.toggle("ready", !why); TE.btn.classList.toggle("disabled", !!why && !ch && !qd); TE.btn.classList.toggle("queued", qd); }
     }
-    if (v.feedEl) { const fd = v.b.feed || []; if (fd.length !== v.feedN) { v.feedN = fd.length; v.feedEl.innerHTML = fd.slice(-5).map((l) => `<div class="cf-${l.kind || "info"}">${l.text}</div>`).join(""); v.feedEl.style.display = fd.length ? "" : "none"; } }
+    if (v.swapEl) { const E = v.swapEl, SW = DATA.config.battle.weaponSets.swap, f = u.swapCd > 0 ? u.swapCd / SW.cooldownSec : 0;
+      E.ring.style.background = f > 0 ? `conic-gradient(rgba(0,0,0,.68) ${Math.round(f * 360)}deg, rgba(0,0,0,0) 0)` : "none"; E.cdt.textContent = u.swapCd > 0 ? Math.ceil(u.swapCd) : "";
+      E.cur.textContent = u.swapping ? "swapping…" : `${u.setIdx ? "Backup" : "Main"}: ${u.weapon.name || ""}`; E.btn.classList.toggle("ready", G.Battle.canSwap(v.b, u)); E.btn.classList.toggle("disabled", !G.Battle.canSwap(v.b, u)); }
+    if (v.feedEl && !(G.Dice && G.Dice.busy())) { const fd = v.b.feed || []; if (fd.length !== v.feedN) { v.feedN = fd.length; v.feedEl.innerHTML = fd.slice(-5).map((l) => `<div class="cf-${l.kind || "info"}">${l.text}</div>`).join(""); v.feedEl.style.display = fd.length ? "" : "none"; } }
     for (let i = 0; i < v.barEls.length; i++) {
       const E = v.barEls[i], s = E.s, f = s.max > 0 ? s.cd / s.max : 0;
       E.ring.style.background = f > 0 ? `conic-gradient(rgba(0,0,0,.68) ${Math.round(f * 360)}deg, rgba(0,0,0,0) 0)` : "none";
@@ -247,9 +263,11 @@
     if (TP && TP.enabled && e.key === TP.key && v.b.phase === "fight") { e.preventDefault(); BV.togglePause(v); }
     else if (i >= 0 && v.b.phase === "fight") { e.preventDefault(); BV.press(v, i); }
     else if (G.Escape && G.Escape.on(v.b) && e.key.toLowerCase() === DATA.config.battle.breakAway.key && v.b.phase === "fight") { e.preventDefault(); BV.pressEscape(v); }
+    else if (e.key.toLowerCase() === DATA.config.battle.weaponSets.swap.key && v.b.phase === "fight") { e.preventDefault(); BV.pressSwap(v); }   // Slice 5 §E
     else if (e.key === "Escape" && v.b.itemAim) { e.preventDefault(); e.stopPropagation(); BV.itemCancel(v); }
     else if (e.key === "Escape" && v.b.aim) { e.preventDefault(); e.stopPropagation(); BV.cancelAim(v); }
   };
+  BV.pressSwap = function (v) { const u = BV.body(v); if (G.Battle.swapSet(v.b, u, "manual")) { G.Sfx.play("sfx_ui_click"); BV.updateBar(v); } };
   // ---------- tactical pause: queue panel, items, icons over units ----------
   BV.togglePause = function (v) {
     const b = v.b; if (!G.Tactical || !G.Tactical.canPause(b)) return;
@@ -383,6 +401,9 @@
     const tgt = u.target && u.target.state === "alive" ? u.target : foes[0];
     let s = `<b>${u.name}</b>${u.elite ? " ★" : ""}${u.rival ? ` <span style="color:#6ee6ff">GHOST</span> <small>(${u.rivalOf})</small>` : ""}<br>HP ${Math.ceil(u.hp)}/${Math.round(u.maxHp)} · Armor ${u.armor} · Eva ${u.eva} · Speed ${U.fmt1(u.speed)} m/s<br>`;
     s += `${w.name}: ${U.fmt1(w.dmg)} ${w.type} / ${w.interval}s · range ${w.range} m${w.mag ? ` · ${u.ammo}/${w.mag}` : ""}<br>`;
+    if (u.dual && u.offW) s += `+ ${u.offW.name}: ${U.fmt1(u.offW.dmg)} / ${u.offW.interval}s (dual wield${G.Battle.dualPen(u) > 0 ? `: −${Math.round(DATA.config.battle.weaponSets.dual.accPenalty * G.Battle.dualPen(u))} Hit, +${Math.round(DATA.config.battle.weaponSets.dual.fumblePenalty * G.Battle.dualPen(u))} fumble` : ""})<br>`;   // Slice 5 §E
+    if (u.block) s += `${u.block.name}: blocks ${u.block.pct}% from the front<br>`;
+    if (u.sets && u.sets[1]) { const o = u.sets[1 - u.setIdx]; s += `<small>${u.setIdx ? "Backup" : "Main"} set in hand · other: ${o.main.name}${o.off ? " + " + o.off.name : ""}${o.shield ? " + " + o.shield.name : ""}</small><br>`; }
     if (tgt) s += `Hit vs ${tgt.name}: <b>${Math.round(G.Battle.hitChance(u, tgt))}%</b><br>`;
     if (w.mag) s += `Fumble per reload: <b>${U.fmt1(G.Battle.fumbleChance(u))}%</b><br>`;
     if (u.spec) s += `<i>${u.spec.name}: ${u.spec.desc}</i><br>`;
@@ -438,16 +459,16 @@
     const timeScale = v.slowmo > 0 ? C().slowMoOnKill : 1;
     v.slowmo = Math.max(0, v.slowmo - dt);
     if (b.phase === "fight" && !v.tutSeen && G.TutView) { v.tutSeen = true; G.TutView.check(); }   // Slice 4 §A T3: first frame of the fight
-    const held = !!(G.TutView && G.TutView.holds()) || !!(G.Dice && G.Dice.busy());   // + Slice 5 §B: Break away's die   // a tutorial step is showing: the fight holds (b.paused untouched)
+    const diceHeld = !!(G.Dice && G.Dice.busy()), held = !!(G.TutView && G.TutView.holds()) || diceHeld;   // + Slice 5 §B: Break away's die   // a tutorial step is showing: the fight holds (b.paused untouched)
     if (b.phase === "fight" && !held) G.Battle.advance(b, dt, v.speed, timeScale);   // aiming: 25% of 1x (or paused), see G.Abilities.timeScale
     for (const e of v.booms) e.age += dt * v.speed * timeScale; v.booms = v.booms.filter((e) => e.age < 0.4);
-    BV.drainFx(v);
+    if (!diceHeld) BV.drainFx(v);   // Break away's "OUT!" / "STUMBLE" float (and anything else from that tick) waits for the die
     if (v.barEls) BV.updateBar(v);
     if (v.touchCancel) BV.updateTouch(v);
     BV.updateParticles(v, dt * v.speed * timeScale);   // Slice 4 §A2: effects crawl / freeze with the speed slider (kill slow-mo on top)
     BV.draw(v);
     if (v.timerEl) v.timerEl.textContent = b.phase === "fight" || b.phase === "over" ? (b.mode === "defense" ? `Hold: ${Math.max(0, Math.ceil(b.surviveSec - b.t))} s` : `${b.t.toFixed(1)} s`) : "";
-    if (b.over && !v.ended) { v.ended = true; setTimeout(() => v.opts.onEnd && v.opts.onEnd(b), 900); }
+    if (b.over && !v.ended && !diceHeld) { v.ended = true; setTimeout(() => v.opts.onEnd && v.opts.onEnd(b), 900); }
   };
 
   const S = () => DATA.sprites;

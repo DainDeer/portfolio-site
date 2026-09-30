@@ -51,7 +51,9 @@
   G.UI.gruntIcon = function (g, px, cls) { const k = GL.key(g); if (k) GL.ensure(k); return SP.icon(k || G.State.gruntTpl(g).sprite, px, cls); };
 
   // ---------- the equip menu ----------
-  const SLOTS = [["head", "head", "Head"], ["body", "body", "Body"], ["pack", "backpack", "Pack"], ["weapon", "weapon", "Weapon"]];   // [grunt slot, item slot, label]
+  // [grunt slot, body loadout key, label, item slot(s)]. Slice 5 §E: + the off hand (both) and the Backup set (the body only)
+  const SLOTS = [["head", "head", "Head", ["head"]], ["body", "body", "Body", ["body"]], ["pack", "backpack", "Pack", ["backpack"]], ["weapon", "weapon", "Main hand", ["weapon"]], ["offhand", "offhand", "Off hand", ["weapon", "shield"]],
+    ["weapon2", "weapon2", "Backup main", ["weapon"], true], ["offhand2", "offhand2", "Backup off", ["weapon", "shield"], true]];
   GL.sel = {};
   // target: { grunt: g } or { body: true } (the deploy loadout: items stay in the stash until you deploy)
   G.UI.dollEl = function (target, after) {
@@ -59,38 +61,43 @@
     const tid = g ? g.uid : "body", cur = GL.sel[tid] || "weapon"; GL.sel[tid] = cur;
     const equipped = (gs, is) => g ? g.gear[gs] : (lo.gear[is] ? s.stash.items.find((i) => i.uid === lo.gear[is]) : null);
     const inRun = !!s.run, redraw = () => { if (after) after(); else UI.render(); };
+    const getB = (k) => (lo.gear[k] ? s.stash.items.find((i) => i.uid === lo.gear[k]) : null), getT = (k) => (g ? g.gear[k] : getB(k));
     const act = (gs, is, uid) => {
       if (g) { const e = G.State.equipGrunt(g.uid, gs, uid); if (e) return UI.fail(e); }
-      else { if (uid) lo.gear[is] = uid; else delete lo.gear[is]; if ((lo.pouch || []).some((p) => p.uid === uid)) lo.pouch = []; G.State.save(); }
+      else { const x = uid && s.stash.items.find((i) => i.uid === uid);
+        if (x && I.isHandItem(x)) { const fit = I.handFit(is, x, getB); if (fit.why) return UI.fail(fit.why); for (const k of fit.clear) delete lo.gear[k]; }   // Slice 5 §E
+        if (uid) lo.gear[is] = uid; else delete lo.gear[is]; if ((lo.pouch || []).some((p) => p.uid === uid)) lo.pouch = []; G.State.save(); }
       if (G.Sfx) G.Sfx.play("sfx_ui_click");
       redraw();
     };
     const box = h("div", { class: "doll", "data-doll": tid });
     // the figure: the composited Grunt at dollScale (the body: its own sprite)
-    const fig = h("div", { class: "doll-fig" });
+    const fig = h("div", { class: "doll-fig" + (!g || G.State.gruntSlots(g).offhand ? " hands" : "") });
     const sc = DATA.gruntLook.dollScale, px = FS() * sc;
     const figIcon = g ? UI.gruntIcon(g, px, "doll-art") : SP.icon(G.State.bodySprite(G.State.body(lo.bodyId)), px, "doll-art");
     fig.appendChild(figIcon);
-    for (const [gs, is, label] of SLOTS) {
-      if (g && !G.State.gruntSlots(g)[gs]) continue;
+    for (const [gs, is, label, , bk] of SLOTS) {
+      if (g ? !G.State.gruntSlots(g)[gs] : false) continue;
+      if (bk && g) continue;
       const it = equipped(gs, is), icon = it ? SP.icon(I.sprite(it), 36) : SP.icon(DATA.sprites["slot_" + gs] ? "slot_" + gs : "slot_gear", 36, "slot-empty");
       const b = h("button", { class: "doll-slot s-" + gs + (cur === gs ? " on" : "") + (it ? " filled r-" + it.rarity : ""), "data-dslot": gs, title: it ? I.name(it) : label + " (empty)", onclick: () => { GL.sel[tid] = gs; redraw(); } }, icon, h("span", null, label));
       fig.appendChild(b);
     }
     box.appendChild(fig);
     // the list for the chosen slot
-    const [gs, is, label] = SLOTS.find((x) => x[0] === cur), it = equipped(gs, is);
+    const [gs, is, label, accepts] = SLOTS.find((x) => x[0] === cur) || SLOTS[3], it = equipped(gs, is);
     const side = h("div", { class: "doll-list" });
     const innate = g ? I.base(g.weapon).name : I.base(DATA.bodies.basicBody.naturalWeapon).name;
     side.appendChild(h("div", { class: "doll-cur" }, h("b", null, label + ": "), it ? h("span", { style: "color:" + DATA.items.rarities[it.rarity].color }, I.name(it)) : h("i", null, gs === "weapon" ? `empty (fights with ${g ? "their" : "your"} ${innate})` : "empty"),
       it && !inRun ? h("button", { "data-act": "doll-unequip", onclick: () => act(gs, is, null) }, "Unequip") : null));
     if (inRun && g) side.appendChild(h("p", { class: "hint" }, "Equip Grunts at the outpost, not during a run."));
     const bodyTaken = new Set(Object.values(lo.gear || {}));
-    const pool = s.stash.items.filter((x) => !I.isQuest(x) && I.base(x.base).slot === is && (!it || x.uid !== it.uid));   // a Grunt can take what the body had picked (it leaves the loadout)
+    const hk = g ? gs : is;   // the hand-rule key (grunt slots use the same names)
+    const pool = s.stash.items.filter((x) => !I.isQuest(x) && accepts.includes(I.base(x.base).slot) && (!it || x.uid !== it.uid) && !(I.isHandItem(x) && I.handFit(hk, x, getT).why));   // a Grunt can take what the body had picked (it leaves the loadout)
     const ul = h("div", { class: "doll-items" });
     if (!pool.length) ul.appendChild(h("p", { class: "hint" }, `No ${label.toLowerCase()} items in the stash.`));
     for (const x of pool) {
-      const bd = I.base(x.base), stat = bd.slot === "weapon" ? `${bd.wtype ? DATA.items.wtypes[bd.wtype].name + " · " : ""}${bd.hands === 2 ? "2H" : "1H"} · ${U.fmt1(I.weaponStats(x).dmg)} dmg` : [bd.armor ? `Armor ${Math.round(bd.armor * (bd.noScale ? 1 : I.scale(x.ilvl)))}` : null, bd.carryKg ? `+${bd.carryKg} kg carry` : null].filter(Boolean).join(" · ");
+      const bd = I.base(x.base), stat = bd.slot === "shield" ? `Shield · block ${bd.blockPct}% · Armor ${Math.round((bd.armor || 0) * I.scale(x.ilvl))} · ${bd.moveSpeedPct}% Move` : bd.slot === "weapon" ? `${bd.wtype ? DATA.items.wtypes[bd.wtype].name + " · " : ""}${bd.hands === 2 ? "2H" : "1H"} · ${U.fmt1(I.weaponStats(x).dmg)} dmg` : [bd.armor ? `Armor ${Math.round(bd.armor * (bd.noScale ? 1 : I.scale(x.ilvl)))}` : null, bd.carryKg ? `+${bd.carryKg} kg carry` : null].filter(Boolean).join(" · ");
       const note = bodyTaken.has(x.uid) ? (g ? " (in your loadout)" : " (you)") : "";
       const row = h("button", { class: "doll-item r-" + x.rarity, "data-uid": x.uid, disabled: inRun && g ? "" : null, onclick: () => act(gs, is, x.uid) }, SP.icon(I.sprite(x), 32), h("span", { class: "di-name", style: "color:" + DATA.items.rarities[x.rarity].color }, I.name(x) + note), h("small", null, `${DATA.items.rarities[x.rarity].name} i${x.ilvl}${stat ? " · " + stat : ""} · ${I.weight(x)} kg`));
       UI.tipOn(row, () => `<b style="color:${I.color(x)}">${I.name(x)}</b><br>` + I.describe(x).join("<br>"));

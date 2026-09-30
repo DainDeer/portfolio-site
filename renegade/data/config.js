@@ -64,7 +64,7 @@ DATA.config = {
     rosterCap: 5,
     // Slice 4 §F: every Grunt has the body's 4 slots (was Megan's playtest weapon + one gear slot), equipped from the Vault
     // stash at the outpost through the paper doll. Gear on a Grunt that dies in battle stays on its body in the location.
-    slots: { weapon: ["weapon"], head: ["head"], body: ["body"], pack: ["backpack"] },
+    slots: { weapon: ["weapon"], offhand: ["weapon", "shield"], head: ["head"], body: ["body"], pack: ["backpack"] },   // Slice 5 §E: + the off hand (Main set only: no backup for Grunts)
     innateWeapon: "nat_shiv",        // §F: what a Grunt fights with when its weapon slot is empty (new recruits: just a shiv)
     // §F starting kit: the new game's Grunts (and the tutorial's free top-ups) get these equipped, by roster position
     // (Vixie: fixed, no randomness; both wear a white Patched Tunic). Recruits get nothing (mannequin + the innate shiv).
@@ -235,6 +235,19 @@ DATA.config = {
     // Success: every standing unit leaves, downed allies are left behind and die ("Left behind at X"), no loot, +heat Heat
     // (instead of the battle's own), back to the location you came from; the enemies stay there (this run).
     // Fail: stumbleSec of free attacks for the enemy (your units don't act), then the cooldown (combat time) starts.
+    // Slice 5 §E [DRAFT Vixie calls]: weapon sets. Your body has a Main and a Backup set (gear weapon + offhand,
+    // weapon2 + offhand2); a set is one 2H weapon, two 1H weapons (dual wield) or 1H + shield. Grunts: Main set only.
+    // dual: attacks alternate hands, each at intervalMult x the weapon's interval; untrained -accPenalty Hit and
+    // +fumblePenalty points fumble on both, shrinking to 0 at Dual Wielding penaltyZeroAt; xpPerAttack (levels fast).
+    // shield: blocks a hit from the front (blockArcDeg around its facing) at the shield's blockPct; Brawling XP per block.
+    // swap: baseSec (/ Attack Speed) + a Handling roll (the incoming weapon's fumble chance: + rolls.fumblePenaltySec);
+    // the class AI swaps (aiSwap) instead of reloading when the backup is loaded and faster, or for range
+    // (a gun set with a foe inside meleeSwapM and a melee backup / a melee set with the target rangeSwapM past reach).
+    weaponSets: {
+      dual: { accPenalty: 25, fumblePenalty: 15, penaltyZeroAt: 20, intervalMult: 0.6, xpPerAttack: 30 },
+      shield: { blockArcDeg: 120, xpPerBlock: 15 },
+      swap: { baseSec: 1.0, cooldownSec: 4, key: "q", aiSwap: true, meleeSwapM: 2.0, rangeSwapM: 4 }
+    },
     breakAway: { enabled: true, key: "b", skill: "acrobatics", channelSec: 1.0, dc: 12, freeEnemies: 2, perEnemy: 1,
                  hunterPack: 3, hunterPacks: ["Marked", "Manhunt"], machines: 2, cooldownSec: 12, stumbleSec: 2, heat: 5 }
   },

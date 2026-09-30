@@ -12,13 +12,15 @@ DATA.gruntLook = {
   enabled: true,           // false: Grunts use the old unit_grunt sprite
   base: "grunt_options/",
   frameSize: 32, frames: ["stand", "walkA", "walkB"],   // every layer file is a 96x32 strip: stand | walkA | walkB
-  layerOrder: ["pack_back", "stowed", "body", "underwear", "face", "legwear", "footwear", "torso", "pack_straps", "belt", "weapon", "offhand", "arms", "sleeves", "hair", "facial_hair", "headwear"],
+  layerOrder: ["pack_back", "stowed", "body", "underwear", "face", "legwear", "footwear", "torso", "pack_straps", "belt", "weapon", "offhand", "arms", "sleeves", "shield", "hair", "facial_hair", "headwear"],
   looks: { skins: ["light", "medium", "dark"], hair: ["crop", "shag", "tied"], hairColours: ["brown", "ginger", "black", "blond", "grey"], beardPct: 30 },
   basePaths: { body: "base/body_{skin}.png", underwear: "base/underwear.png", face: "base/face_{skin}.png",
-    arms: { one_hand: "base/arms_{skin}.png", two_hand: "base/arms_{skin}_two_hand.png", two_hand_rifle: "base/arms_{skin}_two_hand_rifle.png" },
+    arms: { one_hand: "base/arms_{skin}.png", two_hand: "base/arms_{skin}_two_hand.png", two_hand_rifle: "base/arms_{skin}_two_hand_rifle.png",
+      one_hand_shield: "base/arms_{skin}_one_hand_shield.png" },   // Slice 5 §E (fbafb0b): weapon arm as one_hand, off arm braced behind the shield
     hair: "base/hair_{hair}_{hairColour}.png", facial_hair: "base/facial_hair_beard_{hairColour}.png" },
   empty: { legwear: "gear/empty_body/05_legwear.png", torso: "gear/empty_body/07_torso.png",
-    sleeves: { one_hand: "gear/empty_body/13_sleeves.png", two_hand: "gear/empty_body/13_sleeves_two_hand.png", two_hand_rifle: "gear/empty_body/13_sleeves_two_hand_rifle.png" } },
+    sleeves: { one_hand: "gear/empty_body/13_sleeves.png", two_hand: "gear/empty_body/13_sleeves_two_hand.png", two_hand_rifle: "gear/empty_body/13_sleeves_two_hand_rifle.png",
+      one_hand_shield: "gear/empty_body/13_sleeves_one_hand_shield.png" } },
   parts: {
     head: {
       militia_helmet: { headwear: "gear/head/militia_helmet/16_headwear.png", hidesHair: false },
@@ -27,10 +29,10 @@ DATA.gruntLook = {
       starter_wrap: { headwear: "gear/head/starter_wrap/16_headwear.png", hidesHair: false }
     },
     body: {
-      militia_tabard: { legwear: "gear/body/militia_tabard/05_legwear.png", footwear: "gear/body/militia_tabard/06_footwear.png", torso: "gear/body/militia_tabard/07_torso.png", belt: "gear/body/militia_tabard/09_belt.png", sleeves: {"one_hand": "gear/body/militia_tabard/13_sleeves.png", "two_hand": "gear/body/militia_tabard/13_sleeves_two_hand.png", "two_hand_rifle": "gear/body/militia_tabard/13_sleeves_two_hand_rifle.png"} },
-      quilted_jacket: { legwear: "gear/body/quilted_jacket/05_legwear.png", footwear: "gear/body/quilted_jacket/06_footwear.png", torso: "gear/body/quilted_jacket/07_torso.png", belt: "gear/body/quilted_jacket/09_belt.png", sleeves: {"one_hand": "gear/body/quilted_jacket/13_sleeves.png", "two_hand": "gear/body/quilted_jacket/13_sleeves_two_hand.png", "two_hand_rifle": "gear/body/quilted_jacket/13_sleeves_two_hand_rifle.png"} },
-      scav_coat: { legwear: "gear/body/scav_coat/05_legwear.png", footwear: "gear/body/scav_coat/06_footwear.png", torso: "gear/body/scav_coat/07_torso.png", belt: "gear/body/scav_coat/09_belt.png", sleeves: {"one_hand": "gear/body/scav_coat/13_sleeves.png", "two_hand": "gear/body/scav_coat/13_sleeves_two_hand.png", "two_hand_rifle": "gear/body/scav_coat/13_sleeves_two_hand_rifle.png"} },
-      starter_poncho: { legwear: "gear/body/starter_poncho/05_legwear.png", footwear: "gear/body/starter_poncho/06_footwear.png", torso: "gear/body/starter_poncho/07_torso.png", belt: "gear/body/starter_poncho/09_belt.png", sleeves: {"one_hand": "gear/body/starter_poncho/13_sleeves.png", "two_hand": "gear/body/starter_poncho/13_sleeves_two_hand.png", "two_hand_rifle": "gear/body/starter_poncho/13_sleeves_two_hand_rifle.png"} }
+      militia_tabard: { legwear: "gear/body/militia_tabard/05_legwear.png", footwear: "gear/body/militia_tabard/06_footwear.png", torso: "gear/body/militia_tabard/07_torso.png", belt: "gear/body/militia_tabard/09_belt.png", sleeves: {"one_hand": "gear/body/militia_tabard/13_sleeves.png", "two_hand": "gear/body/militia_tabard/13_sleeves_two_hand.png", "two_hand_rifle": "gear/body/militia_tabard/13_sleeves_two_hand_rifle.png", "one_hand_shield": "gear/body/militia_tabard/13_sleeves_one_hand_shield.png"} },
+      quilted_jacket: { legwear: "gear/body/quilted_jacket/05_legwear.png", footwear: "gear/body/quilted_jacket/06_footwear.png", torso: "gear/body/quilted_jacket/07_torso.png", belt: "gear/body/quilted_jacket/09_belt.png", sleeves: {"one_hand": "gear/body/quilted_jacket/13_sleeves.png", "two_hand": "gear/body/quilted_jacket/13_sleeves_two_hand.png", "two_hand_rifle": "gear/body/quilted_jacket/13_sleeves_two_hand_rifle.png", "one_hand_shield": "gear/body/quilted_jacket/13_sleeves_one_hand_shield.png"} },
+      scav_coat: { legwear: "gear/body/scav_coat/05_legwear.png", footwear: "gear/body/scav_coat/06_footwear.png", torso: "gear/body/scav_coat/07_torso.png", belt: "gear/body/scav_coat/09_belt.png", sleeves: {"one_hand": "gear/body/scav_coat/13_sleeves.png", "two_hand": "gear/body/scav_coat/13_sleeves_two_hand.png", "two_hand_rifle": "gear/body/scav_coat/13_sleeves_two_hand_rifle.png", "one_hand_shield": "gear/body/scav_coat/13_sleeves_one_hand_shield.png"} },
+      starter_poncho: { legwear: "gear/body/starter_poncho/05_legwear.png", footwear: "gear/body/starter_poncho/06_footwear.png", torso: "gear/body/starter_poncho/07_torso.png", belt: "gear/body/starter_poncho/09_belt.png", sleeves: {"one_hand": "gear/body/starter_poncho/13_sleeves.png", "two_hand": "gear/body/starter_poncho/13_sleeves_two_hand.png", "two_hand_rifle": "gear/body/starter_poncho/13_sleeves_two_hand_rifle.png", "one_hand_shield": "gear/body/starter_poncho/13_sleeves_one_hand_shield.png"} }
     },
     backpack: {
       military_ruck: { pack_back: "gear/backpack/military_ruck/00_pack_back.png", pack_straps: "gear/backpack/military_ruck/08_pack_straps.png" },
@@ -53,6 +55,13 @@ DATA.gruntLook = {
       wtype_pistol: { weapon: "gear/weapon/wtype_pistol/10_weapon.png", armVariant: "one_hand" },
       wtype_rifle: { weapon: "gear/weapon/wtype_rifle/10_weapon.png", armVariant: "two_hand_rifle" },
       wtype_shotgun: { weapon: "gear/weapon/wtype_shotgun/10_weapon.png", armVariant: "two_hand_rifle" }
+    },
+    // Slice 5 §E (Smudge's fbafb0b): the shield layer draws right after sleeves (a braced shield is in front of its arm;
+    // the reserved "offhand" layer is under the arms: kept for off-hand weapons). Rides handR, centred ~20.2,19.2.
+    offhand: {
+      wood_round_shield: { shield: "gear/offhand/wood_round_shield/13b_shield.png", armVariant: "one_hand_shield" },
+      riot_shield: { shield: "gear/offhand/riot_shield/13b_shield.png", armVariant: "one_hand_shield" },
+      scrap_lid_shield: { shield: "gear/offhand/scrap_lid_shield/13b_shield.png", armVariant: "one_hand_shield" }
     }
   },
   // item base -> part id. [JUDGMENT] items without their own art borrow the closest set (Scrap Helmet -> the militia

@@ -42,6 +42,12 @@ DATA.items = {
     patched_tunic: { name: "Patched Tunic",     slot: "body",     armor: 1, weight: 1.0, req: 0, dropWeight: 0, sprite: "item_patched_tunic" },
     wool_cap:      { name: "Wool Cap",          slot: "head",     armor: 1, weight: 0.4, req: 0, dropWeight: 3, sprite: "item_wool_cap" },
     hide_vest:     { name: "Hide Vest",         slot: "body",     armor: 2, weight: 3.5, req: 0, dropWeight: 3, sprite: "item_hide_vest" },
+    // Slice 5 §E shields (the off hand: 1H weapon + shield). armor scales with ilvl like armour; blockPct = chance to stop
+    // a hit from the front (config.battle.weaponSets.shield.blockArcDeg); moveSpeedPct = the cost. [DRAFT] numbers. Art: Smudge
+    // (fbafb0b: icons item_<id>; paper-doll layer gear.offhand.<id> in grunt_options.json, pose one_hand_shield).
+    wood_round_shield: { name: "Wood Round Shield", slot: "shield", hands: "shield", armor: 1, blockPct: 15, moveSpeedPct: -2, weight: 2.5, req: 0, dropWeight: 3 },
+    riot_shield:       { name: "Riot Shield",       slot: "shield", hands: "shield", armor: 2, blockPct: 25, moveSpeedPct: -6, weight: 5.0, req: 0, dropWeight: 1 },
+    scrap_lid_shield:  { name: "Scrap Lid",         slot: "shield", hands: "shield", armor: 1, blockPct: 10, moveSpeedPct: -1, weight: 1.5, req: 0, dropWeight: 3 },
     school_bag:    { name: "School Bag",        slot: "backpack", carryKg: 10, weight: 0.8, req: 0, dropWeight: 4, noScale: true },
     military_ruck: { name: "Military Ruck",     slot: "backpack", carryKg: 20, moveSpeedPct: -3, weight: 2.0, req: 0, dropWeight: 2, noScale: true },
     // Slice 3 §5 set pieces (data/sets.js). evasion / checkSkill are base stats like armor (evasion scales with ilvl).
@@ -84,8 +90,8 @@ DATA.items = {
   // §10.3 affixes: one line each. value range at ilvl 1; scales with ilvl if scales:true.
   affixes: {
     // basic
-    flat_hp:       { tier: "basic",    label: "+{v} Max HP",         stat: "max_hp",      min: 8,  max: 16, scales: true,  slots: ["weapon", "head", "body", "backpack"] },
-    flat_armor:    { tier: "basic",    label: "+{v} Armor",          stat: "armor",       min: 1,  max: 3,  scales: true,  slots: ["head", "body"] },
+    flat_hp:       { tier: "basic",    label: "+{v} Max HP",         stat: "max_hp",      min: 8,  max: 16, scales: true,  slots: ["weapon", "head", "body", "backpack", "shield"] },
+    flat_armor:    { tier: "basic",    label: "+{v} Armor",          stat: "armor",       min: 1,  max: 3,  scales: true,  slots: ["head", "body", "shield"] },
     flat_accuracy: { tier: "basic",    label: "+{v} Accuracy",       stat: "accuracy",    min: 3,  max: 6,  scales: true,  slots: ["weapon", "head"] },
     flat_carry:    { tier: "basic",    label: "+{v} kg carry",       stat: "carry_kg",    min: 4,  max: 8,  scales: false, slots: ["body", "backpack", "weapon"] },
     flat_evasion:  { tier: "basic",    label: "+{v} Evasion",        stat: "evasion",     min: 2,  max: 5,  scales: true,  slots: ["head", "body"] },
@@ -106,7 +112,7 @@ DATA.items = {
     cx_low_hp_dmg:   { tier: "complex", label: "Below 30% HP: +25% Damage",                      stat: "cx", slots: ["weapon", "body"], cx: { belowPct: 30, dmgPct: 25 } },
     cx_stagger5:     { tier: "complex", label: "Every 5th hit Staggers",                         stat: "cx", slots: ["weapon"], cx: { every: 5, sec: 0.6 } },
     cx_ally_down:    { tier: "complex", label: "When an ally goes down: +20% Attack Speed for 5 s", stat: "cx", slots: ["head", "body"], cx: { asPct: 20, sec: 5 } },
-    cx_first_hit:    { tier: "complex", label: "The first hit you take each battle deals 50% less", stat: "cx", slots: ["head", "body"], cx: { pct: 50 } },
+    cx_first_hit:    { tier: "complex", label: "The first hit you take each battle deals 50% less", stat: "cx", slots: ["head", "body", "shield"], cx: { pct: 50 } },
     cx_kill_cd:      { tier: "complex", label: "Kills take 1 s off your ability cooldowns",      stat: "cx", slots: ["weapon", "head"], cx: { sec: 1 } }
   },
   // §7.4 weapon tags used in slice

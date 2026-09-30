@@ -38,6 +38,7 @@
             if (ly.sleeves) { part.sleeves = {}; for (const v in ly.sleeves) part.sleeves[v] = strip(ly.sleeves[v]); } if (e.hides_legwear) delete part.legwear; }
           else if (slot === "backpack" && (ly.pack_back || ly.pack_straps)) part = { pack_back: strip(ly.pack_back), pack_straps: strip(ly.pack_straps) };
           else if (slot === "weapon" && ly.weapon) part = { weapon: strip(ly.weapon), armVariant: e.armVariant || (e.pose === "two_hand" ? "two_hand" : "one_hand") };
+          else if (slot === "offhand" && (ly.shield || ly.offhand)) { part = { armVariant: e.armVariant || "one_hand" }; if (ly.shield) part.shield = strip(ly.shield); if (ly.offhand) part.offhand = strip(ly.offhand); }   // Slice 5 §E
           if (part) { P[slot][id] = part; added.push(slot + "/" + id); }
         }
         if (P[slot][id]) for (const b of e.items || []) { (GG.optItems[slot] = GG.optItems[slot] || {})[b] = id; }
@@ -51,6 +52,7 @@
     const gear = g.gear || {}, lk = GG.baseLook(g);
     const w = GG.partFor("weapon", gear.weapon) || GG.partFor("weapon", g.weapon || CFG().innateWeapon);
     const spec = { skin: lk.skin, hair: lk.hair, hairColour: lk.hairColour, beard: lk.beard, head: GG.partFor("head", gear.head), body: GG.partFor("body", gear.body), backpack: GG.partFor("pack", gear.pack), weapon: w };
+    const off = GG.partFor("offhand", gear.offhand); if (off) spec.offhand = off;   // Slice 5 §E (only when drawn: old keys stay)
     const key = "gl_" + hash(JSON.stringify(spec)).toString(36);
     GG.specs[key] = spec;
     return { key, spec };
@@ -59,11 +61,14 @@
   // the layer files (paths under assets/) for a spec, bottom -> top: [{ layer, file }]
   GG.layers = function (spec) {
     const D = L(), P = D.parts, B = D.basePaths, fill = (t) => t.replace("{skin}", spec.skin).replace("{hair}", spec.hair).replace("{hairColour}", spec.hairColour);
-    const wp = spec.weapon && P.weapon[spec.weapon], av = wp ? wp.armVariant : "one_hand";
+    const wp = spec.weapon && P.weapon[spec.weapon], op = spec.offhand && P.offhand && P.offhand[spec.offhand];
+    // Slice 5 §E: a shield's pose (one_hand_shield) with a 1H / no main weapon; a two-hander (blocksOffhand) hides it
+    const wav = wp ? wp.armVariant : "one_hand", blocked = /^two_hand/.test(wav), av = op && !blocked ? op.armVariant || wav : wav;
     const hd = spec.head && P.head[spec.head], bd = spec.body && P.body[spec.body], pk = spec.backpack && P.backpack[spec.backpack];
+    const armsF = B.arms[av] || B.arms.one_hand, sleevesF = bd ? bd.sleeves[av] || bd.sleeves.one_hand : D.empty.sleeves[av] || D.empty.sleeves.one_hand;
     const pick = { pack_back: pk && pk.pack_back, body: fill(B.body), underwear: B.underwear, face: fill(B.face),
       legwear: bd ? (bd.hidesLegwear ? null : bd.legwear) : D.empty.legwear, footwear: bd && bd.footwear, torso: bd ? bd.torso : D.empty.torso,
-      pack_straps: pk && pk.pack_straps, belt: bd && bd.belt, weapon: wp && wp.weapon, arms: fill(B.arms[av]), sleeves: bd ? bd.sleeves[av] : D.empty.sleeves[av],
+      pack_straps: pk && pk.pack_straps, belt: bd && bd.belt, weapon: wp && wp.weapon, offhand: op && !blocked && op.offhand, shield: op && !blocked && op.shield, arms: fill(armsF), sleeves: sleevesF,
       hair: hd && hd.hidesHair ? null : fill(B.hair), facial_hair: spec.beard ? fill(B.facial_hair) : null, headwear: hd && hd.headwear };
     const out = [];
     for (const layer of D.layerOrder) if (pick[layer]) out.push({ layer, file: D.base + pick[layer] });

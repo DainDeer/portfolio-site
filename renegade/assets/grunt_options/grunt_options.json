@@ -180,7 +180,8 @@
     "arms": {
       "one_hand": "grunt_options/base/arms_<skin>.png",
       "two_hand": "grunt_options/base/arms_<skin>_two_hand.png",
-      "two_hand_rifle": "grunt_options/base/arms_<skin>_two_hand_rifle.png"
+      "two_hand_rifle": "grunt_options/base/arms_<skin>_two_hand_rifle.png",
+      "one_hand_shield": "grunt_options/base/arms_<skin>_one_hand_shield.png"
     }
   },
   "defaultLook": {
@@ -286,6 +287,9 @@
       ],
       "weapon": [
         "weapon"
+      ],
+      "offhand": [
+        "shield"
       ]
     },
     "reserved": {
@@ -296,7 +300,8 @@
       "pack_back first": "the pack is behind everything, so only its edges show past the arms/torso and above the shoulders (bedroll ends either side of the head)",
       "pack_straps after torso, before belt": "straps sit on the outfit; the belt and scarf ends go over their bottom ends; sleeves/arms still cover the shoulders",
       "weapon before arms": "the hand (arms layer) closes over the grip",
-      "headwear last": "over hair; hair above the hat top edge is clipped per column (clipsHairAbove)"
+      "headwear last": "over hair; hair above the hat top edge is clipped per column (clipsHairAbove)",
+      "shield after sleeves": "a shield is braced in FRONT of its arm (the reserved offhand layer sits under arms, for a dual-wield grip the hand closes over), so shields get their own layer over sleeves; it stays below the chin (top edge y >= 13.5), so hair / beard / headwear above it never overlap it"
     },
     "noOutline": [
       "face",
@@ -325,7 +330,8 @@
     "armVariants": [
       "one_hand",
       "two_hand",
-      "two_hand_rifle"
+      "two_hand_rifle",
+      "one_hand_shield"
     ],
     "one_hand": {
       "pose": "one_hand",
@@ -515,6 +521,94 @@
           ]
         }
       }
+    },
+    "one_hand_shield": {
+      "pose": "one_hand",
+      "generatedBy": "slice5_shields.py",
+      "when": "a shield is in the off hand (offhand slot, kind shield) with a one_hand main weapon or an empty weapon slot. It REPLACES the weapon's armVariant (one_hand) for arms + sleeves.",
+      "weaponGrip": "handL, identical to one_hand's handL every frame: every one_hand weapon layer fits unchanged",
+      "offhandGrip": "handR braced in at the chest, hidden behind the shield",
+      "arms": "weapon arm cocked (elbow out, fist at the hip, blade ready); shield arm braced forward: upper arm out to an elbow tucked behind the rim, forearm across the chest behind the shield. Hands bob 0.5px with the walk like one_hand; the shield rides the off hand.",
+      "shieldLayer": "shield",
+      "shieldLayerAfter": "sleeves",
+      "files": {
+        "arms": "grunt_options/base/arms_<skin>_one_hand_shield.png",
+        "emptyBodySleeves": "grunt_options/gear/empty_body/13_sleeves_one_hand_shield.png",
+        "bodySleeves": "grunt_options/gear/body/<id>/13_sleeves_one_hand_shield.png"
+      },
+      "usedBy": [
+        "wood_round_shield",
+        "riot_shield",
+        "scrap_lid_shield"
+      ],
+      "perFrame": {
+        "stand": {
+          "elbowL": [
+            9.0,
+            17.4
+          ],
+          "handL": [
+            10.4,
+            21.0
+          ],
+          "elbowR": [
+            23.6,
+            17.2
+          ],
+          "handR": [
+            20.4,
+            18.8
+          ],
+          "shieldCentre": [
+            20.2,
+            19.2
+          ]
+        },
+        "walkA": {
+          "elbowL": [
+            9.0,
+            17.6
+          ],
+          "handL": [
+            10.4,
+            21.5
+          ],
+          "elbowR": [
+            23.6,
+            16.9
+          ],
+          "handR": [
+            20.4,
+            18.3
+          ],
+          "shieldCentre": [
+            20.2,
+            18.7
+          ]
+        },
+        "walkB": {
+          "elbowL": [
+            9.0,
+            17.1
+          ],
+          "handL": [
+            10.4,
+            20.5
+          ],
+          "elbowR": [
+            23.6,
+            17.4
+          ],
+          "handR": [
+            20.4,
+            19.3
+          ],
+          "shieldCentre": [
+            20.2,
+            19.7
+          ]
+        }
+      }
     }
   },
   "composer": {
@@ -613,7 +707,8 @@
           "sleeves": {
             "one_hand": "grunt_options/gear/body/militia_tabard/13_sleeves.png",
             "two_hand": "grunt_options/gear/body/militia_tabard/13_sleeves_two_hand.png",
-            "two_hand_rifle": "grunt_options/gear/body/militia_tabard/13_sleeves_two_hand_rifle.png"
+            "two_hand_rifle": "grunt_options/gear/body/militia_tabard/13_sleeves_two_hand_rifle.png",
+            "one_hand_shield": "grunt_options/gear/body/militia_tabard/13_sleeves_one_hand_shield.png"
           }
         },
         "onMannequin": "grunt_options/gear/body/militia_tabard/on_mannequin.png",
@@ -633,7 +728,8 @@
           "sleeves": {
             "one_hand": "grunt_options/gear/body/quilted_jacket/13_sleeves.png",
             "two_hand": "grunt_options/gear/body/quilted_jacket/13_sleeves_two_hand.png",
-            "two_hand_rifle": "grunt_options/gear/body/quilted_jacket/13_sleeves_two_hand_rifle.png"
+            "two_hand_rifle": "grunt_options/gear/body/quilted_jacket/13_sleeves_two_hand_rifle.png",
+            "one_hand_shield": "grunt_options/gear/body/quilted_jacket/13_sleeves_one_hand_shield.png"
           }
         },
         "onMannequin": "grunt_options/gear/body/quilted_jacket/on_mannequin.png",
@@ -653,7 +749,8 @@
           "sleeves": {
             "one_hand": "grunt_options/gear/body/scav_coat/13_sleeves.png",
             "two_hand": "grunt_options/gear/body/scav_coat/13_sleeves_two_hand.png",
-            "two_hand_rifle": "grunt_options/gear/body/scav_coat/13_sleeves_two_hand_rifle.png"
+            "two_hand_rifle": "grunt_options/gear/body/scav_coat/13_sleeves_two_hand_rifle.png",
+            "one_hand_shield": "grunt_options/gear/body/scav_coat/13_sleeves_one_hand_shield.png"
           }
         },
         "onMannequin": "grunt_options/gear/body/scav_coat/on_mannequin.png",
@@ -671,7 +768,8 @@
           "sleeves": {
             "one_hand": "grunt_options/gear/body/starter_poncho/13_sleeves.png",
             "two_hand": "grunt_options/gear/body/starter_poncho/13_sleeves_two_hand.png",
-            "two_hand_rifle": "grunt_options/gear/body/starter_poncho/13_sleeves_two_hand_rifle.png"
+            "two_hand_rifle": "grunt_options/gear/body/starter_poncho/13_sleeves_two_hand_rifle.png",
+            "one_hand_shield": "grunt_options/gear/body/starter_poncho/13_sleeves_one_hand_shield.png"
           }
         },
         "onMannequin": "grunt_options/gear/body/starter_poncho/on_mannequin.png",
@@ -691,7 +789,8 @@
           "sleeves": {
             "one_hand": "grunt_options/gear/body/patched_tunic/13_sleeves.png",
             "two_hand": "grunt_options/gear/body/patched_tunic/13_sleeves_two_hand.png",
-            "two_hand_rifle": "grunt_options/gear/body/patched_tunic/13_sleeves_two_hand_rifle.png"
+            "two_hand_rifle": "grunt_options/gear/body/patched_tunic/13_sleeves_two_hand_rifle.png",
+            "one_hand_shield": "grunt_options/gear/body/patched_tunic/13_sleeves_one_hand_shield.png"
           }
         },
         "onMannequin": "grunt_options/gear/body/patched_tunic/on_mannequin.png",
@@ -711,7 +810,8 @@
           "sleeves": {
             "one_hand": "grunt_options/gear/body/hide_vest/13_sleeves.png",
             "two_hand": "grunt_options/gear/body/hide_vest/13_sleeves_two_hand.png",
-            "two_hand_rifle": "grunt_options/gear/body/hide_vest/13_sleeves_two_hand_rifle.png"
+            "two_hand_rifle": "grunt_options/gear/body/hide_vest/13_sleeves_two_hand_rifle.png",
+            "one_hand_shield": "grunt_options/gear/body/hide_vest/13_sleeves_one_hand_shield.png"
           }
         },
         "onMannequin": "grunt_options/gear/body/hide_vest/on_mannequin.png",
@@ -846,6 +946,74 @@
         "blocksOffhand": false,
         "grip": "handL"
       }
+    },
+    "offhand": {
+      "wood_round_shield": {
+        "name": "Wooden round shield",
+        "set": null,
+        "items": [
+          "wood_round_shield"
+        ],
+        "kind": "shield",
+        "layers": {
+          "shield": "grunt_options/gear/offhand/wood_round_shield/13b_shield.png"
+        },
+        "onMannequin": "grunt_options/gear/offhand/wood_round_shield/on_mannequin.png",
+        "icon": "item_wood_round_shield",
+        "iconFile": "items/item_wood_round_shield.png",
+        "pose": "one_hand",
+        "armVariant": "one_hand_shield",
+        "grip": "handR (braced, behind the shield)",
+        "drawAfter": "sleeves",
+        "blockedBy": "a two_hand main weapon (blocksOffhand)",
+        "design": "wood_round",
+        "purpose": "round wooden shield: planks, teal war-paint band, riveted iron rim, domed boss, axe notch",
+        "generatedBy": "slice5_shields.py"
+      },
+      "riot_shield": {
+        "name": "Riot shield",
+        "set": null,
+        "items": [
+          "riot_shield"
+        ],
+        "kind": "shield",
+        "layers": {
+          "shield": "grunt_options/gear/offhand/riot_shield/13b_shield.png"
+        },
+        "onMannequin": "grunt_options/gear/offhand/riot_shield/on_mannequin.png",
+        "icon": "item_riot_shield",
+        "iconFile": "items/item_riot_shield.png",
+        "pose": "one_hand",
+        "armVariant": "one_hand_shield",
+        "grip": "handR (braced, behind the shield)",
+        "drawAfter": "sleeves",
+        "blockedBy": "a two_hand main weapon (blocksOffhand)",
+        "design": "riot",
+        "purpose": "scavenged riot shield: tall dark polycarbonate slab, scratched view window, scraped stencil band, teal duct tape over a crack, road scuffs",
+        "generatedBy": "slice5_shields.py"
+      },
+      "scrap_lid_shield": {
+        "name": "Scrap lid shield",
+        "set": null,
+        "items": [
+          "scrap_lid_shield"
+        ],
+        "kind": "shield",
+        "layers": {
+          "shield": "grunt_options/gear/offhand/scrap_lid_shield/13b_shield.png"
+        },
+        "onMannequin": "grunt_options/gear/offhand/scrap_lid_shield/on_mannequin.png",
+        "icon": "item_scrap_lid_shield",
+        "iconFile": "items/item_scrap_lid_shield.png",
+        "pose": "one_hand",
+        "armVariant": "one_hand_shield",
+        "grip": "handR (braced, behind the shield)",
+        "drawAfter": "sleeves",
+        "blockedBy": "a two_hand main weapon (blocksOffhand)",
+        "design": "scrap_lid",
+        "purpose": "trash-can lid shield: galvanised dome with pressed rings, leather-strapped handle, rust, a dent",
+        "generatedBy": "slice5_shields.py"
+      }
     }
   },
   "sets": {
@@ -910,5 +1078,58 @@
       "grunt1": "pipe_rifle",
       "grunt2": "rust_machete"
     }
+  },
+  "layerOrderWithShield": [
+    "pack_back",
+    "stowed",
+    "body",
+    "underwear",
+    "face",
+    "legwear",
+    "footwear",
+    "torso",
+    "pack_straps",
+    "belt",
+    "weapon",
+    "offhand",
+    "arms",
+    "sleeves",
+    "shield",
+    "hair",
+    "facial_hair",
+    "headwear"
+  ],
+  "shields": {
+    "generatedBy": "slice5_shields.py",
+    "ids": {
+      "wood_round": "wood_round_shield",
+      "riot": "riot_shield",
+      "scrap_lid": "scrap_lid_shield"
+    },
+    "pose": "one_hand_shield",
+    "layer": "shield",
+    "slot": "offhand",
+    "layerFile": "13b_shield.png",
+    "layerOrder": [
+      "pack_back",
+      "stowed",
+      "body",
+      "underwear",
+      "face",
+      "legwear",
+      "footwear",
+      "torso",
+      "pack_straps",
+      "belt",
+      "weapon",
+      "offhand",
+      "arms",
+      "sleeves",
+      "shield",
+      "hair",
+      "facial_hair",
+      "headwear"
+    ],
+    "rename": "edit SHIELD_IDS / SHIELD_POSE / SHIELD_LAYER at the top of assets/src/slice5_shields.py and rerun it: every file, key and this JSON follow"
   }
 }

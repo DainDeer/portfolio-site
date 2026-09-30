@@ -60,7 +60,7 @@ DATA.allies = {
     name: "Veteran", sprite: "unit_veteran", ai: "auto", deployCost: 2, rank: "core",
     stats: { max_hp: 100, armor: 1, evasion: 2, move_speed: 4.2, crit_chance: 5, crit_damage: 150 },
     skillBonus: 4,
-    slots: { weapon: ["weapon"], head: ["head"], body: ["body"], pack: ["backpack"] }
+    slots: { weapon: ["weapon"], offhand: ["weapon", "shield"], head: ["head"], body: ["body"], pack: ["backpack"] }
   },
 
   // ---- history log ----

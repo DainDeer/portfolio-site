@@ -107,7 +107,7 @@
     for (const u of units) {
       if (u.side !== 0 || !u.weapon || u.weapon.style !== "gun") continue;
       if (def.jamPct) u.ammoJamMult = 1 + def.jamPct / 100;
-      if (def.tag && !u.weapon.tags.includes(def.tag)) u.weapon.tags.push(def.tag);
+      if (def.tag) for (const w of G.Battle.weaponsOf ? G.Battle.weaponsOf(u) : [u.weapon]) if (w.style === "gun" && !w.tags.includes(def.tag)) w.tags.push(def.tag);   // Slice 5 §E: every gun in both sets
       u.ammoPack = a.base;
     }
     return a.base;

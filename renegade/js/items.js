@@ -136,6 +136,30 @@
   I.isQuest = (item) => !!item && !!I.base(item.base) && I.base(item.base).slot === "quest";
   I.makeQuest = (baseId) => ({ uid: U.uid("it"), base: baseId, rarity: "white", ilvl: 1, affixes: [], quest: true });
   I.weight = (item) => I.base(item.base).weight || 0;
+  // ---- Slice 5 §E weapon sets: hand slots weapon / offhand (Main), weapon2 / offhand2 (Backup) ----
+  I.HAND_SLOTS = ["weapon", "offhand", "weapon2", "offhand2"];
+  I.BACKUP_SLOTS = ["weapon2", "offhand2"];
+  I.hands = (b) => (!b ? 0 : b.slot === "shield" ? "shield" : b.slot === "weapon" ? (b.hands === 2 ? 2 : 1) : 0);   // 2 | 1 | "shield" | 0
+  I.isHandItem = (item) => !!(item && I.hands(I.base(item.base)));
+  // Putting item in hand slot key: { why } if it can't go there, else { clear: [keys] } the slots it pushes out.
+  // Rules: a shield only goes in an off hand, a 2H weapon only in a main hand (and empties that set's off hand);
+  // an off hand next to a 2H main pushes the main out (the newer pick wins). get(key) -> the item in that slot.
+  I.handFit = function (key, item, get) {
+    const h = I.hands(I.base(item.base)), off = key === "offhand" || key === "offhand2", bk = key === "weapon2" || key === "offhand2";
+    const mainK = bk ? "weapon2" : "weapon", offK = bk ? "offhand2" : "offhand";
+    if (!h) return { why: "That isn't a weapon or a shield." };
+    if (!off) { if (h === "shield") return { why: "A shield goes in the off hand." }; return { clear: h === 2 && get(offK) ? [offK] : [] }; }
+    if (h === 2) return { why: "Two-handed: it goes in the main hand." };
+    const m = get(mainK); return { clear: m && I.hands(I.base(m.base)) === 2 ? [mainK] : [] };
+  };
+  // the slot a bag / stash item goes to when you just press Equip (set: "main" | "backup")
+  I.autoSlot = function (item, get, set) {
+    const b = I.base(item.base), h = I.hands(b), bk = set === "backup", mainK = bk ? "weapon2" : "weapon", offK = bk ? "offhand2" : "offhand";
+    if (!h) return b.slot;
+    if (h === "shield") return offK;
+    if (h === 2) return mainK;
+    const m = get(mainK); return !m ? mainK : I.hands(I.base(m.base)) === 1 && !get(offK) ? offK : mainK;
+  };
   I.sprite = (item) => I.base(item.base).sprite || ("item_" + item.base);
 
   I.affixText = function (a) {
@@ -186,6 +210,7 @@
       if (w.tags.length) lines.push("Tags: " + w.tags.join(", "));
       lines.push(`Skill: ${DATA.skills[w.skill].name}` + (item.req ? ` (req ${item.req}${LC().enforceRequirements ? "" : ", not enforced"})` : ""));
     }
+    if (b.slot === "shield") lines.push(`Shield · off hand · blocks ${b.blockPct}% of hits from the front · Brawling`);   // Slice 5 §E
     if (b.armor) lines.push(`+${Math.round(b.armor * sc)} Armor`);
     if (b.evasion) lines.push(`+${Math.round(b.evasion * sc)} Evasion`);
     if (b.checkSkill) for (const k in b.checkSkill) lines.push(`+${b.checkSkill[k]} ${DATA.skills[k].name} (checks)`);

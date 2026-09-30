@@ -321,8 +321,9 @@
     const gsec = h("section", { class: "panel" }, h("h3", null, "3 · Gear (taken from the Vault — lost if your body dies)"));
     // Slice 4 §F: the body's gear goes through the same paper doll as the Grunts (items stay in the Vault until you deploy)
     { const chips = h("div", { class: "gear-chips" });
-      for (const slot of ["weapon", "head", "body", "backpack"]) {
+      for (const slot of ["weapon", "offhand", "weapon2", "offhand2", "head", "body", "backpack"]) {
         const it = lo.gear[slot] && s.stash.items.find((i) => i.uid === lo.gear[slot]);
+        if (!it && (slot === "offhand" || slot === "weapon2" || slot === "offhand2")) { if (lo.gear[slot]) delete lo.gear[slot]; continue; }   // Slice 5 §E: only filled extra hands show
         if (lo.gear[slot] && !it) delete lo.gear[slot];
         chips.appendChild(h("span", { class: "gear-chip" + (it ? " r-" + it.rarity : " empty"), "data-gslot": slot }, SP.icon(it ? G.Items.sprite(it) : (DATA.sprites["slot_" + (slot === "backpack" ? "pack" : slot)] ? "slot_" + (slot === "backpack" ? "pack" : slot) : "slot_gear"), 24),
           h("span", it ? { style: "color:" + DATA.items.rarities[it.rarity].color } : null, it ? G.Items.name(it) : slot === "weapon" ? `(natural: ${G.Items.base(body.cls ? DATA.bodies.classes[body.cls].naturalWeapon : DATA.bodies.basicBody.naturalWeapon).name})` : slot === "backpack" && DATA.config.deploy.freeBackpack ? "(free School Bag)" : "(none)")));
@@ -636,6 +637,7 @@
     UI.modal(box, "wide");
   };
 
+  UI.slotLabel = { weapon: "main hand", offhand: "off hand", weapon2: "backup main", offhand2: "backup off hand", head: "head", body: "body", backpack: "backpack" };   // Slice 5 §E
   // ================= EXPEDITION =================
   UI.renderExpedition = function (scr) {
     const s = G.state, r = s.run, X = G.Exp;
@@ -680,11 +682,16 @@
     if (pct > 100) carry.appendChild(h("div", { class: "warn" }, pct >= DATA.config.carry.immobileAtPct ? "Over 150%: you can't move until you drop something." : `Overloaded: −${Math.round(pct - 100)}% Move Speed in battle.`));
     // gear
     const worn = Object.values(r.gear).filter(Boolean);
-    for (const slot of ["weapon", "head", "body", "backpack"]) { const it = r.gear[slot]; if (it) carry.appendChild(UI.itemEl(it, [{ label: "Unequip", fn: () => { X.unequip(slot); UI.render(); } }], slot, worn)); }
+    for (const slot of ["weapon", "offhand", "head", "body", "backpack"]) { const it = r.gear[slot]; if (it) carry.appendChild(UI.itemEl(it, [{ label: "Unequip", fn: () => { X.unequip(slot); UI.render(); } }], UI.slotLabel[slot] || slot, worn)); }
+    if (r.gear.weapon2 || r.gear.offhand2) {   // Slice 5 §E: the Backup set (counts toward carry; in a fight: the Swap button)
+      carry.appendChild(h("h4", null, "Backup set ", h("button", { "data-act": "swap-sets", disabled: !!r.queue.length, onclick: () => { X.swapSets(); UI.render(); } }, "⇄ Swap with Main")));
+      for (const slot of ["weapon2", "offhand2"]) { const it = r.gear[slot]; if (it) carry.appendChild(UI.itemEl(it, [{ label: "Unequip", fn: () => { X.unequip(slot); UI.render(); } }], UI.slotLabel[slot], worn)); }
+    }
     const wornSets = UI.setsEl(worn); if (wornSets) carry.appendChild(wornSets);
     carry.appendChild(h("h4", null, "Bag"));
     for (const it of r.bag.items) carry.appendChild(UI.itemEl(it, G.Items.isQuest(it) ? [{ label: "Drop", fn: () => { X.dropItem(it.uid); UI.render(); } }] : [
-      { label: "Equip", fn: () => { X.equipFromBag(it.uid); UI.render(); } },
+      { label: "Equip", fn: () => { const e = X.equipFromBag(it.uid, "main"); if (e) UI.fail(e); UI.render(); } },
+      ...(G.Items.isHandItem(it) ? [{ label: "Backup", fn: () => { const e = X.equipFromBag(it.uid, "backup"); if (e) UI.fail(e); UI.render(); } }] : []),
       { label: "Pouch", fn: () => { const e = X.toPouch(it.uid); if (e) UI.fail(e); UI.render(); } },
       { label: "Drop", fn: () => { X.dropItem(it.uid); UI.render(); } }], G.Items.isQuest(it) ? "quest item" : null));
     for (const k in r.bag.res) if (r.bag.res[k] > 0) carry.appendChild(h("div", { class: "item-row" }, SP.icon(DATA.items.resources[k].sprite, 20), h("span", { class: "item-name" }, `${r.bag.res[k]} × ${DATA.items.resources[k].name}`, h("small", null, ` ${U.fmt1(r.bag.res[k] * DATA.items.resources[k].kgPerUnit)} kg`)),

@@ -96,6 +96,7 @@
     if (itemUid) {
       it = s.stash.items.find((i) => i.uid === itemUid); if (!it) return "That item isn't in the stash.";
       if (G.Items.isQuest(it) || !St.gruntSlotOk(slot, it, g)) return `${G.Allies.rankName(g)}s can't use that in the ${slot} slot.`;
+      if (G.Items.isHandItem(it)) { const fit = G.Items.handFit(slot, it, (k) => g.gear[k] || null); if (fit.why) return fit.why; for (const k of fit.clear) { s.stash.items.push(g.gear[k]); g.gear[k] = null; } }   // Slice 5 §E: sets
       s.stash.items.splice(s.stash.items.indexOf(it), 1);
       for (const k in s.loadout.gear) if (s.loadout.gear[k] === itemUid) delete s.loadout.gear[k];
     }

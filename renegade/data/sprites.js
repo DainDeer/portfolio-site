@@ -402,6 +402,10 @@ DATA.sprites = {
   item_patched_tunic:    { file: "items/item_patched_tunic.png",    shape: "square",   color: "#b49e70", size: 1, pad: 2 },   // Vixie's starter kit (Smudge 26801b2)
   item_hide_vest:        { file: "items/item_hide_vest.png",        shape: "square",   color: "#5e4a30", size: 1, pad: 2 },
   item_wool_cap:         { file: "items/item_wool_cap.png",         shape: "circle",   color: "#4a5636", size: 1, pad: 2 },
+  // Slice 5 §E shields: Smudge's icons (fbafb0b)
+  item_wood_round_shield: { file: "items/item_wood_round_shield.png", shape: "circle", color: "#7a5a30", size: 1, pad: 2 },
+  item_riot_shield:       { file: "items/item_riot_shield.png",       shape: "square", color: "#3a4a5a", size: 1, pad: 2 },
+  item_scrap_lid_shield:  { file: "items/item_scrap_lid_shield.png",  shape: "circle", color: "#6a6a60", size: 1, pad: 2 },
   // Slice 4 §H: Smudge's difficulty sigils (b57ff0f; assets/ui/difficulty/difficulty_manifest.json). 40x40 (x2 on the start
   // screen, CSS), the _anim strips 4 x 40x40, _hud 16x16 (the corner / top bar badge)
   diff_casual:            { file: "ui/difficulty/diff_casual.png", shape: "circle", color: "#c86a2a", size: 1, pad: 2 },
@@ -475,6 +479,11 @@ DATA.sprites = {
   // Slice 5 §D: the Rusted Truck as the ex_truck extraction hotspot (Smudge 4cf6717; 64x32 wide like obj_vehicle)
   obj_truck:               { file: "objects/obj_truck.png",               shape: "badge", color: "#862c1c", size: 1, text: "TRK" },
   obj_truck_wrecked:       { file: "objects/obj_truck_wrecked.png",       shape: "badge", color: "#3e1410", size: 1, text: "TRK" },
+  // Slice 5 §D: exits + extraction objects (Smudge fd1b93d; exits 32x32 at doorPx, the tunnel 1 slot, the boat 64x32 wide 2)
+  obj_exit_stairwell:      { file: "objects/obj_exit_stairwell.png",      shape: "badge", color: "#5e4a30", size: 1, text: "UP" },
+  obj_exit_fence_hole:     { file: "objects/obj_exit_fence_hole.png",     shape: "badge", color: "#5e4a30", size: 1, text: "GAP" },
+  obj_ex_tunnel_mouth:     { file: "objects/obj_ex_tunnel_mouth.png",     shape: "badge", color: "#2e2418", size: 1, text: "TUN" },
+  obj_ex_boat:             { file: "objects/obj_ex_boat.png",             shape: "badge", color: "#1c7470", size: 1, text: "BOAT" },
   obj_truck_wrecked_smoke: { file: "objects/obj_truck_wrecked_smoke.png", shape: "none",  color: "#000",    size: 1, frames: 4, fps: 6 },
   obj_growth:            { file: "objects/obj_growth.png",          shape: "badge",    color: "#5a8a3a", size: 1, text: "GR" },
   obj_growth_searched:   { file: "objects/obj_growth_searched.png", shape: "badge",    color: "#3a5a2a", size: 1, text: "GR" },

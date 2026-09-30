@@ -381,6 +381,11 @@ button.promote { background: #6a5a1a; }
 .doll-slot .slot-empty { opacity: .45; }
 .doll-slot.s-head { left: 8px; top: 8px; } .doll-slot.s-body { left: 8px; top: 122px; }
 .doll-slot.s-pack { right: 8px; top: 8px; } .doll-slot.s-weapon { right: 8px; top: 122px; }
+/* Slice 5 §E: the off hand + the Backup set (bottom row, under the figure) */
+.doll-fig.hands { height: 310px; } .doll-fig.hands .doll-art { transform: translate(-50%, -62%); }
+.doll-slot.s-offhand { right: 8px; top: 236px; } .doll-slot.s-weapon2 { left: 8px; top: 236px; } .doll-slot.s-offhand2 { left: 86px; top: 236px; }
+.swap-btn { position: relative; padding-right: 8px; } .swap-btn .swap-cur { color: #9fb8c8; }
+.swap-btn.cd { opacity: .6; }
 .doll-list { flex: 1 1 260px; min-width: 240px; max-width: 520px; }
 .doll-cur { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
 .doll-items { display: flex; flex-direction: column; gap: 4px; max-height: 300px; overflow-y: auto; }
