@@ -23,6 +23,7 @@
   };
   T.cond = (name, ctx) => !name || (T.conds[name] ? !!T.conds[name](ctx || {}) : false);
   T.sel = (step, touch) => (touch && step.targetTouch) || step.target || null;
+  T.fallback = (step, touch) => (touch && step.fallbackTouch) || step.fallback || null;   // phones: fallbackTouch instead of fallback
   // text tokens: {key:X} -> "X" on desktop, dropped with its brackets on phones; {click} / {clicking}
   T.text = function (step, touch) {
     let t = touch && step.textTouch ? step.textTouch : step.text || "";
@@ -31,7 +32,7 @@
   };
   // Steps of a sequence that can show now. ctx: { touch, has(selector) -> bool } (the overlay passes the real DOM)
   T.stepsNow = function (seq, ctx) {
-    return seq.steps.filter((s) => !T.done(s.id) && T.cond(s.when, ctx) && !(s.skipIfMissing && !(ctx.has && ctx.has(T.sel(s, ctx.touch), s.fallback))));
+    return seq.steps.filter((s) => !T.done(s.id) && T.cond(s.when, ctx) && !(s.skipIfMissing && !(ctx.has && ctx.has(T.sel(s, ctx.touch), T.fallback(s, ctx.touch)))));
   };
   // First due sequence for any of the triggers (in data order): { id, seq, steps } or null
   T.due = function (triggers, ctx) {

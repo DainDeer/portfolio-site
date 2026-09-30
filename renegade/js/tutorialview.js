@@ -11,7 +11,7 @@
   const D = () => DATA.tutorial;
   const vis = (el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== "hidden"; };
   const find = (sel) => { if (!sel) return []; try { return [...document.querySelectorAll(sel)].filter(vis); } catch (e) { return []; } };
-  const targetsOf = (step) => { let els = find(G.Tut.sel(step, touch())); if (!els.length && step.fallback) els = find(step.fallback); return els; };
+  const targetsOf = (step) => { let els = find(G.Tut.sel(step, touch())); const fb = G.Tut.fallback(step, touch()); if (!els.length && fb) els = find(fb); return els; };
   const ctx = () => ({ touch: touch(), has: (sel, fb) => find(sel).length > 0 || (!!fb && find(fb).length > 0) });
 
   // the triggers that apply to what's on screen now

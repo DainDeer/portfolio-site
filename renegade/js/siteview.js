@@ -4,6 +4,7 @@
   const G = root.G, U = G.Util, SP = G.Sprites;
   const SV = G.SiteView = { els: {} };
   const W = 1000, H = 600;
+  const TL = () => !!(G.Touch && G.Touch.layout());   // phone layout (js/touch.js): "Tap" wording; desktop text unchanged
 
   SV.render = function (container, handlers) {
     const X = G.Exp, site = X.site(), loc = G.Map.loc(X.node(site.nid));
@@ -80,8 +81,8 @@
     if (why || busy) { el.classList.add("done"); el.addEventListener("mousemove", (e) => G.UI.showTip(`<b>${o.name}</b><br><i>${why || ""}</i>`, e.clientX, e.clientY)); el.addEventListener("mouseleave", () => G.UI.hideTip()); return; }
     el.classList.add("spinnable");
     const spin = (dir) => G.UI.spinWheel(o, dir);
-    el.addEventListener("mousemove", (e) => { const r = el.getBoundingClientRect(), left = e.clientX < r.left + r.width / 2; el.dataset.half = left ? "l" : "r";
-      G.UI.showTip(`<b>${o.name}</b> · pointing ${P.arrows[o.pos]}<br><span class="examine">${G.Exp.examine(o)}</span><br>${left ? "↺ Click to turn counterclockwise" : "↻ Click to turn clockwise"}`, e.clientX, e.clientY); });
+    el.addEventListener("mousemove", (e) => { const r = el.getBoundingClientRect(), left = e.clientX < r.left + r.width / 2, v = TL() ? "Tap" : "Click"; el.dataset.half = left ? "l" : "r";
+      G.UI.showTip(`<b>${o.name}</b> · pointing ${P.arrows[o.pos]}<br><span class="examine">${G.Exp.examine(o)}</span><br>${left ? `↺ ${v} to turn counterclockwise` : `↻ ${v} to turn clockwise`}`, e.clientX, e.clientY); });
     el.addEventListener("mouseleave", () => { delete el.dataset.half; G.UI.hideTip(); });
     el.addEventListener("click", (e) => { e.stopPropagation(); if (touch) return; const r = el.getBoundingClientRect(); spin(e.clientX < r.left + r.width / 2 ? -1 : 1); });
     const btns = document.createElement("div"); btns.className = "wheel-btns";

@@ -830,6 +830,21 @@
         "armVariant": "one_hand",
         "blocksOffhand": false,
         "grip": "handL"
+      },
+      "rust_machete": {
+        "name": "Rust machete",
+        "set": "village_starter",
+        "items": [
+          "rust_machete"
+        ],
+        "layers": {
+          "weapon": "grunt_options/gear/weapon/rust_machete/10_weapon.png"
+        },
+        "onMannequin": "grunt_options/gear/weapon/rust_machete/on_mannequin.png",
+        "pose": "one_hand",
+        "armVariant": "one_hand",
+        "blocksOffhand": false,
+        "grip": "handL"
       }
     }
   },
@@ -890,6 +905,10 @@
         "hide_vest"
       ]
     },
-    "preview": "grunt_options/preview_starter_kit.png"
+    "preview": "grunt_options/preview_starter_kit.png",
+    "weapons": {
+      "grunt1": "pipe_rifle",
+      "grunt2": "rust_machete"
+    }
   }
 }

@@ -59,7 +59,23 @@
     const b = box.getBoundingClientRect(), c = cur.getBoundingClientRect();
     box.scrollLeft += c.left + c.width / 2 - (b.left + b.width / 2); box.scrollTop += c.top + c.height / 2 - (b.top + b.height / 2);
   };
-  new MutationObserver(() => T.centerMap()).observe(document.getElementById("screen"), { childList: true });
+  // phones: the pods room (Slice 4 §B, css/mobile.css) is drawn bigger than its box and scrolls. When you walk in, centre
+  // it on the wheels; every wheel turn re-renders the view, so after that keep the scroll where the player left it.
+  T.siteScroll = null;
+  T.centerSite = function () {
+    const box = document.querySelector(".exp-map"), wrap = box && box.querySelector(":scope > .site-wrap");
+    if (!wrap || (box.scrollWidth <= box.clientWidth && box.scrollHeight <= box.clientHeight)) { T.siteScroll = null; return; }   // desktop / every other room: nothing scrolls
+    const key = wrap.dataset.loc;
+    if (T.siteScroll && T.siteScroll.key === key) { box.scrollLeft = T.siteScroll.x; box.scrollTop = T.siteScroll.y; return; }
+    const ws = [...wrap.querySelectorAll(".site-obj.wheel")].map((e) => e.getBoundingClientRect()); if (!ws.length) return;
+    const b = box.getBoundingClientRect(), cx = (Math.min(...ws.map((r) => r.left)) + Math.max(...ws.map((r) => r.right))) / 2, cy = (Math.min(...ws.map((r) => r.top)) + Math.max(...ws.map((r) => r.bottom + 44))) / 2;
+    box.scrollLeft += cx - (b.left + b.width / 2); box.scrollTop += cy - (b.top + b.height / 2);
+    T.siteScroll = { key, x: box.scrollLeft, y: box.scrollTop };
+  };
+  document.addEventListener("scroll", (e) => {
+    const b = e.target; if (T.siteScroll && b && b.classList && b.classList.contains("exp-map") && b.querySelector(":scope > .site-wrap")) { T.siteScroll.x = b.scrollLeft; T.siteScroll.y = b.scrollTop; }
+  }, { capture: true, passive: true });
+  new MutationObserver(() => { T.centerMap(); T.centerSite(); }).observe(document.getElementById("screen"), { childList: true });
   // older iOS Safari ignores user-scalable=no: block its pinch gesture events, on touch devices only
   // (desktop Safari fires them for trackpad pinch: left alone there, so pinch-zoom on a Mac still works)
   const coarse = root.matchMedia ? root.matchMedia("(pointer: coarse)") : null;

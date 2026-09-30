@@ -88,6 +88,15 @@
   .item-row { flex-wrap: wrap; }
   .site-progress { width: 150px; height: 22px; } .site-progress span { line-height: 20px; }
   .site-progress .sp-cancel { top: -12px; padding: 4px 8px; }
+  /* Slice 4 §B pods room: the wheel arrow buttons are 44 px (were 28). Wheels sit one or two slots apart, and on a
+     phone-sized room a slot is only 28-40 px, so two 44 px pairs overlapped (a tap could turn the wrong wheel). This one
+     room is drawn bigger (min-width 800 px, 820 portrait) and scrolls inside its box like the zone map; js/touch.js centres it on
+     the wheels when you walk in and keeps the scroll while you turn them. */
+  .site-obj.wheel .wheel-btns { gap: 4px; }
+  .site-obj.wheel .wheel-btns .wheel-btn { width: 44px; height: 44px; }   /* the spin-button art scales with it */
+  .exp-map:has(> .site-wrap .site-obj.wheel) { overflow: auto; overscroll-behavior: contain; }
+  .exp-map > .site-wrap:has(.site-obj.wheel) { flex: none; min-width: 800px; }   /* 700 px left the wheel buttons over the mural centre in ~1 save in 3 */
+  .exp-map:has(> .site-wrap .site-obj.wheel) > .exp-head { position: sticky; top: 0; left: 0; z-index: 6; background: #14140f; }   /* "Leave to the map" stays in reach */
 
   /* battle: bigger buttons, the keyboard badges go (1 / 2 / B), the on-screen Pause / Break away show */
   .battle-hud { flex-wrap: wrap; gap: 6px; padding: 0 0 4px; }
@@ -153,6 +162,7 @@
   .exp-map { flex: none; }
   .exp-map:has(> .map-wrap) { height: min(62dvh, 520px); }
   .exp-side { width: 100%; overflow: visible; }
+  .exp-map > .site-wrap:has(.site-obj.wheel) { min-width: 820px; }   /* portrait: the pods room (see above) a bit bigger still */
   .battle-canvas { width: 100%; }
   /* Pause / Break away stay at the bottom of the screen, under the thumbs */
   #screen:has(> .touch-ctl) { padding-bottom: 76px; }

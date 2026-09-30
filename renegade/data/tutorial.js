@@ -17,6 +17,7 @@
 //   target      CSS selector of what to ring (every match is ringed as one box). null = no ring, text box centred.
 //   targetTouch optional selector used instead of `target` on the phone layout (G.Touch.layout(), css/mobile.css)
 //   fallback    optional selector tried when `target` matches nothing on screen
+//   fallbackTouch  optional selector used instead of `fallback` on the phone layout
 //   skipIfMissing  true: if nothing matches, the step is skipped for now (not flagged): T2's extraction beat waits
 //               until an extraction is on the map, then shows by itself
 //   text        the box text (~40 words max). {key:Space} / {key:B} tokens read "Space" / "B" on desktop and are
@@ -41,17 +42,25 @@ DATA.tutorial = {
     ] },
     // T2: first time the run map opens
     t2_map: { trigger: "map", modes: ["full", "tips"], steps: [
-      { id: "t2_routes", target: ".map-node.reachable", text: "Three ways in. Each spot shows what lives there and what it might hold. Pick one." },
+      // phones: the zone map scrolls inside its box (css/mobile.css), so the three nodes don't all fit on a landscape
+      // screen; ring where you stand instead (js/touch.js keeps it centred) and say how picking works by touch
+      { id: "t2_routes", target: ".map-node.reachable", targetTouch: ".map-node.current", text: "Three ways in. Each spot shows what lives there and what it might hold. Pick one.",
+        textTouch: "You start here. Three ways in. Each spot shows what lives there and what it might hold. Tap one to look, tap it again to go." },
       { id: "t2_heat", target: "[data-tut=heat]", text: "Noise and fighting raise Heat. More Heat means tougher enemies and worse odds." },
       { id: "t2_extract", target: ".map-node.extract", skipIfMissing: true, text: "This is your way out. Get here to keep what you're carrying. Die out there and you lose it." },
       { id: "t2_notimer", target: null, text: "There's no timer. Push deeper for better loot, or leave while you're ahead." }
     ] },
     // T3: first battle start (holds the fight at 0 s, resumes after the last step)
     t3_battle: { trigger: "battle", modes: ["full", "tips"], steps: [
-      { id: "t3_auto", target: ".battle-canvas", text: "In RENEGADE, your units fight automatically. But you can pause ({key:Space}) or slow down time whenever you want to plan.",
-        textTouch: "In RENEGADE, your units fight automatically. But you can pause or slow down time whenever you want to plan." },
-      { id: "t3_speed", target: ".bh-speeds, .bh-pause", targetTouch: ".bh-speeds, .tc-pause", text: "Slide to speed the fight up or slow it down (all the way left stops it). Pause is next to it." },   // [PLACEHOLDER] (the spec only says "ring them"; A2 slider),
-      { id: "t3_abl", target: ".ability-bar .abl-btn:not(.esc-btn)", fallback: ".bh-pause", text: "While paused, queue abilities and Med kits. They fire the moment you unpause." },
+      // phones: ring the on-screen Pause button (the landscape field leaves no room beside it for the box, and the
+      // text is about pausing); the slider gets its own ring in the next step
+      { id: "t3_auto", target: ".battle-canvas", targetTouch: ".tc-pause", text: "In RENEGADE, your units fight automatically. But you can pause ({key:Space}) or slow down time whenever you want to plan.",
+        textTouch: "In RENEGADE, your units fight automatically. But you can tap Pause or slow down time whenever you want to plan." },
+      // phones: Pause isn't next to the slider (landscape: top right, portrait: the bottom bar), so the two in one ring
+      // covered most of a portrait screen; the slider alone here, Pause was ringed in t3_auto
+      { id: "t3_speed", target: ".bh-speeds, .bh-pause", targetTouch: ".bh-speeds", text: "Slide to speed the fight up or slow it down (all the way left stops it). Pause is next to it.",   // [PLACEHOLDER] (the spec only says "ring them"; A2 slider),
+        textTouch: "Slide to speed the fight up or slow it down (all the way left stops it). Double-tap the slider for 1x." },
+      { id: "t3_abl", target: ".ability-bar .abl-btn:not(.esc-btn)", fallback: ".bh-pause", fallbackTouch: ".tc-pause", text: "While paused, queue abilities and Med kits. They fire the moment you unpause." },
       { id: "t3_break", target: ".esc-btn", targetTouch: ".tc-esc", fallback: ".esc-btn", text: "Losing? Break away ({key:B}) to run for it. Not everyone always makes it." }
     ] },
     // T4: first extraction site on the first (tutorial) run
