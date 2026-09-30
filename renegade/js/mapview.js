@@ -2,6 +2,14 @@
 (function (root) {
   const G = root.G, U = G.Util, SP = G.Sprites;
   const MV = G.MapView = {};
+  // Slice 5 §A: animated map icons (a sprite with frames + fps, e.g. the wrecked truck's smoke). One shared timer steps
+  // every such canvas still in the page; it stops itself when none is left.
+  MV.animate = function (c, d) {
+    c.dataset.fps = d.fps; c.dataset.frame = 0; c.dataset.t0 = Date.now();
+    if (MV._anim) return;
+    MV._anim = setInterval(() => { const cs = document.querySelectorAll("canvas.icon[data-fps]"); if (!cs.length) { clearInterval(MV._anim); MV._anim = 0; return; }
+      for (const x of cs) { const f = Math.floor((Date.now() - +x.dataset.t0) / 1000 * +x.dataset.fps); if (f !== +x.dataset.frame) { x.dataset.frame = f; SP.paintIcon(x); } } }, 40);
+  };
 
   MV.render = function (container, onPick) {
     const s = G.state, map = G.Zones.map(), r = s.run, ins = map.insertion;
@@ -57,8 +65,9 @@
       el.className = "map-node" + (isVis ? "" : " remembered") + (r && r.loc === nid ? " current" : "") + (r && r.visited[nid] ? " visited" : "");
       el.style.left = (n.x / 10) + "%"; el.style.top = (n.y / 6) + "%";
       const wIcon = loc && loc.worldIcons && loc.worldEvent ? loc.worldIcons[s.world.hollow_creek] : null; // world-state icon (distress / aftermath)
-      const iconKey = !loc ? "loc_insertion" : (wIcon || loc.icon);
-      el.appendChild(SP.icon(iconKey, 32));
+      const wreck = loc && loc.iconWrecked && G.Exp.wrecked(n), still = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const iconKey = !loc ? "loc_insertion" : wreck ? (loc.iconWreckedAnim && !still ? loc.iconWreckedAnim : loc.iconWrecked) : (wIcon || loc.icon);   // Slice 5 §A: the wreck (animated unless reduced motion)
+      const ic = SP.icon(iconKey, 32); el.appendChild(ic); if ((SP.def(iconKey) || {}).fps) MV.animate(ic, SP.def(iconKey));
       el.dataset.nid = nid;
       if (loc && loc.extraction) el.classList.add("extract");   // Slice 4 §A: tutorial T2 rings extraction points
       // passage icon (once found), quest marker (an active find quest's object is here and holds the item)

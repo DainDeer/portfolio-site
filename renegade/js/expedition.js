@@ -592,10 +592,10 @@
     if (ex.type === "check") {
       const info = G.Checks.compute(ex.skill, ex.dc, X.members(), X.gearItems()); const roll = G.Checks.roll(info);
       X.log(roll.text, "check");
-      if (G.Checks.isSuccess(roll.grade)) { X.extractSuccess(); return { ok: true, text: roll.text + " — the engine turns over!" }; }
+      if (G.Checks.isSuccess(roll.grade)) { X.extractSuccess(); return { ok: true, roll, text: roll.text + " — the engine turns over!" }; }
       if (roll.grade === "badFail" && ex.badFail === "crash") return X.crash(node, ex, roll);   // Slice 5 §A
-      if (roll.grade === "badFail" && ex.badFail === "battle") { X.push({ type: "battle", family: G.Map.loc(node).family, budgetMult: 1, nid: node.id, why: "The noise draws attention!" }); return { ok: false, text: roll.text + " — the noise draws attention!" }; }
-      X.addHeat(ex.failHeat, "extract"); return { ok: false, text: roll.text + ` — it won't start. +${ex.failHeat} Heat.` };
+      if (roll.grade === "badFail" && ex.badFail === "battle") { X.push({ type: "battle", family: G.Map.loc(node).family, budgetMult: 1, nid: node.id, why: "The noise draws attention!" }); return { ok: false, roll, text: roll.text + " — the noise draws attention!" }; }
+      X.addHeat(ex.failHeat, "extract"); return { ok: false, roll, text: roll.text + ` — it won't start. +${ex.failHeat} Heat.` };
     }
     if (ex.type === "defense") { X.push({ type: "battle", family: G.Map.loc(node).family, budgetMult: ex.budgetMult != null ? ex.budgetMult : 1, defense: true, extraction: ex, nid: node.id, why: `Hold out for ${ex.surviveSec} s!` }); return { ok: false, text: "Defend the extraction!" }; }
   };
@@ -608,7 +608,7 @@
     X.addHeat(heat, "extract");
     X.log(`${C.log} +${heat} Heat. ${G.Map.loc(node).name} is closed for this run: find another way out.`, "bad");
     G.State.save();
-    return { ok: false, crash: true, text: `${roll.text} — ${C.line} +${heat} Heat.`, line: C.line, sfx: C.sfx, heat };
+    return { ok: false, crash: true, roll, text: `${roll.text} — ${C.line} +${heat} Heat.`, line: C.line, sfx: C.sfx, heat };
   };
 
   X.extractSuccess = function () {

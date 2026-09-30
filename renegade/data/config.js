@@ -247,12 +247,40 @@ DATA.config = {
   // closed for the rest of the run (no re-roll): reach a different exit. A plain Fail keeps its softer failHeat stall.
   extraction: {
     crash: {
-      sfx: "sfx_explosion",          // stand-in until Smudge's heavy crash SFX lands (then its key here; no code change)
+      sfx: "sfx_truck_crash_1",      // Smudge d41333a (sfx_truck_crash_2 is the registered spare take)
       line: "The truck's wrecked.",  // [PLACEHOLDER] the flash line
       lineMs: 2600,
       log: "The engine screams, the truck lurches into a tree and dies for good. The whole wood heard that."   // [PLACEHOLDER]
     }
   },
+
+  // Slice 5 §B (Megan): every graded skill check we show rolls a physically simulated d20 (chunky low-poly, into a dark
+  // box, a small panel top-left); the same roll math as before (js/checks.js), this is presentation. The face that
+  // lands is the rolled number. Consumers: where the die is shown (the extraction check first, per the spec).
+  dice: {
+    enabled: true,
+    consumers: ["extract"],
+    // Smudge 7ddb42d (assets/ui/dice/dice_manifest.json): the mesh + numbering, box, lantern, camera and light are in the
+    // scene json (fetched: packaged through this "file"); the panel art below is placed from these numbers (native px).
+    scene: { file: "ui/dice/d20_scene.json" },
+    art: {
+      panel: { file: "ui/dice/dice_panel.png", size: [152, 120], window: [12, 12, 128, 96] },
+      plaque: { file: "ui/dice/dice_plaque.png", at: [54, 106], size: [44, 24], field: [38, 18] },   // hangs 10 px below the frame
+      still: { file: "ui/dice/dice_box_still.png" },                                                // no WebGL / reduced motion
+      atlas: { ember: { file: "ui/dice/d20_bone_ember.png" }, gold: { file: "ui/dice/d20_bone_gold.png" }, ash: { file: "ui/dice/d20_bone_ash.png" }, blood: { file: "ui/dice/d20_bone_blood.png" } },
+      rest: { ember: { file: "ui/dice/d20_rest_ember.png" }, gold: { file: "ui/dice/d20_rest_gold.png" }, ash: { file: "ui/dice/d20_rest_ash.png" }, blood: { file: "ui/dice/d20_rest_blood.png" }, frame: [40, 41], offset: [59, 23] },
+      digits: { ember: { file: "ui/dice/dice_digits_ember.png" }, gold: { file: "ui/dice/dice_digits_gold.png" }, ash: { file: "ui/dice/dice_digits_ash.png" }, blood: { file: "ui/dice/dice_digits_blood.png" }, cell: [13, 17] },
+      box: { floor: { file: "ui/dice/box_floor.png" }, wall: { file: "ui/dice/box_wall.png" }, rim: { file: "ui/dice/box_rim.png" } }
+    },
+    tints: { rolling: "ember", crit: "gold", success: "ember", fail: "ash", badFail: "blood" },   // the die + plaque digits on landing
+    scale: 2,                                   // native pixels shown x2, nearest (phones too: x1.5 blurs this art)
+    maxSimSec: 3.2, phoneSpeed: 1.5,            // phones play the same roll faster ("shorter roll")
+    holdMs: 1300,                               // the landed number stays this long before the outcome shows (tap skips)
+    lidY: 3,                                    // the invisible lid (scene box notes)
+    throw: { speed: [4.2, 5.6], spin: [9, 15], height: [1.5, 1.9] },
+    physics: { gravity: -24, restitution: 0.34, friction: 0.5, inertia: 0.36, angDamp: 3, restV: 0.12, restW: 0.35, restSec: 0.2 }
+  },
+
 
   // ======================= TUTORIAL OVERRIDES =======================
   // Active only while the tutorial runs (the first expedition(s) with the Basic body + 2 Grunts, until the first

@@ -38,6 +38,10 @@ DATA.audio = {
     sfx_card_new: { vol: 0.24 },      // §D first copy: layered ~200 ms after pickup/foil (DATA.cards.pop.newDelayMs) (0.3 x0.8)
     // Slice 4 §C weapon sounds (each weapon names one in its sfx; not in the gun group: quiet next to firearms)
     sfx_shot_bow_1: { vol: 0.95 }, sfx_shot_bow_2: { vol: 1.0 }, sfx_shot_bow_3: { vol: 0.95 }, sfx_shot_crossbow: { vol: 1.0 },
+    // Slice 5 §A truck crash (Smudge d41333a; assets/audio_src/README.md "Slice 5 A"). Not in the gun group.
+    sfx_truck_crash_1: { vol: 1.0 },   // once as a truck Bad Fail crash resolves (config.extraction.crash.sfx), with the line + Heat spike
+    sfx_truck_crash_2: { vol: 0.9 },   // spare take: registered, not played anywhere yet
+    // sfx_truck_wreck_idle (optional 4 s loop, 0.2) is not wired: the loop player runs one loop per screen
     sfx_bonk_1: { vol: 1.0 }, sfx_bonk_2: { vol: 1.0 }, sfx_bonk_3: { vol: 0.95 }, sfx_bonk_bass: { vol: 0.8 }
   },
   // SFX bus: every one-shot goes through a gain + limiter (DynamicsCompressor) before the master, so 6 stacked shots

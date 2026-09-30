@@ -689,7 +689,7 @@
     if (loc && loc.extraction) {
       const ex = X.extractionDef(node), open = X.extractionOpen(node);
       let label = ex.type === "free" ? "Extract (free)" : ex.type === "check" ? (() => { const c = G.Checks.compute(ex.skill, ex.dc, X.members(), X.gearItems()); return `Extract: ${DATA.skills[ex.skill].name} DC ${ex.dc} — ${Math.round(c.chance)}%`; })() : `Extract: hold out ${ex.surviveSec} s (defense battle)`;
-      side.appendChild(h("section", { class: "panel extract" }, h("h3", null, "Extraction point: " + loc.name), open ? h("button", { class: "primary big", "data-act": "extract", disabled: !X.canExtract(), onclick: () => { const res = X.extract(); if (res.crash) UI.crashFlash(res); else UI.toast(res.text); UI.render(); } }, label)
+      side.appendChild(h("section", { class: "panel extract" }, h("h3", null, "Extraction point: " + loc.name), open ? h("button", { class: "primary big", "data-act": "extract", disabled: !X.canExtract(), onclick: () => UI.extractClick() }, label)
         : X.wrecked(node) ? h("div", { class: "warn wrecked", "data-note": "wrecked" }, `${DATA.config.extraction.crash.line} Find another way out.`) : h("div", { class: "warn" }, "Closed at this Heat level.")));
     } else side.appendChild(h("section", { class: "panel" }, h("small", null, inSite ? (TL() ? "Tap" : "Click") + " an object to search it. The tooltip shows the time and the disturbance chance. Leave to the map to move on." : `${TL() ? "Tap" : "Click"} a highlighted neighbouring location to move (+${DATA.config.heat.perMove} Heat). ${TL() ? "Tap" : "Click"} where you are to go back inside. The outpost is hidden: extraction is the only way home.`)));
     // log
@@ -853,6 +853,13 @@
   };
 
   // Slice 5 §A: the truck crash: the heavy sound, a short line across the screen, the roll in a toast
+  // Slice 5 §B: a check extraction rolls the d20 on screen first (G.Dice); the result lands once the die has.
+  UI.extractClick = function () {
+    const res = G.Exp.extract(), after = () => { if (res.crash) UI.crashFlash(res); else UI.toast(res.text); UI.render(); };
+    if (res.roll && G.Dice && G.Dice.enabled("extract")) { UI._diceBusy = true; G.Dice.show(Object.assign({ label: res.roll.text.replace(/^.*?: /, "") }, res.roll)).then(() => { UI._diceBusy = false; after(); }); }
+    else after();
+    return res;
+  };
   UI.crashFlash = function (res) {
     if (res.sfx) G.Sfx.play(res.sfx);
     const el = h("div", { class: "crash-flash", "data-flash": "crash" }, res.line); document.body.appendChild(el);
@@ -933,7 +940,7 @@
   UI.tick = function () {
     if (!G.state.run) {
       const done = G.Outpost.tick(), dirty = G.Outpost.dirty; G.Outpost.dirty = false;
-      if ((done.length || dirty) && !document.querySelector(".modal")) {
+      if ((done.length || dirty) && !document.querySelector(".modal") && !UI._diceBusy) {
         if (done.length) { const k = done[0], O = G.Outpost; UI.toast(O.st(k).level === 1 ? `${O.def(k).name} built!` : `${O.def(k).name} upgrade finished!`); }
         G.State.save(); UI.render(); return;
       }

@@ -109,7 +109,7 @@
     c.style.margin = pad ? `-${Math.round(pad * sc)}px` : "";
     const g = c.getContext("2d"); g.clearRect(0, 0, c.width, c.height);
     g.imageSmoothingEnabled = !(reg().pixelArt && snap);
-    g.drawImage(img, 0, 0, nw, nh, 0, 0, c.width, c.height);
+    g.drawImage(img, (Math.floor(+c.dataset.frame || 0) % (d.frames || 1)) * nw, 0, nw, nh, 0, 0, c.width, c.height);   // data-frame: a strip's frame (Slice 5 §A smoke loop)
   };
   SP.listeners.push((key) => {
     if (typeof document === "undefined") return;

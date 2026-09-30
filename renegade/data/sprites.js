@@ -198,6 +198,10 @@ DATA.sprites = {
   loc_depot:             { file: "map/loc_depot.png",               shape: "square",   color: "#9a8a5a", size: 1 },
   loc_tunnel:            { file: "map/loc_tunnel.png",              shape: "diamond",  color: "#707070", size: 1 },
   loc_extraction:        { file: "map/loc_extraction.png",          shape: "star",     color: "#40e0a0", size: 1 },
+  // Slice 5 §A (Smudge c0febab, assets/map/truck_manifest.json): the Rusted Truck, intact / wrecked (+ its 4-frame smoke loop, 6 fps; frame 0 = the still)
+  loc_truck:             { file: "map/loc_truck.png",               shape: "star",     color: "#40e0a0", size: 1 },
+  loc_truck_wrecked:     { file: "map/loc_truck_wrecked.png",       shape: "star",     color: "#602020", size: 1 },
+  loc_truck_wrecked_smoke: { file: "map/loc_truck_wrecked_smoke.png", shape: "star",   color: "#602020", size: 1, frames: 4, fps: 6 },
   loc_outpost:           { file: "map/loc_outpost.png",             shape: "star",     color: "#f0d040", size: 1 },
   loc_aftermath:         { file: "map/loc_aftermath.png",           shape: "triangle", color: "#602020", size: 1 },
   loc_bunker:            { file: "map/loc_bunker.png",              shape: "square",   color: "#6a6a5a", size: 1 },
