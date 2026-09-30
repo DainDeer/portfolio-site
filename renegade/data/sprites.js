@@ -472,6 +472,10 @@ DATA.sprites = {
   // Slice 3 §11 searchables (obj_vehicle is 64x32 native: wide)
   obj_vehicle:           { file: "objects/obj_vehicle.png",         shape: "badge",    color: "#6a5a4a", size: 1, text: "CAR" },
   obj_vehicle_searched:  { file: "objects/obj_vehicle_searched.png", shape: "badge",   color: "#4a3a2a", size: 1, text: "CAR" },
+  // Slice 5 §D: the Rusted Truck as the ex_truck extraction hotspot (Smudge 4cf6717; 64x32 wide like obj_vehicle)
+  obj_truck:               { file: "objects/obj_truck.png",               shape: "badge", color: "#862c1c", size: 1, text: "TRK" },
+  obj_truck_wrecked:       { file: "objects/obj_truck_wrecked.png",       shape: "badge", color: "#3e1410", size: 1, text: "TRK" },
+  obj_truck_wrecked_smoke: { file: "objects/obj_truck_wrecked_smoke.png", shape: "none",  color: "#000",    size: 1, frames: 4, fps: 6 },
   obj_growth:            { file: "objects/obj_growth.png",          shape: "badge",    color: "#5a8a3a", size: 1, text: "GR" },
   obj_growth_searched:   { file: "objects/obj_growth_searched.png", shape: "badge",    color: "#3a5a2a", size: 1, text: "GR" },
   obj_rival_bag:         { file: "objects/obj_rival_bag.png",       shape: "badge",    color: "#3a8a9a", size: 1, text: "RP" },

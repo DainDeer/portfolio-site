@@ -120,6 +120,36 @@ DATA.searchables = {
     aftermath_hollow_creek: { name: "Raider camp", examine: "[PLACEHOLDER] What the raiders left of the camp.",        sprite: "obj_barricade" },
     allied_hollow_creek:    { name: "Town square", examine: "[PLACEHOLDER] The town square, busier than it has any right to be.",        sprite: "obj_gate" }
   },
+  // Slice 5 §D (Megan): every location's own way in / out, and its extraction point, are clickable objects in the
+  // location view. exit: one per site on the outer (bottom) wall of the first room; you arrive there, and clicking it
+  // leaves to the zone map. Style: byLoc, then the location's kind, then its tags, else default. extract: the
+  // extraction point as a hotspot (click -> the same extract flow as the panel button, d20 included for a check).
+  // Sprites borrow existing art until Smudge draws the rest (art request: exit_stairwell, exit_fence_hole,
+  // ex_tunnel_mouth, ex_boat); only the truck is its own (4cf6717). wreckedSprite / wreckedAnim: after a crash.
+  access: {
+    exit: {
+      styles: {
+        gate:      { name: "Gate",              sprite: "obj_gate",      examine: "[PLACEHOLDER] The way you came in. Back out to the zone map." },
+        stairwell: { name: "Stairwell",         sprite: "obj_door_open", examine: "[PLACEHOLDER] The stairwell you came up. Back out to the zone map." },
+        fence:     { name: "Hole in the fence", sprite: "obj_gate",      examine: "[PLACEHOLDER] The gap in the fence you squeezed through. Back out to the zone map." }
+      },
+      byKind: { industrial: "fence", medical: "stairwell" },
+      byTag: { office: "stairwell", terminal: "stairwell" },
+      byLoc: {},
+      default: "gate",
+      label: "EXIT"   // the small tag under it, so borrowed art still reads as the way out
+    },
+    extract: {
+      default:    { name: "Extraction point", sprite: "obj_radio", examine: "[PLACEHOLDER] Your way home." },
+      byLoc: {
+        ex_truck:   { name: "Rusted Truck",   sprite: "obj_truck", wide: 2, wreckedSprite: "obj_truck_wrecked", wreckedAnim: "obj_truck_wrecked_smoke",
+                      examine: "[DRAFT] [PLACEHOLDER] The Rusted Truck. Keys in it, if it'll start.", examineWrecked: "[DRAFT] [PLACEHOLDER] Wrecked. It's not going anywhere." },   // Smudge's suggested lines (truck_props_manifest.json)
+        ex_tunnel:  { name: "Tunnel mouth",   sprite: "obj_grate_open", examine: "[PLACEHOLDER] The tunnel home. Something always follows you into it." },
+        ex_rooftop: { name: "Pickup radio",   sprite: "obj_radio",      examine: "[PLACEHOLDER] A radio wired to a flare. Call the pickup and it comes." },
+        b_levee:    { name: "Boat launch",    sprite: "obj_radio",      examine: "[PLACEHOLDER] The boat comes when you call. Hold the ramp till it does." }
+      }
+    }
+  },
   survivorObject: { name: "Survivor", sprite: "obj_survivor", examine: "[PLACEHOLDER] A survivor, eyeing you over a raised weapon." },
   // Slice 4 §E: examine text (hover, tap on phones), RuneScape style. [PLACEHOLDER] strings; the flavor pass writes the
   // real ones. Searchables / event objects / the survivor carry an examine field above (an object's own o.examine wins);

@@ -420,3 +420,7 @@ button.promote { background: #6a5a1a; }
 .panel.carry-drop { animation: carryDrop 0.9s ease-out 2; }
 @keyframes carryDrop { 0% { box-shadow: 0 0 0 2px #e04040; } 100% { box-shadow: 0 0 0 0 transparent; } }
 @media (prefers-reduced-motion: reduce) { .panel.carry-drop { animation: none; box-shadow: 0 0 0 1px #e04040; } }
+/* Slice 5 §D: the way out + the extraction hotspot in the location view */
+.site-obj.exit .obj-exit-label { position: absolute; left: 50%; top: 4%; transform: translateX(-50%); font: bold 10px/1 sans-serif; letter-spacing: 1px; color: #14140f; background: #e8d890; border-radius: 3px; padding: 2px 4px; pointer-events: none; }
+.site-obj.exit.usable { outline: 2px dashed #e8d89088; } .site-obj.exit.usable:hover { outline: 2px solid #ffd84a; }
+.site-obj.extract.usable { outline: 2px solid #40e0a0aa; } .site-obj.extract.usable:hover { outline: 2px solid #ffd84a; }

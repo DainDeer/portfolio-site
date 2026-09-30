@@ -695,10 +695,10 @@
     // extraction
     if (loc && loc.extraction) {
       const ex = X.extractionDef(node), open = X.extractionOpen(node);
-      let label = ex.type === "free" ? "Extract (free)" : ex.type === "check" ? (() => { const c = G.Checks.compute(ex.skill, ex.dc, X.members(), X.gearItems()); return `Extract: ${DATA.skills[ex.skill].name} DC ${ex.dc} — ${Math.round(c.chance)}%`; })() : `Extract: hold out ${ex.surviveSec} s (defense battle)`;
+      const label = UI.extractLabel(ex);
       side.appendChild(h("section", { class: "panel extract" }, h("h3", null, "Extraction point: " + loc.name), open ? h("button", { class: "primary big", "data-act": "extract", disabled: !X.canExtract(), onclick: () => UI.extractClick() }, label)
         : X.wrecked(node) ? h("div", { class: "warn wrecked", "data-note": "wrecked" }, `${DATA.config.extraction.crash.line} Find another way out.`) : h("div", { class: "warn" }, "Closed at this Heat level.")));
-    } else side.appendChild(h("section", { class: "panel" }, h("small", null, inSite ? (TL() ? "Tap" : "Click") + " an object to search it. The tooltip shows the time and the disturbance chance. Leave to the map to move on." : `${TL() ? "Tap" : "Click"} a highlighted neighbouring location to move (+${DATA.config.heat.perMove} Heat). ${TL() ? "Tap" : "Click"} where you are to go back inside. The outpost is hidden: extraction is the only way home.`)));
+    } else side.appendChild(h("section", { class: "panel" }, h("small", null, inSite ? (TL() ? "Tap" : "Click") + " an object to search it. The tooltip shows the time and the disturbance chance. The EXIT you came in by takes you back to the zone map." : `${TL() ? "Tap" : "Click"} a highlighted neighbouring location to move (+${DATA.config.heat.perMove} Heat). ${TL() ? "Tap" : "Click"} where you are to go back inside. The outpost is hidden: extraction is the only way home.`)));
     // log
     const lg = h("section", { class: "panel log" }, h("h3", null, "Log"));
     for (const line of r.log.slice(-14).reverse()) lg.appendChild(h("div", null, line));
@@ -782,9 +782,23 @@
     UI.render();
     if (r.opened) { const w = document.querySelector(".site-wrap"); if (w) w.classList.add("clunk"); }
   };
+  // the extract button's line (the panel, the hotspot's tooltip and its confirm)
+  UI.extractLabel = function (ex) {
+    const X = G.Exp;
+    return ex.type === "free" ? "Extract (free)" : ex.type === "check" ? (() => { const c = G.Checks.compute(ex.skill, ex.dc, X.members(), X.gearItems()); return `Extract: ${DATA.skills[ex.skill].name} DC ${ex.dc} — ${Math.round(c.chance)}%`; })() : `Extract: hold out ${ex.surviveSec} s (defense battle)`;
+  };
   UI.onSiteObject = function (o, acts, el) {
     const X = G.Exp, site = X.site();
+    // Slice 5 §D: the way out leaves to the zone map; the extraction hotspot asks first, then runs the panel's flow
+    if (acts[0] === "leave") { UI.hideTip(); X.leaveSite(); UI.render(); return; }
     site.squadAt = o.id;
+    if (acts[0] === "extract") {
+      const ex = X.extractionDef(X.node());
+      UI.modal(h("div", { "data-hotspot": "extract" }, h("h2", null, o.name), h("p", { class: "examine" }, X.examine(o)), h("p", null, UI.extractLabel(ex)),
+        h("div", { class: "confirm-row" }, h("button", { class: "primary confirm-btn", "data-act": "extract-hotspot", disabled: !X.canExtract(), onclick: () => { UI.closeModal(); UI.extractClick(); } }, ex.type === "check" ? "Try it" : ex.type === "defense" ? "Hold out" : "Extract"),
+          h("button", { class: "confirm-btn", onclick: () => { UI.closeModal(); UI.render(); } }, "Not now"))));
+      return;
+    }
     if (acts[0] === "use") { const r = X.useObject(o.id); if (r.error) UI.fail(r.error); UI.render(); return; }
     if (acts[0] === "reopen") { X.reopen(o.id); UI.render(); return; }
     // Slice 4 §B pods room: the mural (examine: a tap on phones reads it), the working pod

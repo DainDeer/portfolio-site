@@ -26,6 +26,7 @@
     if (!site) { site = S[node.id] = X.generateSite(node); site.enteredRun = rc; site.entry = { run: rc, level: 1, mult: 1, fresh: true }; return site; }
     if (site.enteredRun !== rc) X.restockOnEntry(site, node);
     if (G.Main && !site.pods && G.Main.isPodsSite(site)) G.Main.decorate(site, { mk, place, rng: G.rng });   // a site built before Slice 4
+    X.addAccess(site, node);   // Slice 5 §D: a site built before the exit / extract hotspots gets them (no-op otherwise)
     return site;
   };
 
@@ -123,7 +124,7 @@
     if (!R.free.length) { const alt = site.rooms.filter((q) => q.free.length); if (alt.length) R = rng.pick(alt); }
     o.room = R.i;
     const T = o.type && SD().types[o.type];
-    if (T && T.wide > 1) {   // Slice 3: the car takes two side-by-side slots (centred between them)
+    if ((T && T.wide > 1) || o.wide > 1) {   // Slice 3: the car takes two side-by-side slots (centred between them)
       const s = SD().view.slot, rooms = [R].concat(site.rooms.filter((q) => q !== R));
       for (const Q of rooms) for (let i = 0; i < Q.free.length; i++) {
         const p = Q.free[i], j = Q.free.findIndex((q) => q.y === p.y && q.x === p.x + s);
@@ -161,6 +162,7 @@
     }
     // Slice 4 §B: the pods room (sealed door, 3 wheels by it, the mural, the working pod) takes its slots first. No rng draws.
     if (G.Main) G.Main.decorate(site, { mk, place, rng });
+    X.addAccess(site, node);   // Slice 5 §D: the way out + the extraction hotspot (no rng draws; the hotspot takes its slots before the searchables)
     // the searchables: fixed ones first (they take generated slots, so the count stays in the size range)
     const fixed = [];
     const gl = loc.guaranteedLoot;
@@ -218,6 +220,33 @@
     return place(site, o, 0, G.rng);
   };
 
+  // ---------- Slice 5 §D: the way in / out and the extraction hotspot ----------
+  const AC = () => SD().access;
+  X.exitStyle = function (loc, locId) {
+    const E = AC().exit, tags = (loc && loc.tags) || [];
+    const k = E.byLoc[locId] || (loc && E.byKind[loc.kind]) || (tags.find((t) => E.byTag[t]) && E.byTag[tags.find((t) => E.byTag[t])]) || E.default;
+    return Object.assign({ style: k }, E.styles[k] || E.styles[E.default]);
+  };
+  X.extractSpot = (locId) => Object.assign({}, AC().extract.default, AC().extract.byLoc[locId] || {});
+  X.extractSprite = function (o, still) {   // intact / the burning wreck (still: its first frame, for reduced motion)
+    const sp = X.extractSpot(o.loc), has = (k) => !!(k && DATA.sprites[k]);
+    if (!X.wrecked(X.node(o.nid))) return sp.sprite;
+    return has(sp.wreckedAnim) && !still ? sp.wreckedAnim : has(sp.wreckedSprite) ? sp.wreckedSprite : sp.sprite;
+  };
+  X.exitObj = (site) => (site || X.site()).objects.find((o) => o.kind === "exit");
+  X.addAccess = function (site, node) {
+    if (!site || !AC()) return;
+    const loc = G.Map.loc(node || X.node(site.nid)), R = site.rooms[0], V = SD().view;
+    if (!X.exitObj(site)) {   // on the first room's bottom wall (always an outer wall: room 0 is bottom-left in every template)
+      const st = X.exitStyle(loc, site.loc);
+      mk(site, { kind: "exit", style: st.style, name: st.name, sprite: st.sprite, room: 0, x: Math.round(R.x + R.w / 2), y: Math.round(R.y + R.h + V.wall / 2) });
+    }
+    if (loc && loc.extraction && !site.objects.some((o) => o.kind === "extract")) {
+      const sp = X.extractSpot(site.loc);
+      place(site, mk(site, { kind: "extract", loc: site.loc, nid: site.nid, name: sp.name, sprite: sp.sprite, wide: sp.wide || 1 }), 0, G.rng);
+    }
+  };
+
   // ---------- visibility / availability ----------
   X.roomOpen = (site, i) => !!site.rooms[i] && site.rooms[i].open;
   X.objVisible = function (o, site) {
@@ -231,7 +260,8 @@
     if (!r || r.queue.length) return "Finish what's in front of you first.";
     if (!X.roomOpen(site, o.room)) return "Behind a closed door.";
     if (o.kind === "event" || o.kind === "survivor") return o.done ? "Already dealt with." : null;
-    if (o.kind === "grate") return null;
+    if (o.kind === "grate" || o.kind === "exit") return null;
+    if (o.kind === "extract") { const node = X.node(site.nid); return X.extractionOpen(node) ? null : X.wrecked(node) ? `${CFG().extraction.crash.line} Find another way out.` : "Closed at this Heat level."; }   // Slice 5 §D
     if (o.kind === "mural") return null;   // Slice 4 §B pods room
     if (o.kind === "wheel") { const d = site.pods && X.obj(site.pods.door, site); return d && !d.sealed ? "Set. The door is open." : null; }
     if (o.kind === "pod") return o.done || (G.Main && G.Main.status("m1") === "done") ? DATA.main.pods.pod.claimed : null;
@@ -246,6 +276,8 @@
   X.objActions = function (o) {
     if (o.kind === "event" || o.kind === "survivor") return o.done ? [] : ["use"];
     if (o.kind === "grate") return ["cross"];
+    if (o.kind === "exit") return ["leave"];   // Slice 5 §D
+    if (o.kind === "extract") return ["extract"];
     if (o.kind === "mural") return ["examine"];
     if (o.kind === "wheel") return ["spin"];
     if (o.kind === "pod") return o.done ? [] : ["claim"];
@@ -377,6 +409,8 @@
     if (o.kind === "event") return (S.eventObjects[o.eventId] || S.eventObjects.default).examine || S.examineDefault;
     if (o.kind === "survivor") return S.survivorObject.examine || S.examineDefault;
     if (o.kind === "grate") return ((DATA.zones.passages || {})[o.pid] || {}).examine || S.examineDefault;
+    if (o.kind === "exit") { const E = S.access.exit; return (E.styles[o.style] || E.styles[E.default]).examine; }   // Slice 5 §D: read from data each time
+    if (o.kind === "extract") { const sp = X.extractSpot(o.loc); return (X.wrecked(X.node(o.nid)) && sp.examineWrecked) || sp.examine; }
     const T = S.types[o.type];
     return (T && T.examine) || S.examineDefault;
   };
@@ -541,6 +575,7 @@
     const site = X.ensureSite(node);
     site.visitSearches = 0; site.visits++;
     r.view = "site";
+    { const ex = X.exitObj(site); if (ex) site.squadAt = ex.id; }   // Slice 5 §D: you arrive by the way in
     const t = X.heatTier();
     // Break away: the enemies you ran from are still here (this run only)
     if (site.escaped) { if (site.escaped.run === G.state.runCount) { const again = site.escaped.step; site.escaped = null; X.log(`${loc.name}: the fight you broke away from is still here.`, "bad"); X.push(again); return; } site.escaped = null; }
@@ -600,6 +635,7 @@
     X.addHeat(P.crossHeat != null ? P.crossHeat : CFG().heat.passageCross, "passage");
     X.log(`You squeeze through the ${P.name || "passage"} into ${DATA.zones.list[to].name}. +${P.crossHeat} Heat.`);
     X.enterNode(nid, { noMoveHeat: true, passage: true });
+    { const st = X.site(nid), gr = st && st.objects.find((o) => o.kind === "grate"); if (gr) st.squadAt = gr.id; }   // Slice 5 §D: you come up out of the grate
     return null;
   };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -25,15 +25,16 @@
     for (const o of site.objects) {
       if (!X.objVisible(o, site) || !X.roomOpen(site, o.room)) continue;   // rooms behind closed doors stay unseen
       const open = true, blockedWhy = X.objBlocked(o, site), acts = X.objActions(o);
-      const done = o.kind === "search" ? (o.searched && !X.hasLeft(o)) || o.blocked : o.done;
+      const done = o.kind === "search" ? (o.searched && !X.hasLeft(o)) || o.blocked : o.kind === "extract" ? !!blockedWhy && !X.wrecked(X.node(site.nid)) : o.done;   // Slice 5 §D: closed by Heat = dim; the wreck isn't (its smoke says it)
       const el = document.createElement("div");
       el.className = "site-obj" + (open ? "" : " dark") + (done ? " done" : "") + (o.kind !== "search" ? " " + o.kind : "") + (o.type === "door" ? " door" : "") + (o.fresh ? " corpse" : "") + (busy && busy.objId === o.id ? " busy" : "");
       el.dataset.obj = o.id; el.dataset.kind = o.kind; if (o.type) el.dataset.type = o.type;
       el.style.left = (o.x / W * 100) + "%"; el.style.top = (o.y / H * 100) + "%";
-      const V = DATA.searchables.view, px = o.type === "door" ? V.doorPx : V.objPx * (o.wide || (DATA.searchables.types[o.type] || {}).wide || 1);   // the car is wide (2 slots)
+      const V = DATA.searchables.view, px = o.type === "door" || o.kind === "exit" ? V.doorPx : V.objPx * (o.wide || (DATA.searchables.types[o.type] || {}).wide || 1);   // the car is wide (2 slots)
       el.style.width = (px / W * 100) + "%";           // scales with the view (objects are 32 native x2 on the 1000 px canvas)
       const spr = SV.spriteFor(o, site); el.dataset.sprite = spr;
-      el.appendChild(SP.icon(spr, px, "site-art"));
+      { const ic = SP.icon(spr, px, "site-art"); el.appendChild(ic); if (SP.def(spr).fps && G.MapView) G.MapView.animate(ic, SP.def(spr)); }   // Slice 5 §D: the burning wreck loops (MV's shared timer)
+      if (o.kind === "exit") { const l = document.createElement("div"); l.className = "obj-exit-label"; l.textContent = DATA.searchables.access.exit.label; el.appendChild(l); }
       if (o.kind === "mural" && G.Main) G.Main.st().pods.sol.forEach((p, i) => el.appendChild(SP.icon(`obj_mural_arrow_${i + 1}_${["up", "right", "down", "left"][p]}`, px, "site-art mural-arrow")));   // the painted answer
       if (o.sealed != null && o.type === "door" && (o.vertical != null ? o.vertical : site.rooms[o.opens].row === site.rooms[o.room].row)) el.classList.add("sealed-v");   // the bulkhead art is horizontal: turned for a side wall
       const mk = SV.markerFor(o); if (mk) el.appendChild(SP.icon(mk, V.markerPx, "obj-marker"));
@@ -50,9 +51,9 @@
       SV.els[o.id] = el;
     }
     // squad token next to the last object you used (no pathfinding)
-    const at = site.objects.find((o) => o.id === site.squadAt) || { x: site.rooms[0].x + 40, y: site.rooms[0].y + site.rooms[0].h - 40 };
+    const at = site.objects.find((o) => o.id === site.squadAt) || X.exitObj(site) || { x: site.rooms[0].x + 40, y: site.rooms[0].y + site.rooms[0].h - 40 };
     const sq = document.createElement("div"); sq.className = "site-squad";
-    sq.style.left = ((at.x + 34) / W * 100) + "%"; sq.style.top = ((at.y + 10) / H * 100) + "%";
+    sq.style.left = ((at.x + 2 + DATA.searchables.view.objPx * (at.wide || (DATA.searchables.types[at.type] || {}).wide || 1) / 2) / W * 100) + "%"; sq.style.top = ((at.y + (at.kind === "exit" ? -40 : 10)) / H * 100) + "%";   // beside it (wide objects: beside the whole car / truck; the exit sits in the wall, so just inside the room)
     sq.style.width = (DATA.searchables.view.objPx / W * 100) + "%";
     sq.appendChild(SP.icon(G.State.bodySprite(X.body()), DATA.searchables.view.objPx, "site-art"));
     wrap.appendChild(sq);
@@ -72,7 +73,7 @@
     return wrap;
   };
 
-  SV.actionLabel = { search: "Search", pick: "Pick the lock", force: "Force it", kick: "Kick it", reopen: "Take what's left", use: "Interact", cross: "Crawl through", claim: "Claim the body", examine: "Examine" };
+  SV.actionLabel = { leave: "Leave to the zone map ↩", extract: "Extract", search: "Search", pick: "Pick the lock", force: "Force it", kick: "Kick it", reopen: "Take what's left", use: "Interact", cross: "Crawl through", claim: "Claim the body", examine: "Examine" };
   // Slice 4 §B: a wall wheel. Its arrow points at one of 4 positions. Click the left half to turn it counterclockwise,
   // the right half clockwise; on touch screens two small arrow buttons sit under it (css: .wheel-btns).
   SV.wheel = function (el, o, why, busy) {
@@ -102,7 +103,8 @@
     if (ex) t += `<br><span class="examine">${ex}</span>`;
     if (why) return t + `<br><i>${why}</i>`;
     for (const a of acts) {
-      if (a === "use" || a === "cross" || a === "reopen" || a === "claim" || a === "examine") { t += `<br>${SV.actionLabel[a]}`; continue; }
+      if (a === "extract") { t += `<br>${G.UI.extractLabel(X.extractionDef(X.node()))}`; continue; }   // Slice 5 §D: the same line as the panel button
+      if (a === "leave" || a === "use" || a === "cross" || a === "reopen" || a === "claim" || a === "examine") { t += `<br>${SV.actionLabel[a]}`; continue; }
       const i = X.searchInfo(o.id, a);
       t += `<br>${SV.actionLabel[a]}: <b>${U.fmt1(i.sec)} s</b> · disturbance <b>${U.fmt1(i.pct)}%</b>` + (i.heatGain ? ` · +${i.heatGain} Heat` : "") + (i.check ? ` · ${DATA.skills[i.check.skill].name} DC ${i.check.dc} ${Math.round(i.check.chance)}%` : "");
       if (G.Debug && G.Debug.rollMath) t += `<br><small>${i.math}</small>`;
@@ -120,6 +122,8 @@
       return has(base + st) ? base + st : base;
     }
     if (o.kind === "grate") return G.Zones.passageFound(o.pid) && has(o.sprite + "_open") ? o.sprite + "_open" : o.sprite;
+    if (o.kind === "extract") return X.extractSprite(o, typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches);   // Slice 5 §D: the wreck burns (the still under reduced motion)
+    if (o.kind === "exit") { const E = DATA.searchables.access.exit; return (E.styles[o.style] || E.styles[E.default]).sprite; }   // from data, so new art is a one-line swap
     if (o.kind === "wheel") { const k = `obj_wheel_${"abc"[o.idx] || "a"}_${["up", "right", "down", "left"][o.pos]}`; return has(k) ? k : o.sprite; }   // Slice 4 §B
     if (o.kind !== "search") return o.sprite;
     if (o.type === "body_human" || o.type === "body_beast" || o.type === "body_machine" || o.type === "machine_dormant") {
@@ -169,6 +173,8 @@
       const v = o.vertical != null ? o.vertical : site.rooms[o.opens].row === site.rooms[o.room].row;
       if (v) put(ctx, WL.doorwayV, o.x - T / 2, o.y - 2 * T, T, 4 * T, o.x - T / 2, o.y - 2 * T); else put(ctx, WL.doorwayH, o.x - 2 * T, o.y - T / 2, 4 * T, T, o.x - 2 * T, o.y - T / 2);
     }
+    // Slice 5 §D: the way out sits in the outer wall on a doorway plate
+    for (const o of site.objects) if (o.kind === "exit") put(ctx, WL.doorwayH, o.x - 2 * T, o.y - T / 2, 4 * T, T, o.x - 2 * T, o.y - T / 2);
     // south-facing wall face on the floor just inside each room's top wall
     for (const R of site.rooms) tile(ctx, wz.face, R.x, R.y, R.w, T, R.x, R.y);
     const openR = (i) => site.rooms[i] && site.rooms[i].open;
