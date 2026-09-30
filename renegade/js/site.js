@@ -368,6 +368,19 @@
 
   // Called when the search progress bar completes. Resolves checks, the disturbance roll, then queues
   // [battle] + [loot]. Returns { texts, roll, disturb:{pct, roll, hit}, empty } for the UI.
+  // Slice 4 §E: one-line examine text for anything in a location view (data: DATA.searchables examine fields / propInfo)
+  X.examine = function (o) {
+    if (!o) return null;
+    const S = DATA.searchables;
+    if (G.Main && (o.kind === "mural" || o.kind === "wheel" || o.kind === "pod" || o.sealed)) { const t = G.Main.examine(o); if (t) return t; }
+    if (o.examine) return o.examine;
+    if (o.kind === "event") return (S.eventObjects[o.eventId] || S.eventObjects.default).examine || S.examineDefault;
+    if (o.kind === "survivor") return S.survivorObject.examine || S.examineDefault;
+    if (o.kind === "grate") return ((DATA.zones.passages || {})[o.pid] || {}).examine || S.examineDefault;
+    const T = S.types[o.type];
+    return (T && T.examine) || S.examineDefault;
+  };
+  X.propInfo = (sprite) => DATA.searchables.propInfo[sprite] || { name: "", examine: DATA.searchables.examineDefault };
   X.completeSearch = function (objId, action) {
     const r = run(), site = X.site(), o = X.obj(objId, site), node = X.node(site.nid);
     const why = X.objBlocked(o, site); if (why) return { error: why };

@@ -21,10 +21,10 @@ DATA.main = {
     loc: "cryo_annex", zone: "a",
     wheels: 3, positions: 4,
     arrows: ["↑", "→", "↓", "←"],
-    wheel: { name: "Wall wheel", px: 56 },
-    door: { name: "Sealed door", sprite: "obj_door_locked", blocked: "Sealed. The three wheels beside it must be set just right." },
+    wheel: { name: "Wall wheel", examine: "[PLACEHOLDER] A heavy iron wheel set into the wall, with an arrow on its rim.", px: 56 },
+    door: { name: "Sealed door", sprite: "obj_door_locked", examine: "[PLACEHOLDER] A pressure bulkhead. No handle, no keyhole.", blocked: "Sealed. The three wheels beside it must be set just right." },
     mural: { name: "Faded mural", examine: "A faded mural of three wheels, each with its arrow painted in: {sol}." },
-    pod: { name: "Working cryo pod", sprite: "obj_cryo_pod", claimed: "Empty. You already took this one." },
+    pod: { name: "Working cryo pod", sprite: "obj_cryo_pod", examine: "[PLACEHOLDER] The one pod still humming. Frost on the glass, a shape behind it.", claimed: "Empty. You already took this one." },
     openText: "Something heavy clunks behind the wall. The sealed door grinds open.",
     claimText: "The one pod still humming hisses open. The body inside is warm."
   }

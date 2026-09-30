@@ -370,3 +370,5 @@ button.promote { background: #6a5a1a; }
 .card-inspect { display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
 .card-inspect .ci-info { max-width: 260px; }
 .ci-rarity.r-uncommon { color: #7ab0ff; } .ci-rarity.r-rare { color: #ffd84a; }
+/* Slice 4 §E examine line in location tooltips */
+#tooltip .examine { font-style: italic; color: #d9cba2; }

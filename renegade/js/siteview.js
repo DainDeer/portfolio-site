@@ -11,6 +11,14 @@
     const cv = document.createElement("canvas"); cv.width = W; cv.height = H; cv.className = "site-canvas";
     wrap.appendChild(cv);
     SV.paint(cv, site);
+    // Slice 4 §E: scenery props are canvas decor: hover (tap on phones) the nearest one for its examine line
+    const propAt = (e) => { const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * W, y = (e.clientY - r.top) / r.height * H;
+      let best = null, bd = DATA.searchables.view.propHitPx ** 2; for (const p of site.props) { if (!site.rooms[p.room] || !site.rooms[p.room].open) continue; const d = (p.x - x) ** 2 + (p.y - y) ** 2; if (d < bd) { bd = d; best = p; } } return best; };
+    let propTip = null;
+    cv.addEventListener("mousemove", (e) => { const p = propAt(e);
+      if (p) { const i = X.propInfo(p.sprite); propTip = p; G.UI.showTip(`<b>${i.name}</b><br><span class="examine">${i.examine}</span>`, e.clientX, e.clientY); }
+      else if (propTip) { propTip = null; G.UI.hideTip(); } });
+    cv.addEventListener("mouseleave", () => { if (propTip) { propTip = null; G.UI.hideTip(); } });
     SV.els = {};
     const busy = G.UI.search;
     for (const o of site.objects) {
@@ -73,7 +81,7 @@
     el.classList.add("spinnable");
     const spin = (dir) => G.UI.spinWheel(o, dir);
     el.addEventListener("mousemove", (e) => { const r = el.getBoundingClientRect(), left = e.clientX < r.left + r.width / 2; el.dataset.half = left ? "l" : "r";
-      G.UI.showTip(`<b>${o.name}</b> · pointing ${P.arrows[o.pos]}<br>${left ? "↺ Click to turn counterclockwise" : "↻ Click to turn clockwise"}`, e.clientX, e.clientY); });
+      G.UI.showTip(`<b>${o.name}</b> · pointing ${P.arrows[o.pos]}<br><span class="examine">${G.Exp.examine(o)}</span><br>${left ? "↺ Click to turn counterclockwise" : "↻ Click to turn clockwise"}`, e.clientX, e.clientY); });
     el.addEventListener("mouseleave", () => { delete el.dataset.half; G.UI.hideTip(); });
     el.addEventListener("click", (e) => { e.stopPropagation(); if (touch) return; const r = el.getBoundingClientRect(); spin(e.clientX < r.left + r.width / 2 ? -1 : 1); });
     const btns = document.createElement("div"); btns.className = "wheel-btns";
@@ -86,9 +94,11 @@
   SV.tip = function (o, acts, why) {
     const X = G.Exp;
     let t = `<b>${o.name}</b>`;
-    if (o.kind === "mural" && G.Main) return t + `<br><i>${G.Main.examine(o)}</i>`;   // Slice 4 §B/E: examine text on hover
+    const ex = X.examine(o);   // Slice 4 §E: the examine line (the mural's is its answer)
+    if (o.kind === "mural") return t + `<br><span class="examine">${ex}</span>`;
     if (o.questId && G.Quests.itemAvailable(o.questId)) t += ` <span style="color:${DATA.items.questColor}">(quest)</span>`;
     if (o.locked && !o.searched) t += o.jammed ? " · lock jammed" : " · locked";
+    if (ex) t += `<br><span class="examine">${ex}</span>`;
     if (why) return t + `<br><i>${why}</i>`;
     for (const a of acts) {
       if (a === "use" || a === "cross" || a === "reopen" || a === "claim" || a === "examine") { t += `<br>${SV.actionLabel[a]}`; continue; }

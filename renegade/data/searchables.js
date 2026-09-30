@@ -12,48 +12,48 @@ DATA.searchables = {
   // Slice 3 §11: Elites killed at Marked+ Heat carry Relic Tech (15%) on their body
   eliteExtras: [{ res: "relic", n: 1, chance: 15, minTier: "Marked" }],
   types: {
-    body_human: { name: "Body",          sprite: "corpse_human", searchSec: 2, noise: 3, gear: "unit", resRolls: 1,
+    body_human: { name: "Body", examine: "[PLACEHOLDER] Somebody who ran out of luck. Their pockets might not have.",          sprite: "corpse_human", searchSec: 2, noise: 3, gear: "unit", resRolls: 1,
                   table: [["food", 40, 1, 2], ["cloth", 35, 1, 2], ["med", 15, 1, 1], [null, 10]] },
-    body_beast: { name: "Beast carcass", sprite: "corpse_beast", searchSec: 2, noise: 3, resRolls: 1,
+    body_beast: { name: "Beast carcass", examine: "[PLACEHOLDER] Still warm. Something useful under the hide, maybe.", sprite: "corpse_beast", searchSec: 2, noise: 3, resRolls: 1,
                   table: [["chemicals", 35, 1, 1], ["food", 25, 1, 1], ["cloth", 15, 1, 1], ["biomass", 45, 1, 2], [null, 25]],
                   extras: [{ res: "biomass", n: 1, chance: 70 }] },   // Slice 3 §11 tuning (milestone 5): Biomass 20 x1 -> 45 x1-2 + a 70% extra (target 1-3 per extracted run)
-    crate:      { name: "Crate",         sprite: "obj_crate",  searchSec: 3, noise: 5, gearChance: 10, resRolls: 2,   // Slice 3 §11 tuning: Fuel 10 x1 -> 30 x1-2 + a 45% extra (target 2-4 per extracted run)
+    crate:      { name: "Crate", examine: "[PLACEHOLDER] A battered crate. The lid's been pried at before.",         sprite: "obj_crate",  searchSec: 3, noise: 5, gearChance: 10, resRolls: 2,   // Slice 3 §11 tuning: Fuel 10 x1 -> 30 x1-2 + a 45% extra (target 2-4 per extracted run)
                   table: [["scrap", 40, 2, 4], ["food", 30, 2, 3], ["water", 30, 2, 3], ["fuel", 30, 1, 2]],
                   extras: [{ res: "fuel", n: 1, chance: 45 }],
                   heavy: { chance: 20, check: { skill: "hauling", dc: 12 }, bonusItems: 1, name: "Heavy crate" } },  // fail: blocked
-    locker:     { name: "Locker",        sprite: "obj_locker", searchSec: 4, noise: 8, gearChance: 35, resRolls: 1,
+    locker:     { name: "Locker", examine: "[PLACEHOLDER] A dented locker. Hinges gone orange with rust.",        sprite: "obj_locker", searchSec: 4, noise: 8, gearChance: 35, resRolls: 1,
                   table: [["cloth", 35, 1, 3], ["chemicals", 25, 1, 2], ["med", 20, 1, 1], [null, 20]],
                   extras: [{ res: "biomass", n: 1, chance: 20 }],   // Slice 3 §11 tuning: samples jars (Biomass)
                   trap: { chance: 25, check: { skill: "perception", dc: 12 }, failDmgPct: 15, badFailDmgPct: 30, name: "Trapped locker" } },
-    desk:       { name: "Desk",          sprite: "obj_desk",   searchSec: 3, noise: 4, resRolls: 1,
+    desk:       { name: "Desk", examine: "[PLACEHOLDER] An old desk. The drawers stick.",          sprite: "obj_desk",   searchSec: 3, noise: 4, resRolls: 1,
                   table: [["electronics", 60, 1, 2], ["scrap", 25, 1, 1], [null, 15]],
                   extras: [{ res: "data_shards", n: 1, chance: 3 }] },   // Slice 3 (design): Data Shards only a rare extra here (terminals are the source)
-    safe:       { name: "Safe",          sprite: "obj_safe",   searchSec: 8, noise: 5, gearRolls: 1, bonusItems: 1, rarityBonus: 15, resRolls: 1,  // = the Slice 1 safe
+    safe:       { name: "Safe", examine: "[PLACEHOLDER] A squat steel safe. Somebody thought this was worth locking up.",          sprite: "obj_safe",   searchSec: 8, noise: 5, gearRolls: 1, bonusItems: 1, rarityBonus: 15, resRolls: 1,  // = the Slice 1 safe
                   table: [["electronics", 50, 1, 2], ["med", 50, 1, 2]],
                   extras: [{ res: "data_shards", n: 1, chance: 8 }, { res: "relic", n: 1, chance: 5, minTier: "Marked" }],   // Slice 3: Data Shards a rare extra (design), Relic Tech 5% at Marked+
                   lock: { chance: 100, check: { skill: "engineering", dc: 14 }, force: true } },   // force: +forceNoise, +heat.forceLock
     // Slice 3 (design, after milestone 1): the Terminal is the main Data Shards source. Offices, the Relay Tower and clinics
     // (map tag "terminal"). Longer search. alarm: after a search, chance % that a drone answers -> a machine fight at
     // budgetMult (only once the `family` exists: machines land in Part B step 8; until then the alarm is off).
-    terminal:   { name: "Old terminal",      sprite: "obj_computer", searchSec: 6, noise: 4, resRolls: 1,
+    terminal:   { name: "Old terminal", examine: "[PLACEHOLDER] A dead screen over a live hum. It still takes input.",      sprite: "obj_computer", searchSec: 6, noise: 4, resRolls: 1,
                   table: [["data_shards", 60, 1, 2], ["electronics", 30, 1, 1], [null, 10]],
                   alarm: { chance: 8, family: "machines", budgetMult: 0.6, why: "The terminal trips an alarm. A drone answers!" } },
     // Slice 3 §11 new searchables. extras: independent bonus rolls [{ res, n, chance %, minTier (Heat tier name) }]
-    vehicle:    { name: "Wrecked car",   sprite: "obj_vehicle",  searchSec: 4, noise: 6, resRolls: 2, wide: 2,   // wide: takes 2 side-by-side slots, drawn 2x objPx wide (art 64x32 native)
+    vehicle:    { name: "Wrecked car", examine: "[PLACEHOLDER] A burnt-out car on its rims. The trunk is still shut.",   sprite: "obj_vehicle",  searchSec: 4, noise: 6, resRolls: 2, wide: 2,   // wide: takes 2 side-by-side slots, drawn 2x objPx wide (art 64x32 native)
                   table: [["fuel", 45, 1, 2], ["scrap", 35, 2, 3], ["electronics", 20, 1, 1]] },
-    growth:     { name: "Growth cluster", sprite: "obj_growth",  searchSec: 3, noise: 4, resRolls: 1,
+    growth:     { name: "Growth cluster", examine: "[PLACEHOLDER] Wet, glossy growth, pulsing faintly. Don't touch it bare-handed.", sprite: "obj_growth",  searchSec: 3, noise: 4, resRolls: 1,
                   table: [["biomass", 70, 1, 2], ["chemicals", 20, 1, 1], [null, 10]] },
-    body_machine: { name: "Machine wreck", sprite: "corpse_machine", searchSec: 3, noise: 5, resRolls: 1,   // every killed machine (Part B step 8)
+    body_machine: { name: "Machine wreck", examine: "[PLACEHOLDER] A dead machine, leaking something dark.", sprite: "corpse_machine", searchSec: 3, noise: 5, resRolls: 1,   // every killed machine (Part B step 8)
                   table: [["electronics", 40, 1, 2], ["scrap", 35, 1, 3], ["fuel", 10, 1, 1], ["data_shards", 7, 1, 1], [null, 8]] },
     // design call (milestone 3): dormant machine wrecks in Zone B (objectWeights.byZone.b). Same table as a fresh wreck;
     // alarm = the chance it reactivates when you finish searching it (a small machine fight at budgetMult)
-    machine_dormant: { name: "Dormant machine", sprite: "corpse_ai_sentry", searchSec: 4, noise: 5, resRolls: 1,
+    machine_dormant: { name: "Dormant machine", examine: "[PLACEHOLDER] A machine powered down. Probably.", sprite: "corpse_ai_sentry", searchSec: 4, noise: 5, resRolls: 1,
                   table: [["electronics", 40, 1, 2], ["scrap", 35, 1, 3], ["fuel", 10, 1, 1], ["data_shards", 7, 1, 1], [null, 8]],
                   alarm: { chance: 12, family: "machines", budgetMult: 0.7, why: "The wreck twitches. Its optics light up red!" } },
-    rival_pack: { name: "Rival's pack",  sprite: "obj_rival_bag", searchSec: 3, noise: 3, resRolls: 2, gearRolls: 1, rarityBonus: 15,   // beaten rivals only (step 10)
+    rival_pack: { name: "Rival's pack", examine: "[PLACEHOLDER] A pack left behind by another crew.",  sprite: "obj_rival_bag", searchSec: 3, noise: 3, resRolls: 2, gearRolls: 1, rarityBonus: 15,   // beaten rivals only (step 10)
                   table: [["scrap", 40, 2, 4], ["food", 30, 2, 3], ["water", 30, 2, 3], ["fuel", 10, 1, 1]],
                   extras: [{ res: "data_shards", n: 1, chance: 30 }, { res: "relic", n: 1, chance: 20 }] },
-    door:       { name: "Door",          sprite: "obj_door",   searchSec: 3, noise: 10, resRolls: 0, opensRoom: true,
+    door:       { name: "Door", examine: "[PLACEHOLDER] A door. What's behind it is anyone's guess.",          sprite: "obj_door",   searchSec: 3, noise: 10, resRolls: 0, opensRoom: true,
                   stashChance: 10, stashAs: "crate",                                               // one crate roll behind it
                   lock: { chance: 30, check: { skill: "engineering", dc: 12 }, pickSec: 3, kick: { sec: 1 } } }  // kick: +forceNoise, +heat.kickDoor
   },
@@ -66,7 +66,7 @@ DATA.searchables = {
   },
   // Templates on the 1000x600 view canvas: a grid of rooms; order[i] = [col, row, parentIndex]. A site of n rooms uses
   // the first n entries; each room after the first sits behind a door in the wall it shares with its parent.
-  view: { x: 30, y: 30, w: 940, h: 540, wall: 16, slot: 74, objPx: 64, doorPx: 64, markerPx: 32 },   // wall = 8 native x2; objects 32 native x2
+  view: { x: 30, y: 30, w: 940, h: 540, wall: 16, slot: 74, objPx: 64, doorPx: 64, markerPx: 32, propHitPx: 26 },   // wall = 8 native x2; objects 32 native x2
   templates: {
     S: { cols: 1, rows: 1, order: [[0, 0, -1]] },
     M: { cols: 2, rows: 2, order: [[0, 1, -1], [1, 1, 0], [0, 0, 0], [1, 0, 1]] },
@@ -107,18 +107,37 @@ DATA.searchables = {
            doorwayH: "tile_doorway_h", doorwayV: "tile_doorway_v" },
   // Event objects (§5: "events move onto objects"). Clicking one opens the existing check event.
   eventObjects: {
-    default:                { name: "Something odd",      sprite: "obj_event" },
-    distress_hollow_creek:  { name: "Crackling radio",    sprite: "obj_radio" },
-    relay:                  { name: "Relay terminal",     sprite: "obj_terminal" },
-    cryo_ward:              { name: "Cryo pod",           sprite: "obj_cryo_pod" },
-    cache:                  { name: "Dead renegade",      sprite: "obj_dead_renegade" },
-    toll_gate:              { name: "Toll barricade",     sprite: "obj_barricade" },
-    tunnel:                 { name: "Collapsed passage",  sprite: "obj_rubble" },
-    rooftop_survivor:       { name: "Survivor on a roof", sprite: "obj_survivor" },
-    drone_patrol:           { name: "Drone patrol",       sprite: "enemy_ai_drone" },
-    hollow_creek_holding:   { name: "Town gate",          sprite: "obj_gate" },
-    aftermath_hollow_creek: { name: "Raider camp",        sprite: "obj_barricade" },
-    allied_hollow_creek:    { name: "Town square",        sprite: "obj_gate" }
+    default:                { name: "Something odd", examine: "[PLACEHOLDER] Something here doesn't fit.",      sprite: "obj_event" },
+    distress_hollow_creek:  { name: "Crackling radio", examine: "[PLACEHOLDER] A radio spitting static and a voice under it.",    sprite: "obj_radio" },
+    relay:                  { name: "Relay terminal", examine: "[PLACEHOLDER] A relay terminal, lights still blinking.",     sprite: "obj_terminal" },
+    cryo_ward:              { name: "Cryo pod", examine: "[PLACEHOLDER] A cryo pod, frosted over from the inside.",           sprite: "obj_cryo_pod" },
+    cache:                  { name: "Dead renegade", examine: "[PLACEHOLDER] A renegade who didn't make it out. Their stash might have.",      sprite: "obj_dead_renegade" },
+    toll_gate:              { name: "Toll barricade", examine: "[PLACEHOLDER] A barricade of junk and wire. Somebody wants a toll.",     sprite: "obj_barricade" },
+    tunnel:                 { name: "Collapsed passage", examine: "[PLACEHOLDER] A passage half-buried in rubble.",  sprite: "obj_rubble" },
+    rooftop_survivor:       { name: "Survivor on a roof", examine: "[PLACEHOLDER] Someone waving from the roof.", sprite: "obj_survivor" },
+    drone_patrol:           { name: "Drone patrol", examine: "[PLACEHOLDER] A drone sweeping the area on a lazy loop.",       sprite: "enemy_ai_drone" },
+    hollow_creek_holding:   { name: "Town gate", examine: "[PLACEHOLDER] The town gate, barred and watched.",          sprite: "obj_gate" },
+    aftermath_hollow_creek: { name: "Raider camp", examine: "[PLACEHOLDER] What the raiders left of the camp.",        sprite: "obj_barricade" },
+    allied_hollow_creek:    { name: "Town square", examine: "[PLACEHOLDER] The town square, busier than it has any right to be.",        sprite: "obj_gate" }
   },
-  survivorObject: { name: "Survivor", sprite: "obj_survivor" }
+  survivorObject: { name: "Survivor", sprite: "obj_survivor", examine: "[PLACEHOLDER] A survivor, eyeing you over a raised weapon." },
+  // Slice 4 §E: examine text (hover, tap on phones), RuneScape style. [PLACEHOLDER] strings; the flavor pass writes the
+  // real ones. Searchables / event objects / the survivor carry an examine field above (an object's own o.examine wins);
+  // scenery props (canvas decor, by sprite key) take theirs from propInfo; anything without one uses examineDefault.
+  examineDefault: "[PLACEHOLDER] Nothing special.",
+  propInfo: {
+    prop_puddle:  { name: "Puddle",        examine: "[PLACEHOLDER] Standing water with a rainbow sheen." },
+    prop_pipes:   { name: "Pipes",         examine: "[PLACEHOLDER] Old pipes, still dripping somewhere." },
+    prop_shelf:   { name: "Shelf",         examine: "[PLACEHOLDER] Empty shelves. Someone got here first." },
+    prop_junk:    { name: "Junk",          examine: "[PLACEHOLDER] A heap of scrap too bent to use." },
+    prop_rack:    { name: "Clothes rack",  examine: "[PLACEHOLDER] A rack of rags that used to be clothes." },
+    prop_console: { name: "Console",       examine: "[PLACEHOLDER] A smashed console. The wires were pulled." },
+    prop_barrel:  { name: "Barrel",        examine: "[PLACEHOLDER] A barrel with a faded hazard mark." },
+    prop_bed:     { name: "Cot",           examine: "[PLACEHOLDER] A stained cot. Nobody's slept here in a while." },
+    prop_rubble:  { name: "Rubble",        examine: "[PLACEHOLDER] Broken concrete and rebar." },
+    prop_growth:  { name: "Growth",        examine: "[PLACEHOLDER] Something grew here. It's still growing." },
+    prop_nest:    { name: "Nest",          examine: "[PLACEHOLDER] A nest of wire and bone. Empty, for now." },
+    prop_pod:     { name: "Pod",           examine: "[PLACEHOLDER] A husk, split open from the inside." },
+    prop_bones:   { name: "Bones",         examine: "[PLACEHOLDER] Picked clean." }
+  }
 };

@@ -34,7 +34,7 @@ DATA.zones = {
   },
   passages: {
     storm_drain: {
-      name: "Storm drain grate", sprite: "obj_grate", mapIcon: "map_passage",
+      name: "Storm drain grate", sprite: "obj_grate", examine: "[PLACEHOLDER] A storm drain grate. Cold air breathes up from below.", mapIcon: "map_passage",
       ends: { a: { zone: "a", loc: "rail_yard" }, b: { zone: "b", node: "b1" } },
       hiddenAt: "a",                                     // hidden in the Rail Yard until spotted; always visible at B1
       spot: { skills: ["perception", "survival"], dc: 12 }, // once per visit on entering the Rail Yard, squad's best of either

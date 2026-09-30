@@ -72,7 +72,7 @@
     put(H.mk(site, { kind: "pod", name: P().pod.name, sprite: P().pod.sprite }), door.opens, R1.x + R1.w / 2, R1.y + R1.h / 2);
   };
   M.solText = () => M.st().pods.sol.map((p, i) => `wheel ${i + 1} ${P().arrows[p]}`).join(", ");
-  M.examine = (o) => (o.kind === "mural" ? P().mural.examine.replace("{sol}", M.solText()) : o.examine || null);
+  M.examine = (o) => (o.kind === "mural" ? P().mural.examine.replace("{sol}", M.solText()) : o.examine || (o.kind === "wheel" || o.kind === "pod" ? P()[o.kind].examine : o.sealed ? P().door.examine : null));
   M.solved = (site) => !!site && !!site.pods && site.pods.wheels.every((id, i) => (site.objects.find((o) => o.id === id) || {}).pos === M.st().pods.sol[i]);
   // spin a wheel: dir +1 clockwise, -1 counterclockwise. No noise, no Heat, no fail state. Returns { pos, opened }.
   M.spin = function (objId, dir) {
