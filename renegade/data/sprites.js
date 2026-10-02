@@ -250,10 +250,10 @@ DATA.sprites = {
   obj_passage_rail_spur: { file: "objects/obj_passage_rail_spur.png", shape: "rect", color: "#4e5054", size: 1 },
   obj_passage_rail_spur_open: { file: "objects/obj_passage_rail_spur_open.png", shape: "rect", color: "#4e5054", size: 1 },
   map_passage_rail_spur: { file: "map/map_passage_rail_spur.png", shape: "badge", color: "#2a6a8a", size: 1, text: "⇄", fallback: "map_passage" },   // Vixie: the found spur reads as a warning; the generic mark if the file fails (js/sprites.js def.fallback)
-  bg_battle_hushwood: { file: "tiles/bg_battle_hushwood.png", shape: "none", color: "#3e3224", size: 1 },
-  bg_battle_greyback: { file: "tiles/bg_battle_greyback.png", shape: "none", color: "#4a4840", size: 1 },
-  bg_battle_hollis: { file: "tiles/bg_battle_hollis.png", shape: "none", color: "#3a3834", size: 1 },
-  bg_battle_scablands: { file: "tiles/bg_battle_scablands.png", shape: "none", color: "#3e3224", size: 1 },
+  bg_battle_hushwood: { file: "tiles/bg_battle_hushwood.png", shape: "none", color: "#5a4e35", size: 1 },
+  bg_battle_greyback: { file: "tiles/bg_battle_greyback.png", shape: "none", color: "#485338", size: 1 },
+  bg_battle_hollis: { file: "tiles/bg_battle_hollis.png", shape: "none", color: "#40444b", size: 1 },
+  bg_battle_scablands: { file: "tiles/bg_battle_scablands.png", shape: "none", color: "#564732", size: 1 },
   // ---- map ----
   map_bg:                { file: "map/map_bg.png",                  shape: "none",     color: "#1d1f1b", size: 1 },
   map_fog:               { file: "map/map_fog.png",                 shape: "none",     color: "#111",    size: 1 },
