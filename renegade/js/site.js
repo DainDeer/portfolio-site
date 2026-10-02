@@ -27,6 +27,8 @@
     if (site.enteredRun !== rc) X.restockOnEntry(site, node);
     if (G.Main && !site.pods && G.Main.isPodsSite(site)) G.Main.decorate(site, { mk, place, rng: G.rng });   // a site built before Slice 4
     X.addAccess(site, node);   // Slice 5 §D: a site built before the exit / extract hotspots gets them (no-op otherwise)
+    // Slice 5 §G: a site built before one of its passages existed (the Cul-de-sac's Sunken Underpass) gets the grate (first room)
+    for (const pid of G.Zones.passagesOf(loc || {})) if (!site.objects.some((o) => o.kind === "grate" && o.pid === pid)) { const P = DATA.zones.passages[pid]; place(site, mk(site, { kind: "grate", pid, name: P.name || "Storm drain grate", sprite: DATA.sprites[P.sprite] ? P.sprite : P.fallbackSprite || "obj_grate" }), 0, G.rng); }
     return site;
   };
 
@@ -171,6 +173,7 @@
     const wo = X.worldOverride(node);
     if (wo && wo.container) fixed.push({ type: wo.container.type, name: wo.container.name, bonusItems: wo.container.bonusItems, rarityBonus: wo.container.rarityBonus, salvage: true });
     for (const t in S.objectWeights.fixedByTag || {}) if ((loc.tags || []).includes(t)) for (const type of S.objectWeights.fixedByTag[t]) fixed.push({ type });
+    for (const type of loc.fixedObjects || []) if (S.types[type]) fixed.push({ type });   // Slice 5 §G: the location's own (the Garage's alarmed car)
     for (const qid of G.Quests.findObjectsAt(site.zone, node.loc)) { const o = G.Quests.def(qid).objective.object; fixed.push({ type: o.type, name: o.name, sprite: o.sprite, searchSec: o.searchSec, noise: o.noise, questId: qid }); }
     const w = objectWeights(loc, node.zone || "a"), keys = Object.keys(w).filter((k) => w[k] > 0);
     const nGen = Math.max(0, nSearch - (nRooms - 1) - fixed.length);
@@ -187,6 +190,8 @@
     }
     // Slice 5 §F training spots: extra objects (kind "train": not searchables, so the size's count and restock ignore them)
     for (const t in S.training || {}) if (X.trainHere(t, loc, node.loc)) place(site, mk(site, { type: t, kind: "train", name: S.types[t].name, sprite: S.types[t].sprite }), rng.int(0, nRooms - 1), rng);
+    // Slice 5 §G (Hollis): fixed scenery the location names (examine only; not searchables, so counts / restock ignore them)
+    for (const d of loc.decor || []) { const D = (S.decor || {})[d]; if (D) place(site, mk(site, { kind: "decor", decor: d, name: D.name, sprite: D.sprite, wide: D.wide || 1 }), rng.int(0, nRooms - 1), rng); }
     // event object (Slice 1 "Event %" = is there an event object here), survivor object
     const odds = X.odds(node);
     let ev = null;
@@ -204,6 +209,7 @@
     const PR = S.props, pool = []; for (const t of loc.tags || []) for (const p of PR.byTag[t] || []) pool.push(p);
     if (!pool.length) pool.push(...PR.default);
     pool.push(...((PR.byZone || {})[site.zone] || []));
+    pool.push(...(loc.props || []).filter((k) => DATA.sprites[k]));   // Slice 5 §G: the location's own (the MegaMart's carts)
     for (const R of rooms) {
       const n = rng.int(PR.perRoom[0], PR.perRoom[1]);
       for (let i = 0; i < n; i++) { const p = R.free.length ? R.free.pop() : { x: R.x + 20 + rng() * (R.w - 40), y: R.y + 20 + rng() * (R.h - 40) }; site.props.push({ sprite: rng.pick(pool), x: Math.round(p.x), y: Math.round(p.y), room: R.i, rot: Math.round(rng() * 4) * 90 }); }
@@ -284,6 +290,7 @@
     if (!X.roomOpen(site, o.room)) return "Behind a closed door.";
     if (o.kind === "event" || o.kind === "survivor") return o.done ? "Already dealt with." : null;
     if (o.kind === "grate" || o.kind === "exit") return null;
+    if (o.kind === "decor") return null;   // Slice 5 §G: scenery (examine only)
     if (o.kind === "extract") { const node = X.node(site.nid); return X.extractionOpen(node) ? null : X.wrecked(node) ? `${CFG().extraction.crash.line} Find another way out.` : "Closed at this Heat level."; }   // Slice 5 §D
     if (o.kind === "mural") return null;   // Slice 4 §B pods room
     if (X.trainDef(o)) return X.trainedNow(o) ? "Done for this run." : null;   // Slice 5 §F
@@ -301,6 +308,7 @@
     if (o.kind === "event" || o.kind === "survivor") return o.done ? [] : ["use"];
     if (o.kind === "grate") return ["cross"];
     if (o.kind === "exit") return ["leave"];   // Slice 5 §D
+    if (o.kind === "decor") return [];         // Slice 5 §G: examine only
     if (o.kind === "extract") return ["extract"];
     if (o.kind === "mural") return ["examine"];
     if (o.kind === "wheel") return ["spin"];
@@ -435,6 +443,7 @@
     if (o.examine) return o.examine;
     if (o.kind === "event") return (S.eventObjects[o.eventId] || S.eventObjects.default).examine || S.examineDefault;
     if (o.kind === "survivor") return S.survivorObject.examine || S.examineDefault;
+    if (o.kind === "decor") return ((S.decor || {})[o.decor] || {}).examine || S.examineDefault;
     if (o.kind === "grate") return ((DATA.zones.passages || {})[o.pid] || {}).examine || S.examineDefault;
     if (o.kind === "exit") { const E = S.access.exit; return (E.styles[o.style] || E.styles[E.default]).examine; }   // Slice 5 §D: read from data each time
     if (o.kind === "extract") { const sp = X.extractSpot(o.loc); return (X.wrecked(X.node(o.nid)) && sp.examineWrecked) || sp.examine; }
@@ -479,7 +488,11 @@
         if (o.trapped && T.trap && !o.blocked) {
           roll = check(T.trap.check);
           o.trapped = false;
-          if (G.Checks.isSuccess(roll.grade)) texts.push("You spot a trap wire and disarm it.");
+          if (G.Checks.isSuccess(roll.grade)) texts.push(T.trap.spotText || "You spot a trap wire and disarm it.");
+          else if (T.trap.failHeat != null) {   // Slice 5 §G: a noise trap (the Garage's car alarm): Heat, not damage, and it blares
+            const th = roll.grade === "badFail" ? T.trap.badFailHeat : T.trap.failHeat; o.tripped = true;
+            texts.push(T.trap.tripText || "It was alarmed!"); X.addHeat(th, "trap"); texts.push(`+${th} Heat`); X.log(`${T.trap.tripText || "An alarm goes off!"} +${th} Heat.`, "bad");
+          }
           else { texts.push("It was trapped!"); X.damageBody(roll.grade === "badFail" ? T.trap.badFailDmgPct : T.trap.failDmgPct); if (!run() || run() !== r) return { texts, roll, died: true }; }
         }
         if (!o.blocked) {

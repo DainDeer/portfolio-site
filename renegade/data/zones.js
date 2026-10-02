@@ -2,8 +2,9 @@
 // One expedition = one zone, but a passage can be crossed mid-run (you keep Heat, carry and squad).
 window.DATA = window.DATA || {};
 DATA.zones = {
-  order: ["a", "greyback", "b", "scablands"],   // Slice 5 §G (Vixie): new zones get descriptive ids (greyback, hushwood, hollis); a / b keep theirs
+  order: ["a", "greyback", "b", "hollis", "scablands"],   // Slice 5 §G (Vixie): new zones get descriptive ids (greyback, hushwood, hollis); a / b keep theirs
   // Slice 5 §G: the order the zone cards show in (discovery / difficulty): Hushwood (a) > Greyback Hills > Drowned Suburbs (b)
+  // > Hollis Outskirts > Scablands
   // Open Question 7: does spotting a passage unlock its zone even if you die this run? true = unlock at once.
   passageUnlockOnDeath: true,
   // Slice 5 §G: arena floor per zone id (js/battleview.js BV.arenaBg; Smudge c2c0f9c). Unlisted (b) or unregistered: bg_battle
@@ -78,9 +79,42 @@ DATA.zones = {
       },
       edges: [["gb1", "gb2"], ["gb1", "gb5"], ["gb2", "gb3"], ["gb2", "gb4"], ["gb2", "gb6"], ["gb4", "gb6"], ["gb5", "gb6"], ["gb5", "gb9"],
               ["gb6", "gb8"], ["gb6", "gb7"], ["gb7", "gb10"], ["gb8", "gb9"]]
+    },
+    // Slice 5 §G (Vixie 06:30): The Hollis Outskirts (handcrafted, tier 4) between the Drowned Suburbs and the Scablands.
+    // Reached by the Sunken Underpass out of the Flooded Cul-de-sac (Zone B). Node positions + art: Smudge's
+    // hollis_manifest.json (91a7553); room objects hollis_objects_manifest.json (8272465 / c93f2e3). Numbers [DRAFT].
+    hollis: {
+      name: "The Hollis Outskirts", size: "Medium", tierLabel: "Tier 4", familyMix: "Outlaws, cultists and perimeter machines",
+      startUnlocked: false, lockedLabel: "??? – find the way in",
+      insertion: "ho1", insertionName: "Overpass Camp", resourceMult: 1.3, dcBonus: 0, tier: 4,   // [DRAFT] resourceMult (B 1.25, Scablands 1.35)
+      mapBg: "map_bg_hollis",
+      nodes: {
+        ho1: { loc: "ho_overpass",    x: 120, y: 430 },
+        ho2: { loc: "ho_megamart",    x: 330, y: 250 },
+        ho3: { loc: "ho_molar",       x: 250, y: 510 },
+        ho4: { loc: "ho_garage",      x: 520, y: 440 },
+        ho5: { loc: "ho_church",      x: 500, y: 120 },
+        ho6: { loc: "ho_fence",       x: 880, y: 300 },
+        ho7: { loc: "ho_rail",        x: 700, y: 520 },
+        ho8: { loc: "ho_helipad",     x: 720, y: 170 },
+        ho9: { loc: "ho_data_center", x: 660, y: 330, hiddenUntilAdjacent: true }   // the secret data center (behind a fake storefront)
+      },
+      edges: [["ho1", "ho2"], ["ho1", "ho3"], ["ho3", "ho2"], ["ho2", "ho5"], ["ho2", "ho4"], ["ho3", "ho4"], ["ho5", "ho8"], ["ho4", "ho8"],
+              ["ho4", "ho7"], ["ho4", "ho9"], ["ho9", "ho6"], ["ho8", "ho6"], ["ho7", "ho6"]]
     }
   },
   passages: {
+    // Slice 5 §G (Vixie 06:40): [PLACEHOLDER] the Sunken Underpass, Flooded Cul-de-sac (Drowned Suburbs) <-> Overpass Camp (Hollis).
+    // Smudge's c93f2e3 art: the still + _open, and the drip loop (anim; _drip_open once found; the still under reduced motion).
+    sunken_underpass: {
+      name: "Sunken Underpass", crossVerb: "wade through", spotText: "[PLACEHOLDER] The flood water runs one way here, hard, into a dark gap under the road.", hiddenWhere: "under the flooded road",
+      sprite: "obj_passage_sunken_underpass", anim: "obj_passage_sunken_underpass_drip", mapIcon: "map_passage",
+      examine: "[PLACEHOLDER] A road underpass, half full of black water. The other end smells of exhaust and cooking fires.",
+      ends: { b: { zone: "b", loc: "b_culdesac" }, hollis: { zone: "hollis", node: "ho1" } },
+      hiddenAt: "b",                                     // hidden in the Cul-de-sac until spotted; always visible at the Overpass Camp
+      spot: { skills: ["perception", "survival"], dc: 13 },
+      crossHeat: 5                                       // [DRAFT] same as the storm drain / spillway
+    },
     storm_drain: {
       name: "Storm drain grate", sprite: "obj_grate", examine: "[PLACEHOLDER] A storm drain grate. Cold air breathes up from below.", mapIcon: "map_passage",
       ends: { a: { zone: "a", loc: "rail_yard" }, b: { zone: "b", node: "b1" } },

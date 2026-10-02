@@ -501,6 +501,10 @@
       setup.mode = "defense"; setup.surviveSec = ex.surviveSec;
       setup.enemies = G.Battle.buildEnemyGroup(G.rng, step.family, budget * ex.waveBudgetMult, elites, r.zone);
       setup.waves = []; for (let w = 0; w < ex.waves - 1; w++) setup.waves.push(G.Battle.buildEnemyGroup(G.rng, step.family, budget * ex.waveBudgetMult, 0, r.zone));
+    } else if (step.waves && step.extraction) {   // Slice 5 §G Handcar: step.waves fights in a row, each at x waveBudgetMult
+      const ex = step.extraction, wb = budget * (ex.waveBudgetMult != null ? ex.waveBudgetMult : 1);
+      setup.mode = "waves"; setup.enemies = G.Battle.buildEnemyGroup(G.rng, step.family, wb, elites, r.zone);
+      setup.waves = []; for (let w = 0; w < step.waves - 1; w++) setup.waves.push(G.Battle.buildEnemyGroup(G.rng, step.family, wb, 0, r.zone));
     } else if (step.family === "rivals" && step.rival && G.Rivals) { setup.enemies = []; setup.enemyUnits = G.Rivals.units(step.rival); if (step.freeze) setup.freeze = step.freeze; }   // Slice 3 §7 snapshot
     else if (step.family === "hunters" && G.Hunters) { setup.enemies = G.Hunters.packUnits(step.pack || "Hunted"); setup.ambush = !!step.ambush; }   // fixed packs
     else if (step.enemies) setup.enemies = step.enemies.map((id) => ({ id }));   // debug / screenshots: an explicit unit list
@@ -639,6 +643,15 @@
       }
       const info = G.Checks.compute(ex.skill, ex.dc, X.members(), X.gearItems()); const roll = G.Checks.roll(info, null, "extract");
       X.log(roll.text, "check");
+      // Slice 5 §G Handcar (Hollis): the grade sets how many waves catch you (wavesByGrade); 0 = straight out, else one fight
+      // of that many waves back to back (x waveBudgetMult each); win it and the handcar carries you out (step.extraction)
+      if (ex.wavesByGrade) {
+        const n = ex.wavesByGrade[roll.grade] || 0;
+        if (!n) { X.extractSuccess(); return { ok: true, roll, text: roll.text + " — " + (ex.okText || "you get away clean.") }; }
+        const why = `${ex.wavesText || "They catch up!"} (${n} wave${n === 1 ? "" : "s"})`;
+        X.log(why, "bad"); X.push({ type: "battle", family: G.Map.loc(node).family, budgetMult: 1, nid: node.id, extraction: ex, waves: n, stall: true, why });
+        return { ok: false, stall: true, waves: n, roll, text: roll.text + " — " + why };
+      }
       if (G.Checks.isSuccess(roll.grade)) { X.extractSuccess(); return { ok: true, roll, text: roll.text + " — " + (ex.okText || "the engine turns over!") }; }
       if (roll.grade === "badFail" && ex.badFail === "crash") return X.crash(node, ex, roll);   // Slice 5 §A
       if (roll.grade === "badFail" && ex.badFail === "battle") { X.push({ type: "battle", family: G.Map.loc(node).family, budgetMult: 1, nid: node.id, why: "The noise draws attention!" }); return { ok: false, roll, text: roll.text + " — the noise draws attention!" }; }

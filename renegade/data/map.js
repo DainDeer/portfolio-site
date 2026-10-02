@@ -18,7 +18,7 @@ DATA.map = {
     fogAlpha: 0.9,                // fog over never-seen ground
     rememberedFogAlpha: 0.5,      // fog kept over locations remembered from earlier runs
     revealedAlpha: 0.45,          // strength of the revealed-ground tile over the map background
-    revealedAlphaByZone: { a: 0, b: 0, greyback: 0, scablands: 0 } // painted backgrounds (zones.list[z].mapBg) show through as-is
+    revealedAlphaByZone: { a: 0, b: 0, greyback: 0, scablands: 0, hollis: 0 } // painted backgrounds (zones.list[z].mapBg) show through as-is
   },
   // fixed placements: role -> allowed rows (placed in this order, so the extractions always get their row)
   fixed: {
@@ -103,7 +103,7 @@ DATA.map = {
                        extraction: { type: "free" } },
     // ---- Zone B: The Drowned Suburbs (handcrafted, tier 2; nodes + edges in data/zones.js) ----
     b_outfall:       { kind: "industrial", zone: "b", name: "Storm Drain Outfall",  icon: "loc_outfall",      family: "beasts",  size: "S", odds: { hostiles: 30, event: 0,  survivors: 0 },  tags: ["water"], events: [], passage: "storm_drain" },
-    b_culdesac:      { zone: "b", enemyBudgetMult: 0.85, floor: "tile_floor_b_wet", name: "Flooded Cul-de-sac",   icon: "loc_culdesac",     family: "beasts",  size: "M", odds: { hostiles: 55, event: 30, survivors: 5 },  tags: ["food", "cloth", "biomass"], events: ["rooftop_survivor"] },
+    b_culdesac:      { zone: "b", enemyBudgetMult: 0.85, floor: "tile_floor_b_wet", name: "Flooded Cul-de-sac",   icon: "loc_culdesac",     family: "beasts",  size: "M", odds: { hostiles: 55, event: 30, survivors: 5 },  tags: ["food", "cloth", "biomass"], events: ["rooftop_survivor"], passage: "sunken_underpass" },   // Slice 5 §G: the Sunken Underpass to Hollis (hidden here)
     b_warrens:       { zone: "b", name: "Hound Warrens",        icon: "loc_warrens",      family: "beasts",  size: "M", odds: { hostiles: 75, event: 15, survivors: 0 },  tags: ["chemicals", "biomass"], events: ["cache"],
                        objectWeights: { body: 60 } },    // nest: lots of old bodies
     b_clinic:        { kind: "medical", zone: "b", enemyBudgetMult: 0.8, name: "Harrow Street Clinic", icon: "loc_harrow_clinic",family: "beasts",  size: "M", odds: { hostiles: 50, event: 40, survivors: 10 }, tags: ["med", "chemicals", "terminal"], events: ["cryo_ward"] },
@@ -131,7 +131,30 @@ DATA.map = {
     gb_dam:          { kind: "industrial", zone: "greyback", name: "Harlan Dam", icon: "loc_harlan_dam", family: "outlaws", size: "M", odds: { hostiles: 45, event: 35, survivors: 5 }, tags: ["water", "scrap", "office"], events: ["toll_gate", "cache"], passage: "spillway" },
     // SECRET (Vixie): off the map background, never an "Unscouted" marker; shown once adjacent (hiddenUntilAdjacent), then remembered
     gb_crater:       { zone: "greyback", name: "The Crater",          icon: "loc_crater",            family: "hunters", size: "M", odds: { hostiles: 60, event: 0, survivors: 0 },  tags: ["crater", "electronics", "data"], events: [], secret: true,
-                       entryHeat: 12 }   // "huge Heat on entry" (first entry each run); the pod (searchables crater_pod): Orange chance
+                       entryHeat: 12 },   // "huge Heat on entry" (first entry each run); the pod (searchables crater_pod): Orange chance
+    // Slice 5 §G (Vixie 06:30): The Hollis Outskirts (handcrafted, tier 4; data/zones.js list.hollis). Raiders, the Church's
+    // propagandized humans (outlaws) and the AI city's perimeter machines. Numbers [DRAFT]; names from zones-brainstorm.md.
+    // Room objects (Smudge 8272465 / c93f2e3): decor (data/searchables.js decor), props (loc.props), the Garage's car alarms.
+    ho_overpass:     { zone: "hollis", name: "Overpass Camp",       icon: "loc_overpass_camp",     family: "outlaws", size: "M", odds: { hostiles: 20, event: 0,  survivors: 15 }, tags: ["food", "scrap", "cloth"], events: [], passage: "sunken_underpass" },   // the insertion, under the collapsed highway (the raider market: later)
+    ho_megamart:     { zone: "hollis", name: "MegaMart",            icon: "loc_megamart",          family: "outlaws", size: "L", odds: { hostiles: 60, event: 30, survivors: 10 }, tags: ["food", "cloth", "electronics", "office"], events: ["toll_gate", "cache"],
+                       props: ["prop_shopping_cart", "prop_shopping_cart"] },   // carts in every aisle (added to the tag props)
+    ho_molar:        { kind: "medical", zone: "hollis", name: "Molar & Sons Dental", icon: "loc_molar_dental", family: "beasts", size: "S", odds: { hostiles: 40, event: 25, survivors: 0 }, tags: ["med", "chemicals"], events: ["cache"],
+                       decor: ["molar_chair"], enemyBudgetMult: 0.9 },   // the chair still hums (decor; its hum loops, the still under reduced motion)
+    ho_garage:       { kind: "industrial", zone: "hollis", name: "Level 4 Garage", icon: "loc_garage_l4", family: "outlaws", size: "M", odds: { hostiles: 50, event: 20, survivors: 5 }, tags: ["fuel", "scrap"], events: ["cache"],
+                       fixedObjects: ["car_alarm"], objectWeights: { car_alarm: 25 } },   // 1 guaranteed alarmed car (js/site.js fixedObjects), more in the mix: noise traps (searchables car_alarm)
+    ho_church:       { zone: "hollis", name: "Church of the Clear Sky", icon: "loc_church_clear_sky", family: "outlaws", size: "M", odds: { hostiles: 55, event: 30, survivors: 10 }, tags: ["food", "cloth", "med"], events: ["cache"],
+                       decor: ["church_loudspeaker"] },   // sermons on the loudspeakers: decor for now (Vixie: no event system yet)
+    ho_fence:        { zone: "hollis", name: "Perimeter Fence",     icon: "loc_perimeter_fence",   family: "machines", size: "M", odds: { hostiles: 70, event: 30, survivors: 0 }, tags: ["electronics", "scrap", "terminal"], events: ["relay"], enemyBudgetMult: 1.1 },   // the AI city's border (a future story door)
+    ho_rail:         { zone: "hollis", name: "Commuter Rail Platform", icon: "loc_commuter_rail",  family: "outlaws", size: "S", odds: { hostiles: 35, event: 0,  survivors: 0 },  tags: ["scrap"], events: [],
+                       // Vixie 06:30: Athletics DC 13; the grade sets how many waves catch the handcar (x0.7 budget each), survive them all to get out
+                       extraction: { type: "check", skill: "athletics", dc: 13, wavesByGrade: { crit: 0, success: 1, fail: 2, badFail: 3 }, waveBudgetMult: 0.7,
+                                     okText: "you pump the handcar up to speed before anything can catch it.",
+                                     wavesText: "The handcar's too slow. Something's coming down the tracks after you!" } },
+    ho_helipad:      { zone: "hollis", name: "Rooftop Helipad",     icon: "loc_helipad", iconWrecked: "loc_helipad_wrecked", iconWreckedAnim: "loc_helipad_wrecked_smoke", family: "outlaws", size: "M", odds: { hostiles: 40, event: 0, survivors: 0 }, tags: ["fuel", "scrap"], events: [],
+                       // Vixie 06:30: Piloting DC 15 on the truck path: a Fail stalls it (+6 Heat, try again), a Bad Fail crashes it (+10 Heat, closed for the run)
+                       extraction: { type: "check", skill: "piloting", dc: 15, failHeat: 6, badFail: "crash", crashHeat: 10,
+                                     okText: "the rotors catch and the roof drops away.", failText: "the engine stalls on the pad." } },
+    ho_data_center:  { zone: "hollis", name: "Data Center",         icon: "loc_data_center",       family: "machines", size: "M", odds: { hostiles: 30, event: 50, survivors: 0 }, tags: ["electronics", "data", "terminal", "office"], events: ["relay"], secret: true }   // unmarked, behind a fake storefront; the AI fragment quest: later
   },
   gruntSpendDeathChance: 30 // §9.2 "Scout ahead": auto-pass Perception/Stealth checks, 30% death
 };

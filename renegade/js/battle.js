@@ -679,8 +679,11 @@
     if (body && !alive(body) && body.state !== "downed") res = "loss";
     else if (!alliesUp) res = "loss";          // downed body with nobody else standing (or no allies at all): a normal death
     else if (b.mode === "defense") { if (b.t >= b.surviveSec || (!enemiesUp && b.waveIdx >= b.waves.length)) res = "win"; }
+    else if (!enemiesUp && b.mode === "waves" && b.waveIdx < b.waves.length) {   // Slice 5 §G Handcar: the next wave comes down the tracks
+      B.spawnEnemies(b, b.waves[b.waveIdx], true); b.waveIdx++; B.fx(b, { t: "text", x: b.W - 4, y: 2, text: `WAVE ${b.waveIdx + 1}/${b.waves.length + 1}`, color: "#ff9050", big: true });
+    }
     else if (!enemiesUp) res = "win";
-    if (!res && b.t >= C().maxDurationSec) res = "loss";
+    if (!res && b.t >= C().maxDurationSec * (b.mode === "waves" ? b.waves.length + 1 : 1)) res = "loss";   // the Handcar: the cap per wave
     if (res) { b.over = true; b.result = res; b.phase = "over"; b.log.push(`Battle ${res === "win" ? "won" : "lost"} in ${Math.round(b.t)} s (seed ${b.seed})`); }
   };
 

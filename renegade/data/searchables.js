@@ -50,6 +50,12 @@ DATA.searchables = {
                   table: [["fuel", 40, 1, 2], ["scrap", 45, 2, 3], ["electronics", 15, 1, 1]] },
     truck_wreck:  { name: "Burnt-out truck", examine: "[PLACEHOLDER] What's left of a pickup, nose-down in the dirt. Still smouldering, somehow.", sprite: "obj_truck_wrecked", searchSec: 3, noise: 5, resRolls: 1, wide: 2,
                   table: [["scrap", 70, 1, 3], ["fuel", 20, 1, 1], [null, 10]] },
+    // Slice 5 §G (Vixie 07:14): the Level 4 Garage's car alarms, a noise trap on the existing trap check: spot it (Perception)
+    // and you cut the wire; miss it and it blares: + Heat (fail / bad fail), no damage. The blaring loop shows once tripped.
+    car_alarm:  { name: "Parked car", examine: "[PLACEHOLDER] A car parked neatly in its bay. A little red light blinks on the dash.", sprite: "obj_car_alarm", trippedAnim: "obj_car_alarm_blaring", searchSec: 4, noise: 6, resRolls: 2, wide: 2,
+                  table: [["fuel", 45, 1, 2], ["scrap", 35, 2, 3], ["electronics", 20, 1, 1]],
+                  trap: { chance: 60, check: { skill: "perception", dc: 13 }, failHeat: 6, badFailHeat: 10, name: "Alarmed car",   // [DRAFT] numbers
+                          spotText: "You spot the blinking alarm and cut the wire before you touch anything.", tripText: "The car alarm goes off! Every head in the Garage turns." } },
     body_machine: { name: "Machine wreck", examine: "[PLACEHOLDER] A dead machine, leaking something dark.", sprite: "corpse_machine", searchSec: 3, noise: 5, resRolls: 1,   // every killed machine (Part B step 8)
                   table: [["electronics", 40, 1, 2], ["scrap", 35, 1, 3], ["fuel", 10, 1, 1], ["data_shards", 7, 1, 1], [null, 8]] },
     // design call (milestone 3): dormant machine wrecks in Zone B (objectWeights.byZone.b). Same table as a fresh wreck;
@@ -108,7 +114,7 @@ DATA.searchables = {
     // added once if the location has any of `tags` OR is in any of `zones` (Growth cluster: biomass places and Zone B only)
     anyOf: { growth: { weight: 35, tags: ["biomass", "chemicals", "med"], zones: ["b"] }, terminal: { weight: 15, tags: ["terminal"] } },   // growth 15 -> 35, also chemicals / med places (Biomass tuning)
     // guaranteed objects by location tag (they take generated slots): 1 terminal in every office (design)
-    fixedByTag: { office: ["terminal"], crater: ["crater_pod"] },
+    fixedByTag: { office: ["terminal"], crater: ["crater_pod"] },   // + a location's own fixedObjects (Slice 5 §G: the Garage's alarmed car)
     byTag: { fuel: { vehicle: 25 }, food: { crate: 15 }, water: { crate: 10 }, scrap: { crate: 10 }, cloth: { locker: 10 }, electronics: { desk: 20 },
              chemicals: { locker: 10 }, med: { locker: 10, desk: 5 } }
   },
@@ -119,6 +125,13 @@ DATA.searchables = {
              chemicals: ["prop_barrel"], med: ["prop_bed"] },
     default: ["prop_rubble"],
     byZone: { b: ["prop_growth", "prop_nest", "prop_pod", "prop_bones"] }   // added to the tag pool in that zone
+    // + a location's own props (DATA.map.locations[id].props, e.g. the MegaMart's shopping carts), added to the pool too
+  },
+  // Slice 5 §G (Hollis): fixed scenery objects a location names (DATA.map.locations[id].decor): one each, examine only, no
+  // search. anim: a loop (frame 0 = the still, shown under reduced motion). Smudge's c93f2e3 art.
+  decor: {
+    molar_chair:        { name: "Dental chair", sprite: "obj_molar_chair", anim: "obj_molar_chair_hum", examine: "[PLACEHOLDER] A cream vinyl dental chair. It's still humming. Nobody has paid the power bill in years." },
+    church_loudspeaker: { name: "Loudspeaker",  sprite: "obj_church_loudspeaker", examine: "[PLACEHOLDER] A loudspeaker on a pole, crackling. A calm voice reads out the orbits." }
   },
   // Floor tile per location family / tag (first match wins), falls back to tile_floor
   // Floor tile: zone first (Zone B: wet if water-tagged), then tag, then size (S sites are one room or a yard), then
@@ -128,14 +141,16 @@ DATA.searchables = {
               b: { byTag: { water: "tile_floor_b_wet" }, default: "tile_floor_b" },
               greyback: { byTag: { water: "tile_floor_greyback_wet" }, default: "tile_floor_greyback" },
               // Slice 5 §G (Smudge c2c0f9c); js/site.js floorFor falls through to the generic floors if a key isn't registered
-              scablands: { byTag: { water: "tile_floor_scablands_wet", med: "tile_floor_clinic" }, default: "tile_floor_scablands" } },   // Slice 5 §G (Smudge, aa8b4fd)
+              scablands: { byTag: { water: "tile_floor_scablands_wet", med: "tile_floor_clinic" }, default: "tile_floor_scablands" },   // Slice 5 §G (Smudge, aa8b4fd)
+              hollis: { byTag: { water: "tile_floor_hollis_wet" }, default: "tile_floor_hollis" } },   // Slice 5 §G (Smudge 91a7553)
     byTag: { water: "tile_floor_wet", med: "tile_floor_clinic" },
     bySize: { S: "tile_floor_yard" },
     byTagLow: { food: "tile_floor_concrete", cloth: "tile_floor_concrete" },
     default: "tile_floor"
   },
   walls: { default: { fill: "tile_wall", face: "tile_wall_face" }, byZone: { a: { fill: "tile_wall_hushwood", face: "tile_wall_face_hushwood" }, b: { fill: "tile_wall_b", face: "tile_wall_face_b" }, greyback: { fill: "tile_wall_greyback", face: "tile_wall_face_greyback" },
-                                                       scablands: { fill: "tile_wall_scablands", face: "tile_wall_face_scablands" } },   // Smudge c2c0f9c (js/siteview.js keeps tile_wall / tile_wall_face if unregistered)
+                                                       scablands: { fill: "tile_wall_scablands", face: "tile_wall_face_scablands" },
+                                                       hollis: { fill: "tile_wall_hollis", face: "tile_wall_face_hollis" } },   // Smudge 91a7553   // Smudge c2c0f9c (js/siteview.js keeps tile_wall / tile_wall_face if unregistered)
            bandsH: ["tile_wall_h", "tile_wall_h", "tile_wall_h_2", "tile_wall_h_3"], bandV: "tile_wall_v", corner: "tile_wall_corner",
            doorwayH: "tile_doorway_h", doorwayV: "tile_doorway_v" },
   // Event objects (§5: "events move onto objects"). Clicking one opens the existing check event.
@@ -183,6 +198,10 @@ DATA.searchables = {
         b_levee:    { name: "Boat launch",    sprite: "obj_ex_boat", wide: 2, examine: "[PLACEHOLDER] The boat comes when you call. Hold the ramp till it does." },
         // Slice 5 §G: Smudge's 7a9a20d room objects
         gb_cable_car: { name: "Cable car",    sprite: "obj_ex_cable_car", wide: 2, examine: "[PLACEHOLDER] A rusted gondola on a sagging cable. The motor box has a crank." },
+        // Slice 5 §G: Hollis (Smudge 8272465). The helipad has the truck's wreck keys (its Bad Fail crashes it); the handcar none
+        ho_rail:    { name: "Handcar",        sprite: "obj_ex_handcar", wide: 2, examine: "[PLACEHOLDER] A rail handcar on the commuter line. Pump fast enough and nothing catches you." },
+        ho_helipad: { name: "Helicopter",     sprite: "obj_ex_helipad", wide: 2, wreckedSprite: "obj_ex_helipad_wrecked", wreckedAnim: "obj_ex_helipad_wrecked_smoke",
+                      examine: "[PLACEHOLDER] A small helicopter on the roof pad. Fuel in it, if you can fly it.", examineWrecked: "[PLACEHOLDER] What's left of the helicopter. It's not flying anywhere." },
         gb_goat_path: { name: "Goat path",    sprite: "obj_ex_goat_path", examine: "[PLACEHOLDER] A path only a goat would call a path. It goes down, eventually." }
       }
     }
@@ -205,6 +224,7 @@ DATA.searchables = {
     prop_growth:  { name: "Growth",        examine: "[PLACEHOLDER] Something grew here. It's still growing." },
     prop_nest:    { name: "Nest",          examine: "[PLACEHOLDER] A nest of wire and bone. Empty, for now." },
     prop_pod:     { name: "Pod",           examine: "[PLACEHOLDER] A husk, split open from the inside." },
-    prop_bones:   { name: "Bones",         examine: "[PLACEHOLDER] Picked clean." }
+    prop_bones:   { name: "Bones",         examine: "[PLACEHOLDER] Picked clean." },
+    prop_shopping_cart: { name: "Shopping cart", examine: "[PLACEHOLDER] A shopping cart with one bad wheel. Good cover, if you crouch." }
   }
 };

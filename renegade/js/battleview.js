@@ -46,7 +46,7 @@
     const b = v.b;
     v.hud.innerHTML = "";
     const title = document.createElement("span"); title.className = "bh-title";
-    title.textContent = b.phase === "place" ? "PLACEMENT — drag your units on the grid, then Fight" : (b.mode === "defense" ? "DEFEND THE EXTRACTION" : "BATTLE");
+    title.textContent = b.phase === "place" ? "PLACEMENT — drag your units on the grid, then Fight" : (b.mode === "defense" ? "DEFEND THE EXTRACTION" : b.mode === "waves" ? `HOLD THE HANDCAR (${b.waves.length + 1} WAVE${b.waves.length ? "S" : ""})` : "BATTLE");
     v.hud.appendChild(title);
     const timer = document.createElement("span"); timer.className = "bh-timer"; v.timerEl = timer; v.hud.appendChild(timer);
     v.hud.appendChild(BV.speedSlider(v));

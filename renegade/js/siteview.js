@@ -134,7 +134,9 @@
     if (o.kind === "extract") return X.extractSprite(o, typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches);   // Slice 5 §D: the wreck burns (the still under reduced motion)
     if (o.kind === "exit") { const E = DATA.searchables.access.exit; return (E.styles[o.style] || E.styles[E.default]).sprite; }   // from data, so new art is a one-line swap
     if (o.kind === "wheel") { const k = `obj_wheel_${"abc"[o.idx] || "a"}_${["up", "right", "down", "left"][o.pos]}`; return has(k) ? k : o.sprite; }   // Slice 4 §B
+    if (o.kind === "decor") { const D = (DATA.searchables.decor || {})[o.decor] || {}, still = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches; return !still && D.anim && has(D.anim) ? D.anim : D.sprite && has(D.sprite) ? D.sprite : o.sprite; }   // Slice 5 §G: the Molar chair hums (the still under reduced motion)
     if (o.kind !== "search") return o.sprite;
+    if (o.tripped) { const TA = (DATA.searchables.types[o.type] || {}).trippedAnim, still = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches; if (TA && has(TA) && !still) return TA; }   // Slice 5 §G: a tripped car alarm blares
     if (o.type === "body_human" || o.type === "body_beast" || o.type === "body_machine" || o.type === "machine_dormant") {
       if (!o.searched) return o.sprite;
       const k = o.gruntBody ? (o.vet ? "corpse_veteran_searched" : "corpse_grunt_searched") : o.type === "body_beast" ? "corpse_beast_searched" : o.type === "body_machine" || o.type === "machine_dormant" ? "corpse_machine_searched" : "corpse_human_searched"; return X.hasLeft(o) ? o.sprite : (has(k) ? k : o.sprite);

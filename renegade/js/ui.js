@@ -806,7 +806,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
   // the extract button's line (the panel, the hotspot's tooltip and its confirm)
   UI.extractLabel = function (ex) {
     const X = G.Exp;
-    return ex.type === "free" ? "Extract (free)" : ex.type === "check" ? (() => { const c = G.Checks.compute(ex.skill, ex.dc, X.members(), X.gearItems()); return `Extract: ${DATA.skills[ex.skill].name} DC ${ex.dc} — ${Math.round(c.chance)}%`; })() : `Extract: hold out ${ex.surviveSec} s (defense battle)`;
+    return ex.type === "free" ? "Extract (free)" : ex.type === "check" ? (() => { const c = G.Checks.compute(ex.skill, ex.dc, X.members(), X.gearItems()); return `Extract: ${DATA.skills[ex.skill].name} DC ${ex.dc} — ${Math.round(c.chance)}%` + (ex.wavesByGrade ? " (the better the roll, the fewer waves)" : ""); })() : `Extract: hold out ${ex.surviveSec} s (defense battle)`;
   };
   UI.onSiteObject = function (o, acts, el) {
     const X = G.Exp, site = X.site();
