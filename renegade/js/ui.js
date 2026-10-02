@@ -56,7 +56,7 @@
   // ---------- top bar ----------
   UI.renderTop = function () {
     const s = G.state, t = $("#topbar"); t.innerHTML = "";
-    t.appendChild(h("span", { class: "brand" }, "RENEGADE", h("small", null, " [working title] · Slice 3")));
+    t.appendChild(h("span", { class: "brand" }, "RENEGADE", h("small", null, " [working title] · Slice 3"), G.Cards && G.Cards.title() ? h("small", { class: "brand-title", "data-card-title": "1" }, " · ★ " + G.Cards.title()) : null));   // Slice 5 §J: the Series 1 title
     if (G.Difficulty && !G.Difficulty.pending(s)) { const d = G.Difficulty.id(s); t.appendChild(h("span", { class: "diff-badge diff-" + d, "data-diff": d, title: `Difficulty: ${G.Difficulty.name(s)} (locked for this save). ${G.Difficulty.def(s).desc.replace(/^[^:]+: /, "")}` }, SP.icon("diff_" + d + "_hud", 32), G.Difficulty.name(s))); }   // Slice 4 §H
     const res = s.run ? s.run.bag.res : s.stash.res;
     const box = h("span", { class: "res" }, s.run ? "Bag: " : "Stockpile: ");

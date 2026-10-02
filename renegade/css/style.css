@@ -456,3 +456,11 @@ button.promote { background: #6a5a1a; }
 .site-obj.exit .obj-exit-label { position: absolute; left: 50%; top: 4%; transform: translateX(-50%); font: bold 10px/1 sans-serif; letter-spacing: 1px; color: #14140f; background: #e8d890; border-radius: 3px; padding: 2px 4px; pointer-events: none; }
 .site-obj.exit.usable { outline: 2px dashed #e8d89088; } .site-obj.exit.usable:hover { outline: 2px solid #ffd84a; }
 .site-obj.extract.usable { outline: 2px solid #40e0a0aa; } .site-obj.extract.usable:hover { outline: 2px solid #ffd84a; }
+
+/* Slice 5 §J: card set rewards: a finished group's frame tint, the Series title */
+.binder-ph.set-done { color: var(--set-tint); text-shadow: 0 0 6px color-mix(in srgb, var(--set-tint) 60%, transparent); }
+.binder-pocket.set-done .tcard, .binder-sleeve.set-done .tcard { box-shadow: 0 0 0 2px var(--set-tint), 0 0 8px color-mix(in srgb, var(--set-tint) 55%, transparent); border-radius: 3px; }
+.binder-sets { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin: 2px 0 6px; font-size: 13px; color: #e8dcb0; }
+.binder-sets b { color: #ffd84a; }
+.brand-title { color: #ffd84a; }
+.title-cardtitle { display: block; color: #ffd84a; font-size: 12px; margin-top: 2px; }

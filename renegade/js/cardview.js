@@ -92,6 +92,7 @@
     box._t = setTimeout(() => { box.classList.add("out"); setTimeout(() => { done(); next(); }, 300); }, P.holdMs);
   }
   G.Cards.onPickup = (info) => CV.pickup(info);
+  G.Cards.onSet = (list) => { for (const x of list) UI.toast(x.text); };   // Slice 5 §J: set rewards
   // ---- binder panel ----
   CV.pages = function () {
     const list = G.Cards.list(), have = G.Cards.st().have, pages = [];
@@ -102,6 +103,9 @@
     return pages;
   };
   CV.page = 0;
+  // Slice 5 §J: a finished group's frame tint (class + the --set-tint colour from data)
+  CV.setCls = (gid) => (G.Cards.setEarned(gid) ? " set-done" : "");
+  CV.setVar = (gid) => (G.Cards.setEarned(gid) ? `;--set-tint:${(DATA.cards.sets.group.tints || {})[gid] || "#ffd84a"}` : "");
   UI.panels.binder = ["Binder", (el) => CV.panel(el)];
   CV.panel = function (el) {
     // layouts: "spread" (binder_bg, 2 pages), "page" (binder_page, portrait phones), "grid" (binder_pocket sleeves 6x2, short / landscape phones)
@@ -116,6 +120,9 @@
       h("span", null, `${Math.floor(CV.page / per) + 1} / ${Math.ceil(pages.length / per)}`),
       h("button", { "data-act": "binder-next", disabled: CV.page + per >= pages.length ? "" : null, onclick: () => go(1) }, "▶")));
     for (const [gid, gname] of DATA.cards.groups) { const i = pages.findIndex((p) => p.group === gid); head.appendChild(h("button", { class: "binder-tab" + (pages[CV.page] && pages[CV.page].group === gid ? " on" : ""), "data-tab": gid, onclick: () => { CV.page = i - (i % per); UI.render(); } }, gname)); }
+    // Slice 5 §J: the Series title + an unspent Foil wild card
+    if (G.Cards.title() || G.Cards.wild()) wrap.appendChild(h("div", { class: "binder-sets" }, G.Cards.title() ? h("b", { "data-card-title": "1" }, "★ " + G.Cards.title()) : null,
+      G.Cards.wild() ? h("span", { "data-wild": G.Cards.wild() }, DATA.cards.sets.text.wild.replace("{n}", G.Cards.wild())) : null));
     wrap.appendChild(head);
     if (mode === "grid") { CV.grid(wrap, pages[CV.page], have); el.appendChild(wrap); return; }
     const spread = h("div", { class: "binder-spread", "data-per": per }); spread.appendChild(img(per === 1 ? "binder_page" : "binder_bg", "binder-bgimg"));
@@ -125,10 +132,10 @@
     for (let s = 0; s < per; s++) {
       const pg = pages[CV.page + s]; if (!pg) continue;
       const [hx, hy, hw, hh] = M.headers[s];
-      spread.appendChild(h("div", { class: "binder-ph", style: `left:${pct(hx, M.W)};top:${pct(hy, M.H)};width:${pct(hw, M.W)};height:${pct(hh, M.H)}` }, `${pg.name}${pg.parts > 1 ? ` (${pg.part}/${pg.parts})` : ""}`, h("span", null, `${pg.got}/${pg.total}`)));
+      spread.appendChild(h("div", { class: "binder-ph" + CV.setCls(pg.group), style: `left:${pct(hx, M.W)};top:${pct(hy, M.H)};width:${pct(hw, M.W)};height:${pct(hh, M.H)}` + CV.setVar(pg.group) }, `${pg.name}${pg.parts > 1 ? ` (${pg.part}/${pg.parts})` : ""}`, h("span", null, `${pg.got}/${pg.total}`)));
       pg.cards.forEach((c, i) => {
         const [px, py] = M.pockets[s * 12 + i], hv = have[c.id];
-        const pk = h("div", { class: "binder-pocket" + (hv ? " filled" : ""), style: `left:${pct(px + 4, M.W)};top:${pct(py + 4, M.H)};width:${pct(80, M.W)}`, onclick: () => CV.inspect(c) });
+        const pk = h("div", { class: "binder-pocket" + (hv ? " filled" : "") + (hv ? CV.setCls(pg.group) : ""), style: `left:${pct(px + 4, M.W)};top:${pct(py + 4, M.H)};width:${pct(80, M.W)}` + CV.setVar(pg.group), onclick: () => CV.inspect(c) });
         const card = CV.card(c, { unfound: !hv, foil: hv && hv.foil > 0 }); card.style.width = "100%"; pk.appendChild(card);
         if (hv) { pk.appendChild(img("binder_corners", "binder-corners")); if (hv.n > 1) pk.appendChild(h("span", { class: "binder-n" }, "×" + hv.n)); }
         spread.appendChild(pk);
@@ -139,11 +146,11 @@
   };
   CV.grid = function (wrap, pg, have) {
     const ph = Math.max(80, Math.min(120, Math.floor((root.innerHeight - 190) / 2)));   // two rows of sleeves fit the height
-    const g = h("div", { class: "binder-grid", style: `--ph:${ph}px` });
-    g.appendChild(h("div", { class: "binder-ph" }, `${pg.name}${pg.parts > 1 ? ` (${pg.part}/${pg.parts})` : ""}`, h("span", null, `${pg.got}/${pg.total}`)));
+    const g = h("div", { class: "binder-grid", style: `--ph:${ph}px` + CV.setVar(pg.group) });
+    g.appendChild(h("div", { class: "binder-ph" + CV.setCls(pg.group) }, `${pg.name}${pg.parts > 1 ? ` (${pg.part}/${pg.parts})` : ""}`, h("span", null, `${pg.got}/${pg.total}`)));
     const cells = h("div", { class: "binder-cells" });
     pg.cards.forEach((c) => { const hv = have[c.id];
-      const pk = h("div", { class: "binder-sleeve" + (hv ? " filled" : ""), onclick: () => CV.inspect(c) }, img("binder_pocket", "binder-sleeve-bg"));
+      const pk = h("div", { class: "binder-sleeve" + (hv ? " filled" : "") + (hv ? CV.setCls(pg.group) : ""), onclick: () => CV.inspect(c) }, img("binder_pocket", "binder-sleeve-bg"));
       const card = CV.card(c, { unfound: !hv, foil: hv && hv.foil > 0 }); card.style.width = ""; card.classList.add("in-sleeve"); pk.appendChild(card);
       if (hv) { pk.appendChild(img("binder_corners", "binder-corners")); if (hv.n > 1) pk.appendChild(h("span", { class: "binder-n" }, "×" + hv.n)); }
       cells.appendChild(pk); });
@@ -174,6 +181,7 @@
       info.appendChild(h("p", { class: "ci-rarity r-" + c.rarity }, `${R.name} · ${DATA.cards.groups.find((g) => g[0] === c.group)[1]}`));
       info.appendChild(h("p", null, `Copies: ${hv.n}` + (hv.foil ? ` · Foil: ${hv.foil}` : "")));
       info.appendChild(h("p", { class: "hint" }, c.blurb));
+      if (G.Cards.wild() > 0) info.appendChild(h("button", { "data-act": "use-wild", onclick: () => { const r = G.Cards.useWild(c.id); if (r.error) return UI.fail(r.error); UI.closeModal(); UI.toast(r.text); UI.render(); } }, DATA.cards.sets.text.wildUse));   // Slice 5 §J
     } else { info.appendChild(h("h2", null, "???")); info.appendChild(h("p", { class: "hint" }, "Not found yet.")); }
     info.appendChild(h("button", { class: "primary", onclick: () => UI.closeModal() }, "Close"));
     box.appendChild(info);
