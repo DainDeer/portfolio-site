@@ -17,19 +17,38 @@
 
   // ---- Casual: Retry fight. A snapshot of the save + the shared rng just before the battle is built (so the enemies,
   // their gear and the ammo pack are the same); the retry gets a fresh battle seed.
-  Df.canRetry = function () { const d = Df.def(); return !!(d.retries && G.state && G.state.run && Df.snap && (d.retries < 0 || (Df.snap.used || 0) < d.retries)); };
+  Df.canRetry = function () { const d = Df.def(); return !!(d.retries && G.state && G.state.run && Df.snap && (d.retries < 0 || (Df.snap.used || 0) < d.retries)) || Df.canToken(); };
   Df.snapBattle = function () {
-    if (!Df.def().retries || !G.state || !G.state.run) { Df.snap = null; return; }
+    if (!(Df.def().retries || Df.tokenSave()) || !G.state || !G.state.run) { Df.snap = null; return; }
     const key = G.state.runCount + ":" + G.state.run.stats.battles;   // the same fight again (a retry doesn't count a battle)
     Df.snap = { json: JSON.stringify(G.state), rng: G.rng.getState(), key, used: Df.snap && Df.snap.key === key ? Df.snap.used : 0 };
   };
   // back to the snapshot: returns the battle step to start again (the caller builds + mounts it), or null
   Df.retry = function () {
     if (!Df.canRetry()) return null;
+    const free = !!Df.def().retries;   // Casual: free; otherwise it costs a retry token
     const sn = Df.snap; G.state = JSON.parse(sn.json); G.rng.setState(sn.rng); sn.used = (sn.used || 0) + 1;
+    if (!free) G.state.retryTokens = Math.max(0, (G.state.retryTokens || 0) - 1);   // the snapshot still had it: spend it after
     const r = G.state.run; r.retries = (r.retries || 0) + 1;
-    G.Exp.log(`Retry fight (${r.retries}). The battle starts again.`, "good");
+    G.Exp.log(free ? `Retry fight (${r.retries}). The battle starts again.` : `Retry token spent (${G.state.retryTokens} left). The battle starts again.`, "good");
+    G.State.save();
     return G.Exp.current();
+  };
+
+  // ---- Slice 5 §K: retry tokens (DATA.config.retryTokens, state.retryTokens). Earned, never bought.
+  const TK = () => DATA.config.retryTokens || {};
+  Df.tokens = (s) => { s = s || G.state; return Math.max(0, Math.floor((s && s.retryTokens) || 0)); };
+  Df.tokenDiff = (s) => !!(TK().on && (TK().difficulties || []).includes(Df.id(s)));   // tokens exist on this difficulty
+  Df.tokenSave = (s) => Df.tokenDiff(s) && Df.tokens(s) > 0;   // worth a pre-battle snapshot
+  // Hardcore: the lost fight would cost a human body for good, so a token can't undo it
+  Df.tokenBlocked = function (s) { s = s || G.state; return !!(s && s.run && Df.isPermadeath(s, G.Exp.body())); };
+  Df.canToken = function () { const s = G.state; return !!(s && s.run && Df.snap && Df.tokenSave(s) && !Df.tokenBlocked(s)); };
+  // on a successful extraction (G.Exp.extractSuccess): returns the tokens gained (0 if none)
+  Df.earnToken = function (s, heat) {
+    s = s || G.state; const T = TK();
+    if (!Df.tokenDiff(s) || heat < (T.minHeat ?? 40)) return 0;
+    const before = Df.tokens(s), after = Math.min(T.cap ?? 3, before + (T.perExtract ?? 1));
+    s.retryTokens = after; return after - before;
   };
 
   // ---- death: what comes home. Called by G.Exp.die before the standard rules (which then only apply to what's left).

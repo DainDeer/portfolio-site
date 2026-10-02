@@ -59,6 +59,19 @@ DATA.config = {
     },
     pickHint: "Pick a difficulty. It is locked for this save."
   },
+  // Slice 5 §K: retry tokens [DRAFT Vixie]. Earned only (no shop): +perExtract on a successful extraction at Heat >= minHeat,
+  // at most cap held (state.retryTokens). Spend 1 on the defeat screen to retry that fight from its start (the Casual
+  // snapshot). Only on the listed difficulties (Casual already retries for free). Never on Hardcore when the fight would
+  // cost a human body (that loss is final); the Basic body there may use one.
+  retryTokens: {
+    on: true, minHeat: 40, perExtract: 1, cap: 3, difficulties: ["standard", "hardcore"],
+    name: "Retry token",
+    earnText: "Retry token earned for a hot extraction",
+    defeatHint: "Spend a retry token to fight this battle again from its start. Continue accepts the defeat.",
+    hardcoreBlocked: "Hardcore: a retry token can't undo the loss of a human body."
+  },
+  // Slice 5 §K: a future premium hook (Megan). Nothing is sold: no UI reads this, and null means no product.
+  premium: { retryTokenSku: null },
   grunts: {
     recruitCost: { food: 3, water: 3 },
     rosterCap: 5,

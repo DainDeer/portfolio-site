@@ -699,12 +699,14 @@
     s.nickOffers = (s.nickOffers || []).concat((r.nickOffers || []).filter((o) => s.grunts.some((g) => g.uid === o.uid))); r.nickOffers = [];
     for (const b of r.claimedBodies) s.bodies.push(b);
     s.extractions++;
+    const tokenGot = G.Difficulty && G.Difficulty.earnToken ? G.Difficulty.earnToken(s, r.heat) : 0;   // Slice 5 §K
+    if (tokenGot) X.log(`${DATA.config.retryTokens.earnText} (${G.Difficulty.tokens(s)}/${DATA.config.retryTokens.cap}).`, "good");
     let offer = null;
     // Slice 4 §B: the first extraction no longer rolls the human body offer; the working pod in the cryo annex does (G.Main.claim)
     s.lastResult = { kind: "extracted", items: got.map((i) => ({ name: G.Items.name(i), rarity: i.rarity, ilvl: i.ilvl })), res: resGot, grunts: newGrunts, bodies: r.claimedBodies.map((b) => G.State.bodyTitle(b)),
                      heat: r.heat, moves: r.moves, stats: r.stats, offer: !!offer, xp: r.xpTally || {}, zone: r.zone, nickOffers: s.nickOffers.map((o) => o.uid),
                      ammo: r.ammo ? { base: r.ammo.base, used: r.ammo.used, left: r.ammo.n } : null, bounties: bounties.map((b) => G.Radio.text(b)),
-                     converted: conv, pets: pets.map((p) => p.name) };
+                     converted: conv, pets: pets.map((p) => p.name), retryToken: tokenGot ? { got: tokenGot, held: G.Difficulty.tokens(s) } : null };
     if (G.Tut) { const ml = G.Tut.onExtracted(); if (ml) s.lastResult.marta = ml; }   // Slice 4 §A1: "I've got this" + a successful extraction
     X.endRun();
   };

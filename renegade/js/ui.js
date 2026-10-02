@@ -615,6 +615,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
       const rs = Object.entries(lr.res).filter(([, n]) => n).map(([k, n]) => `${n} ${DATA.items.resources[k].name}`); if (rs.length) box.appendChild(h("p", null, "Resources: " + rs.join(", ")));
       if (lr.grunts.length) box.appendChild(h("p", null, `New recruits: ${lr.grunts.join(", ")}`));
       if (lr.pets && lr.pets.length) box.appendChild(h("p", { class: "good", "data-result": "pets" }, `It followed you home: ${lr.pets.join(", ")}. Recruit it at the Recruitment lot.`));   // Slice 5 §F
+      if (lr.retryToken) box.appendChild(h("p", { class: "good", "data-result": "retry-token" }, `+${lr.retryToken.got} ${DATA.config.retryTokens.name.toLowerCase()} for a hot extraction (${lr.retryToken.held}/${DATA.config.retryTokens.cap} held).`));   // Slice 5 §K
       if (lr.converted && Object.keys(lr.converted).length) box.appendChild(h("p", { class: "hint" }, Object.entries(lr.converted).map(([k, n]) => `${n} ${DATA.resources[k].name} → ${DATA.resources[DATA.resources[k].convertOnExtract.to].name}`).join(", ")));
       if ((lr.bounties || []).length) box.appendChild(h("p", { class: "good" }, `Bounty paid: ${lr.bounties.join(" · ")}`));
       if (lr.bodies.length) box.appendChild(h("p", null, `New bodies: ${lr.bodies.join("; ")}`));
@@ -905,11 +906,14 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     const tbl = h("table", { class: "summary" }, h("tr", null, ...["Unit", "State", "Dmg", "Hits", "Misses", "Jams", "Kills", "Heals"].map((x) => h("th", null, x))));
     for (const r of sm.rows) tbl.appendChild(h("tr", { class: r.side ? "enemy" : "" }, ...[r.name, r.state, r.dmg, r.hits, r.misses, r.jams, r.kills, r.heals].map((x) => h("td", null, String(x)))));
     const lost = b.result !== "win" && b.result !== "escape", retry = lost && G.Difficulty && G.Difficulty.canRetry();   // Slice 4 §H: Casual
+    const DF = G.Difficulty, TKc = DATA.config.retryTokens || {}, token = retry && DF && !DF.def().retries;   // Slice 5 §K: a retry token pays for it
+    const tokenNote = lost && DF && DF.tokenSave && DF.tokenSave() && DF.tokenBlocked() ? TKc.hardcoreBlocked : null;
     const box = h("div", null, h("h2", { class: b.result === "win" ? "good" : "bad" }, b.result === "win" ? "VICTORY" : b.result === "escape" ? "BROKE AWAY" : "DEFEAT"), h("p", null, `Duration ${Math.round(b.t)} s · seed ${b.seed}`), tbl,
       h("div", { class: "blog" }, ...sm.log.map((l) => h("div", null, l))),
-      retry ? h("p", { class: "hint", "data-note": "retry" }, "Casual: retry this fight from its start, as often as you like. Continue accepts the defeat.") : null,
+      retry ? h("p", { class: "hint", "data-note": token ? "retry-token" : "retry" }, token ? `${TKc.defeatHint} (${DF.tokens()}/${TKc.cap} held)` : "Casual: retry this fight from its start, as often as you like. Continue accepts the defeat.") : null,
+      tokenNote ? h("p", { class: "hint", "data-note": "retry-token-blocked" }, tokenNote) : null,
       h("div", { class: "confirm-row" },
-        retry ? h("button", { class: "primary confirm-btn", "data-act": "retry-fight", onclick: () => UI.retryFight() }, "↻ Retry fight") : null,
+        retry ? h("button", { class: "primary confirm-btn", "data-act": "retry-fight", onclick: () => UI.retryFight() }, token ? `↻ Retry fight (1 ${TKc.name.toLowerCase()})` : "↻ Retry fight") : null,
         h("button", { class: (retry ? "" : "primary ") + "confirm-btn", "data-act": "battle-continue", onclick: () => { G.BattleView.unmount(UI.battle.v); UI.battle = null; UI.closeModal(); G.Exp.finishBattle(step, b); UI.render(); } }, "Continue")));
     UI.modal(box, "wide");
   };
