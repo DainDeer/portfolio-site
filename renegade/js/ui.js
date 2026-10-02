@@ -522,6 +522,13 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
         where ? h("p", { class: "hint", "data-where": q.where }, "📍 " + where) : q.where ? h("p", { class: "hint" }, "Location not scouted yet.") : null,
         q.placeholder ? h("p", { class: "hint" }, "More to come.") : null));
     } else box.appendChild(h("p", { class: "hint" }, Mn && Mn.status("m1") === "locked" ? `Talk to ${DATA.tutorial.marta.name} by the trapdoor.` : "Nothing right now."));
+    // Slice 5 §I: relocating the settlement, offered once the gate's main quest is done (data/prestige.js)
+    if (G.Prestige && DATA.prestige.enabled && G.Prestige.nextAct() && (!DATA.prestige.gate.main || (Mn && Mn.status(DATA.prestige.gate.main) === "done"))) {
+      const PT = DATA.prestige.text, why = G.Prestige.gateWhy();
+      box.appendChild(h("h3", null, PT.title));
+      box.appendChild(h("div", { class: "jr-prestige", "data-prestige": why ? "locked" : "ready" }, h("p", null, PT.offer),
+        why ? h("p", { class: "hint" }, why) : h("button", { "data-act": "relocate", onclick: () => UI.showRelocate() }, `${PT.title}…`)));
+    }
     box.appendChild(h("h3", null, "Side Quests"));
     const ids = Q.activeIds();
     if (!ids.length) box.appendChild(h("p", { class: "hint" }, "None accepted. Dunn and Doc Ilse have work."));
@@ -532,6 +539,19 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     }
     box.appendChild(h("button", { class: "primary", onclick: () => UI.closeModal() }, "Close"));
     UI.modal(box);
+  };
+  // Slice 5 §I: the relocation confirm: what you keep, what resets, the one item you take along
+  UI.showRelocate = function () {
+    const P = G.Prestige, D = DATA.prestige, T = D.text, next = P.nextAct(); if (!next) return;
+    const rk = Object.keys(DATA.items.rarities), items = P.keepable().slice().sort((a, b) => rk.indexOf(b.rarity) - rk.indexOf(a.rarity) || (b.ilvl || 0) - (a.ilvl || 0));
+    const sel = h("select", { "data-keep": "item" }, h("option", { value: "" }, "Nothing"), ...items.map((it) => h("option", { value: it.uid }, `${G.Items.name(it)} (${DATA.items.rarities[it.rarity].name}, i${it.ilvl || 1})`)));
+    UI.modal(h("div", { class: "relocate", "data-panel": "relocate" }, h("h2", null, `${T.title}: ${next.homeName}`), h("p", null, T.offer),
+      h("p", null, T.keepsLine.replace("{xp}", (P.st().xpPct || 0) + D.bonus.xpPct)), h("p", { class: "hint" }, T.resetsLine),
+      h("label", null, "Take along: ", sel),
+      h("div", { class: "confirm-row" }, h("button", { class: "primary confirm-btn danger", "data-act": "relocate-confirm", onclick: () => {
+        const r = P.relocate(sel.value || null); if (r.error) return UI.fail(r.error);
+        UI.closeModal(); UI.toast(T.done.replace("{home}", r.act.homeName)); UI.render(); } }, T.confirm),
+        h("button", { class: "confirm-btn", onclick: () => UI.closeModal() }, "Not yet"))));
   };
   UI.showMarta = function (after) {
     const M = DATA.tutorial.marta, first = G.Tut.needsMarta();

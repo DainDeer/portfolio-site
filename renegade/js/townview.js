@@ -7,8 +7,12 @@
   const h = (...a) => G.UI.h(...a);
   const src = (file) => (DATA.sprites.basePath || "assets/") + file;
 
+  // Slice 5 §I: the current act's home (G.Prestige; the outpost art until a home set is committed) + its carried props
+  TV.art = () => (G.Prestige ? G.Prestige.townArt() : DATA.townArt);
+  TV.carried = (A) => { const C = A && A.carriedProps && A.carriedProps.props; return C && G.Prestige ? Object.values(C).filter((p) => p.file && G.Prestige.cameFrom(p.fromTown)) : []; };
   TV.hotspots = function () {
-    const art = DATA.townArt && DATA.townArt.hotspots ? Object.fromEntries(DATA.townArt.hotspots.map((x) => [x.id, x])) : {};
+    const A = TV.art(), art = A && A.hotspots ? Object.fromEntries(A.hotspots.map((x) => [x.id, x])) : {};
+    for (const cp of TV.carried(A)) if (cp.hotspotOverride && art[cp.hotspotOverride.id]) art[cp.hotspotOverride.id] = Object.assign({}, art[cp.hotspotOverride.id], cp.hotspotOverride);   // the carried prop's own outline / hover
     const O = G.Outpost;
     return DATA.town.hotspots.map((d) => {
       let a = art[d.id] || d.art || {};
@@ -49,11 +53,14 @@
   };
 
   TV.render = function (container, onOpen) {
-    const stage = h("div", { class: "town-stage" });
-    const bgFile = DATA.townArt ? DATA.townArt.background : DATA.sprites[DATA.town.background] && DATA.sprites[DATA.town.background].file;
+    const A = TV.art(), act = G.Prestige ? G.Prestige.act() : null;
+    const stage = h("div", { class: "town-stage" + (act && act.tint && !G.Prestige.homeId() ? " home-" + act.tint : ""), "data-act": act ? act.id : null, "data-home": G.Prestige ? G.Prestige.homeId() || "outpost" : null });
+    const bgFile = A ? A.background : DATA.sprites[DATA.town.background] && DATA.sprites[DATA.town.background].file;
     const bg = h("img", { class: "town-bg", src: src(bgFile), alt: "", draggable: "false" });
     bg.addEventListener("error", () => { bg.remove(); stage.classList.add("placeholder"); });
     stage.appendChild(bg);
+    for (const cp of TV.carried(A)) { const im = h("img", { class: "town-carried", src: src(cp.file), alt: "", draggable: "false", style: `left:${cp.x / 10}%;top:${cp.y / 6}%` }); im.addEventListener("load", () => { im.style.width = (im.naturalWidth / 10) + "%"; im.style.height = (im.naturalHeight / 6) + "%"; }); stage.appendChild(im); }   // canvas px, like the hotspot overlays
+    if (act && act.id > 1) stage.appendChild(h("div", { class: "town-home", "data-home-name": act.homeName }, `${act.homeName} · ${act.label}`));   // Slice 5 §I: you moved
     for (const hs of TV.hotspots()) {
       const [x, y, w, hh] = hs.rect;
       const el = h("div", { class: `town-hs ${hs.state}` + (hs.built ? " built" : ""), "data-hs": hs.id, "data-building": hs.building ? `${hs.building}:${G.Outpost.st(hs.building).level}` : null, style: `left:${x / 10}%;top:${y / 6}%;width:${w / 10}%;height:${hh / 6}%` });

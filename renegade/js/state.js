@@ -180,6 +180,7 @@
   // also the Body and Character XP it adds (derived), plus gold level-up labels.
   St.giveXp = function (ref, skillId, amount) {
     if (!ref || !amount || !DATA.skills[skillId]) return;
+    if (G.Prestige) { const pm = G.Prestige.xpMult(); if (pm !== 1) amount = Math.round(amount * pm); }   // Slice 5 §I: the relocation XP bonus
     const def = DATA.skills[skillId];
     const s = G.state, E = G.XP ? G.XP.emit : () => {};
     const charBefore = S.charLevel(s);
