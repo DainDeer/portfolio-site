@@ -1,0 +1,48 @@
+/* Prototype pages only (proto/). Not the game's stylesheet: just the two examine rules copied from css/style.css. */
+html, body { margin: 0; height: 100%; background: #14140f; color: #ddd8c8; font: 13px/1.4 "Segoe UI", Roboto, Arial, sans-serif; overflow: hidden; }
+* { box-sizing: border-box; }
+button { font: inherit; color: #ddd8c8; background: #2a2a22; border: 1px solid #5a5440; border-radius: 4px; padding: 4px 10px; min-height: 32px; cursor: pointer; }
+button:hover { background: #36352a; }
+button[aria-pressed="true"] { border-color: #c8b070; color: #f0e2b0; }
+/* copied from css/style.css: #tooltip and .examine */
+#tooltip { position: fixed; z-index: 100; background: #0c0c09ee; border: 1px solid #6a6040; padding: 6px 8px; border-radius: 4px; max-width: 360px; font-size: 12px; pointer-events: none; }
+#tooltip .examine { font-style: italic; color: #d9cba2; }
+#tooltip[hidden] { display: none; }
+
+.pa { display: flex; flex-direction: column; height: 100%; }
+.pa-top { display: flex; align-items: center; gap: 8px; padding: 4px 8px; flex-wrap: wrap; border-bottom: 1px solid #2a2820; }
+.pa-title { font-weight: bold; color: #e8c880; }
+.pa-caption { color: #a49c84; font-size: 12px; flex: 1; min-width: 140px; }
+.pa-stage { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.pa-stage canvas { display: block; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.pa-stage canvas.chunky { image-rendering: pixelated; image-rendering: crisp-edges; }
+.pa-stage canvas.hot { cursor: pointer; }
+/* OSRS-style action text, top left of the room */
+.pa-action { position: absolute; left: 8px; top: 6px; font: bold 14px/1.2 "Segoe UI", Roboto, Arial, sans-serif; color: #fff; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; pointer-events: none; }
+.pa-action .obj { color: #ffde5a; }
+.pa-action .walk { color: #fff; }
+.pa-bottom { display: flex; gap: 10px; padding: 6px 8px; border-top: 1px solid #2a2820; height: 100px; flex: none; overflow: hidden; }   /* fixed: the room doesn't jump as the log fills */
+.pa-tray { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; min-width: 180px; }
+.pa-tray-label { color: #8a8270; font-size: 11px; width: 100%; }
+.pa-slot { position: relative; width: 40px; height: 40px; background: #1d1c16; border: 1px solid #3a3628; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
+.pa-slot img { width: 32px; height: 32px; image-rendering: pixelated; }
+.pa-slot .n { position: absolute; right: 2px; bottom: 0; font-size: 11px; color: #f0e2b0; text-shadow: 1px 1px 0 #000; }
+.pa-slot.real { border-color: #c8a040; box-shadow: 0 0 6px #c8a04066; }
+.pa-slot.bump { animation: pa-bump 0.3s; }
+@keyframes pa-bump { 50% { transform: scale(1.18); } }
+.pa-log { flex: 1; font-size: 12px; color: #c8c0a8; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; }
+.pa-log div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pa-log .find { color: #9fd08a; }
+.pa-log .real { color: #f0c860; }
+.pa-log .ex { font-style: italic; color: #d9cba2; }
+.pa-log .dim { color: #8a8270; }
+.pa-fly { position: fixed; z-index: 90; width: 32px; height: 32px; pointer-events: none; image-rendering: pixelated; filter: drop-shadow(0 2px 2px #000a); }
+.pa-fps { position: absolute; right: 6px; top: 6px; font: 11px monospace; color: #9f9; pointer-events: none; }
+@media (max-height: 500px) and (orientation: landscape) {
+  .pa-top { padding: 2px 6px; } .pa-top button { min-height: 28px; padding: 2px 8px; }
+  .pa-bottom { height: 52px; padding: 3px 6px; } .pa-tray-label { display: none; } .pa-slot { width: 32px; height: 32px; } .pa-slot img { width: 24px; height: 24px; }
+  .pa-log { max-height: 46px; }
+}
+@media (orientation: portrait) and (max-width: 700px) {
+  .pa-bottom { flex-direction: column; height: 170px; } .pa-log { flex: 1; min-height: 0; }
+}

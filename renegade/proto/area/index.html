@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Renegade prototype: MegaMart back office (click to move)</title>
+<!-- Isolated prototype (proto-area-click-to-move.md). Loads no game code and no save code; stores nothing.
+     Only keys starting with renegade_proto_ may ever be written (guard in area.js). -->
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../shared/proto.css">
+</head>
+<body>
+<div class="pa">
+  <div class="pa-top">
+    <span class="pa-title">MegaMart back office</span>
+    <span class="pa-caption">Click to move. Find things.</span>
+    <button id="btn-look" type="button" aria-pressed="true" hidden title="Testing only (?debug): compare the chunky half-res look with smooth rendering">Look: Chunky</button>
+    <button id="btn-sound" type="button" aria-pressed="true">Sound: On</button>
+    <button id="btn-reset" type="button">Reset room</button>
+  </div>
+  <div class="pa-stage" id="stage">
+    <canvas id="room" aria-label="The MegaMart back office. Click to move, click things to search them."></canvas>
+    <div class="pa-action" id="action"></div>
+  </div>
+  <div class="pa-bottom">
+    <div class="pa-tray" id="tray"><span class="pa-tray-label">Found (this visit only)</span></div>
+    <div class="pa-log" id="log" aria-live="polite"></div>
+  </div>
+</div>
+<div id="tooltip" hidden></div>
+<script src="../shared/office_room.js"></script>
+<script src="area.js"></script>
+</body>
+</html>
