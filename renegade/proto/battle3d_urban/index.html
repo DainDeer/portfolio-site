@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Renegade prototype: 3D battle (Hollis Outskirts: troops vs scavengers)</title>
+<link rel="icon" href="data:,">
+<!-- Isolated prototype (proto-battle-3d.md + Megan / Vixie, Oct 3). Loads the game's DATA tables and its DOM-free battle
+     sim (shared/3d/simfiles.js allowlist) but never the save code; writes nothing (storage_guard.js refuses any key but
+     renegade_proto_*). ES modules: serve over http (python3 -m http.server from the repo root), not file://. -->
+<script>window.__protoT0 = performance.now();</script>
+<script src="../shared/storage_guard.js"></script>
+<script type="importmap">
+{ "imports": {
+    "three": "../vendor/three-0.185.0/three.module.min.js",
+    "three/addons/": "../vendor/three-0.185.0/addons/",
+    "cannon-es": "../vendor/cannon-es-0.20.0/cannon-es.js"
+} }
+</script>
+<link rel="stylesheet" href="../shared/3d/demo.css">
+</head>
+<body>
+<canvas id="view" aria-label="A 3D battle in the Hollis Outskirts: troops against scavengers."></canvas>
+<div id="title">Hollis Outskirts · 3D battle (prototype)</div>
+<div id="card"><h1>Loading the fight</h1><ol id="load-steps"></ol></div>
+<div id="end" hidden></div>
+<div id="overlay" hidden></div>
+<div id="bar">
+  <button id="btn-pause" type="button">❚❚ Pause</button>
+  <button type="button" data-speed="1">¼x</button><button type="button" data-speed="2">½x</button><button type="button" data-speed="3" aria-pressed="true">1x</button><button type="button" data-speed="4">2x</button>
+  <button id="btn-replay" type="button" title="R: replay the same seed">↻ Replay</button>
+  <button id="btn-new" type="button" title="N: a new seed">New seed</button>
+  <button id="btn-size" type="button" hidden>3v3</button>
+  <button id="btn-fps" type="button" title="F: fps and timings">FPS</button>
+  <button id="btn-sound" type="button">Sound: On</button>
+  <button id="btn-killcam" type="button" title="K" hidden>Kill cam: On</button>
+  <button id="btn-look" type="button" hidden>Look</button>
+</div>
+<div id="seed"></div>
+<script src="../shared/3d/simfiles.js"></script>
+<script type="module" src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+[
+ {
+  "file": "grunt.glb",
+  "model": "grunt",
+  "tris": 520,
+  "budget": 1200,
+  "bytes": 54712,
+  "single": false
+ },
+ {
+  "file": "goat.glb",
+  "model": "goat",
+  "tris": 428,
+  "budget": 1200,
+  "bytes": 43764,
+  "single": false
+ },
+ {
+  "file": "scavenger.glb",
+  "model": "scavenger",
+  "tris": 528,
+  "budget": 1200,
+  "bytes": 56452,
+  "single": false
+ },
+ {
+  "file": "rifle.glb",
+  "model": "rifle",
+  "tris": 168,
+  "budget": 250,
+  "bytes": 16412,
+  "single": false
+ },
+ {
+  "file": "shotgun.glb",
+  "model": "shotgun",
+  "tris": 124,
+  "budget": 250,
+  "bytes": 12612,
+  "single": false
+ },
+ {
+  "file": "pistol.glb",
+  "model": "pistol",
+  "tris": 84,
+  "budget": 250,
+  "bytes": 9076,
+  "single": false
+ },
+ {
+  "file": "machete.glb",
+  "model": "machete",
+  "tris": 72,
+  "budget": 250,
+  "bytes": 8180,
+  "single": false
+ },
+ {
+  "file": "weapon_hatchet.glb",
+  "model": "weapon_hatchet",
+  "tris": 48,
+  "budget": 250,
+  "bytes": 6468,
+  "single": false
+ },
+ {
+  "file": "rock_small.glb",
+  "model": "rock_small",
+  "tris": 36,
+  "budget": 300,
+  "bytes": 4848,
+  "single": false
+ },
+ {
+  "file": "rock_large.glb",
+  "model": "rock_large",
+  "tris": 54,
+  "budget": 300,
+  "bytes": 6752,
+  "single": false
+ },
+ {
+  "file": "fence_wood.glb",
+  "model": "fence_wood",
+  "tris": 96,
+  "budget": 300,
+  "bytes": 9188,
+  "single": false
+ },
+ {
+  "file": "grass_tuft.glb",
+  "model": "grass_tuft",
+  "tris": 48,
+  "budget": 60,
+  "bytes": 6444,
+  "single": true
+ },
+ {
+  "file": "tree_lone.glb",
+  "model": "tree_lone",
+  "tris": 154,
+  "budget": 1500,
+  "bytes": 14612,
+  "single": false
+ },
+ {
+  "file": "wall_drystone.glb",
+  "model": "wall_drystone",
+  "tris": 156,
+  "budget": 1500,
+  "bytes": 14148,
+  "single": false
+ },
+ {
+  "file": "car_wreck.glb",
+  "model": "car_wreck",
+  "tris": 516,
+  "budget": 1500,
+  "bytes": 42004,
+  "single": false
+ },
+ {
+  "file": "barrier.glb",
+  "model": "barrier",
+  "tris": 96,
+  "budget": 1500,
+  "bytes": 9724,
+  "single": false
+ },
+ {
+  "file": "crate.glb",
+  "model": "crate",
+  "tris": 192,
+  "budget": 300,
+  "bytes": 16100,
+  "single": false
+ },
+ {
+  "file": "wall_chunk.glb",
+  "model": "wall_chunk",
+  "tris": 192,
+  "budget": 1500,
+  "bytes": 16656,
+  "single": false
+ },
+ {
+  "file": "wall_shopfront.glb",
+  "model": "wall_shopfront",
+  "tris": 240,
+  "budget": 1500,
+  "bytes": 23280,
+  "single": false
+ },
+ {
+  "file": "streetlight.glb",
+  "model": "streetlight",
+  "tris": 144,
+  "budget": 1500,
+  "bytes": 13280,
+  "single": false
+ },
+ {
+  "file": "shell_casing.glb",
+  "model": "shell_casing",
+  "tris": 20,
+  "budget": 24,
+  "bytes": 3444,
+  "single": true
+ },
+ {
+  "file": "gib_01.glb",
+  "model": "gib_01",
+  "tris": 26,
+  "budget": 80,
+  "bytes": 4072,
+  "single": true
+ },
+ {
+  "file": "gib_02.glb",
+  "model": "gib_02",
+  "tris": 36,
+  "budget": 80,
+  "bytes": 5160,
+  "single": true
+ },
+ {
+  "file": "gib_03.glb",
+  "model": "gib_03",
+  "tris": 62,
+  "budget": 80,
+  "bytes": 7968,
+  "single": true
+ },
+ {
+  "file": "gib_04.glb",
+  "model": "gib_04",
+  "tris": 24,
+  "budget": 80,
+  "bytes": 3856,
+  "single": true
+ },
+ {
+  "file": "gib_05.glb",
+  "model": "gib_05",
+  "tris": 24,
+  "budget": 80,
+  "bytes": 3856,
+  "single": true
+ }
+]

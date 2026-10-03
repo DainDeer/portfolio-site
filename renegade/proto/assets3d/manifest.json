@@ -1,0 +1,30 @@
+{
+  "files": [
+    "grunt.glb",
+    "goat.glb",
+    "scavenger.glb",
+    "rifle.glb",
+    "shotgun.glb",
+    "pistol.glb",
+    "machete.glb",
+    "weapon_hatchet.glb",
+    "rock_small.glb",
+    "rock_large.glb",
+    "fence_wood.glb",
+    "grass_tuft.glb",
+    "tree_lone.glb",
+    "wall_drystone.glb",
+    "car_wreck.glb",
+    "barrier.glb",
+    "crate.glb",
+    "wall_chunk.glb",
+    "wall_shopfront.glb",
+    "streetlight.glb",
+    "shell_casing.glb",
+    "gib_01.glb",
+    "gib_02.glb",
+    "gib_03.glb",
+    "gib_04.glb",
+    "gib_05.glb"
+  ]
+}
