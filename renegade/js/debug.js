@@ -29,6 +29,16 @@
     hs.appendChild(h("label", { class: "dbg-check" }, h("input", { type: "checkbox", checked: D.fastSearch, onchange: (e) => { D.fastSearch = e.target.checked; } }), " Instant searches (skip the progress bar wait)"));
     hs.appendChild(h("label", { class: "dbg-check" }, h("input", { type: "checkbox", checked: G.Sfx.enabled, onchange: (e) => { G.Sfx.enabled = e.target.checked; } }), " Audio on (assets/sfx/*.mp3, assets/amb/*)"));
     el.appendChild(hs);
+    // SP-096 scenario links: share this moment as a link / .renegade file, or open one in a sandbox
+    const sc = h("div", { class: "dbg-sec", "data-sec": "scenario" }, h("h4", null, "Scenario"));
+    if (G.State.sandbox) sc.appendChild(h("div", { class: "dbg-small" }, "SANDBOX: " + G.State.sandbox.name + " (saves go to renegade_sandbox_* only)"));
+    // (plain buttons: btn() re-renders the screen afterwards, which would close the dialog they open)
+    const plain = (label, fn, title) => h("button", { title: title || "", onclick: () => { try { fn(); } catch (e) { console.error(e); G.UI.toast("Error: " + e.message); } } }, label);
+    sc.appendChild(plain("Share run…", () => G.ScenarioView.shareDialog(), "A link (or .renegade file) that opens this exact moment in a sandbox"));
+    sc.appendChild(plain("Download .renegade", () => G.ScenarioView.download(G.Scenario.capture({ name: "Debug capture" })), "Save this moment as a file (name it in Share run… instead to add a note)"));
+    sc.appendChild(plain("Load scenario…", () => G.ScenarioView.loadDialog(), "Open a .renegade file, a scenario link or a code in a sandbox (your save stays as it is)"));
+    if (G.State.sandbox) sc.appendChild(plain("Exit sandbox", () => G.ScenarioView.exit()));
+    el.appendChild(sc);
     // give item
     const gi = h("div", { class: "dbg-sec" }, h("h4", null, "Give item" + (r ? " (to bag)" : " (to stash)")));
     const bSel = h("select"); for (const k in DATA.items.bases) if (!DATA.items.bases[k].natural) bSel.appendChild(h("option", { value: k }, DATA.items.bases[k].name));
@@ -121,7 +131,7 @@
       ex.appendChild(btn("Heal squad", () => { r.bodyHp = G.Exp.maxBodyHp(); for (const m of r.squad) if (m.hp > 0) m.hp = G.Battle.unitFromGrunt(m.g).maxHp; }));
       ex.appendChild(btn("Reveal map", () => { for (const z in s.maps) for (const nid in s.maps[z].nodes) s.everSeen[nid] = true; }));
       if (G.Exp.site()) ex.appendChild(btn("Open all doors here", () => { for (const R of G.Exp.site().rooms) R.open = true; }));
-      ex.appendChild(btn("Restart expedition", () => { if (G.UI.battle) { G.BattleView.unmount(G.UI.battle.v); G.UI.battle = null; } G.UI.closeModal(); const e = G.Exp.restart(); return e || "Expedition restarted (state rolled back)."; }, "Rolls the save back to the moment this expedition started and starts again with the same loadout"));
+      ex.appendChild(btn("Restart expedition", () => { if (!r.snapshot) return "Restart isn't available here: a scenario doesn't carry the deploy snapshot."; if (G.UI.battle) { G.BattleView.unmount(G.UI.battle.v); G.UI.battle = null; } G.UI.closeModal(); const e = G.Exp.restart(); return e || "Expedition restarted (state rolled back)."; }, "Rolls the save back to the moment this expedition started and starts again with the same loadout"));
       ex.appendChild(btn("Kill my body (test death)", () => { if (G.UI.battle) { G.BattleView.unmount(G.UI.battle.v); G.UI.battle = null; } G.UI.closeModal(); G.Exp.die("Killed by the debug panel."); }));
       ex.appendChild(btn("Extract now", () => { if (G.UI.battle) { G.BattleView.unmount(G.UI.battle.v); G.UI.battle = null; } G.UI.closeModal(); r.queue = []; G.Exp.extractSuccess(); }));
       const step = G.Exp.current();

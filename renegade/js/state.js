@@ -219,8 +219,39 @@
   };
 
   // --- save / load
+  // SP-096 scenario links: a sandbox session (St.sandbox set by js/scenario.js before anything reads storage) keeps its
+  // whole save under renegade_sandbox_* keys. Every storage access goes through St.key() + St.store, and in a sandbox the
+  // store refuses any write or removal of a key outside that namespace, so the real save, tuning and build id can't change.
+  // A playable build published by .github/workflows/publish-playable.yml (docs/deploy-own-server.md) sets
+  // window.RENEGADE_STORAGE_NS in its js/build_id.js (e.g. "renegade_b_hex_test_"): that build keeps its save, tuning,
+  // build id and sandbox under that prefix only and can never read, wipe or write the main game's keys on the same origin.
+  // The main game (no namespace) keeps the real keys exactly as before.
+  const NS = typeof root.RENEGADE_STORAGE_NS === "string" && /^renegade_[a-z0-9_]+_$/.test(root.RENEGADE_STORAGE_NS) ? root.RENEGADE_STORAGE_NS : null;
+  St.NS = NS;
+  St.SANDBOX_PREFIX = (NS || "renegade_") + "sandbox_";
+  St.sandbox = null;
+  St.key = function (kind) {
+    const sb = !!St.sandbox, c = DATA.config, P = sb ? St.SANDBOX_PREFIX : NS;
+    if (kind === "save") return P ? P + "save" : c.saveKey;
+    if (kind === "unreadable") return P ? P + "save_unreadable" : c.saveKey + "_unreadable";
+    if (kind === "tuning") return P ? P + "tuning" : c.overridesKey;
+    if (kind === "build") return NS ? NS + "build_id" : (c.save || {}).buildIdKey;
+    throw new Error("unknown storage key kind " + kind);
+  };
+  const LS = () => root.localStorage;
+  const guard = (op, k) => {
+    const P = St.sandbox ? St.SANDBOX_PREFIX : NS;
+    if (P && String(k).indexOf(P) !== 0) { console.error("[storage] refused " + op + " of \"" + k + "\": " + (St.sandbox ? "a scenario sandbox" : "this build") + " only writes " + P + "* keys"); return false; }
+    return true;
+  };
+  St.store = {
+    get: (k) => LS().getItem(k),
+    set: (k, v) => { if (!guard("write", k)) return false; LS().setItem(k, v); return true; },
+    remove: (k) => { if (!guard("removal", k)) return false; LS().removeItem(k); return true; },
+  };
   St.save = function () {
-    try { localStorage.setItem(DATA.config.saveKey, JSON.stringify({ s: G.state, clockOffset: G.clockOffset })); } catch (e) { /* storage may be unavailable */ }
+    if (St.sandbox && St.sandbox.exiting) return;   // Exit sandbox has cleared the sandbox keys: the unload save must not put them back
+    try { St.store.set(St.key("save"), JSON.stringify({ s: G.state, clockOffset: G.clockOffset })); } catch (e) { /* storage may be unavailable */ }
   };
   // Load: current saves as-is; Slice 1 saves (version 1) are migrated; anything else (unknown / corrupt) is set aside
   // and a new game starts with a notice. St.loadNotice explains what happened (shown once by the UI).
@@ -231,19 +262,20 @@
   St.checkBuild = function () {
     const cfg = DATA.config.save || {}, id = String((typeof window !== "undefined" && window.BUILD_ID) || "dev");
     if (id === "dev") return false;
-    let stored = null; try { stored = localStorage.getItem(cfg.buildIdKey); } catch (e) { return false; }
+    if (St.sandbox) return false;   // SP-096: a scenario sandbox never reads or writes the build id (the real save's wipe stays for the real game)
+    let stored = null; try { stored = St.store.get(St.key("build")); } catch (e) { return false; }
     let wiped = false;
     if (cfg.resetOnNewBuild && stored !== id) {
-      const keys = [DATA.config.saveKey, DATA.config.saveKey + "_unreadable", DATA.config.overridesKey];
-      try { wiped = keys.some((k) => localStorage.getItem(k) != null); for (const k of keys) localStorage.removeItem(k); } catch (e) {}
+      const keys = [St.key("save"), St.key("unreadable"), St.key("tuning")];
+      try { wiped = keys.some((k) => St.store.get(k) != null); for (const k of keys) St.store.remove(k); } catch (e) {}
       if (wiped) St.buildNotice = "New build (" + id + "): progress reset.";
     }
-    try { localStorage.setItem(cfg.buildIdKey, id); } catch (e) {}
+    try { St.store.set(St.key("build"), id); } catch (e) {}
     return wiped;
   };
   St.load = function () {
     let raw = null;
-    try { raw = localStorage.getItem(DATA.config.saveKey); } catch (e) { return false; }
+    try { raw = St.store.get(St.key("save")); } catch (e) { return false; }
     if (!raw) return false;
     try {
       const o = JSON.parse(raw);
@@ -257,8 +289,8 @@
       G.state = st; G.clockOffset = o.clockOffset || 0;
       return true;
     } catch (e) {
-      try { localStorage.setItem(DATA.config.saveKey + "_unreadable", raw); } catch (e2) {}
-      St.loadNotice = "Your old save couldn't be read (" + e.message + "), so a new save was started. The old data was kept under \"" + DATA.config.saveKey + "_unreadable\".";
+      try { St.store.set(St.key("unreadable"), raw); } catch (e2) {}
+      St.loadNotice = "Your old save couldn't be read (" + e.message + "), so a new save was started. The old data was kept under \"" + St.key("unreadable") + "\".";
       return false;
     }
   };
@@ -335,15 +367,15 @@
     { const seen = new Set(); for (const k of Object.keys(s.loadout.gear)) { const u = s.loadout.gear[k]; if (u && seen.has(u)) delete s.loadout.gear[k]; else if (u) seen.add(u); } }   // an item in two body slots (pre-fix saves): keep the first
     return s;
   };
-  St.wipe = function () { try { localStorage.removeItem(DATA.config.saveKey); } catch (e) {} };
+  St.wipe = function () { try { St.store.remove(St.key("save")); } catch (e) {} };
 
   // --- tuning overrides (debug panel)
-  St.saveOverrides = function (ov) { try { localStorage.setItem(DATA.config.overridesKey, JSON.stringify(ov)); } catch (e) {} };
+  St.saveOverrides = function (ov) { try { St.store.set(St.key("tuning"), JSON.stringify(ov)); } catch (e) {} };
   St.loadOverrides = function () {
     // Only overrides whose value already exists in DATA with the same type are applied (a Slice 1 tuning override
     // for a removed or renamed field is dropped instead of creating a half-defined entry).
     try {
-      const o = JSON.parse(localStorage.getItem(DATA.config.overridesKey) || "{}"), kept = {};
+      const o = JSON.parse(St.store.get(St.key("tuning")) || "{}"), kept = {};
       for (const p in o) { try { const cur = U.getPath(DATA, p); if (cur !== undefined && typeof cur === typeof o[p] && typeof cur !== "object") { U.setPath(DATA, p, o[p]); kept[p] = o[p]; } } catch (e) {} }
       return kept;
     } catch (e) { return {}; }

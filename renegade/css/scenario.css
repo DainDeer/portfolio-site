@@ -1,0 +1,21 @@
+/* SP-096 scenario sandbox: a banner over the top edge + a frame around the screen. Nothing here changes the game's
+   layout (a repro must look like the real thing); the banner sits above modals, battles, the dice and the debug panel. */
+#sandbox-banner { position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 2147483000;
+  display: flex; align-items: center; gap: 8px; max-width: calc(100vw - 16px); box-sizing: border-box;
+  margin-top: env(safe-area-inset-top); padding: 2px 3px 2px 10px; border-radius: 0 0 8px 8px;
+  background: #c2187a; color: #fff; font: 12px/1.2 "Segoe UI", Roboto, Arial, sans-serif; box-shadow: 0 2px 10px #000a; }
+#sandbox-banner .sb-label { cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+#sandbox-banner .sb-tag { letter-spacing: 1.5px; }
+#sandbox-banner .sb-warn { color: #ffe08a; }
+#sandbox-banner.compact .sb-name, #sandbox-banner.compact .sb-sub, #sandbox-banner.compact .sb-warn { display: none; }
+#sandbox-banner .sb-exit { position: relative; flex: none; background: #fff; color: #8a0f55; border: 0; border-radius: 5px; padding: 3px 9px; font-weight: bold; cursor: pointer; }
+#sandbox-banner .sb-exit::after { content: ""; position: absolute; left: -6px; right: -6px; top: -10px; bottom: -10px; }   /* a 44 px tap target without a taller banner */
+body.sandbox::after { content: ""; position: fixed; inset: 0; border: 3px solid #c2187a; pointer-events: none; z-index: 2147482999; }
+.modal.sb-dialog, .modal.sb-fail { max-width: min(520px, calc(100vw - 16px)); }
+.modal .sb-in { display: block; width: 100%; box-sizing: border-box; margin: 6px 0; background: #11110d; color: #eee; border: 1px solid #555; border-radius: 4px; padding: 6px; font: inherit; }
+.modal .sb-code { font: 11px/1.3 monospace; word-break: break-all; }
+.modal .sb-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+.modal .sb-row button { min-height: 36px; }
+.modal .sb-small { font-size: 12px; opacity: .8; }
+.modal .sb-fail-msg { color: #ffb0b0; }
+@media (pointer: coarse) { .modal .sb-row button { min-height: 44px; } }
