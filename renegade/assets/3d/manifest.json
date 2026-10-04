@@ -1,0 +1,1285 @@
+{
+ "files": [
+  "grunt.glb",
+  "scavenger.glb",
+  "goat.glb",
+  "raider.glb",
+  "gunman.glb",
+  "brute.glb",
+  "hunter_stalker.glb",
+  "hunter_marksman.glb",
+  "hunter_captain.glb",
+  "basic.glb",
+  "vanguard.glb",
+  "striker.glb",
+  "gunner.glb",
+  "medic.glb",
+  "veteran.glb",
+  "ai_warden.glb",
+  "ai_drone.glb",
+  "ai_crawler.glb",
+  "ai_sentry.glb",
+  "orbital_drone_t1.glb",
+  "hound.glb",
+  "spitter.glb",
+  "maw.glb",
+  "pet_goat.glb",
+  "grunt_mannequin.glb",
+  "grunt_set_starter.glb",
+  "grunt_set_militia.glb",
+  "grunt_set_woodsman.glb",
+  "grunt_set_scav.glb",
+  "gear_head_militia_helmet.glb",
+  "gear_head_woodsman_beanie.glb",
+  "gear_head_scav_hood.glb",
+  "gear_head_starter_wrap.glb",
+  "gear_head_wool_cap.glb",
+  "gear_head_witch_hat.glb",
+  "gear_head_horse_mask.glb",
+  "gear_body_militia_tabard.glb",
+  "gear_body_quilted_jacket.glb",
+  "gear_body_scav_coat.glb",
+  "gear_body_starter_poncho.glb",
+  "gear_body_patched_tunic.glb",
+  "gear_body_hide_vest.glb",
+  "gear_body_wizard_robes.glb",
+  "gear_body_maid_outfit.glb",
+  "gear_body_lucky_boxers.glb",
+  "gear_pack_military_ruck.glb",
+  "gear_pack_school_bag.glb",
+  "rifle.glb",
+  "shotgun.glb",
+  "pistol.glb",
+  "machete.glb",
+  "weapon_hatchet.glb",
+  "wtype_pistol.glb",
+  "wtype_rifle.glb",
+  "wtype_auto.glb",
+  "wtype_shotgun.glb",
+  "wtype_bow.glb",
+  "wtype_crossbow.glb",
+  "wtype_blade.glb",
+  "wtype_club.glb",
+  "wtype_improvised.glb",
+  "militia_carbine.glb",
+  "scav_carbine.glb",
+  "kalash_47.glb",
+  "ar16_stoner.glb",
+  "hunter_longrifle.glb",
+  "m1912_colter.glb",
+  "scrap_smg.glb",
+  "nail_gun.glb",
+  "felling_axe.glb",
+  "recruit_spear.glb",
+  "nat_shiv.glb",
+  "hunter_knife.glb",
+  "stun_baton.glb",
+  "bass_guitar.glb",
+  "knuckle_wraps.glb",
+  "wood_round_shield.glb",
+  "riot_shield.glb",
+  "scrap_lid_shield.glb",
+  "frag_grenade.glb",
+  "acid_glob.glb",
+  "drone_bolt.glb",
+  "arrow.glb",
+  "crossbow_bolt.glb",
+  "med_kit.glb",
+  "rock_small.glb",
+  "rock_large.glb",
+  "fence_wood.glb",
+  "grass_tuft.glb",
+  "tree_lone.glb",
+  "wall_drystone.glb",
+  "car_wreck.glb",
+  "barrier.glb",
+  "crate.glb",
+  "wall_chunk.glb",
+  "wall_shopfront.glb",
+  "streetlight.glb",
+  "shell_casing.glb",
+  "hushwood_pine.glb",
+  "hushwood_pine_small.glb",
+  "hushwood_dead_tree.glb",
+  "hushwood_stump.glb",
+  "hushwood_log.glb",
+  "hushwood_log_pile.glb",
+  "hushwood_fern.glb",
+  "hushwood_rock_mossy.glb",
+  "hushwood_culvert.glb",
+  "hushwood_palisade.glb",
+  "drowned_fence_sunk.glb",
+  "drowned_car_sunk.glb",
+  "drowned_mailbox.glb",
+  "drowned_puddle.glb",
+  "drowned_roof.glb",
+  "drowned_rowboat.glb",
+  "drowned_outfall.glb",
+  "drowned_reeds.glb",
+  "scablands_truck_wreck.glb",
+  "scablands_rail_track.glb",
+  "scablands_rail_marker.glb",
+  "scablands_scrap_heap.glb",
+  "scablands_drum.glb",
+  "scablands_tire.glb",
+  "scablands_pylon_stub.glb",
+  "scablands_crater.glb",
+  "scablands_rock_scab.glb",
+  "scablands_shrub_dry.glb",
+  "gib_01.glb",
+  "gib_02.glb",
+  "gib_03.glb",
+  "gib_04.glb",
+  "gib_05.glb",
+  "gib_06.glb",
+  "gib_07.glb",
+  "gib_08.glb",
+  "gib_09.glb",
+  "gib_10.glb",
+  "gib_11.glb",
+  "gib_12.glb",
+  "gib_metal_01.glb",
+  "gib_metal_02.glb",
+  "gib_metal_03.glb",
+  "hollis_cart_corral.glb",
+  "hollis_cart_barricade.glb",
+  "hollis_megamart_wall.glb",
+  "hollis_cmu_wall.glb",
+  "hollis_boom_gate.glb",
+  "hollis_sandbags.glb",
+  "hollis_raider_stall.glb",
+  "hollis_vending_tipped.glb",
+  "hollis_news_box.glb",
+  "hollis_sawhorse.glb",
+  "drowned_water_tile.glb",
+  "drowned_water_shore.glb",
+  "drowned_water_shore_corner.glb",
+  "drowned_float_tire.glb",
+  "drowned_float_plank.glb",
+  "drowned_float_reeds.glb",
+  "drowned_foam_strip.glb",
+  "props_merged/greyback_hills.glb",
+  "props_merged/hushwood_clearing.glb",
+  "props_merged/drowned_culdesac.glb",
+  "props_merged/scablands_railline.glb",
+  "props_merged/hollis_outskirts.glb",
+  "props_merged/hollis_outskirts_ground.glb",
+  "parts_shared/parts_library.glb"
+ ],
+ "_note": "Rivet's loader reads only 'files'. The rest is reference data (Smudge kit, Oct 3 2026): see README.md.",
+ "plans": {
+  "human": {
+   "required": [
+    "torso",
+    "head",
+    "arm_l",
+    "arm_r",
+    "leg_l",
+    "leg_r"
+   ],
+   "empties": [
+    "hand_r"
+   ]
+  },
+  "quad": {
+   "required": [
+    "body",
+    "head",
+    "leg_fl",
+    "leg_fr",
+    "leg_bl",
+    "leg_br",
+    "tail"
+   ],
+   "empties": []
+  },
+  "hexapod": {
+   "required": [
+    "body",
+    "head",
+    "leg_fl",
+    "leg_fr",
+    "leg_ml",
+    "leg_mr",
+    "leg_bl",
+    "leg_br"
+   ],
+   "empties": []
+  },
+  "hover": {
+   "required": [
+    "body",
+    "head",
+    "rotor_fl",
+    "rotor_fr",
+    "rotor_bl",
+    "rotor_br"
+   ],
+   "empties": [
+    "muzzle"
+   ],
+   "spinners": [
+    "blade_fl",
+    "blade_fr",
+    "blade_bl",
+    "blade_br"
+   ]
+  },
+  "turret": {
+   "required": [
+    "base",
+    "gun"
+   ],
+   "empties": [
+    "muzzle_l",
+    "muzzle_r"
+   ]
+  }
+ },
+ "materials_by_name": {
+  "tint": "squad colour slot: the loader lerps it toward a squad tint (contract rev 2 section 3)",
+  "eye": "goat eye: a very subtle ember (enemy goat only)",
+  "orbital_glow": "SELF-LIT orbital faction mark (rust.2 #c65a30, hostile red family): KHR_materials_unlit + emissiveFactor = the colour. Draw it unlit (e.g. MeshBasicMaterial); no bloom pass, no toon bands, never tinted. Its own primitive (never merged into vertex colours)",
+  "vertex_colour": "white base for the merged parts: colours are per-face COLOR_0 (palette A)"
+ },
+ "human_sockets_optional": [
+  "hand_l (child of arm_l_lower)",
+  "back (child of torso)",
+  "head_top (child of head)"
+ ],
+ "units": {
+  "grunt": {
+   "plan": "human",
+   "weapon": "rifle",
+   "src": "mannequin grunt (assets/grunt_options/loadouts/grunt_mannequin) + the brief's vest",
+   "tint": true,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "tris": 520
+  },
+  "scavenger": {
+   "plan": "human",
+   "weapon": "shotgun",
+   "src": "hooded raider (proto urban demo)",
+   "tint": true,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "tris": 528
+  },
+  "goat": {
+   "plan": "quad",
+   "weapon": null,
+   "src": "enemy_beast_goat (Megan's lock: a totally normal goat, ember eyes only)",
+   "tint": false,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "tris": 428
+  },
+  "raider": {
+   "plan": "human",
+   "weapon": "rifle",
+   "src": "enemy_outlaw_raider: rust mohawk crest, beard, rust shoulder pads, brown jerkin, dark trousers",
+   "tint": true,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "tris": 444
+  },
+  "gunman": {
+   "plan": "human",
+   "weapon": "scav_carbine",
+   "src": "enemy_outlaw_gunman: duster, gas mask (yellow lenses), wide-brim hat, rust pads, bandolier",
+   "tint": true,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "tris": 588
+  },
+  "brute": {
+   "plan": "human",
+   "weapon": "machete",
+   "src": "enemy_outlaw_brute: huge, bald + scarred, iron jaw mask, bare chest, rust plates (2D size ~1.2)",
+   "tint": true,
+   "scale": [
+    1.24,
+    1.12,
+    1.2
+   ],
+   "tris": 612
+  },
+  "hunter_stalker": {
+   "plan": "human",
+   "weapon": "hunter_knife",
+   "src": "enemy_hunter_stalker: lean graphite stealth suit, shoulder cloak, smooth mask + red visor slit, long knife",
+   "tint": true,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "tris": 324
+  },
+  "hunter_marksman": {
+   "plan": "human",
+   "weapon": "hunter_longrifle",
+   "src": "enemy_hunter_marksman: long graphite coat, pointed hood, one big red scope eye, long scoped rifle",
+   "tint": true,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "tris": 452
+  },
+  "hunter_captain": {
+   "plan": "human",
+   "weapon": "ar16_stoner",
+   "src": "enemy_hunter_captain: heavy graphite plate, pale pauldrons, crimson half-cape (rust, not blood red), rank chevron, fin-crested helmet, red T-visor",
+   "tint": true,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "tris": 420
+  },
+  "basic": {
+   "plan": "human",
+   "weapon": null,
+   "src": "unit_basic: level-1 husk, pale and featureless, teal neural collar (no tint slot: it's your body)",
+   "tint": false,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "tris": 304
+  },
+  "vanguard": {
+   "plan": "human",
+   "weapon": null,
+   "src": "unit_vanguard: melee tank, teal plate, closed helmet, scrap riot shield (baked on the left arm, as in the sprite)",
+   "tint": true,
+   "scale": [
+    1.06,
+    1.03,
+    1.06
+   ],
+   "tris": 420
+  },
+  "striker": {
+   "plan": "human",
+   "weapon": "nat_shiv",
+   "src": "unit_striker: fast melee, brown hood, teal scarf, long blade + shiv",
+   "tint": true,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "tris": 396
+  },
+  "gunner": {
+   "plan": "human",
+   "weapon": "wtype_rifle",
+   "src": "unit_gunner: teal armour + visor, rifle",
+   "tint": true,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "tris": 348
+  },
+  "medic": {
+   "plan": "human",
+   "weapon": "pistol",
+   "src": "unit_medic: teal vest with a red cross, med bag on the hip, backpack, pistol (the cross is the one small saturated red)",
+   "tint": true,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "tris": 540
+  },
+  "veteran": {
+   "plan": "human",
+   "weapon": "militia_carbine",
+   "src": "unit_veteran: olive steel helmet + goggles + teal ally stripe, scarred face, olive flak vest + steel plate, chevroned pauldrons, rust scarf, knee pads",
+   "tint": true,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "tris": 600
+  },
+  "ai_warden": {
+   "plan": "human",
+   "weapon": "stun_baton",
+   "src": "enemy_ai_warden: boxy cream riot bot, yellow visor slit, riot shield (hazard band + view slot), stun baton; big like the Brute",
+   "tint": false,
+   "scale": [
+    1.2,
+    1.15,
+    1.2
+   ],
+   "tris": 456
+  },
+  "ai_drone": {
+   "plan": "hover",
+   "weapon": null,
+   "src": "enemy_ai_drone: quad-rotor pod, cream + hazard band, camera ball with a yellow lens, zapper prongs (hovers: body at 1.6 m)",
+   "tint": false,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "tris": 484
+  },
+  "ai_crawler": {
+   "plan": "hexapod",
+   "weapon": null,
+   "src": "enemy_ai_crawler: squat dome on six spider legs, hazard band, red beacon on top",
+   "tint": false,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "tris": 400
+  },
+  "ai_sentry": {
+   "plan": "turret",
+   "weapon": null,
+   "src": "enemy_ai_sentry + enemy_ai_sentry_gun: bolted tripod, armoured pedestal, ammo box + belt; twin-barrel gun housing on a yaw ring",
+   "tint": false,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "tris": 292
+  },
+  "orbital_drone_t1": {
+   "plan": "hover",
+   "weapon": null,
+   "src": "ASSUMPTION (no 2D art / data unit yet): SP-034 tier-1 Heat hunter = a small orbital drone; graphite lens hull, one red eye + emitter, 4 ducted rotors (hovers: body at 1.6 m, ~0.6 m across vs the Scout Drone's ~0.95 m); faction mark = one self-lit red-orange (rust.2) ring round the hull (node orbital_ring under body, material orbital_glow)",
+   "tint": false,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "self_lit": [
+    "orbital_glow"
+   ],
+   "faction_mark": {
+    "node": "orbital_ring",
+    "parent": "body",
+    "material": "orbital_glow",
+    "what": "orbital faction family mark (self-lit red-orange ring, rust.2)"
+   },
+   "tris": 324
+  },
+  "hound": {
+   "plan": "quad",
+   "weapon": null,
+   "src": "enemy_beast_hound: fast, lean, skinned mutant dog (olive hide, raw patches, bone spine spurs, yellow eyes, open jaw)",
+   "tint": false,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "tris": 428
+  },
+  "spitter": {
+   "plan": "quad",
+   "weapon": null,
+   "src": "enemy_beast_spitter: ranged, bloated, glowing acid glands (glow = flat yellow faces, no emissive)",
+   "tint": false,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "tris": 420
+  },
+  "maw": {
+   "plan": "quad",
+   "weapon": null,
+   "src": "enemy_beast_maw: the large tank: a huge hide-green beast that is mostly mouth, bone teeth + horns, yellow eyes",
+   "tint": false,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "tris": 424
+  },
+  "pet_goat": {
+   "plan": "quad",
+   "weapon": null,
+   "src": "unit_pet_goat ('Stubborn kid'): the same goat + a teal collar with a little brass tag; its eyes are plain dark (no ember: the 2D pet has none)",
+   "tint": false,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "tris": 452
+  },
+  "grunt_mannequin": {
+   "plan": "human",
+   "weapon": null,
+   "src": "assets/grunt_options/loadouts/grunt_mannequin (empty slots)",
+   "tint": true,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "tris": 348
+  },
+  "grunt_set_starter": {
+   "plan": "human",
+   "weapon": "rifle",
+   "src": "grunt_options set: head starter_wrap, body starter_poncho, pack None",
+   "tint": true,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "gear": {
+    "head": "starter_wrap",
+    "body": "starter_poncho",
+    "pack": null
+   },
+   "tris": 564
+  },
+  "grunt_set_militia": {
+   "plan": "human",
+   "weapon": "militia_carbine",
+   "src": "grunt_options set: head militia_helmet, body militia_tabard, pack None",
+   "tint": true,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "gear": {
+    "head": "militia_helmet",
+    "body": "militia_tabard",
+    "pack": null
+   },
+   "tris": 588
+  },
+  "grunt_set_woodsman": {
+   "plan": "human",
+   "weapon": "felling_axe",
+   "src": "grunt_options set: head woodsman_beanie, body quilted_jacket, pack None",
+   "tint": true,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "gear": {
+    "head": "woodsman_beanie",
+    "body": "quilted_jacket",
+    "pack": null
+   },
+   "tris": 648
+  },
+  "grunt_set_scav": {
+   "plan": "human",
+   "weapon": "weapon_hatchet",
+   "src": "grunt_options set: head scav_hood, body scav_coat, pack military_ruck",
+   "tint": true,
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "gear": {
+    "head": "scav_hood",
+    "body": "scav_coat",
+    "pack": "military_ruck"
+   },
+   "tris": 784
+  }
+ },
+ "gear": {
+  "gear_head_militia_helmet": {
+   "slot": "head",
+   "hides": [],
+   "tint": false,
+   "tris": 36
+  },
+  "gear_head_woodsman_beanie": {
+   "slot": "head",
+   "hides": [],
+   "tint": false,
+   "tris": 36
+  },
+  "gear_head_scav_hood": {
+   "slot": "head",
+   "hides": [
+    "hair"
+   ],
+   "tint": false,
+   "tris": 60
+  },
+  "gear_head_starter_wrap": {
+   "slot": "head",
+   "hides": [],
+   "tint": false,
+   "tris": 36
+  },
+  "gear_head_wool_cap": {
+   "slot": "head",
+   "hides": [],
+   "tint": false,
+   "tris": 24
+  },
+  "gear_head_witch_hat": {
+   "slot": "head",
+   "hides": [],
+   "tint": false,
+   "tris": 72
+  },
+  "gear_head_horse_mask": {
+   "slot": "head",
+   "hides": [
+    "hair"
+   ],
+   "tint": false,
+   "tris": 108
+  },
+  "gear_body_militia_tabard": {
+   "slot": "body",
+   "hides": [],
+   "tint": true,
+   "tris": 204
+  },
+  "gear_body_quilted_jacket": {
+   "slot": "body",
+   "hides": [],
+   "tint": true,
+   "tris": 264
+  },
+  "gear_body_scav_coat": {
+   "slot": "body",
+   "hides": [],
+   "tint": true,
+   "tris": 288
+  },
+  "gear_body_starter_poncho": {
+   "slot": "body",
+   "hides": [],
+   "tint": true,
+   "tris": 180
+  },
+  "gear_body_patched_tunic": {
+   "slot": "body",
+   "hides": [],
+   "tint": true,
+   "tris": 180
+  },
+  "gear_body_hide_vest": {
+   "slot": "body",
+   "hides": [],
+   "tint": true,
+   "tris": 180
+  },
+  "gear_body_wizard_robes": {
+   "slot": "body",
+   "hides": [],
+   "tint": true,
+   "tris": 264
+  },
+  "gear_body_maid_outfit": {
+   "slot": "body",
+   "hides": [],
+   "tint": true,
+   "tris": 264
+  },
+  "gear_body_lucky_boxers": {
+   "slot": "body",
+   "hides": [],
+   "tint": true,
+   "tris": 168
+  },
+  "gear_pack_military_ruck": {
+   "slot": "pack",
+   "hides": [],
+   "tint": false,
+   "tris": 124
+  },
+  "gear_pack_school_bag": {
+   "slot": "pack",
+   "hides": [],
+   "tint": false,
+   "tris": 84
+  }
+ },
+ "zone_props": {
+  "hushwood_pine": {
+   "zone": "hushwood",
+   "role": "decoration",
+   "src": "map_bg_hushwood (dense dark pines), bg_battle_hushwood; zones-brainstorm Zone 1 (forest)",
+   "tris": 110
+  },
+  "hushwood_pine_small": {
+   "zone": "hushwood",
+   "role": "decoration",
+   "src": "map_bg_hushwood young pines",
+   "tris": 76
+  },
+  "hushwood_dead_tree": {
+   "zone": "hushwood",
+   "role": "decoration",
+   "src": "loc_owlfall marker (bare dead tree); the forest's snags. A plain dead tree, not Owlfall's giant oak",
+   "tris": 156
+  },
+  "hushwood_stump": {
+   "zone": "hushwood",
+   "role": "decoration",
+   "src": "obj_chop_stump (sawn stump, pale cut top) without the axe",
+   "tris": 132
+  },
+  "hushwood_log": {
+   "zone": "hushwood",
+   "role": "cover_low",
+   "src": "tile_floor_hushwood split-log bits; logging (Lumber Mill No. 3). Felled mossy log, 0.8 m high",
+   "tris": 84
+  },
+  "hushwood_log_pile": {
+   "zone": "hushwood",
+   "role": "cover_low",
+   "src": "loc_lumber_mill (log stack by the mill), obj_logging_truck load. ~1.0 m high",
+   "tris": 432
+  },
+  "hushwood_fern": {
+   "zone": "hushwood",
+   "role": "decoration",
+   "src": "tile_floor_hushwood_wet (ferns); instanced like grass_tuft",
+   "tris": 60
+  },
+  "hushwood_rock_mossy": {
+   "zone": "hushwood",
+   "role": "cover_low",
+   "src": "tile_floor_hushwood moss + rock; rock_large look with moss. ~0.85 m high",
+   "tris": 44
+  },
+  "hushwood_culvert": {
+   "zone": "hushwood",
+   "role": "cover_high",
+   "src": "obj_ex_creek_culvert / loc_creek_culvert: stone headwall, round pipe mouth, moss on top, teal water out",
+   "tris": 144
+  },
+  "hushwood_palisade": {
+   "zone": "hushwood",
+   "role": "cover_high",
+   "src": "tile_wall_hushwood / tile_wall_face_hushwood: sharpened-log palisade, rope lashing. 2.2 m run along X",
+   "tris": 266
+  },
+  "drowned_fence_sunk": {
+   "zone": "drowned_suburbs",
+   "role": "cover_low",
+   "src": "map_bg_b (flooded yards), zone brief: half-sunk picket fence, leaning, two pickets gone. ~0.8 m above water",
+   "tris": 224
+  },
+  "drowned_car_sunk": {
+   "zone": "drowned_suburbs",
+   "role": "cover_low",
+   "src": "map_bg_b + zone brief: a car sunk to the wheel arches, with its water patch. ~1.0 m above water",
+   "tris": 258
+  },
+  "drowned_mailbox": {
+   "zone": "drowned_suburbs",
+   "role": "decoration",
+   "src": "zone brief (suburbia): a leaning mailbox on a post, flag up. No 2D sprite: generic suburban dressing",
+   "tris": 100
+  },
+  "drowned_puddle": {
+   "zone": "drowned_suburbs",
+   "role": "decoration",
+   "src": "objects/prop_puddle (teal water, lighter rim); flat, walk-over",
+   "tris": 27
+  },
+  "drowned_roof": {
+   "zone": "drowned_suburbs",
+   "role": "cover_high",
+   "src": "loc_culdesac + map_bg_b (rust roofs above the flood): the top of a drowned house, ~2.2 m",
+   "tris": 96
+  },
+  "drowned_rowboat": {
+   "zone": "drowned_suburbs",
+   "role": "cover_low",
+   "src": "obj_ex_boat / loc_boat_launch (teal rowboat). Beached, ~0.6 m",
+   "tris": 88
+  },
+  "drowned_outfall": {
+   "zone": "drowned_suburbs",
+   "role": "cover_high",
+   "src": "loc_outfall (storm-drain outfall with a grate). The culvert headwall part with a grate; no eyes (a 2D marker hint)",
+   "tris": 216
+  },
+  "drowned_reeds": {
+   "zone": "drowned_suburbs",
+   "role": "decoration",
+   "src": "map_bg_b green marsh patches: reeds / cattails at the water's edge; instanced",
+   "tris": 72
+  },
+  "scablands_truck_wreck": {
+   "zone": "scablands",
+   "role": "cover_high",
+   "src": "obj_truck_wrecked / loc_truck_wrecked (the Rusted Truck, Scablands wreck scenery): rust cab, slatted bed, flat tyres. 2.5 m",
+   "tris": 468
+  },
+  "scablands_rail_track": {
+   "zone": "scablands",
+   "role": "decoration",
+   "src": "obj_passage_rail_spur: an overgrown rail spur section, weeds through the sleepers",
+   "tris": 180
+  },
+  "scablands_rail_marker": {
+   "zone": "scablands",
+   "role": "decoration",
+   "src": "obj_passage_rail_spur post (the overgrown-rail marker): signal post, dark head, dead lamps, weeds at the foot",
+   "tris": 154
+  },
+  "scablands_scrap_heap": {
+   "zone": "scablands",
+   "role": "cover_low",
+   "src": "map_bg_scablands debris blocks; res_scrap. ~0.9-1.0 m",
+   "tris": 150
+  },
+  "scablands_drum": {
+   "zone": "scablands",
+   "role": "cover_low",
+   "src": "map_bg_scablands drum cluster (grey / rust drums). 0.9 m",
+   "tris": 176
+  },
+  "scablands_tire": {
+   "zone": "scablands",
+   "role": "decoration",
+   "src": "wasteland scrap (a half-sunk tyre); the truck's tyre colours. No own 2D sprite",
+   "tris": 118
+  },
+  "scablands_pylon_stub": {
+   "zone": "scablands",
+   "role": "decoration",
+   "src": "map_bg_scablands power-line pylons: the broken base of one, ~4.5 m",
+   "tris": 372
+  },
+  "scablands_crater": {
+   "zone": "scablands",
+   "role": "decoration",
+   "src": "map_bg_scablands dark pits: a shallow crater, walk-over (0.35 m rim)",
+   "tris": 50
+  },
+  "scablands_rock_scab": {
+   "zone": "scablands",
+   "role": "cover_low",
+   "src": "bg_battle_scablands cracked ground + map scab patches (dark rust crust on the rock). ~0.85 m",
+   "tris": 46
+  },
+  "scablands_shrub_dry": {
+   "zone": "scablands",
+   "role": "decoration",
+   "src": "bg_battle_scablands dry ground: a dead dry shrub; instanced",
+   "tris": 22
+  },
+  "hollis_cart_corral": {
+   "zone": "hollis",
+   "role": "cover_low",
+   "src": "prop_shopping_cart (MegaMart decor or cover) x3 nested in a cart-return pen; loc_megamart red sign colour on the end plate. ~1.05 m",
+   "tris": 1260
+  },
+  "hollis_cart_barricade": {
+   "zone": "hollis",
+   "role": "cover_low",
+   "src": "prop_shopping_cart x3 (two on their sides) + plywood + tyre: a raider barricade (loc_overpass_camp raiders). ~1.0 m",
+   "tris": 1200
+  },
+  "hollis_megamart_wall": {
+   "zone": "hollis",
+   "role": "cover_high",
+   "src": "loc_megamart: tan strip-mall front, red box sign with cream MEGA / MART, faded-rust door (the 2D teal, kept off unit height); broken end. 3.3 m",
+   "tris": 660
+  },
+  "hollis_cmu_wall": {
+   "zone": "hollis",
+   "role": "cover_high",
+   "src": "tile_wall_hollis: CMU cinder-block courses, dark mortar, graffiti tag (rust + faded rust); top broken in steps. 2.0 m",
+   "tris": 816
+  },
+  "hollis_boom_gate": {
+   "zone": "hollis",
+   "role": "decoration",
+   "src": "loc_ranger_gate boom gate shape, retinted as a rusty town barrier: yellow / black hazard arm with rust wear (Ranger's Gate red / white stays a Hushwood landmark); see-through, ~1.2 m",
+   "tris": 228
+  },
+  "hollis_sandbags": {
+   "zone": "hollis",
+   "role": "cover_low",
+   "src": "Hollis militia / raider checkpoint dressing (no own 2D sprite): a bowed sandbag wall, hessian + olive. ~0.83 m",
+   "tris": 180
+  },
+  "hollis_raider_stall": {
+   "zone": "hollis",
+   "role": "cover_low",
+   "src": "loc_overpass_camp: raider camp stall, rust + teal tarps (teal only on the roof, above head height), the red crate, faded-rust goods. Crate counter ~1.0 m (cover); tarp roof 2.1-2.5 m overhead",
+   "tris": 468
+  },
+  "hollis_vending_tipped": {
+   "zone": "hollis",
+   "role": "cover_low",
+   "src": "strip-mall street furniture (no own 2D sprite; MEGAMART red): a drinks machine knocked on its back, spilled cans. ~0.8 m",
+   "tris": 236
+  },
+  "hollis_news_box": {
+   "zone": "hollis",
+   "role": "decoration",
+   "src": "strip-mall kerb dressing (no own 2D sprite): faded-rust box. ~1.05 m",
+   "tris": 132
+  },
+  "hollis_sawhorse": {
+   "zone": "hollis",
+   "role": "decoration",
+   "src": "police barricade (obj_car_alarm street / loc_perimeter_fence checkpoint mood; no own 2D sprite): orange / cream sawhorse. ~1.1 m",
+   "tris": 200
+  },
+  "drowned_water_tile": {
+   "zone": "drowned_suburbs",
+   "role": "decoration",
+   "src": "zone brief / map_bg_b standing flood: a 4 x 4 m open-water tile, flat-shaded, murky: mutant.0 dark olive with mutant.1 moss ripple bands (continue across tiles) and a few metal.1 grey sky-glint facets",
+   "kit": "water",
+   "tris": 128
+  },
+  "drowned_water_shore": {
+   "zone": "drowned_suburbs",
+   "role": "decoration",
+   "src": "the depth-band edge, 4 x 2 m: deep mutant.0 (meets the tile) -> mutant.1 moss -> a thin 0.3 m teal.1 shallows band -> a ragged bone.1 foam lip on the shore (+Z) side",
+   "kit": "water",
+   "tris": 96
+  },
+  "drowned_water_shore_corner": {
+   "zone": "drowned_suburbs",
+   "role": "decoration",
+   "src": "the same bands on a quarter annulus (r 1..3 m): rounds an island's convex corner",
+   "kit": "water",
+   "tris": 60
+  },
+  "drowned_float_tire": {
+   "zone": "drowned_suburbs",
+   "role": "decoration",
+   "src": "scablands_tire / drowned flood debris: a tyre floating flat, 7 cm proud, broken foam ring",
+   "kit": "water",
+   "tris": 134
+  },
+  "drowned_float_plank": {
+   "zone": "drowned_suburbs",
+   "role": "decoration",
+   "src": "drowned_fence_sunk boards: two fence boards on a rail, floating, foam at the ends",
+   "kit": "water",
+   "tris": 66
+  },
+  "drowned_float_reeds": {
+   "zone": "drowned_suburbs",
+   "role": "decoration",
+   "src": "drowned_reeds / map_bg_b marsh: a reed clump in the water + lily pads + a ripple / foam ring at the stems",
+   "kit": "water",
+   "tris": 99
+  },
+  "drowned_foam_strip": {
+   "zone": "drowned_suburbs",
+   "role": "decoration",
+   "src": "edge foam: a ragged 3 m bone.1 strip with gaps and a mutant.1 moss fringe on the water side",
+   "kit": "water",
+   "tris": 48
+  }
+ },
+ "weapons": {
+  "rifle": {
+   "hands": 2,
+   "tris": 168
+  },
+  "shotgun": {
+   "hands": 2,
+   "tris": 124
+  },
+  "pistol": {
+   "hands": 1,
+   "tris": 84
+  },
+  "machete": {
+   "hands": 1,
+   "tris": 72
+  },
+  "weapon_hatchet": {
+   "hands": 1,
+   "tris": 48
+  },
+  "wtype_pistol": {
+   "hands": 1,
+   "src": "wtype_pistol sprite: revolver, bone grip",
+   "tris": 100
+  },
+  "wtype_rifle": {
+   "hands": 2,
+   "src": "wtype_rifle sprite: scoped bolt-action, wood stock",
+   "tris": 180
+  },
+  "wtype_auto": {
+   "hands": 2,
+   "src": "wtype_auto sprite: drum-mag SMG, light stock",
+   "tris": 164
+  },
+  "wtype_shotgun": {
+   "hands": 2,
+   "src": "wtype_shotgun sprite: double barrel, pale stock",
+   "tris": 112
+  },
+  "wtype_bow": {
+   "hands": 2,
+   "src": "wtype_bow sprite: wooden recurve",
+   "tris": 96
+  },
+  "wtype_crossbow": {
+   "hands": 2,
+   "src": "wtype_crossbow sprite: pale stock, wood prod",
+   "tris": 132
+  },
+  "wtype_blade": {
+   "hands": 1,
+   "src": "wtype_blade sprite: short sword",
+   "tris": 72
+  },
+  "wtype_club": {
+   "hands": 1,
+   "src": "wtype_club sprite: wooden club, iron bands",
+   "tris": 48
+  },
+  "wtype_improvised": {
+   "hands": 1,
+   "src": "wtype_improvised sprite: spiked mace, rusty haft",
+   "tris": 84
+  },
+  "militia_carbine": {
+   "hands": 2,
+   "src": "item_militia_carbine (militia set): dark carbine, olive furniture",
+   "for": [
+    "militia_carbine"
+   ],
+   "tris": 128
+  },
+  "scav_carbine": {
+   "hands": 2,
+   "src": "item_scav_carbine (scav set) - the existing build_props.py carbine",
+   "for": [
+    "scav_carbine"
+   ],
+   "tris": 172
+  },
+  "kalash_47": {
+   "hands": 2,
+   "src": "item_kalash_47: steel + wood, curved mag",
+   "tris": 160
+  },
+  "ar16_stoner": {
+   "hands": 2,
+   "src": "item_ar16_stoner: black rifle, carry handle",
+   "for": [
+    "ar16_stoner",
+    "hunter_carbine"
+   ],
+   "tris": 172
+  },
+  "hunter_longrifle": {
+   "hands": 2,
+   "src": "item_hunter_longrifle (Hunters): graphite long rifle, red-lens scope",
+   "tris": 232
+  },
+  "m1912_colter": {
+   "hands": 1,
+   "src": "item_m1912_colter: steel slide, wood grips",
+   "tris": 80
+  },
+  "scrap_smg": {
+   "hands": 2,
+   "src": "item_scrap_smg: black SMG, straight mag, wire stock",
+   "tris": 128
+  },
+  "nail_gun": {
+   "hands": 1,
+   "src": "item_nail_gun: yellow power tool, battery pack",
+   "tris": 68
+  },
+  "felling_axe": {
+   "hands": 2,
+   "src": "item_felling_axe (woodsman set): long haft, steel head",
+   "tris": 60
+  },
+  "recruit_spear": {
+   "hands": 2,
+   "src": "item_recruit_spear: wood shaft, steel leaf head, teal wrap",
+   "tris": 44
+  },
+  "nat_shiv": {
+   "hands": 1,
+   "src": "item_nat_shiv: short blade, rag grip",
+   "tris": 72
+  },
+  "hunter_knife": {
+   "hands": 1,
+   "src": "item_hunter_knife (Hunters): long graphite knife",
+   "tris": 72
+  },
+  "stun_baton": {
+   "hands": 1,
+   "src": "item_stun_baton: black baton, yellow tip",
+   "tris": 72
+  },
+  "bass_guitar": {
+   "hands": 2,
+   "src": "item_bass_guitar: red body (drawn rust.1 here - contract: no saturated reds), dark neck",
+   "tris": 80
+  },
+  "knuckle_wraps": {
+   "hands": 0,
+   "src": "item_knuckle_wraps: taped fists",
+   "tris": 96
+  }
+ },
+ "shields": {
+  "wood_round_shield": {
+   "hands": null,
+   "src": "item_wood_round_shield: planks, iron rim + boss, teal paint",
+   "tris": 152
+  },
+  "riot_shield": {
+   "hands": null,
+   "src": "item_riot_shield: dark tall shield, view slot, teal stripe",
+   "tris": 96
+  },
+  "scrap_lid_shield": {
+   "hands": null,
+   "src": "item_scrap_lid_shield: trash can lid",
+   "tris": 152
+  }
+ },
+ "fx": {
+  "frag_grenade": {
+   "src": "item_frag_grenade + fx: olive frag",
+   "tris": 100
+  },
+  "acid_glob": {
+   "src": "fx_spitter_glob (spitter acid_gland projectile), flies +Z",
+   "tris": 36
+  },
+  "drone_bolt": {
+   "src": "fx_drone_bolt (drone zapper), flies +Z",
+   "tris": 48
+  },
+  "arrow": {
+   "src": "KEPT (Megan, Oct 3 6 PM): 2D bows fire fx_bullet; the 3D bow shoots this arrow",
+   "tris": 30
+  },
+  "crossbow_bolt": {
+   "src": "KEPT (Megan, Oct 3 6 PM): 2D crossbows fire fx_bullet; the 3D crossbow shoots this bolt",
+   "tris": 30
+  },
+  "med_kit": {
+   "src": "item_med_kit (medic heal / consumable)",
+   "tris": 60
+  }
+ },
+ "gear_item_to_part": {
+  "head": {
+   "militia_helmet": "militia_helmet",
+   "scav_hood": "scav_hood",
+   "scrap_helmet": "militia_helmet",
+   "hunter_mask": "scav_hood",
+   "wool_cap": "wool_cap",
+   "witch_hat": "witch_hat",
+   "horse_mask": "horse_mask"
+  },
+  "body": {
+   "militia_vest": "militia_tabard",
+   "scav_poncho": "scav_coat",
+   "padded_vest": "quilted_jacket",
+   "hunter_coat": "scav_coat",
+   "patched_tunic": "patched_tunic",
+   "hide_vest": "hide_vest",
+   "wizard_robes": "wizard_robes",
+   "maid_outfit": "maid_outfit",
+   "lucky_boxers": "lucky_boxers"
+  },
+  "pack": {
+   "school_bag": "school_bag",
+   "military_ruck": "military_ruck",
+   "scav_satchel": "school_bag"
+  }
+ },
+ "weapon_item_to_file": {
+  "glokk_17": "pistol",
+  "nat_pistol": "pistol",
+  "remingon_870": "shotgun",
+  "pipe_rifle": "rifle",
+  "rust_machete": "machete",
+  "scav_hatchet": "weapon_hatchet",
+  "hunter_carbine": "ar16_stoner",
+  "hunter_longrifle": "hunter_longrifle"
+ },
+ "water_kit": {
+  "note": "OPTIONAL Drowned Suburbs water kit (not placed in any scene; drowned.js keeps its procedural plane). y = 0 is the waterline; one primitive each. See README note 14",
+  "files": [
+   "drowned_water_tile.glb",
+   "drowned_water_shore.glb",
+   "drowned_water_shore_corner.glb",
+   "drowned_float_tire.glb",
+   "drowned_float_plank.glb",
+   "drowned_float_reeds.glb",
+   "drowned_foam_strip.glb"
+  ]
+ },
+ "props_merged": {
+  "manifest": "props_merged/manifest.json",
+  "note": "win 4: one pre-merged static-prop chunk per room (zone scene). See props_merged/README.md",
+  "files": [
+   "props_merged/greyback_hills.glb",
+   "props_merged/hushwood_clearing.glb",
+   "props_merged/drowned_culdesac.glb",
+   "props_merged/scablands_railline.glb",
+   "props_merged/hollis_outskirts.glb",
+   "props_merged/hollis_outskirts_ground.glb"
+  ]
+ },
+ "parts_shared": {
+  "manifest": "parts_shared/manifest.json",
+  "note": "win 1: the deduplicated shared part-mesh library for InstancedMesh batching. See parts_shared/README.md",
+  "files": [
+   "parts_shared/parts_library.glb"
+  ]
+ }
+}

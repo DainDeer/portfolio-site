@@ -58,9 +58,9 @@ h2 { margin: 4px 0 10px; } h3 { margin: 0 0 8px; font-size: 14px; color: #e8c880
 .mn-tags { font-size: 10px; color: #bba; text-shadow: 0 0 3px #000; }
 .sq-row { display: flex; align-items: center; gap: 6px; margin: 3px 0; } .sq-name { width: 110px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; } .sq-row.dead { opacity: .6; }
 .heat-marks { position: relative; height: 14px; font-size: 9px; color: #999; overflow: hidden; } .heat-marks span { position: absolute; white-space: nowrap; } .heat-marks span.hm-end { text-align: right; }
-.log div { font-size: 11px; color: #bbb; border-bottom: 1px solid #262520; }
+.log div { font-size: 11px; color: #bbb; border-bottom: 1px solid #262520; overflow-wrap: anywhere; }   /* long lists (the Toll Gate) wrap on phones */
 .modal-back { position: fixed; inset: 0; background: #000a; display: flex; align-items: center; justify-content: center; z-index: 50; }
-.modal { background: #201f18; border: 1px solid #6a6040; border-radius: 6px; padding: 16px 20px; max-width: 560px; max-height: 88vh; overflow: auto; box-shadow: 0 10px 40px #000; }
+.modal { background: #201f18; border: 1px solid #6a6040; border-radius: 6px; padding: 16px 20px; max-width: 560px; max-height: 88vh; overflow: auto; box-shadow: 0 10px 40px #000; overflow-wrap: anywhere; }
 .modal.wide { max-width: 860px; }
 .modal.radio, .radio { }
 .ev-text { font-style: italic; color: #e8e0c8; }
@@ -73,7 +73,7 @@ table.summary { border-collapse: collapse; width: 100%; font-size: 12px; } table
 .battle-canvas { display: block; border: 1px solid #444; width: min(100%, calc((100vh - 190px) * 40 / 24)); height: auto; image-rendering: pixelated; }
 .battle-wrap { display: block; width: 100%; }
 #tooltip { position: fixed; z-index: 100; background: #0c0c09ee; border: 1px solid #6a6040; padding: 6px 8px; border-radius: 4px; max-width: 360px; font-size: 12px; pointer-events: none; }
-#toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 8px 14px; border-radius: 4px; opacity: 0; transition: opacity .2s; z-index: 120; pointer-events: none; max-width: 80vw; }
+#toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 8px 14px; border-radius: 4px; opacity: 0; transition: opacity .2s; z-index: 120; pointer-events: none; max-width: 80vw; overflow-wrap: anywhere; }
 #toast.show { opacity: .95; }
 #debug { position: fixed; right: 0; top: 0; bottom: 0; width: 380px; background: #0e0e12f5; border-left: 2px solid #5050a0; z-index: 90; overflow-y: auto; padding: 8px; font-size: 12px; }
 .dbg-head { display: flex; justify-content: space-between; align-items: center; } .dbg-sec { border-top: 1px solid #333; padding: 4px 0; }
@@ -355,6 +355,7 @@ button.promote { background: #6a5a1a; }
 /* landscape phone battles: the pickup as a toast along the bottom edge (js/cardview.js; left/right set by CV.placeToast) */
 .card-toast { position: fixed; bottom: max(6px, env(safe-area-inset-bottom)); z-index: 90; display: flex; align-items: center; gap: 8px; min-height: 44px; max-width: 300px; box-sizing: border-box;
   padding: 3px 10px 3px 4px; background: #1b1a14f0; border: 1px solid #8a7a4a; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.6); cursor: pointer; opacity: 0; transform: translateY(8px); transition: opacity .25s, transform .25s; }
+.card-toast.ct-compact { padding: 3px; gap: 0; } .card-toast.ct-compact .ct-text { display: none; }   /* no room anywhere else (CV.toastFallback): the thumbnail alone */
 .card-toast.in { opacity: 1; transform: none; } .card-toast.out { opacity: 0; transition: opacity .4s; }
 .card-toast .tcard { flex: none; } .card-toast .tcard .tc-name { display: none; }
 .card-toast .ct-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
@@ -464,3 +465,11 @@ button.promote { background: #6a5a1a; }
 .binder-sets b { color: #ffd84a; }
 .brand-title { color: #ffd84a; }
 .title-cardtitle { display: block; color: #ffd84a; font-size: 12px; margin-top: 2px; }
+/* SP-100 3D battles (js/b3d/view.js): the WebGL arena under a transparent overlay canvas that lays out exactly like the 2D .battle-canvas */
+.b3d-stack { position: relative; }
+.b3d-stack > .b3d-gl { position: absolute; display: block; pointer-events: none; image-rendering: pixelated; }
+.battle-canvas.b3d-overlay { position: relative; background: transparent; image-rendering: auto; }
+.b3d-loading { display: flex; align-items: center; justify-content: center; aspect-ratio: 40 / 24; max-height: calc(100vh - 190px); background: #15130f; border: 1px solid #444; }
+.b3d-card { background: #0c0c09e8; border: 1px solid #5a4a2a; padding: 12px 18px; min-width: 240px; font-size: 13px; }
+.b3d-card h3 { margin: 0 0 6px; color: #e8c880; }
+.b3d-card ol { margin: 0; padding-left: 18px; } .b3d-card li { display: flex; justify-content: space-between; gap: 16px; } .b3d-card li b { font-family: monospace; color: #9a9; }

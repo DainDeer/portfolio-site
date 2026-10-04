@@ -164,7 +164,7 @@ DATA.events = {
     title: "Hollow Creek (Aftermath)",
     text: "Burned walls. A raider camp squats in the ruins. A few survivors watch you from a cellar door. They remember who didn't come.",
     options: [
-      { label: "Clear the raider camp", effects: [{ battle: { family: "outlaws", budgetMult: 1.2 } }, { loot: { rolls: 2, rarityBonus: 10 } }, { lore: "hollow_creek_aftermath" }, { setWorld: { hollow_creek: "aftermath_cleared" } }] },
+      { label: "Clear the raider camp", effects: [{ text: "Cold fire pits and cut ropes. Whatever the raiders didn't burn, they left behind." }, { battle: { family: "outlaws", budgetMult: 1.2 } }, { loot: { rolls: 2, rarityBonus: 10 } }, { lore: "hollow_creek_aftermath" }, { setWorld: { hollow_creek: "aftermath_cleared" } }] },
       { label: "Search the ruins quietly", heat: 15, check: { skill: "stealth", dc: 14 }, gruntSpendable: true, outcomes: {
           success: [{ text: "You slip in and out." }, { loot: { rolls: 1 } }, { lore: "hollow_creek_aftermath" }],
           fail:    [{ text: "Spotted!" }, { battle: { family: "outlaws", budgetMult: 1.2 } }] } },

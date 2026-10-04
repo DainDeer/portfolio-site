@@ -165,7 +165,7 @@ DATA.searchables = {
     rooftop_survivor:       { name: "Survivor on a roof", examine: "[PLACEHOLDER] Someone waving from the roof.", sprite: "obj_survivor" },
     drone_patrol:           { name: "Drone patrol", examine: "[PLACEHOLDER] A drone sweeping the area on a lazy loop.",       sprite: "enemy_ai_drone" },
     hollow_creek_holding:   { name: "Town gate", examine: "[PLACEHOLDER] The town gate, barred and watched.",          sprite: "obj_gate" },
-    aftermath_hollow_creek: { name: "Raider camp", examine: "[PLACEHOLDER] What the raiders left of the camp.",        sprite: "obj_barricade" },
+    aftermath_hollow_creek: { name: "Raider camp", examine: "Cold fire pits and cut ropes. Whatever the raiders didn't burn, they left behind.",        sprite: "obj_barricade" },
     allied_hollow_creek:    { name: "Town square", examine: "[PLACEHOLDER] The town square, busier than it has any right to be.",        sprite: "obj_gate" }
   },
   // Slice 5 §D (Megan): every location's own way in / out, and its extraction point, are clickable objects in the
@@ -191,8 +191,8 @@ DATA.searchables = {
       default:    { name: "Extraction point", sprite: "obj_radio", examine: "[PLACEHOLDER] Your way home." },
       byLoc: {
         ex_truck:   { name: "Logging Truck",  sprite: "obj_logging_truck", wide: 2, wreckedSprite: "obj_logging_truck_wrecked", wreckedAnim: "obj_logging_truck_wrecked_smoke",   // Slice 5 §G (Smudge 1828231; Vixie: the red Rusted Truck art is retired from zone a, asset kept)
-                      examine: "[DRAFT] [PLACEHOLDER] The logging truck. Keys in it, if it'll start.", examineWrecked: "[DRAFT] [PLACEHOLDER] Wrecked. It's not going anywhere." },   // Smudge's suggested lines (truck_props_manifest.json)
-        ex_tunnel:  { name: "Culvert mouth",  sprite: "obj_ex_creek_culvert", examine: "[PLACEHOLDER] The creek runs out through a culvert under the road, toward home. Something always follows you into it." },   // Slice 5 §G: the Creek Culvert (Smudge 1828231)
+                      examine: "The logging truck. Keys in it, if it'll start.", examineWrecked: "Wrecked. It's not going anywhere." },   // Smudge's suggested lines (truck_props_manifest.json)
+        ex_tunnel:  { name: "Culvert mouth",  sprite: "obj_ex_creek_culvert", examine: "The creek runs out through a culvert under the road, toward home. Something always follows you into it." },   // Slice 5 §G: the Creek Culvert (Smudge 1828231)
         sc_tunnel:  { name: "Tunnel mouth",   sprite: "obj_ex_sc_tunnel", fallback: "obj_ex_tunnel_mouth", examine: "[PLACEHOLDER] A service tunnel, pointed home. Something always follows you into it." },   // Slice 5 §G: Tunnel Home (hook: obj_ex_sc_tunnel; meanwhile the old tunnel mouth)
         ex_rooftop: { name: "Pickup radio",   sprite: "obj_radio",      examine: "[PLACEHOLDER] A radio wired to a flare. Call the pickup and it comes." },
         b_levee:    { name: "Boat launch",    sprite: "obj_ex_boat", wide: 2, examine: "[PLACEHOLDER] The boat comes when you call. Hold the ramp till it does." },

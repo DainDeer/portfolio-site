@@ -124,7 +124,7 @@ DATA.zones = {
     },
     // Slice 5 §G: the Deer Trail starts at the Hushwood's Fire Lookout (fixed in rows 3-4, DATA.map.fixed)
     deer_trail: {
-      name: "Deer Trail", crossVerb: "follow", spotText: "[PLACEHOLDER] Fresh hoofprints cut off between the trees, uphill.", hiddenWhere: "behind the lookout", sprite: "obj_passage_deer_trail", examine: "[PLACEHOLDER] A narrow trail of hoofprints climbs into the hills. Something with horns uses it every day.", mapIcon: "map_passage",
+      name: "Deer Trail", crossVerb: "follow", spotText: "Fresh hoofprints cut off between the trees, uphill.", hiddenWhere: "behind the lookout", sprite: "obj_passage_deer_trail", examine: "[PLACEHOLDER] A narrow trail of hoofprints climbs into the hills. Something with horns uses it every day.", mapIcon: "map_passage",
       ends: { a: { zone: "a", loc: "fire_lookout" }, greyback: { zone: "greyback", node: "gb1" } },
       hiddenAt: "a",
       spot: { skills: ["perception", "survival"], dc: 12 },

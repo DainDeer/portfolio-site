@@ -10,6 +10,14 @@
 <link rel="stylesheet" href="css/mobile.css">
 <link rel="stylesheet" href="css/title.css">
 <link rel="stylesheet" href="css/scenario.css">
+<!-- SP-100: the 3D battle view's ES modules (js/b3d/, loaded on demand by js/gfx.js) find three.js + cannon-es here -->
+<script type="importmap">
+{ "imports": {
+    "three": "./vendor/three-0.185.0/three.module.min.js",
+    "three/addons/": "./vendor/three-0.185.0/addons/",
+    "cannon-es": "./vendor/cannon-es-0.20.0/cannon-es.js"
+} }
+</script>
 </head>
 <body>
 <div id="app">
@@ -21,7 +29,7 @@
   <div id="toast"></div>
 </div>
 <!-- data (all tuning numbers) -->
-<script src="js/build_id.js?v=bc5bb86"></script>
+<script src="js/build_id.js?v=e862087"></script>
 <script src="data/config.js"></script>
 <script src="data/resources.js"></script>
 <script src="data/sprites.js"></script>
@@ -95,6 +103,9 @@
 <script src="js/sfx.js"></script>
 <script src="js/music.js"></script>
 <script src="js/battleview.js"></script>
+<script src="js/battleclock.js"></script>
+<script src="js/roster3d.js"></script>
+<script src="js/gfx.js"></script>
 <script src="js/mapview.js"></script>
 <script src="js/siteview.js"></script>
 <script src="js/townview.js"></script>
@@ -109,6 +120,6 @@
 <script src="js/title.js"></script>
 <script src="js/scenarioview.js"></script>
 <script src="js/main.js"></script>
-<div id="build-stamp" style="position:fixed;right:4px;bottom:3px;z-index:2147483647;font:10px/1.2 monospace;color:#fff;opacity:.45;background:rgba(0,0,0,.35);padding:1px 4px;border-radius:3px;pointer-events:none;user-select:none">build bc5bb86</div>
+<div id="build-stamp" style="position:fixed;right:4px;bottom:3px;z-index:2147483647;font:10px/1.2 monospace;color:#fff;opacity:.45;background:rgba(0,0,0,.35);padding:1px 4px;border-radius:3px;pointer-events:none;user-select:none">build e862087</div>
 </body>
 </html>

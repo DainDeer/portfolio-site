@@ -61,7 +61,7 @@ DATA.map = {
     // 1828231; the three keepers keep their old markers (Vixie). ----
     mossback:        { name: "Mossback Campground", icon: "loc_mossback", family: "outlaws", size: "M", odds: { hostiles: 50, event: 40, survivors: 15 }, tags: ["food", "cloth"], events: ["cache", "toll_gate"] },
     owlfall:         { name: "Owlfall Hollow",      icon: "loc_owlfall",  family: "beasts",  size: "M", odds: { hostiles: 55, event: 35, survivors: 5 },  tags: ["biomass", "chemicals", "food"], events: ["cache"],
-                       secretSpot: { loc: "witch_cottage", skills: ["perception"], dc: 15, text: "[PLACEHOLDER] Owls, all of them watching the same gap in the trees." } },   // Vixie: the Witch's Cottage
+                       secretSpot: { loc: "witch_cottage", skills: ["perception"], dc: 15, text: "Owls, all of them watching the same gap in the trees." } },   // Vixie: the Witch's Cottage
     lumber_mill:     { kind: "industrial", name: "Lumber Mill No. 3", icon: "loc_lumber_mill", family: "outlaws", size: "L", odds: { hostiles: 55, event: 30, survivors: 5 }, tags: ["scrap", "fuel", "office"], events: ["toll_gate", "cache"] },
     stillwater:      { name: "Stillwater Pond",     icon: "loc_stillwater", family: "beasts", size: "M", odds: { hostiles: 45, event: 40, survivors: 5 }, tags: ["water", "food", "biomass"], events: ["cache"] },
     picnic:          { name: "Picnic of the Damned", icon: "loc_picnic", family: "beasts", size: "M", odds: { hostiles: 60, event: 50, survivors: 0 }, tags: ["food", "cloth"], events: ["cache"],
@@ -92,7 +92,7 @@ DATA.map = {
                          }
                        } },
     ex_truck:        { name: "Logging Truck",          icon: "loc_logging_truck", iconWrecked: "loc_logging_truck_wrecked", iconWreckedAnim: "loc_logging_truck_wrecked_smoke",family: "outlaws", size: "M", odds: { hostiles: 30, event: 0, survivors: 0 }, tags: ["scrap", "fuel"], events: [],
-                       extraction: { type: "check", skill: "piloting", dc: 12, failHeat: 5, badFail: "crash", crashHeat: 8 } },  // hotwire (§2.3). Slice 5 §A (Megan): a Bad Fail crashes it (was "battle"); crash numbers: config.extraction.crash
+                       extraction: { type: "check", skill: "piloting", dc: 8, failHeat: 5, badFail: "crash", crashHeat: 8 } },  // hotwire (§2.3). Vixie (Hex beginning pass): one truck DC everywhere, 8 (was 12 after the tutorial; config.tutorial.extraction.ex_truck). Slice 5 §A (Megan): a Bad Fail crashes it (was "battle"); crash numbers: config.extraction.crash
     ex_tunnel:       { name: "Creek Culvert",   icon: "loc_creek_culvert",family: "beasts",  size: "M", odds: { hostiles: 0, event: 0, survivors: 0 }, tags: ["scrap"], events: [],
                        extraction: { type: "defense", surviveSec: 30, waves: 3, waveBudgetMult: 0.6 } },           // countdown defense (Tarkov-like). Slice 5 §G: renamed from Tunnel Home, same defense
     // ---- Slice 5 §G: The Scablands' extractions (the six places above + these two; generated map, data/zones.js) ----
@@ -107,7 +107,7 @@ DATA.map = {
     b_warrens:       { zone: "b", name: "Hound Warrens",        icon: "loc_warrens",      family: "beasts",  size: "M", odds: { hostiles: 75, event: 15, survivors: 0 },  tags: ["chemicals", "biomass"], events: ["cache"],
                        objectWeights: { body: 60 } },    // nest: lots of old bodies
     b_clinic:        { kind: "medical", zone: "b", enemyBudgetMult: 0.8, name: "Harrow Street Clinic", icon: "loc_harrow_clinic",family: "beasts",  size: "M", odds: { hostiles: 50, event: 40, survivors: 10 }, tags: ["med", "chemicals", "terminal"], events: ["cryo_ward"] },
-    b_cistern:       { kind: "industrial", zone: "b", name: "Cistern Pumphouse",    icon: "loc_cistern",      family: "outlaws", size: "S", odds: { hostiles: 45, event: 25, survivors: 0 },  tags: ["water", "scrap", "office"], events: ["toll_gate"] },
+    b_cistern:       { kind: "industrial", zone: "b", name: "Cistern Pumphouse",    icon: "loc_cistern",      family: "outlaws", size: "S", odds: { hostiles: 45, event: 25, survivors: 0 },  tags: ["water", "scrap", "office"], events: ["toll_gate"], passage: "spillway" },   // the Spillway's Drowned end (hidden here until spotted; DATA.zones.passages.spillway)
     b_levee:         { zone: "b", floor: "tile_floor_b_wet", name: "Levee Boat Launch",    icon: "loc_boat_launch",  family: "beasts",  size: "S", odds: { hostiles: 40, event: 0,  survivors: 0 },  tags: [], events: [],
                        extraction: { type: "defense", surviveSec: 20, waves: 3, waveBudgetMult: 0.7 } },           // the zone's only extraction (x0.7 total, via the waves; 20 s so B6 isn't where most runs end)
     // ---- Slice 5 §G: The Greyback Hills (handcrafted, tier 2; nodes + edges in data/zones.js; Smudge's markers aa8b4fd) ----

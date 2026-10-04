@@ -38,6 +38,13 @@
   U.uid = (() => { let n = 0; return (p) => (p || "id") + "_" + Date.now().toString(36) + "_" + (n++).toString(36) + Math.floor(Math.random() * 1e4).toString(36); })();
   U.fmt1 = (v) => (Math.round(v * 10) / 10).toString();
   U.pct = (v) => Math.round(v) + "%";
+  // Vixie (Hex beginning pass): data copy still carries [DRAFT] / [PLACEHOLDER] tags (the flavor pass to-do list, see
+  // tests/copy_tags.js); they're stripped here, at display time, never in the data. A tag right before punctuation
+  // takes its leading space with it ("LOG [PLACEHOLDER]: x" -> "LOG: x"), otherwise the space after it.
+  U.copy = (s) => (typeof s !== "string" || s.indexOf("[") < 0 ? s : s.replace(/ ?\[(?:DRAFT|PLACEHOLDER)\](?=[:;,.!?)]|$)/g, "").replace(/\[(?:DRAFT|PLACEHOLDER)\] ?/g, ""));
+  // Hex retest (g): global hotkeys ignore keys typed into a field (input, textarea, select, contenteditable)
+  U.typing = (e) => { const t = (e && e.target && e.target.nodeType === 1 ? e.target : null) || (typeof document !== "undefined" ? document.activeElement : null);
+    return !!t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || !!t.isContentEditable); };
   U.dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
   U.fmtTime = (ms) => {
     if (ms <= 0) return "ready";

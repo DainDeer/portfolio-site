@@ -52,7 +52,7 @@
     TV.show();
   };
   TV.onKey = function (e) {
-    if (!TV.cur) return;
+    if (!TV.cur || G.Util.typing(e)) return;
     if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") { e.preventDefault(); e.stopPropagation(); TV.next(); }
     else if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); }
     else if (TV.holds()) e.stopPropagation();   // battle hotkeys wait until the step is closed
@@ -63,7 +63,7 @@
     // a step whose condition went false since the sequence opened is skipped (not flagged)
     if (!G.Tut.cond(st.when) || (st.skipIfMissing && !targetsOf(st).length)) { TV.cur.i++; return TV.show(); }
     const el = TV.el, last = TV.cur.i === TV.cur.steps.length - 1;
-    el.querySelector(".tut-text").textContent = G.Tut.text(st, touch());
+    el.querySelector(".tut-text").textContent = G.Util.copy(G.Tut.text(st, touch()));
     el.querySelector(".tut-next").textContent = last ? "Got it" : "Next";
     el.querySelector(".tut-n").textContent = TV.cur.steps.length > 1 ? `${TV.cur.i + 1}/${TV.cur.steps.length}` : "";
     el.dataset.step = st.id;

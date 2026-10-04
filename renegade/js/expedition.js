@@ -153,6 +153,26 @@
       if (!(g.gear && g.gear.weapon) && fists(g.weapon)) out.push(G.Allies ? G.Allies.name(g) : g.name); }
     return out;
   };
+  // the stash backpack X.start equips when the loadout has none (config.deploy.freeBackpack), or null (a free one is made)
+  X.ownDefaultPack = function () { const FB = CFG().deploy.freeBackpack; return FB ? G.state.stash.items.find((i) => i.base === FB.base) || null : null; };
+  // Hex beginning pass: the deploy screen's carry preview. The same pieces X.start puts in the run (picked gear by its
+  // loadout slot, the default backpack, pouch, Med, ammo, squad), measured by the same X.capacity / X.carried. A free
+  // School Bag (none in the stash) has no affixes (Vixie: free gear stays plain), so the preview is exact.
+  X.loadoutPreview = function (lo) {
+    const s = G.state, body = G.State.body(lo.bodyId), used = new Set(), find = (uid) => (uid && !used.has(uid) ? s.stash.items.find((i) => i.uid === uid) : null);
+    const gear = {}; let freePack = false;
+    for (const slot in lo.gear || {}) { const it = find(lo.gear[slot]); if (it) { gear[slot] = it; used.add(it.uid); } }
+    const FB = CFG().deploy.freeBackpack;
+    if (!gear.backpack && FB) { const own = X.ownDefaultPack(); if (own && !used.has(own.uid)) { gear.backpack = own; used.add(own.uid); } else { gear.backpack = { uid: null, base: FB.base, rarity: FB.rarity, ilvl: FB.ilvl, affixes: [] }; freePack = true; } }
+    // Reserve resources in deployment order without changing the stash: pouch slots first, then bag Med.
+    const pouch = [], res = { ...s.stash.res };
+    for (const p of lo.pouch || []) { if (p.uid) { const it = find(p.uid); if (it) { pouch.push({ item: it }); used.add(it.uid); } } else if (p.res && (res[p.res] || 0) >= p.n) { res[p.res] -= p.n; pouch.push({ res: p.res, n: p.n }); } }
+    const med = Math.min(lo.med || 0, res.med || 0);
+    const ammo = lo.ammo && lo.ammo.base && lo.ammo.n > 0 && G.Workbench ? { base: lo.ammo.base, n: Math.min(lo.ammo.n, G.Workbench.ammoCount(lo.ammo.base)) } : null;
+    const squad = (lo.grunts || []).map((id) => s.grunts.find((x) => x.uid === id)).filter(Boolean).map((g) => ({ g, hp: 1 }));
+    const r = { gear, bag: { items: [], res: med ? { med } : {} }, pouch, carriedCritical: [], ammo: ammo && ammo.n > 0 ? ammo : null, squad };
+    return { run: r, body, freePack, cap: X.capacity(r, body), kg: X.carried(r), team: squad.reduce((a, m) => a + X.memberCarryKg(m), 0) };
+  };
   X.start = function (lo, seed, zone) {
     const s = G.state;
     zone = zone || lo.zone || "a";
@@ -170,7 +190,7 @@
     // button asks first (X.unarmedUnits).
     // every run starts with a basic backpack (config.deploy.freeBackpack): none picked -> one from the stash, else a free one
     const FB = CFG().deploy.freeBackpack; let freePack = null;
-    if (!gear.backpack && FB) { const own = s.stash.items.find((i) => i.base === FB.base); if (own) gear.backpack = take(own.uid); else gear.backpack = freePack = G.Items.make(FB.base, FB.rarity, FB.ilvl, G.rng); }
+    if (!gear.backpack && FB) { const own = X.ownDefaultPack(); if (own) gear.backpack = take(own.uid); else { gear.backpack = freePack = G.Items.make(FB.base, FB.rarity, FB.ilvl, G.rng); freePack.affixes = []; } }   // Vixie: free gear stays plain (affixes come from loot)
     const pouch = [];
     for (const p of lo.pouch || []) {
       if (p.uid) { const it = take(p.uid); if (it) pouch.push({ item: it }); }
@@ -426,7 +446,7 @@
 
   // Effects run in order. A battle effect queues a battle step and defers the remaining effects until it's won.
   X.applyEffects = function (effects, ctxStep) {
-    const r = run(), texts = [], front = [];
+    const r = run(), texts = [], front = [], shown = {};   // shown: a shorter pop-up version of a text (the log keeps the full one)
     for (let i = 0; i < effects.length; i++) {
       const e = effects[i];
       if (!run() || G.state.run !== r) break; // died
@@ -444,7 +464,7 @@
         if (n) { r.loc = n.id; r.visited[n.id] = true; X.markSeen(); const site = X.ensureSite(n); site.visitSearches = 0; site.visits++; r.view = "site"; texts.push(`You arrive at ${G.Map.label(n)}.`); }
       }
       if (e.hiddenContainer) { const site = X.site(); if (site) { X.addSearchObject(site, "crate", { name: "Hidden stash" }); texts.push("A hidden stash is now searchable here."); } }
-      if (e.payKg) texts.push(X.payKg(e.payKg));
+      if (e.payKg) { const p = X.payKgDetail(e.payKg); texts.push(p.text); if (p.short !== p.text) shown[texts.length - 1] = p.short; }
       if (e.revealFog) texts.push(X.revealFog(e.revealFog));
       if (e.loot) {
         const n = X.node(); const ilvl = X.itemLevel(G.Map.loc(n) ? n : { tier: 1 });
@@ -456,11 +476,12 @@
         break;
       }
     }
-    if (!run() || G.state.run !== r) return { texts };
+    const popup = texts.map((t, k) => (shown[k] != null ? shown[k] : t));
+    if (!run() || G.state.run !== r) return { texts: popup, logTexts: texts };
     for (let k = front.length - 1; k >= 0; k--) X.push(front[k], true);
     if (texts.length) X.log(texts.join(" · "));
     G.State.save();
-    return { texts };
+    return { texts: popup, logTexts: texts };
   };
 
   // lift the fog on the n nearest unseen locations (graph distance from you)
@@ -473,14 +494,27 @@
     r.revealed = r.revealed || {}; for (const y of got) r.revealed[y] = true; X.markSeen();
     return got.length ? `Fog lifted on ${got.map((y) => G.Map.label(map.nodes[y])).join(", ")}.` : "Nothing new to see.";
   };
-  X.payKg = function (kg) {
+  // Pocket (phone): the pop-up lists at most tollShownMax entries and summarizes the tail as "+N more"; the log keeps the full list
+  X.tollShownMax = 6;
+  X.payKg = (kg) => X.payKgDetail(kg).text;
+  X.payKgDetail = function (kg) {
     const r = run(); let paid = 0; const taken = [];
     // outlaws take the most valuable-looking items first (rarity, then ilvl) — ASSUMPTION
     const order = { yellow: 3, blue: 2, white: 1, grey: 0 };
+    // Hex beginning pass: quest items and pets (Vixie) are never taken, and the message names every item and every resource (with its count)
     r.bag.items.sort((a, b) => (order[b.rarity] - order[a.rarity]) || b.ilvl - a.ilvl);
-    while (paid < kg && r.bag.items.length) { const it = r.bag.items.shift(); paid += G.Items.weight(it); taken.push(G.Items.name(it)); }
-    for (const k of Object.keys(r.bag.res)) { while (paid < kg && r.bag.res[k] > 0) { r.bag.res[k]--; paid += DATA.items.resources[k].kgPerUnit; } }
-    return paid > 0 ? `Paid ${U.fmt1(paid)} kg: ${taken.join(", ") || "resources"}` : "You had nothing to pay with.";
+    for (const it of r.bag.items.filter((x) => !G.Items.isQuest(x) && !G.Items.isPet(x))) {
+      if (paid >= kg) break;
+      r.bag.items.splice(r.bag.items.indexOf(it), 1); paid += G.Items.weight(it); taken.push(G.Items.name(it));
+    }
+    for (const k of Object.keys(r.bag.res)) {
+      const def = DATA.items.resources[k]; if (!def || def.hidden) continue;
+      let n = 0; while (paid < kg && r.bag.res[k] > 0) { r.bag.res[k]--; n++; paid += def.kgPerUnit; }
+      if (n) taken.push(`${def.name} x${n}`);
+    }
+    if (!(paid > 0)) return { text: "You had nothing to pay with.", short: "You had nothing to pay with.", taken };
+    const head = `Paid ${U.fmt1(paid)} kg: `, M = X.tollShownMax;
+    return { text: head + taken.join(", "), short: head + (taken.length > M ? taken.slice(0, M).join(", ") + `, +${taken.length - M} more` : taken.join(", ")), taken, paid };
   };
 
   X.resolveMessage = function (step) { X.next(); if (step.effects) X.applyEffects(step.effects, step); };
@@ -669,9 +703,22 @@
     const r = run(), C = CFG().extraction.crash, heat = ex.crashHeat != null ? ex.crashHeat : ex.failHeat;
     r.wrecked = r.wrecked || {}; r.wrecked[node.id] = { moves: r.moves, loud: true };
     X.addHeat(heat, "extract");
-    X.log(`${C.log} +${heat} Heat. ${G.Map.loc(node).name} is closed for this run: find another way out.`, "bad");
+    const way = X.otherExitsNote(node);
+    X.log(`${C.log} +${heat} Heat. ${G.Map.loc(node).name} is closed for this run. ${way}`, "bad");
     G.State.save();
-    return { ok: false, crash: true, roll, text: `${roll.text} — ${C.line} +${heat} Heat.`, line: C.line, sfx: C.sfx, heat };
+    return { ok: false, crash: true, roll, text: `${roll.text} — ${C.line} +${heat} Heat. ${way}`, line: C.line, sfx: C.sfx, heat };
+  };
+  // Vixie (Hex beginning pass): a crashed exit names the other ways out still open in this zone, but only the ones the
+  // player has discovered on the map (named there: in sight this run, or seen before when fog persists; an unfound secret
+  // never is). None discovered: the short generic line.
+  X.discovered = (nid) => X.visible(nid) || !!(CFG().expedition.fogPersistsBetweenRuns && G.state.everSeen[nid]);
+  X.otherExits = function (node) {
+    const zid = G.Zones.zoneOf(node.id), map = G.state.maps[zid]; if (!map) return [];
+    return Object.values(map.nodes).filter((n) => n.id !== node.id && !G.Map.hiddenSecret(n) && X.discovered(n.id) && X.extractionOpen(n)).map((n) => G.Map.loc(n).name);
+  };
+  X.otherExitsNote = function (node) {
+    const names = X.otherExits(node);
+    return names.length ? `Find another way out: ${names.join(", ")}.` : "Find another way out.";
   };
 
   X.extractSuccess = function () {

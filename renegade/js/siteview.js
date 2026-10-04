@@ -68,7 +68,7 @@
       wrap.appendChild(pb);
     }
     const title = document.createElement("div"); title.className = "site-title";
-    title.textContent = `${loc.name} · ${site.size} · ${site.objects.filter((o) => o.kind === "search" && !o.searched && !o.blocked).length} unsearched`;
+    title.textContent = `${G.Util.copy(loc.name)} · ${site.size} · ${site.objects.filter((o) => o.kind === "search" && !o.searched && !o.blocked).length} unsearched`;
     wrap.appendChild(title);
     container.appendChild(wrap);
     return wrap;

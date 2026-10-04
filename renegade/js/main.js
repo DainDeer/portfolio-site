@@ -38,6 +38,6 @@
   } }, 300); });
   window.addEventListener("beforeunload", () => G.State.save());
   // Esc closes an outpost panel (back to the town view)
-  window.addEventListener("keydown", (e) => { if (e.key === "Escape" && !G.state.run && G.UI.panel && !document.querySelector(".modal")) { G.UI.openPanel(null); } });
+  window.addEventListener("keydown", (e) => { if (G.Util.typing(e)) return; if (e.key === "Escape" && !G.state.run && G.UI.panel && !document.querySelector(".modal")) { G.UI.openPanel(null); } });
   }
 })();

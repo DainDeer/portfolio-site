@@ -103,7 +103,7 @@ DATA.config = {
     // equipped gear + its share of the run bag: the share is its part of the squad's capacity (its kg / capacity before
     // it died) of every resource stack and of the bag's item weight (newest pickups first; quest items stay with you).
     // Searchable once. Move to another location without emptying it and it's gone.
-    deadBag: { examine: "[PLACEHOLDER] Their pack's still on them: what they were hauling for the squad.", vanishOnLeave: true }
+    deadBag: { examine: "Their pack's still on them, full of what they were hauling for the squad.", vanishOnLeave: true }
   },
 
   // §12 Heat. Megan's Slice 2 playtest: Heat is rarer but comes in bigger chunks. Searching gives none, battles a
@@ -210,7 +210,7 @@ DATA.config = {
     hpMult: 1.5,                // global HP multiplier for every unit (both sides): longer, more readable fights (doc target 20-60 s)
     arenaW: 40, arenaH: 24,     // meters
     pxPerM: 32,                 // 32 px/m: a 32px sprite at texelScale 2 = 64 px = one 2 m grid cell
-    phoneFloatPx: { word: 10, num: 8 },   // phone layout only: floating combat text at least this many CSS px (words like CHARGE! / KNOCKDOWN, numbers); desktop draws 13 / 18 canvas px as before
+    phoneFloatPx: { word: 10, num: 8, halo: 1 },   // phone layout only: floating combat text at least this many CSS px (words like CHARGE! / KNOCKDOWN, numbers), with a solid black halo of `halo` CSS px; desktop draws 13 / 18 canvas px as before
     gridCell: 2,                // placement grid cell size (m)
     playerZoneCols: 6,          // columns of cells on the left available for placement
     enemyZoneFromX: 26,         // enemies spawn right of this x (m)

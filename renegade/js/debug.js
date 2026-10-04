@@ -226,6 +226,7 @@
   };
 
   window.addEventListener("keydown", (e) => {
+    if (G.Util.typing(e)) return;   // a backtick typed in the Share name field is just a backtick
     if (e.key === "`" || e.key === "F1" || e.key === "~") { e.preventDefault(); D.toggle(); }
   });
 })(window);

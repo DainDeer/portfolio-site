@@ -69,7 +69,7 @@
     const desc = h("p", { class: "t-diff-desc", "aria-live": "polite" }, T.choice ? D.list[T.choice].desc : D.pickHint);
     const cols = h("div", { class: "t-diffs", role: "radiogroup", "aria-label": "Difficulty" });
     const paint = () => { for (const c of cols.children) { const id = c.dataset.diff; c.classList.toggle("sel", T.choice === id); c.classList.toggle("dim", !!T.choice && T.choice !== id); c.setAttribute("aria-checked", T.choice === id ? "true" : "false"); }
-      desc.textContent = T.choice ? D.list[T.choice].desc : D.pickHint; desc.classList.remove("warn"); };
+      desc.textContent = G.Util.copy(T.choice ? D.list[T.choice].desc : D.pickHint); desc.classList.remove("warn"); };
     for (const id of D.order) {
       const c = h("button", { class: "t-diff", "data-diff": id, "data-act": "diff-" + id, role: "radio", "aria-checked": "false", onclick: () => { T.choice = id; paint(); } },
         h("span", { class: "t-diff-label" }, D.list[id].name), h("span", { class: "t-sigil" }));
@@ -99,7 +99,7 @@
       h("div", { class: "title-version", "data-note": "build" }, !T.diffPending() && G.Difficulty && G.state ? h("img", { class: "title-diff", src: url(DATA.sprites["diff_" + G.Difficulty.id() + "_hud"].file), alt: G.Difficulty.name(), title: "Difficulty: " + G.Difficulty.name() }) : null, T.buildLabel(), G.state && G.Cards && G.Cards.title() ? h("span", { class: "title-cardtitle", "data-card-title": "1" }, "★ " + G.Cards.title()) : null),   // Slice 5 §J
       h("button", { class: "title-sound", "data-act": "title-sound", "data-nosfx": "1", onclick: (e) => { e.stopPropagation(); T.toggleSound(); } }));
     document.body.appendChild(root); document.body.classList.add("title-open");
-    T.keys = (e) => { if ((e.key === "Enter" || e.key === " ") && T.open && !document.querySelector("#modal-root .modal")) { e.preventDefault(); T.play(); } };
+    T.keys = (e) => { if (G.Util.typing(e)) return; if ((e.key === "Enter" || e.key === " ") && T.open && !document.querySelector("#modal-root .modal")) { e.preventDefault(); T.play(); } };
     window.addEventListener("keydown", T.keys);
     T.tapSync = () => setTimeout(T.syncSound, 50); document.addEventListener("pointerup", T.tapSync, true);
     T.startScene(root); T.syncSound();

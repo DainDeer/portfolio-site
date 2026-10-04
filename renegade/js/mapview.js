@@ -27,14 +27,49 @@
     const W = wrap.clientWidth || 1000, H = wrap.clientHeight || 600, F = MV.frame(W, H);
     if (wrap._laid === W + "x" + H) return F;
     wrap._laid = W + "x" + H;
-    for (const el of wrap.querySelectorAll("[data-mx]")) { const p = F.at(+el.dataset.mx, +el.dataset.my); el.style.left = Math.round(p[0]) + "px"; el.style.top = Math.round(p[1]) + "px"; }
+    F.px = G.Touch && G.Touch.layout && G.Touch.layout() ? MV.phoneSpread(wrap, F) : {};   // phones: node px overrides (display only)
+    const at = (id, x, y) => (id && F.px[id]) || F.at(x, y);
+    for (const el of wrap.querySelectorAll("[data-mx]")) { const p = at(el.dataset.node || el.dataset.hunterAt || el.dataset.rivalAt, +el.dataset.mx, +el.dataset.my); el.style.left = Math.round(p[0]) + "px"; el.style.top = Math.round(p[1]) + "px"; }
     const svg = wrap.querySelector("svg.map-edges"); if (svg) svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
     for (const l of wrap.querySelectorAll("line[data-ax]")) {
-      const a = F.at(+l.dataset.ax, +l.dataset.ay), b = F.at(+l.dataset.bx, +l.dataset.by);
+      const a = at(l.dataset.a, +l.dataset.ax, +l.dataset.ay), b = at(l.dataset.b, +l.dataset.bx, +l.dataset.by);
       l.setAttribute("x1", a[0]); l.setAttribute("y1", a[1]); l.setAttribute("x2", b[0]); l.setAttribute("y2", b[1]);
     }
     if (wrap._ground) wrap._ground(W, H, F);
     return F;
+  };
+  // Phone pass (Hushwood / Scablands): on the phone layout a node's tap target is the 88x64 px box round its marker + name
+  // (css/mobile.css .map-node::before; the node is anchored 24 px below its top, the box starts 4 px above that). The phone
+  // map is wide enough that the bg's cover frame crops nothing, so nodes sit on their landmarks unclamped; what can still
+  // collide is a secret spur hung at a fixed offset from its host (the Witch's Cottage over Mossback Campground, 1056 px²
+  // of shared tap box on one map in 8) or, on an unusually tall wrap, nodes clamped to the same edge. Phones only, display
+  // only: such a node is drawn at the nearest free spot (rings of 8 px round where it would be), its edges, fog hole and
+  // tokens follow it; the saved map, rules and desktop are unchanged. Order: plain nodes keep their spot, then clamped
+  // ones, then secret spurs move first. Every node is also kept 58 px (half its 112 px name block) inside the wrap's
+  // sides, so a landmark at the very edge (the Scablands' Rooftop Pickup) doesn't cut its name off.
+  MV.PHONE_HIT = { w: 88, h: 64, dy: -28, gap: 4, label: 112 };   // label: the phone .map-node width (its name block)
+  MV.phoneSpread = function (wrap, F) {
+    const B = MV.PHONE_HIT, px = {}, placed = [];
+    const xr = [Math.min(B.label / 2 + 2, F.W / 2), Math.max(F.W / 2, F.W - B.label / 2 - 2)], yr = [Math.min(-B.dy + 2, F.H / 2), Math.max(F.H / 2, F.H - B.h - B.dy - 2)];
+    const items = [...wrap.querySelectorAll(".map-node[data-node]")].map((el, i) => {
+      const x = +el.dataset.mx, y = +el.dataset.my, p = F.at(x, y), r = F.raw(x, y), lx = U.clamp(p[0], Math.min(B.label / 2 + 2, F.W / 2), Math.max(F.W / 2, F.W - B.label / 2 - 2));
+      const it = { id: el.dataset.node, x: lx, y: p[1], i, pri: (el.dataset.secret ? 2 : 0) + (Math.abs(lx - r[0]) + Math.abs(p[1] - r[1]) > 0.5 ? 1 : 0) };
+      if (lx !== p[0]) px[it.id] = [lx, p[1]];   // keep the 112 px name block inside the wrap (Rooftop Pickup at the Scablands' east edge)
+      return it;
+    }).sort((a, b) => a.pri - b.pri || a.i - b.i);
+    const hit = (x, y) => placed.reduce((s, o) => s + Math.max(0, B.w + B.gap - Math.abs(x - o.x)) * Math.max(0, B.h + B.gap - Math.abs(y - o.y)), 0);
+    for (const it of items) {
+      if (hit(it.x, it.y) > 0) {
+        let best = null;
+        for (let r = 8; r <= 240 && !best; r += 8) for (let a = 0; a < 24; a++) {
+          const x = U.clamp(it.x + r * Math.cos(a * Math.PI / 12), xr[0], xr[1]), y = U.clamp(it.y + r * Math.sin(a * Math.PI / 12), yr[0], yr[1]), d = Math.hypot(x - it.x, y - it.y);
+          if (!hit(x, y) && (!best || d < best.d - 0.01)) best = { x, y, d };
+        }
+        if (best) { it.x = best.x; it.y = best.y; px[it.id] = [best.x, best.y]; }
+      }
+      placed.push(it);
+    }
+    return px;
   };
   const pos = (el, x, y) => { el.dataset.mx = x; el.dataset.my = y; el.style.left = (x / 10) + "%"; el.style.top = (y / 6) + "%"; };   // % until MV.layout runs
 
@@ -71,7 +106,7 @@
       const na = map.nodes[a], nb = map.nodes[b];
       const l = document.createElementNS(svgNS, "line");
       l.setAttribute("x1", na.x); l.setAttribute("y1", na.y); l.setAttribute("x2", nb.x); l.setAttribute("y2", nb.y);
-      l.dataset.ax = na.x; l.dataset.ay = na.y; l.dataset.bx = nb.x; l.dataset.by = nb.y;
+      l.dataset.ax = na.x; l.dataset.ay = na.y; l.dataset.bx = nb.x; l.dataset.by = nb.y; l.dataset.a = a; l.dataset.b = b;
       const active = r && ((a === r.loc && G.Exp.canMoveTo(b)) || (b === r.loc && G.Exp.canMoveTo(a)));
       l.setAttribute("class", active ? "edge active" : (vis(a) && vis(b) ? "edge" : "edge dim"));
       if (unknownSet[a] && unknownSet[b]) continue;
@@ -82,7 +117,7 @@
       const n = map.nodes[nid];
       if (unknownSet[nid]) {
         const el = document.createElement("div"); el.className = "map-node unknown";
-        pos(el, n.x, n.y);
+        pos(el, n.x, n.y); el.dataset.node = nid;
         el.appendChild(SP.icon("loc_unknown", 32));
         const name = document.createElement("div"); name.className = "mn-name"; name.textContent = "Unscouted"; el.appendChild(name);
         wrap.appendChild(el); continue;
@@ -91,7 +126,7 @@
       const loc = G.Map.loc(n), isVis = vis(nid);
       const el = document.createElement("div");
       el.className = "map-node" + (isVis ? "" : " remembered") + (r && r.loc === nid ? " current" : "") + (r && r.visited[nid] ? " visited" : "");
-      pos(el, n.x, n.y);
+      pos(el, n.x, n.y); el.dataset.node = nid; if (n.secret) el.dataset.secret = "1";
       const wIcon = loc && loc.worldIcons && loc.worldEvent ? loc.worldIcons[s.world.hollow_creek] : null; // world-state icon (distress / aftermath)
       const wreck = loc && loc.iconWrecked && G.Exp.wrecked(n), still = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
       const iconKey = !loc ? SP.or((DATA.zones.list[map.zone || "a"] || {}).insertionIcon, "loc_insertion") : wreck ? (loc.iconWreckedAnim && !still ? loc.iconWreckedAnim : loc.iconWrecked) : (wIcon || G.Map.icon(loc));   // Slice 5 §A: the wreck (animated unless reduced motion)
@@ -103,7 +138,7 @@
       if (loc && G.Quests.findObjectsAt(map.zone || "a", n.loc).some((q) => G.Quests.itemAvailable(q))) { const qm = document.createElement("div"); qm.className = "mn-quest"; qm.textContent = "!"; qm.title = "Quest objective here"; el.appendChild(qm); }
       const cd = countdownOf(nid);
       if (cd > 0) { const b = document.createElement("div"); b.className = "mn-countdown"; b.textContent = `⏳ ${cd}`; b.title = `Hollow Creek holds for ${cd} more move${cd === 1 ? "" : "s"}. Arrive in time to defend it.`; el.appendChild(b); el.classList.add("distress"); }
-      const name = document.createElement("div"); name.className = "mn-name"; name.textContent = G.Map.label(n); el.appendChild(name);
+      const name = document.createElement("div"); name.className = "mn-name"; name.textContent = G.Util.copy(G.Map.label(n)); el.appendChild(name);
       if (loc && isVis && r) {
         const o = G.Exp.odds(n), revisit = r.visited[nid] && nid !== r.loc, rv = revisit ? G.Exp.revisitInfo(n) : null, site = G.Exp.site(nid), eh = G.Exp.entryHostiles(n);
         o.hostiles = Math.round(eh.pct * 10) / 10;   // Slice 3 §12: a picked-over place has fewer Hostiles on the first entry of a run
@@ -119,7 +154,7 @@
         if (loc.size) tags.push(loc.size);
         const scoutHid = G.Scout && G.Scout.hidden(nid);
         tags.push("T" + n.tier + " · " + (scoutHid ? "Unscouted" : DATA.enemies.families[loc.family].name));
-        const tg = document.createElement("div"); tg.className = "mn-tags"; tg.textContent = tags.join(" · "); el.appendChild(tg);
+        const tg = document.createElement("div"); tg.className = "mn-tags"; tg.textContent = G.Util.copy(tags.join(" · ")); el.appendChild(tg);
         el.addEventListener("mouseenter", (e) => G.UI.showTip(`<b>${loc.name}</b> (${loc.size || "M"})<br>` + (revisit ? `Revisit: ${rv.text}<br>Events and searched objects stay as you left them.` : `${eh.level < 1 ? eh.text + "<br>" : ""}Hostiles ${o.hostiles}% · Event ${o.event}% · Survivors ${o.survivors}%<br>` + (!loc.extraction ? `Loot: ${G.Exp.lootRead(nid)}${site && site.pickedOver ? ` (restocks 1 step per run, ${G.Exp.restockSteps(site)} to full)` : ""}<br>` : "") + `<i>Odds are independent (they don't sum to 100). Event % = is there an event object inside.</i>`) + (G.Scout ? G.Scout.tipHtml(nid) : "") + (scoutHid ? `Tier ${n.tier}; enemies, resources: <span class="unscouted">Unscouted</span>` : `Tier ${n.tier}, ${DATA.enemies.families[loc.family].name}; resources: ${(loc.tags || []).map((t) => DATA.resources[t] || Object.values(DATA.resources).find((r) => r.tag === t)).filter(Boolean).map((r) => r.name).join(", ") || "–"}${(loc.tags || []).some((t) => t === "terminal" || t === "office") ? " · terminals" : ""}`) + (r.loc === nid ? "<br><b>Click to go back inside.</b>" : ""), e.clientX, e.clientY));
         el.addEventListener("mouseleave", () => G.UI.hideTip());
       } else if (loc && !isVis) {
@@ -154,7 +189,7 @@
     }
     if (r && r.hunt && r.hunt.banner && !r.hunt.banner.shown) {
       r.hunt.banner.shown = true; G.Sfx.play("sfx_hunter_alert");
-      const bn = document.createElement("div"); bn.className = "map-banner hunter"; bn.textContent = "⚠ " + r.hunt.banner.text; wrap.appendChild(bn); setTimeout(() => bn.remove(), 3500);
+      const bn = document.createElement("div"); bn.className = "map-banner hunter"; bn.textContent = "⚠ " + G.Util.copy(r.hunt.banner.text); wrap.appendChild(bn); setTimeout(() => bn.remove(), 3500);
     }
     container.appendChild(wrap);
     wrap.dataset.zone = map.zone || "a";
@@ -173,7 +208,7 @@
     const ctx = cv.getContext("2d"); ctx.imageSmoothingEnabled = !DATA.sprites.pixelArt;
     if (bg) ctx.drawImage(bg, F.ox, F.oy, F.bw, F.bh);   // cover (the same frame the nodes are placed in: MV.frame)
     else { ctx.fillStyle = SP.def("map_bg").color; ctx.fillRect(0, 0, W, H); }
-    const R = (V.revealRadius || 78) * F.k, P = (n) => F.at(n.x, n.y);
+    const R = (V.revealRadius || 78) * F.k, P = (n) => (F.px && F.px[n.id]) || F.at(n.x, n.y);
     const circle = (g, n, rr) => { const p = P(n); g.beginPath(); g.arc(p[0], p[1], rr, 0, Math.PI * 2); g.fill(); };
     const visN = Object.values(map.nodes).filter((n) => vis(n.id)), memN = Object.values(map.nodes).filter((n) => !vis(n.id) && known(n.id));
     const revA = zbg && (V.revealedAlphaByZone || {})[map.zone] != null ? V.revealedAlphaByZone[map.zone] : (V.revealedAlpha != null ? V.revealedAlpha : 0.45);

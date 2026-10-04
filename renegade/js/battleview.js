@@ -5,9 +5,10 @@
   const C = () => DATA.config.battle;
   const TL = () => !!(G.Touch && G.Touch.layout());   // phone layout (js/touch.js): touch wording instead of keys; desktop text unchanged
 
-  BV.mount = function (container, b, opts) {
+  // vIn (SP-100, js/gfx.js): an existing view object to fill in (a 3D load that fell back to 2D keeps UI.battle.v)
+  BV.mount = function (container, b, opts, vIn) {
     const c = C(), px = c.pxPerM, W = c.arenaW * px, H = c.arenaH * px;
-    const v = { b, opts, px, W, H, speed: opts.speed || 1, floaters: [], tracers: [], gibs: [], booms: [], sparks: [], arcs: [], shake: 0, slowmo: 0, last: 0, raf: 0, drag: null, hover: null, mouse: null, corpseIdx: 0, done: false };
+    const v = Object.assign(vIn || {}, { b, opts, px, W, H, speed: opts.speed == null ? 1 : opts.speed, floaters: [], tracers: [], gibs: [], booms: [], sparks: [], arcs: [], shake: 0, slowmo: 0, last: 0, raf: 0, drag: null, hover: null, mouse: null, corpseIdx: 0, clock: G.BattleClock.create(), rnd: U.makeRng(((b.seed >>> 0) ^ 0x5bd1e995) >>> 0), ip: null, done: false, ended: false, is3d: false, dispose: null, pausePanel: null, container });
     container.innerHTML = "";
     if (G.Dice && G.Dice.dismissMini) G.Dice.dismissMini();   // a docked scouting die never lingers into a fight
     const wrap = document.createElement("div"); wrap.className = "battle-wrap";
@@ -40,7 +41,7 @@
     return v;
   };
 
-  BV.unmount = function (v) { v.done = true; cancelAnimationFrame(v.raf); window.removeEventListener("mouseup", v.onUp); window.removeEventListener("keydown", v.onKey); G.UI.hideTip(); if (BV.active === v) BV.active = null; };
+  BV.unmount = function (v) { if (v.dispose) { v.dispose(); v.dispose = null; } v.done = true; cancelAnimationFrame(v.raf); window.removeEventListener("mouseup", v.onUp); window.removeEventListener("keydown", v.onKey); G.UI.hideTip(); if (BV.active === v) BV.active = null; };
 
   BV.renderHud = function (v) {
     const b = v.b;
@@ -210,7 +211,7 @@
     if (v.swapEl) { const E = v.swapEl, SW = DATA.config.battle.weaponSets.swap, f = u.swapCd > 0 ? u.swapCd / SW.cooldownSec : 0;
       E.ring.style.background = f > 0 ? `conic-gradient(rgba(0,0,0,.68) ${Math.round(f * 360)}deg, rgba(0,0,0,0) 0)` : "none"; E.cdt.textContent = u.swapCd > 0 ? Math.ceil(u.swapCd) : "";
       E.cur.textContent = u.swapping ? "swapping…" : `${u.setIdx ? "Backup" : "Main"}: ${u.weapon.name || ""}`; E.btn.classList.toggle("ready", G.Battle.canSwap(v.b, u)); E.btn.classList.toggle("disabled", !G.Battle.canSwap(v.b, u)); }
-    if (v.feedEl && !(G.Dice && G.Dice.busy())) { const fd = v.b.feed || []; if (fd.length !== v.feedN) { v.feedN = fd.length; v.feedEl.innerHTML = fd.slice(-5).map((l) => `<div class="cf-${l.kind || "info"}">${l.text}</div>`).join(""); v.feedEl.style.display = fd.length ? "" : "none"; } }
+    if (v.feedEl && !(G.Dice && G.Dice.busy())) { const fd = v.b.feed || []; if (fd.length !== v.feedN) { v.feedN = fd.length; v.feedEl.innerHTML = fd.slice(-5).map((l) => `<div class="cf-${l.kind || "info"}">${G.Util.copy(l.text)}</div>`).join(""); v.feedEl.style.display = fd.length ? "" : "none"; } }
     for (let i = 0; i < v.barEls.length; i++) {
       const E = v.barEls[i], s = E.s, f = s.max > 0 ? s.cd / s.max : 0;
       E.ring.style.background = f > 0 ? `conic-gradient(rgba(0,0,0,.68) ${Math.round(f * 360)}deg, rgba(0,0,0,0) 0)` : "none";
@@ -247,7 +248,8 @@
   // the aim target under the cursor: a valid unit for unit abilities, else the ground point
   BV.aimTarget = function (v, m) {
     const b = v.b, u = BV.body(v), s = b.aim && u && u.abl[b.aim.i]; if (!s || !m) return null;
-    if (s.d.target === "ground") return { x: m.x, y: m.y };
+    // The 3D picker also carries snapped unit coordinates. Ground abilities must use the same ground point as their preview.
+    if (s.d.target === "ground") return { x: m.gx == null ? m.x : m.gx, y: m.gy == null ? m.y : m.gy };
     const lift = v.art ? 0.5 : 0, valid = AB().validTargets(b, u, s);
     return valid.filter((o) => Math.hypot(o.x - m.x, o.y - lift - m.y) < 1.2).sort((p, q) => Math.hypot(p.x - m.x, p.y - lift - m.y) - Math.hypot(q.x - m.x, q.y - lift - m.y))[0] || null;
   };
@@ -259,7 +261,7 @@
     BV.updateBar(v);
   };
   BV.onKey = function (v, e) {
-    if (v.done || e.target && /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
+    if (v.done || G.Util.typing(e)) return;
     const i = DATA.abilities.hotkeys.indexOf(e.key), TP = DATA.config.battle.tacticalPause;
     if (TP && TP.enabled && e.key === TP.key && v.b.phase === "fight") { e.preventDefault(); BV.togglePause(v); }
     else if (i >= 0 && v.b.phase === "fight") { e.preventDefault(); BV.press(v, i); }
@@ -334,10 +336,12 @@
     }
     if (b.paused) {
       ctx.fillStyle = "rgba(20,40,70,.3)"; ctx.fillRect(0, 0, v.W, v.H); ctx.strokeStyle = "rgba(120,190,255,.8)"; ctx.lineWidth = 4; ctx.strokeRect(2, 2, v.W - 4, v.H - 4);
-      ctx.font = "bold 22px sans-serif"; ctx.textAlign = "center"; ctx.lineWidth = 4; ctx.strokeStyle = "#000";
+      // phones: the arena is drawn at ~0.3x, so 22 px came out ~6.5 css px; give it the floater word minimum (desktop unchanged)
+      const pk = G.Touch && G.Touch.layout() && v.canvas.clientWidth ? v.canvas.width / v.canvas.clientWidth : 0, pw = ((DATA.config.battle || {}).phoneFloatPx || { word: 10 }).word;
+      ctx.font = "bold " + (pk ? Math.max(22, Math.ceil(pw * pk - 1e-6)) : 22) + "px sans-serif"; ctx.textAlign = "center"; ctx.lineWidth = 4; ctx.strokeStyle = "#000";
       const t = TL() ? (b.itemAim ? "MED KIT: tap one of your units · tap Cancel aim" : "⏸ TACTICAL PAUSE · tap Resume")
         : b.itemAim ? `MED KIT: click one of your units · right click / Esc cancels` : "⏸ TACTICAL PAUSE · Space resumes";
-      if (!b.aim) { ctx.strokeText(t, v.W / 2, 36); ctx.fillStyle = "#bfe4ff"; ctx.fillText(t, v.W / 2, 36); }
+      if (!b.aim) { const ty = pk ? Math.max(36, Math.ceil(pw * pk * 1.4)) : 36; ctx.strokeText(t, v.W / 2, ty); ctx.fillStyle = "#bfe4ff"; ctx.fillText(t, v.W / 2, ty); }
       if (b.itemAim) for (const u of b.units) if (u.side === 0 && u.state === "alive") { const ok = !G.Tactical.itemBlock(b, b.itemAim.kind, u); ctx.beginPath(); ctx.ellipse(u.x * px, u.y * px, px * 0.95, px * 0.45, 0, 0, Math.PI * 2); ctx.strokeStyle = ok ? "rgba(96,255,144,.9)" : "rgba(150,150,150,.6)"; ctx.lineWidth = 3; ctx.stroke();
         if (!ok) { ctx.fillStyle = "rgba(90,90,90,.55)"; ctx.beginPath(); ctx.ellipse(u.x * px, (u.y - lift) * px, px * 0.75, px * 0.95, 0, 0, Math.PI * 2); ctx.fill(); }   // greyed out: on cooldown / full HP / already has one coming
       }
@@ -454,6 +458,20 @@
     if (u.burns && u.burns.length) SP.drawWorld(ctx, "fx_fire", x, y - px * 0.2, px * 0.9 * (1 + 0.08 * Math.sin(b.t * 17)), { alpha: 0.75 + 0.25 * Math.sin(b.t * 11), mirror: Math.floor(b.t * 6) % 2 === 0 });
   };
 
+  // Snare's battle stingers (data/audio.js), once per battle: a win -> stinger_battle_win; a loss by the squad going down
+  // or your body dying -> stinger_battle_wipe; a loss on the time cap (body and allies still up) and Break away -> none
+  // (my call: the wipe is "the whole squad died"). The 3D view calls it when the kill shot holding the fight-ending blow
+  // ends (or on its skip); the 2D view when the fight ends. v.sting records { key, via } for the tests.
+  BV.stingKey = function (b) {
+    if (b.result === "win") return "stinger_battle_win";
+    if (b.result !== "loss") return null;
+    const body = b.units.find((u) => u.rank === "body" && u.side === 0), up = b.units.some((u) => u.side === 0 && u.state === "alive");
+    return !up || (body && body.state !== "alive" && body.state !== "downed") ? "stinger_battle_wipe" : null;
+  };
+  BV.sting = function (v, via) {
+    if (v.stung) return; v.stung = true; const key = BV.stingKey(v.b);
+    v.sting = { key, via: via || "end", t: +v.b.t.toFixed(3) }; if (key && G.Sfx) G.Sfx.play(key);
+  };
   BV.frame = function (v, t) {
     const b = v.b;
     let dt = Math.min(0.05, (t - v.last) / 1000); v.last = t;
@@ -461,15 +479,34 @@
     v.slowmo = Math.max(0, v.slowmo - dt);
     if (b.phase === "fight" && !v.tutSeen && G.TutView) { v.tutSeen = true; G.TutView.check(); }   // Slice 4 §A T3: first frame of the fight
     const diceHeld = !!(G.Dice && G.Dice.busy()), held = !!(G.TutView && G.TutView.holds()) || diceHeld;   // + Slice 5 §B: Break away's die   // a tutorial step is showing: the fight holds (b.paused untouched)
-    if (b.phase === "fight" && !held) G.Battle.advance(b, dt, v.speed, timeScale);   // aiming: 25% of 1x (or paused), see G.Abilities.timeScale
+    // SP-100: the same fixed 1/60 sim clock as the 3D view (js/battleclock.js): real time x G.Abilities.timeScale (aiming:
+    // 25% of 1x or paused; the kill slow-mo on top) spent in whole steps, so 2D and 3D play a fight step for step.
+    // Units / projectiles are drawn between the last two steps (BV.interp), so slow speeds and 120 Hz screens stay smooth.
+    if (b.phase === "fight" && !held) G.BattleClock.advance(v.clock, b, dt, v.speed, timeScale, () => BV.snapStep(v));
     for (const e of v.booms) e.age += dt * v.speed * timeScale; v.booms = v.booms.filter((e) => e.age < 0.4);
     if (!diceHeld) BV.drainFx(v);   // Break away's "OUT!" / "STUMBLE" float (and anything else from that tick) waits for the die
     if (v.barEls) BV.updateBar(v);
     if (v.touchCancel) BV.updateTouch(v);
     BV.updateParticles(v, dt * v.speed * timeScale);   // Slice 4 §A2: effects crawl / freeze with the speed slider (kill slow-mo on top)
-    BV.draw(v);
+    BV.interp(v, () => BV.draw(v));
     if (v.timerEl) v.timerEl.textContent = b.phase === "fight" || b.phase === "over" ? (b.mode === "defense" ? `Hold: ${Math.max(0, Math.ceil(b.surviveSec - b.t))} s` : `${b.t.toFixed(1)} s`) : "";
+    if (b.over && !v.stung) BV.sting(v);   // the 2D view has no kill cam: the sting plays as the fight ends
     if (b.over && !v.ended && !diceHeld) { v.ended = true; setTimeout(() => v.opts.onEnd && v.opts.onEnd(b), 900); }
+  };
+
+  // draw-time interpolation (render only): positions after the step before last (v.ip.prev) and after the last step
+  // (v.ip.cur); drawn at alpha = the clock's leftover fraction of a step. The sim's own x / y are put back right after
+  // the draw, bit for bit, before anything else runs.
+  const posOf = (b) => { const m = new Map(); for (const u of b.units) m.set(u, [u.x, u.y]); for (const q of b.projectiles || []) if (q && q.x != null) m.set(q, [q.x, q.y]); return m; };
+  BV.snapStep = function (v) { const cur = posOf(v.b); v.ip = { prev: v.ip ? v.ip.cur : cur, cur }; };
+  BV.interp = function (v, draw) {
+    const b = v.b, ip = v.ip;
+    if (!ip || b.phase !== "fight") return draw();
+    const a = Math.max(0, Math.min(1, v.clock.acc / G.BattleClock.DT)), keep = [];
+    for (const [o, c] of ip.cur) { const p = ip.prev.get(o); if (!p || o.x !== c[0] || o.y !== c[1]) continue;
+      if (Math.abs(c[0] - p[0]) > 3 || Math.abs(c[1] - p[1]) > 3) continue;   // a teleport (Break away, a charge's snap): no smear
+      keep.push(o, o.x, o.y); o.x = p[0] + (c[0] - p[0]) * a; o.y = p[1] + (c[1] - p[1]) * a; }
+    try { draw(); } finally { for (let i = 0; i < keep.length; i += 3) { keep[i].x = keep[i + 1]; keep[i].y = keep[i + 2]; } }
   };
 
   const S = () => DATA.sprites;
@@ -480,13 +517,13 @@
   BV.drainFx = function (v) {
     const b = v.b, lift = bodyLiftM(v);
     for (const e of b.fx) {
-      if (e.t === "text") v.floaters.push({ x: e.x, y: e.y - (v.art ? 1.0 : 0), text: e.text, color: e.color, big: e.big, life: e.big ? 1.6 : 1.0, max: e.big ? 1.6 : 1.0, dx: (Math.random() - 0.5) * 0.6 });
+      if (e.t === "text") v.floaters.push({ x: e.x, y: e.y - (v.art ? 1.0 : 0), text: e.text, color: e.color, big: e.big, life: e.big ? 1.6 : 1.0, max: e.big ? 1.6 : 1.0, dx: (v.rnd() - 0.5) * 0.6 });
       else if (e.t === "shot") {
         let x2 = e.x2, y2 = e.y2;
-        if (!e.hit) { x2 += (Math.random() - 0.5) * 2.5; y2 += (Math.random() - 0.5) * 2.5; }
+        if (!e.hit) { x2 += (v.rnd() - 0.5) * 2.5; y2 += (v.rnd() - 0.5) * 2.5; }
         v.tracers.push({ x1: e.x1, y1: e.y1 - lift, x2, y2: y2 - lift, life: e.melee ? 0.12 : 0.09, melee: e.melee, proj: e.proj });
         const ap = S().acidPoolOn;
-        if (ap && e.proj === ap.projectile) BV.stampDecal(v, ap.decal, x2, y2, Math.random() * 6.28, 0.8);
+        if (ap && e.proj === ap.projectile) BV.stampDecal(v, ap.decal, x2, y2, v.rnd() * 6.28, 0.8);
         G.Sfx.play(e.sfx); if (!e.hit && !e.melee) setTimeout(() => G.Sfx.play("sfx_miss"), DATA.audio.missDelayMs || 0);
       } else if (e.t === "blood" && e.kind === "machine") {   // Slice 3 §4a: machines spark (short-lived), oil pool instead of blood
         const MF = S().machineFx || {};
@@ -497,13 +534,13 @@
       else if (e.t === "drag") { if (S().dragOn) BV.stampDecal(v, S().dragOn, e.x - Math.cos(e.dir) * 0.6, e.y - Math.sin(e.dir) * 0.6, e.dir, 1.2); }
       else if (e.t === "gibs") {
         const set = (S().gibs && S().gibs[e.kind || "human"]) || [1, 2, 3], pre = (S().gibPrefix || {})[e.kind] || "fx_gib_";
-        for (let i = 0; i < e.n; i++) { const a = Math.random() * Math.PI * 2, sp = 3 + Math.random() * 7; v.gibs.push({ x: e.x, y: e.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 20, key: pre + set[Math.floor(Math.random() * set.length)], life: 0.9 + Math.random() * 0.5, metal: e.kind === "machine" }); }
+        for (let i = 0; i < e.n; i++) { const a = v.rnd() * Math.PI * 2, sp = 3 + v.rnd() * 7; v.gibs.push({ x: e.x, y: e.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, rot: v.rnd() * 6, vr: (v.rnd() - 0.5) * 20, key: pre + set[Math.floor(v.rnd() * set.length)], life: 0.9 + v.rnd() * 0.5, metal: e.kind === "machine" }); }
         G.Sfx.play(e.kind === "machine" ? "sfx_hit_metal" : "sfx_gib");
       }
       else if (e.t === "shake") { v.shake = Math.max(v.shake, e.mag); }
       else if (e.t === "slowmo") v.slowmo = C().slowMoSec;
       else if (e.t === "sfx") G.Sfx.play(e.key);
-      else if (e.t === "explosion") { v.booms.push({ x: e.x, y: e.y, r: e.r, age: 0 }); if (!e.metal) BV.stampDecal(v, "fx_blood_pool", e.x, e.y, Math.random() * 6.28, e.r * 0.8, 0.25); }
+      else if (e.t === "explosion") { v.booms.push({ x: e.x, y: e.y, r: e.r, age: 0 }); if (!e.metal) BV.stampDecal(v, "fx_blood_pool", e.x, e.y, v.rnd() * 6.28, e.r * 0.8, 0.25); }
       else if (e.t === "death") G.Sfx.play(e.metal ? "sfx_explosion" : e.beast ? "sfx_death_beast" : "sfx_death_human");
     }
     b.fx.length = 0;
@@ -515,7 +552,7 @@
   };
 
   BV.stampDecal = function (v, key, x, y, rot, fallbackSize, alpha) {
-    SP.drawWorld(v.dctx, key, toPx(v, x), toPx(v, y), v.px * (fallbackSize || 1), { rot: rot || 0, decal: true, mirror: Math.random() < 0.5, alpha: alpha != null ? alpha : 0.9 });
+    SP.drawWorld(v.dctx, key, toPx(v, x), toPx(v, y), v.px * (fallbackSize || 1), { rot: rot || 0, decal: true, mirror: v.rnd() < 0.5, alpha: alpha != null ? alpha : 0.9 });
   };
   BV.stampBlood = function (v, e) {
     const bs = S().bloodBySize || { small: 0.6, medium: 1.0 }, sz = e.size || 1;
@@ -550,7 +587,7 @@
     v.art = b.units.some((u) => hasArt(u.sprite));
     ctx.save();
     ctx.imageSmoothingEnabled = !S().pixelArt;
-    if (v.shake > 0) ctx.translate(Math.round((Math.random() - 0.5) * v.shake), Math.round((Math.random() - 0.5) * v.shake));
+    if (v.shake > 0) ctx.translate(Math.round((v.rnd() - 0.5) * v.shake), Math.round((v.rnd() - 0.5) * v.shake));
     const bgk = BV.arenaBg(), pat = SP.pattern(ctx, bgk);
     if (pat && pat.setTransform && typeof DOMMatrix !== "undefined") pat.setTransform(new DOMMatrix().scale(S().texelScale || 1));
     ctx.fillStyle = pat || SP.def(bgk).color; ctx.fillRect(-10, -10, v.W + 20, v.H + 20);
@@ -668,10 +705,14 @@
     const fk = G.Touch && G.Touch.layout() && v.canvas.clientWidth ? v.canvas.width / v.canvas.clientWidth : 0, fp = (DATA.config.battle || {}).phoneFloatPx || { word: 10, num: 8 };
     for (const f of v.floaters) {
       ctx.globalAlpha = U.clamp(f.life / f.max * 1.5, 0, 1);
-      const fs0 = f.big ? 18 : 13, fs = fk ? Math.max(fs0, Math.round((/[A-Za-z]{2}/.test(f.text) ? fp.word : fp.num) * (f.big ? 1.3 : 1) * fk)) : fs0;
+      const fs0 = f.big ? 18 : 13, fs = fk ? Math.max(fs0, Math.ceil((/[A-Za-z]{2}/.test(f.text) ? fp.word : fp.num) * (f.big ? 1.3 : 1) * fk - 1e-6)) : fs0;
       ctx.font = "bold " + fs + "px sans-serif";
-      ctx.lineWidth = 3; ctx.strokeStyle = "rgba(0,0,0,.85)"; ctx.strokeText(f.text, f.x * px, f.y * px); ctx.fillStyle = f.color; ctx.fillText(f.text, f.x * px, f.y * px);
+      // phones: a 3 canvas px outline is ~0.4 css px of halo there, so the paler floaters (reload #999, MISS #aaa, JAMMED #ff5050,
+      // hurt #ff8080) sat at 2.4-3:1 on Smudge's brighter zone floors (59c4bf3). Give them phoneFloatPx.halo css px of solid black.
+      ctx.lineWidth = fk ? Math.max(3, Math.ceil((fp.halo || 1) * 2 * fk)) : 3; ctx.strokeStyle = fk ? "#000" : "rgba(0,0,0,.85)"; ctx.lineJoin = fk ? "round" : "miter";
+      ctx.strokeText(f.text, f.x * px, f.y * px); ctx.fillStyle = f.color; ctx.fillText(f.text, f.x * px, f.y * px);
     }
+    ctx.lineJoin = "miter";
     // XP floats (Slice 2 §10): small pale-cyan labels beside the unit, real-time fade, stacked upward
     if (G.XPFloat && G.XPFloat.battle.length) {
       ctx.textAlign = "left"; ctx.font = "10px sans-serif"; ctx.lineWidth = 2.5;

@@ -238,6 +238,7 @@ void main() {
       const panel = h("div", { class: "dice-panel", "data-dice": "rolling", style: `width:${px(A.panel.size[0])};height:${px(A.panel.size[1])};background-image:url(${url(A.panel.file)})` }, cv, plaque, line);
       const shield = h("div", { class: "dice-shield", title: "Tap to skip" });
       if (opts.noShield) document.body.append(panel); else document.body.append(shield, panel);
+      if (opts.noShield && G.Touch && G.Touch.layout && G.Touch.layout()) { Dc.placePanel(panel); setTimeout(() => panel.isConnected && Dc.placePanel(panel), 300); }
       let done = false, raf = 0, r = null, plan = null, landed = false;
       const finish = () => { if (done) return; done = true; cancelAnimationFrame(raf); Dc.close(); resolve(roll); };
       const land = () => { if (landed) return; landed = true; cancelAnimationFrame(raf); Dc.sfx(opts.quiet ? "landQuiet" : "land");
@@ -265,6 +266,21 @@ void main() {
       }).catch((e) => { Dc.error = String(e && e.message || e); still("error"); });
     });
   };
+  // Phones: a lone scouting roll's big panel has no shield, so whatever it sits on can't be tapped while it shows (~2 s).
+  // In landscape its top-left spot lay over the "You found something!" Continue button (a found secret is scouted at
+  // once). Move it to the corner that covers the fewest buttons (modal / tutorial / battle first, then any button, map
+  // node or room object); desktop and the shielded (holding) panel are unchanged.
+  Dc.PANEL_AVOID = ".modal button, .modal [data-act], .tut-box, .tut-ring, .touch-ctl, .card-toast, .abl-btn, .battle-hud button, .tp-panel button";
+  Dc.PANEL_SOFT = "button, .map-node, .site-obj";
+  Dc.placePanel = function (el) {
+    const vw = root.innerWidth, vh = root.innerHeight, r0 = el.getBoundingClientRect(), w = r0.width, hh = r0.height, top = Math.max(0, Math.min(46, vh - hh - 6));
+    const rects = (sel, wt) => [...document.querySelectorAll(sel)].filter((e) => !el.contains(e)).map((e) => e.getBoundingClientRect()).filter((r) => r.width && r.height).map((r) => ({ r, wt }));
+    const hit = rects(Dc.PANEL_AVOID, 100).concat(rects(Dc.PANEL_SOFT, 1));
+    const over = (x, y) => hit.reduce((c, { r, wt }) => c + wt * Math.max(0, Math.min(x + w, r.right) - Math.max(x, r.left)) * Math.max(0, Math.min(y + hh, r.bottom) - Math.max(y, r.top)), 0);
+    let best = null;
+    for (const [x, y] of [[6, top], [vw - w - 6, top], [6, vh - hh - 6], [vw - w - 6, vh - hh - 6]]) { const c = over(x, y); if (!best || c < best.c) best = { x, y, c }; if (!c) break; }
+    Object.assign(el.style, { left: Math.max(0, best.x) + "px", top: Math.max(0, best.y) + "px" });
+  };
   // ---- the docked batch die (Vixie, Sep 30): a batch of rolls that don't hold the screen (scouting a new neighbourhood:
   // config.dice.queue.dockMin or more noHold rolls of one kind queued together; a lone one and every holding check use the big panel)
   // rolls a small d20 in a 64 px box (config.dice.art.mini) docked in a corner (bottom-left first) instead of the big panel,
@@ -287,9 +303,10 @@ void main() {
   };
   Dc.MINI_AVOID = ".tut-box, .tut-ring, .tut-arrow, .wheel-btn, .touch-ctl, .card-toast, #toast.show, .battle-canvas, .battle-hud";
   Dc.MINI_SOFT = ".map-node, .site-obj";   // taps it would block; weighed 1/100 of the above (a corner clear of both wins)
+  Dc.MINI_SOFT_PHONE = ".sq-row, .exp-side .panel > h3, #topbar button";   // + phones: in portrait bottom-left sat on the Squad panel's title + first row
   Dc.placeMini = function (el) {
     const rects = (sel, wt) => [...document.querySelectorAll(sel)].map((e) => e.getBoundingClientRect()).filter((r) => r.width && r.height).map((r) => ({ r, wt }));
-    const hit = rects(Dc.MINI_AVOID, 100).concat(rects(Dc.MINI_SOFT, 1));
+    const hit = rects(Dc.MINI_AVOID, 100).concat(rects(Dc.MINI_SOFT + (G.Touch && G.Touch.layout && G.Touch.layout() ? ", " + Dc.MINI_SOFT_PHONE : ""), 1));
     const over = (a) => hit.reduce((s, { r: b, wt }) => s + wt * Math.max(0, Math.min(a.right, b.right + 4) - Math.max(a.left, b.left - 4)) * Math.max(0, Math.min(a.bottom, b.bottom + 4) - Math.max(a.top, b.top - 4)), 0);
     let best = null;
     for (const spot of ["bl", "br", "tl", "tr"]) {

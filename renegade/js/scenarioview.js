@@ -39,6 +39,50 @@
     ], "sb-fail");
   };
 
+  // Share / Load open in their own layer over everything (outside #modal-root): G.UI.modal would replace whatever the
+  // game has open there, e.g. a queued step's "Hostiles! / To battle" pop-up, and closing it would leave the run with
+  // no way to resolve that step (Hex, SP-097 B2). Closing this layer removes only itself.
+  // Hex retest (f): Escape and a backdrop tap close it exactly like Close (the game's pop-up underneath stays). Pocket
+  // (phones): a backdrop close needs the press AND the release on the backdrop itself (a text selection dragged out of
+  // the dialog doesn't count), and a tap outside while a text field in the dialog has focus only drops the focus (the
+  // keyboard), never closes. Nothing listens to resize, so the on-screen keyboard opening can't close it.
+  const textField = (el) => !!el && (/^(INPUT|TEXTAREA)$/.test(el.tagName) || !!el.isContentEditable);
+  V.dialog = function (content, cls) {
+    const opener = document.querySelector(".sb-layer") ? V._opener : document.activeElement;   // Hex: focus goes back here on close
+    V.closeDialog(); V._opener = opener;
+    const box = h("div", { class: "modal " + (cls || ""), tabindex: "-1" }, content);
+    const layer = h("div", { class: "modal-back sb-layer", "data-layer": "scenario" }, box);
+    let down = false, shut = false;
+    layer.addEventListener("pointerdown", (e) => {
+      down = e.target === layer;
+      const f = document.activeElement;
+      if (down && textField(f) && box.contains(f)) { down = false; f.blur(); }   // first tap outside: just the keyboard
+    });
+    layer.addEventListener("pointerup", (e) => {
+      const was = down; down = false;
+      // touch keeps the release on the press's target, so check what's really under the finger
+      const under = document.elementFromPoint ? document.elementFromPoint(e.clientX, e.clientY) : e.target;
+      shut = was && e.target === layer && under === layer;   // close on the click, not here, or the tap's click lands on what was under the backdrop
+    });
+    layer.addEventListener("click", (e) => { if (shut && e.target === layer) { e.preventDefault(); V.closeDialog(); } shut = false; });
+    layer.addEventListener("pointercancel", () => { down = false; shut = false; });
+    document.body.appendChild(layer);
+    if (!V._esc) window.addEventListener("keydown", V._esc = (e) => {   // capture: before the game's own Escape (closes outpost panels)
+      if (e.key !== "Escape" || !document.querySelector(".sb-layer")) return;
+      e.preventDefault(); e.stopPropagation(); V.closeDialog();
+    }, true);
+    // Hex: focus moves into the dialog: its first text field with a mouse / keyboard, the dialog itself on touch (no surprise keyboard)
+    const first = typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches ? null : box.querySelector("input[type=text]:not([disabled]), textarea:not([readonly]):not([disabled])");
+    const tgt = first || box; if (typeof tgt.focus === "function") tgt.focus({ preventScroll: true });
+    return box;
+  };
+  V.closeDialog = function () {
+    const layers = document.querySelectorAll(".sb-layer"); if (!layers.length) return;
+    layers.forEach((el) => el.remove());
+    const o = V._opener; V._opener = null;
+    if (o && o.isConnected && typeof o.focus === "function" && o !== document.body) o.focus({ preventScroll: true });   // back to the opener
+  };
+
   // --- Share run…  (name + note -> link / code / .renegade file)
   const slug = (s) => (String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48) || "scenario");
   V.download = function (payload) {
@@ -69,8 +113,8 @@
       } catch (e) { console.error(e); out.appendChild(h("p", { class: "sb-fail-msg" }, "Couldn't make the link: " + e.message)); }
       go.disabled = false;
     } }, "Make link");
-    G.UI.modal([h("h2", null, "Share this run"), h("p", { class: "sb-small" }, "Anyone who opens the link gets this exact moment in a sandbox. Their own save isn't touched."),
-      name, note, h("div", { class: "sb-row" }, go, h("button", { onclick: G.UI.closeModal }, "Close")), out], "sb-dialog");
+    V.dialog([h("h2", null, "Share this run"), h("p", { class: "sb-small" }, "Anyone who opens the link gets this exact moment in a sandbox. Their own save isn't touched."),
+      name, note, h("div", { class: "sb-row" }, go, h("button", { "data-act": "close-scenario-dialog", onclick: V.closeDialog }, "Close")), out], "sb-dialog");
   };
 
   // --- Load scenario…  (.renegade / .json file, a pasted link, or a pasted code). Checked here first, then the page
@@ -92,8 +136,8 @@
     };
     const file = h("input", { type: "file", accept: ".renegade,.json,application/json", "data-act": "scenario-file", onchange: async (e) => { const f = e.target.files[0]; if (f) run(await f.text()); } });
     const paste = h("textarea", { rows: 4, class: "sb-in sb-code", placeholder: "…or paste a scenario link, code or JSON", "data-act": "scenario-paste" });
-    G.UI.modal([h("h2", null, "Load a scenario"), h("p", { class: "sb-small" }, "Opens in a sandbox: your own save stays as it is, and Exit sandbox brings it back."),
+    V.dialog([h("h2", null, "Load a scenario"), h("p", { class: "sb-small" }, "Opens in a sandbox: your own save stays as it is, and Exit sandbox brings it back."),
       h("div", { class: "sb-row" }, file), paste,
-      h("div", { class: "sb-row" }, h("button", { class: "primary", "data-act": "scenario-open", onclick: () => run(paste.value) }, "Open"), h("button", { onclick: G.UI.closeModal }, "Close")), msg], "sb-dialog");
+      h("div", { class: "sb-row" }, h("button", { class: "primary", "data-act": "scenario-open", onclick: () => run(paste.value) }, "Open"), h("button", { "data-act": "close-scenario-dialog", onclick: V.closeDialog }, "Close")), msg], "sb-dialog");
   };
 })(window);

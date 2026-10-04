@@ -11,17 +11,18 @@
     const e = document.createElement(tag);
     if (attrs) for (const k in attrs) {
       const v = attrs[k];
-      if (k === "class") e.className = v; else if (k === "html") e.innerHTML = v; else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
-      else if (k === "style") e.setAttribute("style", v); else if (v !== false && v != null) e.setAttribute(k, v === true ? "" : v);
+      if (k === "class") e.className = v; else if (k === "html") e.innerHTML = U.copy(v); else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+      else if (k === "style") e.setAttribute("style", v); else if (v !== false && v != null) e.setAttribute(k, v === true ? "" : k === "title" ? U.copy(v) : v);
     }
-    for (const kid of kids.flat()) if (kid != null && kid !== false) e.appendChild(typeof kid === "string" || typeof kid === "number" ? document.createTextNode(String(kid)) : kid);
+    // U.copy: data text reaches the player through here (modals, panels, the log), so [DRAFT] / [PLACEHOLDER] tags never show
+    for (const kid of kids.flat()) if (kid != null && kid !== false) e.appendChild(typeof kid === "string" || typeof kid === "number" ? document.createTextNode(U.copy(String(kid))) : kid);
     return e;
   }
   UI.h = h;
   UI.fail = function (msg) { G.Sfx.play("sfx_ui_error"); UI.toast(msg); };   // a refused action: toast + error sound
   UI.toast = function (msg) { if (G.Dice && G.Dice.busy()) return G.Dice.whenIdle(() => UI.toast(msg));   // Slice 5 §B: a check's toast waits for its die
-    const t = $("#toast"); t.textContent = msg; t.onclick = null; t.classList.remove("clickable"); t.classList.add("show"); clearTimeout(UI._tt); UI._tt = setTimeout(() => t.classList.remove("show"), 2600); };
-  UI.showTip = function (html, x, y) { UI.tipAt = performance.now(); const t = $("#tooltip"); t.innerHTML = html; t.classList.remove("hidden"); const w = t.offsetWidth, hh = t.offsetHeight; t.style.left = Math.min(window.innerWidth - w - 8, x + 14) + "px"; t.style.top = Math.min(window.innerHeight - hh - 8, y + 14) + "px"; };
+    const t = $("#toast"); t.textContent = U.copy(msg); t.onclick = null; t.classList.remove("clickable"); t.classList.add("show"); clearTimeout(UI._tt); UI._tt = setTimeout(() => t.classList.remove("show"), 2600); };
+  UI.showTip = function (html, x, y) { UI.tipAt = performance.now(); const t = $("#tooltip"); t.innerHTML = U.copy(html); t.classList.remove("hidden"); const w = t.offsetWidth, hh = t.offsetHeight; t.style.left = Math.min(window.innerWidth - w - 8, x + 14) + "px"; t.style.top = Math.min(window.innerHeight - hh - 8, y + 14) + "px"; };
   UI.hideTip = function () { UI.tipArmed = null; $("#tooltip").classList.add("hidden"); };   // tipAt / tipArmed: tap-to-show on touch (js/touch.js)
   const tipOn = UI.tipOn = (el, fn) => { el.addEventListener("mousemove", (e) => UI.showTip(typeof fn === "function" ? fn() : fn, e.clientX, e.clientY)); el.addEventListener("mouseleave", UI.hideTip); return el; };
   UI.modal = function (content, cls) { const root = $("#modal-root"); root.innerHTML = ""; const m = h("div", { class: "modal " + (cls || "") }, content); root.appendChild(h("div", { class: "modal-back" }, m)); return m; };
@@ -294,20 +295,31 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     const zd = DATA.zones.list[UI.zone];
     el.appendChild(h("div", { class: "deploy-zone" }, "Zone: ", h("b", null, zd.name), ` (${zd.size}, ${zd.tierLabel}) `, h("button", { onclick: () => UI.openPanel("zones") }, "Change zone")));
     lo.med = lo.med == null ? Math.min(2, s.stash.res.med || 0) : Math.min(lo.med, s.stash.res.med || 0);
-    if (!G.State.body(lo.bodyId) || !G.State.bodyReady(G.State.body(lo.bodyId))) { const rb = s.bodies.find((b) => G.State.bodyReady(b)); if (rb) lo.bodyId = rb.uid; }
+    if (!G.State.body(lo.bodyId) || !G.State.bodyReady(G.State.body(lo.bodyId))) { const was = G.State.body(lo.bodyId), rb = s.bodies.find((b) => G.State.bodyReady(b)); if (rb) { if (was) UI.bodyFallbackFrom = was.uid; lo.bodyId = rb.uid; } }
+    // the body you had picked is restoring, so the panel fell back to a ready one: say so (until you pick one yourself)
+    const fbFrom = UI.bodyFallbackFrom && G.State.body(UI.bodyFallbackFrom);
+    // Hex retest (B4): once it has restored, the auto-fallback goes back to it (only an auto-fallback: a body you
+    // clicked yourself, Basic included, cleared bodyFallbackFrom). The [data-restore] tick re-renders at 0.
+    if (fbFrom && G.State.bodyReady(fbFrom) && fbFrom.uid !== lo.bodyId && G.State.body(lo.bodyId)) { lo.bodyId = fbFrom.uid; UI.bodyFallbackFrom = null; }   // fixGrunts() below re-fits the squad
+    if (fbFrom && (G.State.bodyReady(fbFrom) || fbFrom.uid === lo.bodyId)) UI.bodyFallbackFrom = null;
     const score = G.State.deployScore();
     // bodies
     const bsec = h("section", { class: "panel" }, h("h3", null, "1 · Body (you wear one; unworn bodies never fight)"));
     const cards = h("div", { class: "cards" });
     for (const b of s.bodies) {
       const ready = G.State.bodyReady(b);
-      const c = h("div", { class: "card body-card" + (lo.bodyId === b.uid ? " sel" : "") + (ready ? "" : " disabled"), onclick: () => { if (ready) { lo.bodyId = b.uid; fixGrunts(); UI.render(); } } },
+      const c = h("div", { class: "card body-card" + (lo.bodyId === b.uid ? " sel" : "") + (ready ? "" : " disabled"), "data-body": b.uid, onclick: () => {
+        if (!G.State.bodyReady(b)) return UI.fail(`${b.name} is still restoring (${U.fmtTime(b.restoreUntil - G.now())} left). Pick a ready body or wait.`);   // never a silent no-op
+        UI.bodyFallbackFrom = null; lo.bodyId = b.uid; fixGrunts(); UI.render(); } },
         SP.icon(G.State.bodySprite(b), 40), h("div", { class: "bc-name" }, b.name), h("div", { class: "bc-sub" }, b.cls ? `${DATA.bodies.classes[b.cls].name} / ${DATA.bodies.specialties[b.spec].name}` : "Basic (no timer)"),
         h("div", { class: "bc-sub" }, `Body Lv ${G.Skills.bodyLevel(b)} · cost ${G.State.bodyCost(b)}`), ready ? null : h("div", { class: "bc-timer", "data-restore": b.uid }, "Restoring " + U.fmtTime(b.restoreUntil - G.now())), UI.injuryChips ? UI.injuryChips(b) : null);
       tipOn(c, () => UI.bodyTip(b));
       cards.appendChild(c);
     }
-    bsec.appendChild(cards); el.appendChild(bsec);
+    bsec.appendChild(cards);
+    if (UI.bodyFallbackFrom && G.State.body(lo.bodyId)) { const fb = G.State.body(UI.bodyFallbackFrom);
+      bsec.appendChild(h("div", { class: "hint warn body-fallback-note" }, `${fb.name} is still restoring (`, h("span", { "data-until": fb.restoreUntil }, U.fmtTime(fb.restoreUntil - G.now())), ` left), so you'd deploy in ${G.State.body(lo.bodyId).name}.`)); }
+    el.appendChild(bsec);
     function fixGrunts() {
       const body = G.State.body(lo.bodyId); let left = score - G.State.bodyCost(body);
       lo.grunts = lo.grunts.filter((id) => { const g = s.grunts.find((x) => x.uid === id); if (!g) return false; const c = G.State.gruntTpl(g).deployCost; if (c <= left) { left -= c; return true; } return false; });
@@ -365,11 +377,9 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     // carry preview
     const carryLine = h("div", { "data-tut": "carry" });
     function updCarry() {
-      const gearItems = Object.values(lo.gear).map((uid) => s.stash.items.find((i) => i.uid === uid)).filter(Boolean);
-      const squad = (lo.grunts || []).map((id) => s.grunts.find((x) => x.uid === id)).filter(Boolean).map((g) => ({ g, hp: 1 }));   // Slice 5 §C: teammates add capacity
-      const fake = { gear: Object.fromEntries(gearItems.map((i) => [G.Items.base(i.base).slot, i])), bag: { items: [], res: { med: lo.med } }, pouch: [], carriedCritical: [], ammo: lo.ammo || null, squad };
-      const cap = G.Exp.capacity(fake, body, gearItems), kg = G.Exp.carried(fake), team = squad.reduce((a, m) => a + G.Exp.memberCarryKg(m), 0);
-      carryLine.textContent = `Carry: ${U.fmt1(kg)} / ${U.fmt1(cap)} kg (${DATA.config.carry.baseKg} base + ${DATA.config.carry.kgPerHaulingLevel}×Hauling ${G.Skills.level(body.skills, "hauling")} + backpack/affixes${body.quirks.includes("light_frame") ? " − 5 Light Frame" : ""}` + (squad.length ? ` + ${U.fmt1(team)} from ${squad.length} teammate${squad.length > 1 ? "s" : ""}: ${DATA.config.carry.perTeammateKg} each + their packs` : "") + ")";
+      // Hex beginning pass: the same run pieces + capacity code as the expedition (G.Exp.loadoutPreview), incl. the default backpack
+      const pv = G.Exp.loadoutPreview(lo), squad = pv.run.squad, cap = pv.cap, kg = pv.kg, team = pv.team;
+      carryLine.textContent = `Carry: ${U.fmt1(kg)} / ${U.fmt1(cap)} kg (${DATA.config.carry.baseKg} base + ${DATA.config.carry.kgPerHaulingLevel}×Hauling ${G.Skills.level(body.skills, "hauling")} + backpack/affixes${pv.freePack ? " (free School Bag)" : ""}${body.quirks.includes("light_frame") ? " − 5 Light Frame" : ""}` + (squad.length ? ` + ${U.fmt1(team)} from ${squad.length} teammate${squad.length > 1 ? "s" : ""}: ${DATA.config.carry.perTeammateKg} each + their packs` : "") + ")";
     }
     updCarry();
     gsec.appendChild(carryLine);
@@ -587,6 +597,14 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     const aim = h("select", { "data-set": "aimMode", onchange: (e) => { st.aimMode = e.target.value; G.State.save(); } });
     for (const [v, l] of [["slowmo", "Slow-mo 25% while aiming"], ["pause", "Full pause while aiming"]]) aim.appendChild(h("option", { value: v, selected: st.aimMode === v }, l));
     box.appendChild(h("div", { class: "set-row" }, h("label", null, "Aim mode"), aim));
+    // SP-100 (Megan): Graphics 3D / Low (2D) + the kill cam. Their own storage key (js/gfx.js), never the save's game state
+    if (G.Gfx) {
+      const Gx = G.Gfx, gsel = h("select", { "data-set": "graphics", onchange: (e) => { Gx.set("graphics", e.target.value); gst.textContent = Gx.status(); G.Sfx.play("sfx_ui_click"); } });
+      for (const [v, l] of [["auto", "Auto (3D; 2D on a weak device)"], ["3d", "3D"], ["low", "Low (2D)"]]) gsel.appendChild(h("option", { value: v, selected: Gx.graphics() === v }, l));
+      box.appendChild(h("div", { class: "set-row" }, h("label", null, "Graphics"), gsel));
+      box.appendChild(h("div", { class: "set-row" }, h("label", null, h("input", { type: "checkbox", "data-set": "killcam", checked: Gx.killcam(), onchange: (e) => { Gx.set("killcam", e.target.checked); } }), " Kill cam on every death (3D; a tap skips one)")));
+      const gst = h("p", { class: "hint", "data-note": "graphics" }, Gx.status()); box.appendChild(gst);
+    }
     // Slice 5 §B (Vixie): the physics d20 for out-of-combat checks; off = outcomes at once, no die, no dice sounds
     box.appendChild(h("h3", null, "Dice"));
     box.appendChild(h("div", { class: "set-row" }, h("label", null, h("input", { type: "checkbox", "data-set": "showDice", checked: st.showDice !== false, onchange: (e) => { st.showDice = e.target.checked; G.State.save(); } }), " Show dice rolls")));
@@ -735,7 +753,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
       const ex = X.extractionDef(node), open = X.extractionOpen(node);
       const label = UI.extractLabel(ex);
       side.appendChild(h("section", { class: "panel extract" }, h("h3", null, "Extraction point: " + loc.name), open ? h("button", { class: "primary big", "data-act": "extract", disabled: !X.canExtract(), onclick: () => UI.extractClick() }, label)
-        : X.wrecked(node) ? h("div", { class: "warn wrecked", "data-note": "wrecked" }, `${DATA.config.extraction.crash.line} Find another way out.`) : h("div", { class: "warn" }, "Closed at this Heat level.")));
+        : X.wrecked(node) ? h("div", { class: "warn wrecked", "data-note": "wrecked" }, `${DATA.config.extraction.crash.line} ${X.otherExitsNote(node)}`) : h("div", { class: "warn" }, "Closed at this Heat level.")));
     } else side.appendChild(h("section", { class: "panel" }, h("small", null, inSite ? (TL() ? "Tap" : "Click") + " an object to search it. The tooltip shows the time and the disturbance chance. The EXIT you came in by takes you back to the zone map." : `${TL() ? "Tap" : "Click"} a highlighted neighbouring location to move (+${DATA.config.heat.perMove} Heat). ${TL() ? "Tap" : "Click"} where you are to go back inside. The outpost is hidden: extraction is the only way home.`)));
     // log
     const lg = h("section", { class: "panel log" }, h("h3", null, "Log"));
@@ -827,7 +845,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
   // the extract button's line (the panel, the hotspot's tooltip and its confirm)
   UI.extractLabel = function (ex) {
     const X = G.Exp;
-    return ex.type === "free" ? "Extract (free)" : ex.type === "check" ? (() => { const c = G.Checks.compute(ex.skill, ex.dc, X.members(), X.gearItems()); return `Extract: ${DATA.skills[ex.skill].name} DC ${ex.dc} — ${Math.round(c.chance)}%` + (ex.wavesByGrade ? " (the better the roll, the fewer waves)" : ""); })() : `Extract: hold out ${ex.surviveSec} s (defense battle)`;
+    return ex.type === "free" ? "Extract (free)" : ex.type === "check" ? (() => { const c = G.Checks.compute(ex.skill, ex.dc, X.members(), X.gearItems()); return `Extract: ${DATA.skills[ex.skill].name} DC ${c.dc} — ${Math.round(c.chance)}%` + (ex.wavesByGrade ? " (the better the roll, the fewer waves)" : ""); })() : `Extract: hold out ${ex.surviveSec} s (defense battle)`;
   };
   UI.onSiteObject = function (o, acts, el) {
     const X = G.Exp, site = X.site();
@@ -896,7 +914,8 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     const b = G.Exp.buildBattle(step, G.Debug && G.Debug.rollMath);
     const scr = $("#screen");
     UI.battle = { step, b };
-    UI.battle.v = G.BattleView.mount(scr, b, { speed: UI.battleSpeed, onEnd: (bb) => UI.battleSummary(step, bb) });
+    const bopts = { speed: UI.battleSpeed, onEnd: (bb) => UI.battleSummary(step, bb) };
+    UI.battle.v = G.Gfx ? G.Gfx.mountBattle(scr, b, bopts) : G.BattleView.mount(scr, b, bopts);   // SP-100: 3D (js/gfx.js) or 2D
     if (G.Music) G.Music.set("battle", G.state.run ? G.state.run.zone : null);   // battle music: on the bar grid (js/music.js)
     G.log(`Battle seed ${b.seed}`);
   };

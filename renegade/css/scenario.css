@@ -11,6 +11,8 @@
 #sandbox-banner .sb-exit { position: relative; flex: none; background: #fff; color: #8a0f55; border: 0; border-radius: 5px; padding: 3px 9px; font-weight: bold; cursor: pointer; }
 #sandbox-banner .sb-exit::after { content: ""; position: absolute; left: -6px; right: -6px; top: -10px; bottom: -10px; }   /* a 44 px tap target without a taller banner */
 body.sandbox::after { content: ""; position: fixed; inset: 0; border: 3px solid #c2187a; pointer-events: none; z-index: 2147482999; }
+.modal-back.sb-layer { z-index: 1000; }   /* Share / Load: over the game's own modal (z 50) and the debug panel (z 90) */
+.sb-layer > .modal:focus { outline: none; }   /* Hex: the dialog takes focus when it opens (its first field, or itself on touch) */
 .modal.sb-dialog, .modal.sb-fail { max-width: min(520px, calc(100vw - 16px)); }
 .modal .sb-in { display: block; width: 100%; box-sizing: border-box; margin: 6px 0; background: #11110d; color: #eee; border: 1px solid #555; border-radius: 4px; padding: 6px; font: inherit; }
 .modal .sb-code { font: 11px/1.3 monospace; word-break: break-all; }
@@ -19,3 +21,27 @@ body.sandbox::after { content: ""; position: fixed; inset: 0; border: 3px solid 
 .modal .sb-small { font-size: 12px; opacity: .8; }
 .modal .sb-fail-msg { color: #ffb0b0; }
 @media (pointer: coarse) { .modal .sb-row button { min-height: 44px; } }
+@media (pointer: coarse) {
+  /* the debug panel's × (top right) sits under the sandbox banner's Exit sandbox on portrait phones: a tap meant to
+     close the panel exits the sandbox. Start the panel below the banner. */
+  body.sandbox #debug { padding-top: calc(56px + env(safe-area-inset-top)); }
+  /* Share / Load: keep the dialog clear of the banner on short (landscape) screens */
+  .modal-back.sb-layer { padding-top: calc(56px + env(safe-area-inset-top)); box-sizing: border-box; }
+  .modal-back.sb-layer .modal { max-height: calc(100dvh - 64px - env(safe-area-inset-top)); }
+  /* mobile.css gives text inputs 16px (no iOS focus-zoom); .modal .sb-in's `font: inherit` overrode it (13px / 11px) */
+  .modal .sb-in, .modal .sb-code { font-size: 16px; }
+}
+/* Hex retest (i): with a battle on screen the banner shrinks to a pill (SANDBOX + Exit sandbox) and the game starts
+   below it, clear of Exit's 44 px tap area (10 px past its bottom), so Exit sandbox never sits over the speed slider, Fight!, the touch Pause or an ability (360/390/430 portrait, 844x390 landscape). */
+body.sandbox:has(.battle-wrap) #sandbox-banner .sb-name, body.sandbox:has(.battle-wrap) #sandbox-banner .sb-sub,
+body.sandbox:has(.battle-wrap) #sandbox-banner .sb-warn { display: none; }
+body.sandbox:has(.battle-wrap) #sandbox-banner .sb-exit { min-height: 0; min-width: 0; padding: 3px 9px; }
+body.sandbox:has(.battle-wrap) #app { box-sizing: border-box; padding-top: calc(36px + env(safe-area-inset-top)); }
+@media (pointer: fine) {
+  /* Keep the desktop ability bar in view after reserving the banner's 36 px above the game. */
+  body.sandbox:has(.battle-wrap) .battle-canvas { width: min(100%, calc((100vh - 226px - env(safe-area-inset-top)) * 40 / 24)); }
+}
+@media (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {   /* the landscape battle (mobile.css) sized to the 36 px less height */
+  body.sandbox:has(.battle-wrap) .battle-canvas { height: calc(100dvh - 106px - env(safe-area-inset-top)); }
+  body.sandbox:has(.battle-wrap) .battle-wrap .battle-hud { max-width: calc((100dvh - 106px - env(safe-area-inset-top)) * 40 / 24); }
+}

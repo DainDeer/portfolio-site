@@ -236,6 +236,7 @@
     if (kind === "unreadable") return P ? P + "save_unreadable" : c.saveKey + "_unreadable";
     if (kind === "tuning") return P ? P + "tuning" : c.overridesKey;
     if (kind === "build") return NS ? NS + "build_id" : (c.save || {}).buildIdKey;
+    if (kind === "gfx") return P ? P + "gfx" : "renegade_gfx";   // SP-100 graphics prefs (js/gfx.js): outside the save, kept by a build wipe
     throw new Error("unknown storage key kind " + kind);
   };
   const LS = () => root.localStorage;

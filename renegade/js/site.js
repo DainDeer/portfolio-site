@@ -291,7 +291,7 @@
     if (o.kind === "event" || o.kind === "survivor") return o.done ? "Already dealt with." : null;
     if (o.kind === "grate" || o.kind === "exit") return null;
     if (o.kind === "decor") return null;   // Slice 5 §G: scenery (examine only)
-    if (o.kind === "extract") { const node = X.node(site.nid); return X.extractionOpen(node) ? null : X.wrecked(node) ? `${CFG().extraction.crash.line} Find another way out.` : "Closed at this Heat level."; }   // Slice 5 §D
+    if (o.kind === "extract") { const node = X.node(site.nid); return X.extractionOpen(node) ? null : X.wrecked(node) ? `${CFG().extraction.crash.line} ${X.otherExitsNote(node)}` : "Closed at this Heat level."; }   // Slice 5 §D
     if (o.kind === "mural") return null;   // Slice 4 §B pods room
     if (X.trainDef(o)) return X.trainedNow(o) ? "Done for this run." : null;   // Slice 5 §F
     if (o.kind === "wheel") { const d = site.pods && X.obj(site.pods.door, site); return d && !d.sealed ? "Set. The door is open." : null; }
@@ -696,6 +696,9 @@
   X.crossPassage = function (pid) {
     const why = X.canCross(pid); if (why) return why;
     const r = run(), P = DATA.zones.passages[pid], to = G.Zones.otherEnd(pid, r.zone), nid = G.Zones.passageNode(pid, to);
+    // From its always-visible end (e.g. the Spillway at Harlan Dam) a passage can be crossed before it was ever spotted:
+    // crossing it finds it, through the same path as a successful spot roll (s.passages + the zone unlock / pendingUnlocks)
+    if (!G.Zones.passageFound(pid)) X.discoverPassage(pid);
     r.zone = to;
     X.addHeat(P.crossHeat != null ? P.crossHeat : CFG().heat.passageCross, "passage");
     X.log(`You ${P.crossVerb || "squeeze through"} the ${P.name || "passage"} into ${DATA.zones.list[to].name}. +${P.crossHeat} Heat.`);

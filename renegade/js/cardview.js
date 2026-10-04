@@ -33,7 +33,7 @@
     if (bw) spots.push({ spot: "field", left: bw.left + 6, right: Math.max(6, vw - bw.right + 6) });             // along the bottom of the battlefield
     if (cv) spots.push({ spot: "field-top", left: cv.left + 6, right: Math.max(6, vw - cv.right + 6), top: cv.top + 6 });   // portrait (the pop's fallback): over the top of the arena, where no button is
     const hit = [...document.querySelectorAll(CV.TOAST_AVOID)].map((e) => e.getBoundingClientRect()).filter((r) => r.width && r.height);
-    const put = (sp) => { Object.assign(el.style, { left: sp.left + "px", right: sp.right + "px", top: sp.top != null ? sp.top + "px" : "", bottom: sp.top != null ? "auto" : "" }); el.dataset.spot = sp.spot; };
+    const put = (sp) => { Object.assign(el.style, { width: "", left: sp.left + "px", right: sp.right + "px", top: sp.top != null ? sp.top + "px" : "", bottom: sp.top != null ? "auto" : "" }); el.dataset.spot = sp.spot; };
     let best = null;
     for (const sp of spots) {
       put(sp);
@@ -41,7 +41,40 @@
       if (!best || c < best.c) best = { sp, c };
       if (!c) break;
     }
-    if (best) put(best.sp);
+    if (best && !best.c) { el.classList.remove("ct-compact"); el.style.display = ""; return put(best.sp); }
+    CV.toastFallback(el, hit);
+  };
+  // Rivet (#6): with every spot covered the toast took the least-covered one, and in a forced test that was over a
+  // button. Vixie's rule: nothing may ever cover an ability / battle button mid-fight. So then scan the screen for a
+  // strip that touches no button (CV.TOAST_BTNS; the softer TOAST_AVOID panels as the tie-break), preferring the arena,
+  // full size, then narrower (min 150 px), then the thumbnail alone (.ct-compact, 44 px). No room at all: it stays
+  // hidden (the card is in the binder anyway) and is looked at again on the next 250 ms re-check.
+  CV.TOAST_BTNS = ".abl-btn, .tc-btn, .touch-ctl button, .bh-speed, .bh-pause, .tp-panel button, .tp-q, .ability-bar button, .battle-hud button, .battle-hud input";
+  CV.toastFallback = function (el, soft) {
+    const vw = root.innerWidth, vh = root.innerHeight, pad = 6;
+    const hard = [...document.querySelectorAll(CV.TOAST_BTNS)].map((e) => e.getBoundingClientRect()).filter((r) => r.width && r.height);
+    el.classList.remove("ct-compact"); el.style.display = "";
+    Object.assign(el.style, { left: pad + "px", right: "auto", top: "0px", bottom: "auto", width: "" });
+    const full = Math.min(300, vw - 2 * pad), hh = el.offsetHeight || 50, cvr = document.querySelector("#screen > .battle-wrap canvas");
+    const arena = cvr && cvr.getBoundingClientRect();
+    const softC = (x, y, w) => soft.reduce((c, b) => c + Math.max(0, Math.min(x + w, b.right) - Math.max(x, b.left)) * Math.max(0, Math.min(y + hh, b.bottom) - Math.max(y, b.top)), 0);
+    const gaps = (y) => {   // free x-intervals of the row [y, y + hh] (4 px clear of every button)
+      const xs = hard.filter((b) => b.top - 4 < y + hh && b.bottom + 4 > y).map((b) => [b.left - 4, b.right + 4]).sort((a, b) => a[0] - b[0]);
+      const out = []; let x = pad; for (const [a, b] of xs) { if (a > x) out.push([x, a]); x = Math.max(x, b); } if (vw - pad > x) out.push([x, vw - pad]); return out;
+    };
+    let pick = null;
+    for (const minW of [full, 150, 44]) {
+      for (let y = pad; y + hh <= vh - pad; y += 2) for (const [a, b] of gaps(y)) {
+        if (b - a < minW) continue;
+        const w = minW === 44 ? 44 : Math.min(full, b - a), x = arena && a < arena.right && b > arena.left ? Math.min(Math.max(a, arena.left + pad), b - w) : a;
+        const inArena = arena && y >= arena.top && y + hh <= arena.bottom ? 0 : 1, c = softC(x, y, w);
+        if (!pick || inArena < pick.inArena || (inArena === pick.inArena && c < pick.c)) pick = { x, y, w, c, inArena };
+      }
+      if (pick) break;
+    }
+    if (!pick) { el.style.display = "none"; el.dataset.spot = "none"; return; }
+    if (pick.w < 150) el.classList.add("ct-compact");
+    Object.assign(el.style, { left: pick.x + "px", width: pick.w + "px", right: "auto", top: pick.y + "px", bottom: "auto" }); el.dataset.spot = "scan";
   };
   // Vixie (Sep 30): portrait phones in a battle: the pop may never cover an ability / battle button. It takes the first
   // spot (the usual corner, then over the battlefield, then the screen corners) that covers nothing in CV.TOAST_AVOID,

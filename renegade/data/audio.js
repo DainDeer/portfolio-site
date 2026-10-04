@@ -46,6 +46,11 @@ DATA.audio = {
     sfx_dice_bounce_1: { vol: 1.0 }, sfx_dice_bounce_2: { vol: 1.0 }, sfx_dice_bounce_3: { vol: 1.0 },   // a random one per wall bounce, up to 3 a roll
     sfx_dice_land: { vol: 1.0 },       // the landing frame, with stinger_roll
     stinger_roll: { vol: 0.45, path: "music/", noPitch: true },   // Snare (assets/music_src/README_zones2.md): on top of the landing thunk, SFX bus
+    // Snare (assets/music_src/README_stingers.md): the battle stingers, once per battle (G.BattleView.sting, js/battleview.js):
+    // Vixie (Oct 4) when the kill shot holding the fight-ending blow ends, or right on a skip; with no such shot, when the
+    // fight ends. Their files are not in this branch's assets/music/ yet: pending (silent, never requested) until they land.
+    stinger_battle_win: { vol: 1.0, path: "music/", noPitch: true, pending: true },    // a battle won
+    stinger_battle_wipe: { vol: 1.0, path: "music/", noPitch: true, pending: true },   // the squad went down (or your body died)
     sfx_bonk_1: { vol: 1.0 }, sfx_bonk_2: { vol: 1.0 }, sfx_bonk_3: { vol: 0.95 }, sfx_bonk_bass: { vol: 0.8 }
   },
   // SFX bus: every one-shot goes through a gain + limiter (DynamicsCompressor) before the master, so 6 stacked shots
