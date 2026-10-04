@@ -1,0 +1,5359 @@
+{
+ "fmt": "renegade-scenario",
+ "v": 1,
+ "name": "drowned-mid",
+ "note": "Run 4 at Harrow Street Clinic (Drowned Suburbs), Heat 16. Hale solo (both Grunts dead: Coward ran and died; Spitter gibbed the other), unarmed, 194/211 HP, 2 Med. Try: Spitter+Hound fights with a thin squad; next door is the Flooded Cul-de-sac with the hidden Sunken Underpass to Hollis.",
+ "by": "",
+ "createdAt": "2026-10-03T23:56:51.748Z",
+ "build": "bc5bb86",
+ "saveVersion": 4,
+ "rng": 211868990,
+ "capturedNow": 1791071811748,
+ "state": {
+  "version": 4,
+  "seed": 1504782025,
+  "created": 1791070548318,
+  "maps": {
+   "a": {
+    "seed": 1504782025,
+    "zone": "a",
+    "insertion": "outpost",
+    "nodes": {
+     "outpost": {
+      "id": "outpost",
+      "row": 0,
+      "x": 60,
+      "y": 300,
+      "loc": null,
+      "tier": 1
+     },
+     "n1_0": {
+      "id": "n1_0",
+      "row": 1,
+      "x": 232.9737100182101,
+      "y": 137.35987157560885,
+      "loc": "backpack_cache",
+      "tier": 1
+     },
+     "n1_1": {
+      "id": "n1_1",
+      "row": 1,
+      "x": 230.68592687975615,
+      "y": 269.89216001005843,
+      "loc": "stillwater",
+      "tier": 1
+     },
+     "n1_2": {
+      "id": "n1_2",
+      "row": 1,
+      "x": 211.87621290236712,
+      "y": 422.6085058390163,
+      "loc": "owlfall",
+      "tier": 1
+     },
+     "n2_0": {
+      "id": "n2_0",
+      "row": 2,
+      "x": 386.2326537752524,
+      "y": 177.05404101870954,
+      "loc": "ex_truck",
+      "tier": 1
+     },
+     "n2_1": {
+      "id": "n2_1",
+      "row": 2,
+      "x": 415.8909321743995,
+      "y": 281.2025254033506,
+      "loc": "picnic",
+      "tier": 1
+     },
+     "n2_2": {
+      "id": "n2_2",
+      "row": 2,
+      "x": 418.51245477143675,
+      "y": 440.20135873463005,
+      "loc": "hollow_creek",
+      "tier": 1
+     },
+     "n3_0": {
+      "id": "n3_0",
+      "row": 3,
+      "x": 616.6184226628393,
+      "y": 139.43735014880076,
+      "loc": "pump_station",
+      "tier": 2
+     },
+     "n3_1": {
+      "id": "n3_1",
+      "row": 3,
+      "x": 577.937311951071,
+      "y": 298.0484720575623,
+      "loc": "cryo_annex",
+      "tier": 2
+     },
+     "n3_2": {
+      "id": "n3_2",
+      "row": 3,
+      "x": 579.2491558352485,
+      "y": 450.1950129773468,
+      "loc": "mossback",
+      "tier": 2
+     },
+     "n4_0": {
+      "id": "n4_0",
+      "row": 4,
+      "x": 770.110216723755,
+      "y": 133.61395604908466,
+      "loc": "fire_lookout",
+      "tier": 2
+     },
+     "n4_1": {
+      "id": "n4_1",
+      "row": 4,
+      "x": 769.7389244809747,
+      "y": 319.65242660371587,
+      "loc": "rail_yard",
+      "tier": 2
+     },
+     "n4_2": {
+      "id": "n4_2",
+      "row": 4,
+      "x": 788.6766397729516,
+      "y": 446.86470492510125,
+      "loc": "ex_tunnel",
+      "tier": 2
+     },
+     "n5_0": {
+      "id": "n5_0",
+      "row": 5,
+      "x": 956.7774511314929,
+      "y": 126.02647212799639,
+      "loc": "lumber_mill",
+      "tier": 3
+     },
+     "n5_1": {
+      "id": "n5_1",
+      "row": 5,
+      "x": 950.2609985414892,
+      "y": 288.74047117773443,
+      "loc": "riverbed_camp",
+      "tier": 3
+     },
+     "n5_2": {
+      "id": "n5_2",
+      "row": 5,
+      "x": 910.5291659478098,
+      "y": 454.74897254258394,
+      "loc": "toll_bridge",
+      "tier": 3
+     },
+     "s_witch_cottage": {
+      "id": "s_witch_cottage",
+      "row": 1,
+      "x": 259.8762129023671,
+      "y": 344.6085058390163,
+      "loc": "witch_cottage",
+      "secret": true,
+      "tier": 1
+     }
+    },
+    "edges": [
+     [
+      "outpost",
+      "n1_0"
+     ],
+     [
+      "outpost",
+      "n1_1"
+     ],
+     [
+      "outpost",
+      "n1_2"
+     ],
+     [
+      "n1_0",
+      "n2_0"
+     ],
+     [
+      "n1_1",
+      "n2_1"
+     ],
+     [
+      "n1_1",
+      "n2_0"
+     ],
+     [
+      "n1_2",
+      "n2_2"
+     ],
+     [
+      "n1_0",
+      "n1_1"
+     ],
+     [
+      "n2_0",
+      "n3_0"
+     ],
+     [
+      "n2_0",
+      "n3_1"
+     ],
+     [
+      "n2_1",
+      "n3_1"
+     ],
+     [
+      "n2_2",
+      "n3_2"
+     ],
+     [
+      "n3_0",
+      "n4_0"
+     ],
+     [
+      "n3_0",
+      "n4_1"
+     ],
+     [
+      "n3_1",
+      "n4_1"
+     ],
+     [
+      "n3_2",
+      "n4_2"
+     ],
+     [
+      "n4_0",
+      "n5_0"
+     ],
+     [
+      "n4_1",
+      "n5_1"
+     ],
+     [
+      "n4_1",
+      "n5_2"
+     ],
+     [
+      "n4_2",
+      "n5_2"
+     ],
+     [
+      "n4_2",
+      "n5_1"
+     ],
+     [
+      "n1_2",
+      "s_witch_cottage"
+     ]
+    ]
+   }
+  },
+  "world": {
+   "hollow_creek": "pending",
+   "sites": {
+    "n1_1": {
+     "nid": "n1_1",
+     "loc": "stillwater",
+     "zone": "a",
+     "size": "M",
+     "rooms": [
+      {
+       "i": 0,
+       "col": 0,
+       "row": 1,
+       "parent": -1,
+       "open": true,
+       "x": 38,
+       "y": 308,
+       "w": 454,
+       "h": 254,
+       "free": [
+        {
+         "x": 413,
+         "y": 398
+        }
+       ]
+      },
+      {
+       "i": 1,
+       "col": 1,
+       "row": 1,
+       "parent": 0,
+       "open": true,
+       "x": 508,
+       "y": 308,
+       "w": 454,
+       "h": 254,
+       "free": [
+        {
+         "x": 661,
+         "y": 472
+        },
+        {
+         "x": 735,
+         "y": 472
+        },
+        {
+         "x": 587,
+         "y": 398
+        },
+        {
+         "x": 587,
+         "y": 472
+        },
+        {
+         "x": 735,
+         "y": 398
+        }
+       ]
+      },
+      {
+       "i": 2,
+       "col": 0,
+       "row": 0,
+       "parent": 0,
+       "open": true,
+       "x": 38,
+       "y": 38,
+       "w": 454,
+       "h": 254,
+       "free": [
+        {
+         "x": 117,
+         "y": 202
+        },
+        {
+         "x": 265,
+         "y": 202
+        },
+        {
+         "x": 265,
+         "y": 128
+        }
+       ]
+      }
+     ],
+     "objects": [
+      {
+       "id": "o1",
+       "kind": "search",
+       "searched": true,
+       "type": "door",
+       "name": "Door",
+       "sprite": "obj_door",
+       "room": 0,
+       "opens": 1,
+       "vertical": true,
+       "x": 500,
+       "y": 435,
+       "locked": false
+      },
+      {
+       "id": "o2",
+       "kind": "search",
+       "searched": true,
+       "type": "door",
+       "name": "Door",
+       "sprite": "obj_door",
+       "room": 0,
+       "opens": 2,
+       "vertical": false,
+       "x": 265,
+       "y": 300,
+       "locked": false
+      },
+      {
+       "id": "o3",
+       "kind": "exit",
+       "searched": false,
+       "style": "gate",
+       "name": "Gate",
+       "sprite": "obj_gate",
+       "room": 0,
+       "x": 265,
+       "y": 570
+      },
+      {
+       "id": "o4",
+       "kind": "search",
+       "searched": true,
+       "name": "Crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "room": 1,
+       "x": 809,
+       "y": 398,
+       "left": null
+      },
+      {
+       "id": "o5",
+       "kind": "search",
+       "searched": true,
+       "name": "Desk",
+       "sprite": "obj_desk",
+       "type": "desk",
+       "room": 2,
+       "x": 191,
+       "y": 128,
+       "left": null
+      },
+      {
+       "id": "o6",
+       "kind": "search",
+       "searched": true,
+       "name": "Desk",
+       "sprite": "obj_desk",
+       "type": "desk",
+       "room": 2,
+       "x": 117,
+       "y": 128,
+       "left": null
+      },
+      {
+       "id": "o7",
+       "kind": "search",
+       "searched": true,
+       "name": "Crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "room": 0,
+       "x": 117,
+       "y": 398,
+       "left": null
+      },
+      {
+       "id": "o8",
+       "kind": "search",
+       "searched": true,
+       "name": "Heavy crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "heavy": true,
+       "room": 2,
+       "x": 191,
+       "y": 202,
+       "left": null
+      },
+      {
+       "id": "o9",
+       "kind": "search",
+       "searched": true,
+       "name": "Locker",
+       "sprite": "obj_locker",
+       "type": "locker",
+       "trapped": false,
+       "room": 1,
+       "x": 883,
+       "y": 472,
+       "left": null
+      },
+      {
+       "id": "o10",
+       "kind": "search",
+       "searched": true,
+       "name": "Growth cluster",
+       "sprite": "obj_growth",
+       "type": "growth",
+       "room": 0,
+       "x": 413,
+       "y": 472,
+       "left": null
+      },
+      {
+       "id": "o11",
+       "kind": "train",
+       "searched": false,
+       "type": "train_fish",
+       "name": "Still water",
+       "sprite": "obj_fishing_spot",
+       "room": 0,
+       "x": 228,
+       "y": 398,
+       "trainedRun": 1
+      },
+      {
+       "id": "o12",
+       "kind": "event",
+       "searched": false,
+       "eventId": "cache",
+       "name": "Dead renegade",
+       "sprite": "obj_dead_renegade",
+       "room": 2,
+       "x": 339,
+       "y": 128,
+       "done": true
+      }
+     ],
+     "props": [
+      {
+       "sprite": "prop_puddle",
+       "x": 191,
+       "y": 472,
+       "room": 0,
+       "rot": 0
+      },
+      {
+       "sprite": "prop_shelf",
+       "x": 117,
+       "y": 472,
+       "room": 0,
+       "rot": 180
+      },
+      {
+       "sprite": "prop_shelf",
+       "x": 265,
+       "y": 472,
+       "room": 0,
+       "rot": 90
+      },
+      {
+       "sprite": "prop_shelf",
+       "x": 661,
+       "y": 398,
+       "room": 1,
+       "rot": 90
+      },
+      {
+       "sprite": "prop_shelf",
+       "x": 413,
+       "y": 202,
+       "room": 2,
+       "rot": 270
+      }
+     ],
+     "decals": [],
+     "floor": "tile_floor_hushwood_wet",
+     "visits": 1,
+     "visitSearches": 15,
+     "searches": 15,
+     "nextId": 19,
+     "pickedOver": true,
+     "restock": 2,
+     "enteredRun": 1,
+     "entry": {
+      "run": 1,
+      "level": 1,
+      "mult": 1,
+      "fresh": true
+     },
+     "squadAt": "o17",
+     "everPicked": true
+    },
+    "n2_0": {
+     "nid": "n2_0",
+     "loc": "ex_truck",
+     "zone": "a",
+     "size": "M",
+     "rooms": [
+      {
+       "i": 0,
+       "col": 0,
+       "row": 1,
+       "parent": -1,
+       "open": true,
+       "x": 38,
+       "y": 308,
+       "w": 454,
+       "h": 254,
+       "free": [
+        {
+         "x": 413,
+         "y": 472
+        },
+        {
+         "x": 413,
+         "y": 398
+        }
+       ]
+      },
+      {
+       "i": 1,
+       "col": 1,
+       "row": 1,
+       "parent": 0,
+       "open": false,
+       "x": 508,
+       "y": 308,
+       "w": 454,
+       "h": 254,
+       "free": [
+        {
+         "x": 661,
+         "y": 398
+        },
+        {
+         "x": 735,
+         "y": 472
+        },
+        {
+         "x": 809,
+         "y": 398
+        },
+        {
+         "x": 883,
+         "y": 472
+        },
+        {
+         "x": 809,
+         "y": 472
+        },
+        {
+         "x": 883,
+         "y": 398
+        },
+        {
+         "x": 735,
+         "y": 398
+        }
+       ]
+      },
+      {
+       "i": 2,
+       "col": 0,
+       "row": 0,
+       "parent": 0,
+       "open": false,
+       "x": 38,
+       "y": 38,
+       "w": 454,
+       "h": 254,
+       "free": [
+        {
+         "x": 339,
+         "y": 202
+        },
+        {
+         "x": 413,
+         "y": 202
+        },
+        {
+         "x": 265,
+         "y": 128
+        },
+        {
+         "x": 117,
+         "y": 202
+        },
+        {
+         "x": 191,
+         "y": 202
+        },
+        {
+         "x": 117,
+         "y": 128
+        },
+        {
+         "x": 339,
+         "y": 128
+        }
+       ]
+      },
+      {
+       "i": 3,
+       "col": 1,
+       "row": 0,
+       "parent": 1,
+       "open": false,
+       "x": 508,
+       "y": 38,
+       "w": 454,
+       "h": 254,
+       "free": [
+        {
+         "x": 809,
+         "y": 128
+        },
+        {
+         "x": 661,
+         "y": 128
+        },
+        {
+         "x": 587,
+         "y": 128
+        },
+        {
+         "x": 809,
+         "y": 202
+        }
+       ]
+      }
+     ],
+     "objects": [
+      {
+       "id": "o1",
+       "kind": "search",
+       "searched": false,
+       "type": "door",
+       "name": "Door",
+       "sprite": "obj_door",
+       "room": 0,
+       "opens": 1,
+       "vertical": true,
+       "x": 500,
+       "y": 435,
+       "locked": false
+      },
+      {
+       "id": "o2",
+       "kind": "search",
+       "searched": false,
+       "type": "door",
+       "name": "Door",
+       "sprite": "obj_door",
+       "room": 0,
+       "opens": 2,
+       "vertical": false,
+       "x": 265,
+       "y": 300,
+       "locked": false
+      },
+      {
+       "id": "o3",
+       "kind": "search",
+       "searched": false,
+       "type": "door",
+       "name": "Door",
+       "sprite": "obj_door",
+       "room": 1,
+       "opens": 3,
+       "vertical": false,
+       "x": 735,
+       "y": 300,
+       "locked": false
+      },
+      {
+       "id": "o4",
+       "kind": "exit",
+       "searched": false,
+       "style": "gate",
+       "name": "Gate",
+       "sprite": "obj_gate",
+       "room": 0,
+       "x": 265,
+       "y": 570
+      },
+      {
+       "id": "o5",
+       "kind": "extract",
+       "searched": false,
+       "loc": "ex_truck",
+       "nid": "n2_0",
+       "name": "Logging Truck",
+       "sprite": "obj_logging_truck",
+       "wide": 2,
+       "room": 0,
+       "x": 154,
+       "y": 472
+      },
+      {
+       "id": "o6",
+       "kind": "search",
+       "searched": false,
+       "name": "Body",
+       "sprite": "corpse_human",
+       "type": "body_human",
+       "room": 1,
+       "x": 587,
+       "y": 472
+      },
+      {
+       "id": "o7",
+       "kind": "search",
+       "searched": false,
+       "name": "Safe",
+       "sprite": "obj_safe",
+       "type": "safe",
+       "locked": true,
+       "room": 2,
+       "x": 265,
+       "y": 202
+      },
+      {
+       "id": "o8",
+       "kind": "search",
+       "searched": false,
+       "name": "Crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "room": 0,
+       "x": 265,
+       "y": 472
+      },
+      {
+       "id": "o9",
+       "kind": "search",
+       "searched": false,
+       "name": "Locker",
+       "sprite": "obj_locker",
+       "type": "locker",
+       "room": 0,
+       "x": 191,
+       "y": 398
+      },
+      {
+       "id": "o10",
+       "kind": "search",
+       "searched": false,
+       "name": "Heavy crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "heavy": true,
+       "room": 3,
+       "x": 661,
+       "y": 202
+      },
+      {
+       "id": "o11",
+       "kind": "search",
+       "searched": false,
+       "name": "Desk",
+       "sprite": "obj_desk",
+       "type": "desk",
+       "room": 3,
+       "x": 883,
+       "y": 202
+      },
+      {
+       "id": "o12",
+       "kind": "search",
+       "searched": false,
+       "name": "Safe",
+       "sprite": "obj_safe",
+       "type": "safe",
+       "locked": true,
+       "room": 3,
+       "x": 883,
+       "y": 128
+      }
+     ],
+     "props": [
+      {
+       "sprite": "prop_junk",
+       "x": 339,
+       "y": 398,
+       "room": 0,
+       "rot": 90
+      },
+      {
+       "sprite": "prop_junk",
+       "x": 339,
+       "y": 472,
+       "room": 0,
+       "rot": 360
+      },
+      {
+       "sprite": "prop_junk",
+       "x": 265,
+       "y": 398,
+       "room": 0,
+       "rot": 90
+      },
+      {
+       "sprite": "prop_junk",
+       "x": 587,
+       "y": 398,
+       "room": 1,
+       "rot": 270
+      },
+      {
+       "sprite": "prop_junk",
+       "x": 661,
+       "y": 472,
+       "room": 1,
+       "rot": 90
+      },
+      {
+       "sprite": "prop_junk",
+       "x": 191,
+       "y": 128,
+       "room": 2,
+       "rot": 90
+      },
+      {
+       "sprite": "prop_junk",
+       "x": 413,
+       "y": 128,
+       "room": 2,
+       "rot": 270
+      },
+      {
+       "sprite": "prop_junk",
+       "x": 735,
+       "y": 128,
+       "room": 3,
+       "rot": 270
+      },
+      {
+       "sprite": "prop_junk",
+       "x": 735,
+       "y": 202,
+       "room": 3,
+       "rot": 180
+      },
+      {
+       "sprite": "prop_junk",
+       "x": 587,
+       "y": 202,
+       "room": 3,
+       "rot": 270
+      }
+     ],
+     "decals": [],
+     "floor": "tile_floor_hushwood",
+     "visits": 2,
+     "visitSearches": 0,
+     "searches": 0,
+     "nextId": 14,
+     "pickedOver": false,
+     "restock": 0,
+     "enteredRun": 1,
+     "entry": {
+      "run": 1,
+      "level": 1,
+      "mult": 1,
+      "fresh": true
+     },
+     "squadAt": "o4"
+    },
+    "n3_1": {
+     "nid": "n3_1",
+     "loc": "cryo_annex",
+     "zone": "a",
+     "size": "M",
+     "rooms": [
+      {
+       "i": 0,
+       "col": 0,
+       "row": 1,
+       "parent": -1,
+       "open": true,
+       "x": 38,
+       "y": 308,
+       "w": 454,
+       "h": 254,
+       "free": [
+        {
+         "x": 117,
+         "y": 398
+        }
+       ]
+      },
+      {
+       "i": 1,
+       "col": 1,
+       "row": 1,
+       "parent": 0,
+       "open": true,
+       "x": 508,
+       "y": 308,
+       "w": 454,
+       "h": 254,
+       "free": [
+        {
+         "x": 661,
+         "y": 398
+        }
+       ]
+      }
+     ],
+     "objects": [
+      {
+       "id": "o1",
+       "kind": "search",
+       "searched": true,
+       "type": "door",
+       "name": "Sealed door",
+       "sprite": "obj_door",
+       "room": 0,
+       "opens": 1,
+       "vertical": true,
+       "x": 500,
+       "y": 435,
+       "locked": false,
+       "sealed": false
+      },
+      {
+       "id": "o2",
+       "kind": "wheel",
+       "searched": false,
+       "idx": 2,
+       "pos": 3,
+       "name": "Wall wheel 3",
+       "sprite": "obj_wheel",
+       "room": 0,
+       "x": 413,
+       "y": 398
+      },
+      {
+       "id": "o3",
+       "kind": "wheel",
+       "searched": false,
+       "idx": 1,
+       "pos": 2,
+       "name": "Wall wheel 2",
+       "sprite": "obj_wheel",
+       "room": 0,
+       "x": 265,
+       "y": 472
+      },
+      {
+       "id": "o4",
+       "kind": "wheel",
+       "searched": false,
+       "idx": 0,
+       "pos": 3,
+       "name": "Wall wheel 1",
+       "sprite": "obj_wheel",
+       "room": 0,
+       "x": 117,
+       "y": 472
+      },
+      {
+       "id": "o5",
+       "kind": "mural",
+       "searched": false,
+       "name": "Faded mural",
+       "sprite": "obj_mural",
+       "room": 0,
+       "x": 302,
+       "y": 398,
+       "wide": 2
+      },
+      {
+       "id": "o6",
+       "kind": "pod",
+       "searched": false,
+       "name": "Working cryo pod",
+       "sprite": "obj_cryo_pod",
+       "room": 1,
+       "x": 735,
+       "y": 472,
+       "done": true
+      },
+      {
+       "id": "o7",
+       "kind": "exit",
+       "searched": false,
+       "style": "stairwell",
+       "name": "Stairwell",
+       "sprite": "obj_exit_stairwell",
+       "room": 0,
+       "x": 265,
+       "y": 570
+      },
+      {
+       "id": "o8",
+       "kind": "search",
+       "searched": false,
+       "name": "Desk",
+       "sprite": "obj_desk",
+       "type": "desk",
+       "room": 1,
+       "x": 735,
+       "y": 398
+      },
+      {
+       "id": "o9",
+       "kind": "search",
+       "searched": false,
+       "name": "Heavy crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "heavy": true,
+       "room": 1,
+       "x": 883,
+       "y": 398
+      },
+      {
+       "id": "o10",
+       "kind": "search",
+       "searched": false,
+       "name": "Growth cluster",
+       "sprite": "obj_growth",
+       "type": "growth",
+       "room": 0,
+       "x": 191,
+       "y": 472
+      },
+      {
+       "id": "o11",
+       "kind": "search",
+       "searched": false,
+       "name": "Old terminal",
+       "sprite": "obj_computer",
+       "type": "terminal",
+       "room": 1,
+       "x": 587,
+       "y": 398
+      },
+      {
+       "id": "o12",
+       "kind": "search",
+       "searched": false,
+       "name": "Crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "room": 1,
+       "x": 661,
+       "y": 472
+      },
+      {
+       "id": "o13",
+       "kind": "search",
+       "searched": false,
+       "name": "Crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "room": 1,
+       "x": 809,
+       "y": 472
+      },
+      {
+       "id": "o14",
+       "kind": "train",
+       "searched": false,
+       "type": "train_terminal",
+       "name": "Working terminal",
+       "sprite": "obj_computer",
+       "room": 0,
+       "x": 339,
+       "y": 472
+      },
+      {
+       "id": "o15",
+       "kind": "event",
+       "searched": false,
+       "eventId": "cryo_ward",
+       "name": "Cryo pod",
+       "sprite": "obj_cryo_pod",
+       "room": 1,
+       "x": 883,
+       "y": 472
+      }
+     ],
+     "props": [
+      {
+       "sprite": "prop_bed",
+       "x": 191,
+       "y": 398,
+       "room": 0,
+       "rot": 0
+      },
+      {
+       "sprite": "prop_bed",
+       "x": 413,
+       "y": 472,
+       "room": 0,
+       "rot": 270
+      },
+      {
+       "sprite": "prop_bed",
+       "x": 587,
+       "y": 472,
+       "room": 1,
+       "rot": 180
+      },
+      {
+       "sprite": "prop_bed",
+       "x": 809,
+       "y": 398,
+       "room": 1,
+       "rot": 180
+      }
+     ],
+     "decals": [],
+     "floor": "tile_floor_clinic",
+     "visits": 1,
+     "visitSearches": 0,
+     "searches": 0,
+     "nextId": 16,
+     "pickedOver": false,
+     "restock": 0,
+     "pods": {
+      "door": "o1",
+      "wheels": [
+       "o4",
+       "o3",
+       "o2"
+      ]
+     },
+     "enteredRun": 1,
+     "entry": {
+      "run": 1,
+      "level": 1,
+      "mult": 1,
+      "fresh": true
+     },
+     "squadAt": "o6"
+    },
+    "n4_1": {
+     "nid": "n4_1",
+     "loc": "rail_yard",
+     "zone": "a",
+     "size": "M",
+     "rooms": [
+      {
+       "i": 0,
+       "col": 0,
+       "row": 1,
+       "parent": -1,
+       "open": true,
+       "x": 38,
+       "y": 308,
+       "w": 454,
+       "h": 254,
+       "free": []
+      },
+      {
+       "i": 1,
+       "col": 1,
+       "row": 1,
+       "parent": 0,
+       "open": false,
+       "x": 508,
+       "y": 308,
+       "w": 454,
+       "h": 254,
+       "free": [
+        {
+         "x": 661,
+         "y": 472
+        },
+        {
+         "x": 587,
+         "y": 398
+        },
+        {
+         "x": 735,
+         "y": 398
+        },
+        {
+         "x": 883,
+         "y": 398
+        },
+        {
+         "x": 587,
+         "y": 472
+        },
+        {
+         "x": 809,
+         "y": 398
+        }
+       ]
+      }
+     ],
+     "objects": [
+      {
+       "id": "o1",
+       "kind": "search",
+       "searched": false,
+       "type": "door",
+       "name": "Door",
+       "sprite": "obj_door",
+       "room": 0,
+       "opens": 1,
+       "vertical": true,
+       "x": 500,
+       "y": 435,
+       "locked": true
+      },
+      {
+       "id": "o2",
+       "kind": "exit",
+       "searched": false,
+       "style": "fence",
+       "name": "Hole in the fence",
+       "sprite": "obj_exit_fence_hole",
+       "room": 0,
+       "x": 265,
+       "y": 570
+      },
+      {
+       "id": "o3",
+       "kind": "search",
+       "searched": false,
+       "name": "Beast carcass",
+       "sprite": "corpse_beast",
+       "type": "body_beast",
+       "room": 0,
+       "x": 265,
+       "y": 472
+      },
+      {
+       "id": "o4",
+       "kind": "search",
+       "searched": false,
+       "name": "Crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "room": 0,
+       "x": 265,
+       "y": 398
+      },
+      {
+       "id": "o5",
+       "kind": "search",
+       "searched": false,
+       "name": "Growth cluster",
+       "sprite": "obj_growth",
+       "type": "growth",
+       "room": 0,
+       "x": 339,
+       "y": 398
+      },
+      {
+       "id": "o6",
+       "kind": "search",
+       "searched": false,
+       "name": "Crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "room": 0,
+       "x": 413,
+       "y": 472
+      },
+      {
+       "id": "o7",
+       "kind": "search",
+       "searched": false,
+       "name": "Growth cluster",
+       "sprite": "obj_growth",
+       "type": "growth",
+       "room": 0,
+       "x": 191,
+       "y": 398
+      },
+      {
+       "id": "o8",
+       "kind": "search",
+       "searched": false,
+       "name": "Crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "room": 0,
+       "x": 339,
+       "y": 472
+      },
+      {
+       "id": "o9",
+       "kind": "train",
+       "searched": false,
+       "type": "train_chop",
+       "name": "Chopping stump",
+       "sprite": "obj_chop_stump",
+       "room": 0,
+       "x": 191,
+       "y": 472
+      },
+      {
+       "id": "o10",
+       "kind": "grate",
+       "searched": false,
+       "pid": "storm_drain",
+       "name": "Storm drain grate",
+       "sprite": "obj_grate",
+       "room": 0,
+       "x": 117,
+       "y": 398
+      },
+      {
+       "id": "o11",
+       "kind": "grate",
+       "searched": false,
+       "pid": "rail_spur",
+       "name": "Rail Spur",
+       "sprite": "obj_passage_rail_spur",
+       "room": 0,
+       "x": 117,
+       "y": 472
+      }
+     ],
+     "props": [
+      {
+       "sprite": "prop_junk",
+       "x": 413,
+       "y": 398,
+       "room": 0,
+       "rot": 0
+      },
+      {
+       "sprite": "prop_barrel",
+       "x": 883,
+       "y": 472,
+       "room": 1,
+       "rot": 270
+      },
+      {
+       "sprite": "prop_barrel",
+       "x": 661,
+       "y": 398,
+       "room": 1,
+       "rot": 270
+      }
+     ],
+     "decals": [],
+     "floor": "tile_floor_hushwood",
+     "visits": 1,
+     "visitSearches": 0,
+     "searches": 0,
+     "nextId": 14,
+     "pickedOver": true,
+     "restock": 2,
+     "enteredRun": 1,
+     "entry": {
+      "run": 1,
+      "level": 1,
+      "mult": 1,
+      "fresh": true
+     },
+     "squadAt": "o2",
+     "everPicked": true
+    },
+    "n3_0": {
+     "nid": "n3_0",
+     "loc": "pump_station",
+     "zone": "a",
+     "size": "M",
+     "rooms": [
+      {
+       "i": 0,
+       "col": 0,
+       "row": 1,
+       "parent": -1,
+       "open": true,
+       "x": 38,
+       "y": 308,
+       "w": 454,
+       "h": 254,
+       "free": [
+        {
+         "x": 413,
+         "y": 398
+        },
+        {
+         "x": 265,
+         "y": 398
+        },
+        {
+         "x": 339,
+         "y": 398
+        },
+        {
+         "x": 265,
+         "y": 472
+        },
+        {
+         "x": 191,
+         "y": 472
+        },
+        {
+         "x": 117,
+         "y": 398
+        },
+        {
+         "x": 191,
+         "y": 398
+        }
+       ]
+      },
+      {
+       "i": 1,
+       "col": 1,
+       "row": 1,
+       "parent": 0,
+       "open": false,
+       "x": 508,
+       "y": 308,
+       "w": 454,
+       "h": 254,
+       "free": [
+        {
+         "x": 735,
+         "y": 398
+        },
+        {
+         "x": 809,
+         "y": 398
+        },
+        {
+         "x": 809,
+         "y": 472
+        },
+        {
+         "x": 661,
+         "y": 472
+        },
+        {
+         "x": 661,
+         "y": 398
+        },
+        {
+         "x": 883,
+         "y": 398
+        },
+        {
+         "x": 587,
+         "y": 398
+        },
+        {
+         "x": 883,
+         "y": 472
+        },
+        {
+         "x": 735,
+         "y": 472
+        }
+       ]
+      },
+      {
+       "i": 2,
+       "col": 0,
+       "row": 0,
+       "parent": 0,
+       "open": false,
+       "x": 38,
+       "y": 38,
+       "w": 454,
+       "h": 254,
+       "free": [
+        {
+         "x": 117,
+         "y": 202
+        },
+        {
+         "x": 117,
+         "y": 128
+        },
+        {
+         "x": 413,
+         "y": 202
+        },
+        {
+         "x": 413,
+         "y": 128
+        },
+        {
+         "x": 191,
+         "y": 202
+        },
+        {
+         "x": 339,
+         "y": 128
+        },
+        {
+         "x": 265,
+         "y": 202
+        },
+        {
+         "x": 339,
+         "y": 202
+        }
+       ]
+      },
+      {
+       "i": 3,
+       "col": 1,
+       "row": 0,
+       "parent": 1,
+       "open": false,
+       "x": 508,
+       "y": 38,
+       "w": 454,
+       "h": 254,
+       "free": [
+        {
+         "x": 587,
+         "y": 202
+        }
+       ]
+      }
+     ],
+     "objects": [
+      {
+       "id": "o1",
+       "kind": "search",
+       "searched": false,
+       "type": "door",
+       "name": "Door",
+       "sprite": "obj_door",
+       "room": 0,
+       "opens": 1,
+       "vertical": true,
+       "x": 500,
+       "y": 435,
+       "locked": true
+      },
+      {
+       "id": "o2",
+       "kind": "search",
+       "searched": false,
+       "type": "door",
+       "name": "Door",
+       "sprite": "obj_door",
+       "room": 0,
+       "opens": 2,
+       "vertical": false,
+       "x": 265,
+       "y": 300,
+       "locked": false
+      },
+      {
+       "id": "o3",
+       "kind": "search",
+       "searched": false,
+       "type": "door",
+       "name": "Door",
+       "sprite": "obj_door",
+       "room": 1,
+       "opens": 3,
+       "vertical": false,
+       "x": 735,
+       "y": 300,
+       "locked": false
+      },
+      {
+       "id": "o4",
+       "kind": "exit",
+       "searched": false,
+       "style": "fence",
+       "name": "Hole in the fence",
+       "sprite": "obj_exit_fence_hole",
+       "room": 0,
+       "x": 265,
+       "y": 570
+      },
+      {
+       "id": "o5",
+       "kind": "search",
+       "searched": false,
+       "name": "Old terminal",
+       "sprite": "obj_computer",
+       "type": "terminal",
+       "room": 3,
+       "x": 587,
+       "y": 128
+      },
+      {
+       "id": "o6",
+       "kind": "search",
+       "searched": false,
+       "name": "Pump machinery",
+       "sprite": "obj_pump_machinery",
+       "type": "locker",
+       "searchSec": 4,
+       "noise": 8,
+       "questId": "dunn_pump_house",
+       "room": 3,
+       "x": 661,
+       "y": 202
+      },
+      {
+       "id": "o7",
+       "kind": "search",
+       "searched": false,
+       "name": "Heavy crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "heavy": true,
+       "room": 3,
+       "x": 883,
+       "y": 128
+      },
+      {
+       "id": "o8",
+       "kind": "train",
+       "searched": false,
+       "type": "train_fish",
+       "name": "Still water",
+       "sprite": "obj_fishing_spot",
+       "room": 3,
+       "x": 846,
+       "y": 202
+      },
+      {
+       "id": "o9",
+       "kind": "event",
+       "searched": false,
+       "eventId": "cache",
+       "name": "Dead renegade",
+       "sprite": "obj_dead_renegade",
+       "room": 3,
+       "x": 809,
+       "y": 128
+      }
+     ],
+     "props": [
+      {
+       "sprite": "prop_junk",
+       "x": 117,
+       "y": 472,
+       "room": 0,
+       "rot": 90
+      },
+      {
+       "sprite": "prop_puddle",
+       "x": 339,
+       "y": 472,
+       "room": 0,
+       "rot": 270
+      },
+      {
+       "sprite": "prop_junk",
+       "x": 413,
+       "y": 472,
+       "room": 0,
+       "rot": 270
+      },
+      {
+       "sprite": "prop_junk",
+       "x": 587,
+       "y": 472,
+       "room": 1,
+       "rot": 0
+      },
+      {
+       "sprite": "prop_pipes",
+       "x": 265,
+       "y": 128,
+       "room": 2,
+       "rot": 180
+      },
+      {
+       "sprite": "prop_pipes",
+       "x": 191,
+       "y": 128,
+       "room": 2,
+       "rot": 180
+      },
+      {
+       "sprite": "prop_junk",
+       "x": 735,
+       "y": 128,
+       "room": 3,
+       "rot": 0
+      },
+      {
+       "sprite": "prop_junk",
+       "x": 735,
+       "y": 202,
+       "room": 3,
+       "rot": 180
+      },
+      {
+       "sprite": "prop_junk",
+       "x": 661,
+       "y": 128,
+       "room": 3,
+       "rot": 90
+      }
+     ],
+     "decals": [],
+     "floor": "tile_floor_hushwood_wet",
+     "visits": 2,
+     "visitSearches": 0,
+     "searches": 0,
+     "nextId": 10,
+     "pickedOver": false,
+     "restock": 0,
+     "enteredRun": 1,
+     "entry": {
+      "run": 1,
+      "level": 1,
+      "mult": 1,
+      "fresh": true
+     },
+     "squadAt": "o4"
+    },
+    "n4_0": {
+     "nid": "n4_0",
+     "loc": "fire_lookout",
+     "zone": "a",
+     "size": "S",
+     "rooms": [
+      {
+       "i": 0,
+       "col": 0,
+       "row": 0,
+       "parent": -1,
+       "open": true,
+       "x": 38,
+       "y": 38,
+       "w": 924,
+       "h": 524,
+       "free": [
+        {
+         "x": 278,
+         "y": 485
+        },
+        {
+         "x": 130,
+         "y": 485
+        },
+        {
+         "x": 278,
+         "y": 115
+        },
+        {
+         "x": 130,
+         "y": 337
+        },
+        {
+         "x": 352,
+         "y": 115
+        },
+        {
+         "x": 204,
+         "y": 337
+        },
+        {
+         "x": 278,
+         "y": 263
+        },
+        {
+         "x": 574,
+         "y": 263
+        },
+        {
+         "x": 648,
+         "y": 189
+        },
+        {
+         "x": 426,
+         "y": 263
+        },
+        {
+         "x": 870,
+         "y": 337
+        },
+        {
+         "x": 648,
+         "y": 485
+        },
+        {
+         "x": 796,
+         "y": 115
+        },
+        {
+         "x": 204,
+         "y": 189
+        },
+        {
+         "x": 574,
+         "y": 337
+        },
+        {
+         "x": 648,
+         "y": 337
+        },
+        {
+         "x": 426,
+         "y": 189
+        },
+        {
+         "x": 500,
+         "y": 189
+        },
+        {
+         "x": 204,
+         "y": 411
+        },
+        {
+         "x": 500,
+         "y": 485
+        },
+        {
+         "x": 130,
+         "y": 411
+        },
+        {
+         "x": 500,
+         "y": 263
+        },
+        {
+         "x": 204,
+         "y": 263
+        },
+        {
+         "x": 870,
+         "y": 115
+        },
+        {
+         "x": 352,
+         "y": 337
+        },
+        {
+         "x": 870,
+         "y": 263
+        },
+        {
+         "x": 722,
+         "y": 115
+        },
+        {
+         "x": 426,
+         "y": 115
+        },
+        {
+         "x": 870,
+         "y": 485
+        },
+        {
+         "x": 204,
+         "y": 115
+        },
+        {
+         "x": 352,
+         "y": 411
+        },
+        {
+         "x": 204,
+         "y": 485
+        },
+        {
+         "x": 870,
+         "y": 411
+        },
+        {
+         "x": 870,
+         "y": 189
+        },
+        {
+         "x": 130,
+         "y": 263
+        },
+        {
+         "x": 278,
+         "y": 189
+        },
+        {
+         "x": 500,
+         "y": 411
+        },
+        {
+         "x": 722,
+         "y": 411
+        },
+        {
+         "x": 500,
+         "y": 115
+        },
+        {
+         "x": 722,
+         "y": 337
+        },
+        {
+         "x": 722,
+         "y": 189
+        },
+        {
+         "x": 648,
+         "y": 411
+        },
+        {
+         "x": 278,
+         "y": 337
+        },
+        {
+         "x": 130,
+         "y": 115
+        },
+        {
+         "x": 648,
+         "y": 263
+        },
+        {
+         "x": 278,
+         "y": 411
+        },
+        {
+         "x": 574,
+         "y": 485
+        },
+        {
+         "x": 796,
+         "y": 263
+        },
+        {
+         "x": 648,
+         "y": 115
+        },
+        {
+         "x": 500,
+         "y": 337
+        },
+        {
+         "x": 574,
+         "y": 115
+        },
+        {
+         "x": 796,
+         "y": 411
+        },
+        {
+         "x": 130,
+         "y": 189
+        },
+        {
+         "x": 426,
+         "y": 485
+        },
+        {
+         "x": 574,
+         "y": 411
+        },
+        {
+         "x": 574,
+         "y": 189
+        },
+        {
+         "x": 352,
+         "y": 189
+        },
+        {
+         "x": 796,
+         "y": 485
+        },
+        {
+         "x": 796,
+         "y": 189
+        }
+       ]
+      }
+     ],
+     "objects": [
+      {
+       "id": "o1",
+       "kind": "exit",
+       "searched": false,
+       "style": "gate",
+       "name": "Gate",
+       "sprite": "obj_gate",
+       "room": 0,
+       "x": 500,
+       "y": 570
+      },
+      {
+       "id": "o2",
+       "kind": "search",
+       "searched": false,
+       "name": "Desk",
+       "sprite": "obj_desk",
+       "type": "desk",
+       "room": 0,
+       "x": 722,
+       "y": 263
+      },
+      {
+       "id": "o3",
+       "kind": "search",
+       "searched": false,
+       "name": "Crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "room": 0,
+       "x": 352,
+       "y": 263
+      },
+      {
+       "id": "o4",
+       "kind": "search",
+       "searched": false,
+       "name": "Crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "room": 0,
+       "x": 352,
+       "y": 485
+      },
+      {
+       "id": "o5",
+       "kind": "search",
+       "searched": false,
+       "name": "Locker",
+       "sprite": "obj_locker",
+       "type": "locker",
+       "room": 0,
+       "x": 426,
+       "y": 337
+      },
+      {
+       "id": "o6",
+       "kind": "event",
+       "searched": false,
+       "eventId": "cache",
+       "name": "Dead renegade",
+       "sprite": "obj_dead_renegade",
+       "room": 0,
+       "x": 796,
+       "y": 337
+      },
+      {
+       "id": "o7",
+       "kind": "grate",
+       "searched": false,
+       "pid": "deer_trail",
+       "name": "Deer Trail",
+       "sprite": "obj_passage_deer_trail",
+       "room": 0,
+       "x": 722,
+       "y": 485
+      }
+     ],
+     "props": [
+      {
+       "sprite": "prop_console",
+       "x": 426,
+       "y": 411,
+       "room": 0,
+       "rot": 270
+      }
+     ],
+     "decals": [],
+     "floor": "tile_floor_hushwood",
+     "visits": 1,
+     "visitSearches": 0,
+     "searches": 0,
+     "nextId": 8,
+     "pickedOver": false,
+     "restock": 0,
+     "enteredRun": 1,
+     "entry": {
+      "run": 1,
+      "level": 1,
+      "mult": 1,
+      "fresh": true
+     },
+     "squadAt": "o1"
+    },
+    "gb1": {
+     "nid": "gb1",
+     "loc": "gb_switchback",
+     "zone": "greyback",
+     "size": "S",
+     "rooms": [
+      {
+       "i": 0,
+       "col": 0,
+       "row": 0,
+       "parent": -1,
+       "open": true,
+       "x": 38,
+       "y": 38,
+       "w": 924,
+       "h": 524,
+       "free": [
+        {
+         "x": 500,
+         "y": 189
+        },
+        {
+         "x": 130,
+         "y": 485
+        },
+        {
+         "x": 352,
+         "y": 189
+        },
+        {
+         "x": 500,
+         "y": 485
+        },
+        {
+         "x": 648,
+         "y": 411
+        },
+        {
+         "x": 426,
+         "y": 189
+        },
+        {
+         "x": 426,
+         "y": 115
+        },
+        {
+         "x": 648,
+         "y": 115
+        },
+        {
+         "x": 870,
+         "y": 263
+        },
+        {
+         "x": 574,
+         "y": 411
+        },
+        {
+         "x": 204,
+         "y": 337
+        },
+        {
+         "x": 796,
+         "y": 115
+        },
+        {
+         "x": 722,
+         "y": 189
+        },
+        {
+         "x": 278,
+         "y": 263
+        },
+        {
+         "x": 870,
+         "y": 115
+        },
+        {
+         "x": 278,
+         "y": 411
+        },
+        {
+         "x": 278,
+         "y": 485
+        },
+        {
+         "x": 574,
+         "y": 337
+        },
+        {
+         "x": 500,
+         "y": 115
+        },
+        {
+         "x": 130,
+         "y": 189
+        },
+        {
+         "x": 722,
+         "y": 115
+        },
+        {
+         "x": 204,
+         "y": 189
+        },
+        {
+         "x": 278,
+         "y": 337
+        },
+        {
+         "x": 870,
+         "y": 485
+        },
+        {
+         "x": 722,
+         "y": 337
+        },
+        {
+         "x": 722,
+         "y": 263
+        },
+        {
+         "x": 500,
+         "y": 411
+        },
+        {
+         "x": 796,
+         "y": 411
+        },
+        {
+         "x": 130,
+         "y": 337
+        },
+        {
+         "x": 648,
+         "y": 485
+        },
+        {
+         "x": 500,
+         "y": 263
+        },
+        {
+         "x": 870,
+         "y": 337
+        },
+        {
+         "x": 796,
+         "y": 337
+        },
+        {
+         "x": 648,
+         "y": 189
+        },
+        {
+         "x": 722,
+         "y": 411
+        },
+        {
+         "x": 130,
+         "y": 115
+        },
+        {
+         "x": 648,
+         "y": 337
+        },
+        {
+         "x": 130,
+         "y": 263
+        },
+        {
+         "x": 352,
+         "y": 411
+        },
+        {
+         "x": 352,
+         "y": 485
+        },
+        {
+         "x": 870,
+         "y": 189
+        },
+        {
+         "x": 574,
+         "y": 189
+        },
+        {
+         "x": 574,
+         "y": 263
+        },
+        {
+         "x": 352,
+         "y": 337
+        },
+        {
+         "x": 352,
+         "y": 115
+        },
+        {
+         "x": 722,
+         "y": 485
+        },
+        {
+         "x": 796,
+         "y": 485
+        },
+        {
+         "x": 574,
+         "y": 115
+        },
+        {
+         "x": 574,
+         "y": 485
+        },
+        {
+         "x": 204,
+         "y": 485
+        },
+        {
+         "x": 500,
+         "y": 337
+        },
+        {
+         "x": 278,
+         "y": 189
+        },
+        {
+         "x": 870,
+         "y": 411
+        },
+        {
+         "x": 426,
+         "y": 411
+        }
+       ]
+      }
+     ],
+     "objects": [
+      {
+       "id": "o1",
+       "kind": "exit",
+       "searched": false,
+       "style": "gate",
+       "name": "Gate",
+       "sprite": "obj_gate",
+       "room": 0,
+       "x": 500,
+       "y": 570
+      },
+      {
+       "id": "o2",
+       "kind": "search",
+       "searched": false,
+       "name": "Crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "room": 0,
+       "x": 204,
+       "y": 263
+      },
+      {
+       "id": "o3",
+       "kind": "search",
+       "searched": false,
+       "name": "Locker",
+       "sprite": "obj_locker",
+       "type": "locker",
+       "trapped": true,
+       "room": 0,
+       "x": 278,
+       "y": 115
+      },
+      {
+       "id": "o4",
+       "kind": "search",
+       "searched": false,
+       "name": "Crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "room": 0,
+       "x": 648,
+       "y": 263
+      },
+      {
+       "id": "o5",
+       "kind": "search",
+       "searched": false,
+       "name": "Crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "room": 0,
+       "x": 352,
+       "y": 263
+      },
+      {
+       "id": "o6",
+       "kind": "search",
+       "searched": false,
+       "name": "Heavy crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "heavy": true,
+       "room": 0,
+       "x": 426,
+       "y": 263
+      },
+      {
+       "id": "o7",
+       "kind": "search",
+       "searched": false,
+       "name": "Wrecked car",
+       "sprite": "obj_vehicle",
+       "type": "vehicle",
+       "room": 0,
+       "x": 167,
+       "y": 411
+      },
+      {
+       "id": "o8",
+       "kind": "grate",
+       "searched": false,
+       "pid": "deer_trail",
+       "name": "Deer Trail",
+       "sprite": "obj_passage_deer_trail",
+       "room": 0,
+       "x": 426,
+       "y": 485
+      },
+      {
+       "id": "o10",
+       "kind": "search",
+       "searched": false,
+       "type": "body_human",
+       "name": "Body",
+       "sprite": "corpse_human",
+       "rot": 79,
+       "room": 0,
+       "x": 796,
+       "y": 189
+      }
+     ],
+     "props": [
+      {
+       "sprite": "prop_junk",
+       "x": 426,
+       "y": 337,
+       "room": 0,
+       "rot": 270
+      },
+      {
+       "sprite": "prop_junk",
+       "x": 796,
+       "y": 263,
+       "room": 0,
+       "rot": 180
+      }
+     ],
+     "decals": [],
+     "floor": "tile_floor_greyback",
+     "visits": 1,
+     "visitSearches": 0,
+     "searches": 0,
+     "nextId": 11,
+     "pickedOver": false,
+     "restock": 0,
+     "enteredRun": 3,
+     "entry": {
+      "run": 3,
+      "level": 1,
+      "mult": 1,
+      "refilled": 0,
+      "rolls": [],
+      "pickedOver": true
+     },
+     "squadAt": "o1",
+     "everPicked": true
+    },
+    "gb5": {
+     "nid": "gb5",
+     "loc": "gb_quarry",
+     "zone": "greyback",
+     "size": "M",
+     "rooms": [
+      {
+       "i": 0,
+       "col": 0,
+       "row": 1,
+       "parent": -1,
+       "open": true,
+       "x": 38,
+       "y": 308,
+       "w": 454,
+       "h": 254,
+       "free": []
+      },
+      {
+       "i": 1,
+       "col": 1,
+       "row": 1,
+       "parent": 0,
+       "open": true,
+       "x": 508,
+       "y": 308,
+       "w": 454,
+       "h": 254,
+       "free": [
+        {
+         "x": 587,
+         "y": 472
+        },
+        {
+         "x": 883,
+         "y": 472
+        },
+        {
+         "x": 735,
+         "y": 398
+        }
+       ]
+      }
+     ],
+     "objects": [
+      {
+       "id": "o1",
+       "kind": "search",
+       "searched": true,
+       "type": "door",
+       "name": "Door",
+       "sprite": "obj_door",
+       "room": 0,
+       "opens": 1,
+       "vertical": true,
+       "x": 500,
+       "y": 435,
+       "locked": false,
+       "broken": true
+      },
+      {
+       "id": "o2",
+       "kind": "exit",
+       "searched": false,
+       "style": "fence",
+       "name": "Hole in the fence",
+       "sprite": "obj_exit_fence_hole",
+       "room": 0,
+       "x": 265,
+       "y": 570
+      },
+      {
+       "id": "o3",
+       "kind": "search",
+       "searched": true,
+       "name": "Crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "room": 0,
+       "x": 191,
+       "y": 472,
+       "left": null
+      },
+      {
+       "id": "o4",
+       "kind": "search",
+       "searched": false,
+       "name": "Crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "room": 1,
+       "x": 661,
+       "y": 472,
+       "left": null,
+       "jammed": false
+      },
+      {
+       "id": "o5",
+       "kind": "search",
+       "searched": false,
+       "name": "Crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "room": 0,
+       "x": 191,
+       "y": 398,
+       "left": null,
+       "jammed": false
+      },
+      {
+       "id": "o6",
+       "kind": "search",
+       "searched": true,
+       "name": "Crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "room": 0,
+       "x": 413,
+       "y": 398,
+       "left": null
+      },
+      {
+       "id": "o7",
+       "kind": "search",
+       "searched": true,
+       "name": "Wrecked car",
+       "sprite": "obj_vehicle",
+       "type": "vehicle",
+       "room": 0,
+       "x": 302,
+       "y": 472
+      },
+      {
+       "id": "o8",
+       "kind": "search",
+       "searched": false,
+       "name": "Growth cluster",
+       "sprite": "obj_growth",
+       "type": "growth",
+       "room": 0,
+       "x": 117,
+       "y": 398
+      },
+      {
+       "id": "o9",
+       "kind": "search",
+       "searched": false,
+       "name": "Locker",
+       "sprite": "obj_locker",
+       "type": "locker",
+       "room": 0,
+       "x": 413,
+       "y": 472
+      },
+      {
+       "id": "o10",
+       "kind": "event",
+       "searched": false,
+       "eventId": "cache",
+       "name": "Dead renegade",
+       "sprite": "obj_dead_renegade",
+       "room": 0,
+       "x": 265,
+       "y": 398
+      }
+     ],
+     "props": [
+      {
+       "sprite": "prop_barrel",
+       "x": 117,
+       "y": 472,
+       "room": 0,
+       "rot": 90
+      },
+      {
+       "sprite": "prop_barrel",
+       "x": 339,
+       "y": 398,
+       "room": 0,
+       "rot": 270
+      },
+      {
+       "sprite": "prop_junk",
+       "x": 809,
+       "y": 398,
+       "room": 1,
+       "rot": 90
+      }
+     ],
+     "decals": [],
+     "floor": "tile_floor_greyback",
+     "visits": 1,
+     "visitSearches": 0,
+     "searches": 6,
+     "nextId": 16,
+     "pickedOver": true,
+     "restock": 1,
+     "enteredRun": 3,
+     "entry": {
+      "run": 3,
+      "level": 0.5,
+      "mult": 0.675,
+      "refilled": 2,
+      "rolls": [
+       {
+        "obj": "o3",
+        "name": "Crate",
+        "roll": 89,
+        "hit": false
+       },
+       {
+        "obj": "o4",
+        "name": "Crate",
+        "roll": 23,
+        "hit": true
+       },
+       {
+        "obj": "o5",
+        "name": "Crate",
+        "roll": 12,
+        "hit": true
+       },
+       {
+        "obj": "o6",
+        "name": "Crate",
+        "roll": 85,
+        "hit": false
+       },
+       {
+        "obj": "o7",
+        "name": "Wrecked car",
+        "roll": 86,
+        "hit": false
+       }
+      ],
+      "pickedOver": true
+     },
+     "squadAt": "o2",
+     "everPicked": true
+    },
+    "gb9": {
+     "nid": "gb9",
+     "loc": "gb_dam",
+     "zone": "greyback",
+     "size": "M",
+     "rooms": [
+      {
+       "i": 0,
+       "col": 0,
+       "row": 1,
+       "parent": -1,
+       "open": true,
+       "x": 38,
+       "y": 308,
+       "w": 454,
+       "h": 254,
+       "free": [
+        {
+         "x": 413,
+         "y": 398
+        },
+        {
+         "x": 265,
+         "y": 472
+        }
+       ]
+      },
+      {
+       "i": 1,
+       "col": 1,
+       "row": 1,
+       "parent": 0,
+       "open": false,
+       "x": 508,
+       "y": 308,
+       "w": 454,
+       "h": 254,
+       "free": [
+        {
+         "x": 809,
+         "y": 398
+        },
+        {
+         "x": 735,
+         "y": 472
+        }
+       ]
+      }
+     ],
+     "objects": [
+      {
+       "id": "o1",
+       "kind": "search",
+       "searched": false,
+       "type": "door",
+       "name": "Door",
+       "sprite": "obj_door",
+       "room": 0,
+       "opens": 1,
+       "vertical": true,
+       "x": 500,
+       "y": 435,
+       "locked": false
+      },
+      {
+       "id": "o2",
+       "kind": "exit",
+       "searched": false,
+       "style": "fence",
+       "name": "Hole in the fence",
+       "sprite": "obj_exit_fence_hole",
+       "room": 0,
+       "x": 265,
+       "y": 570
+      },
+      {
+       "id": "o3",
+       "kind": "search",
+       "searched": false,
+       "name": "Old terminal",
+       "sprite": "obj_computer",
+       "type": "terminal",
+       "room": 1,
+       "x": 587,
+       "y": 398
+      },
+      {
+       "id": "o4",
+       "kind": "search",
+       "searched": false,
+       "name": "Locker",
+       "sprite": "obj_locker",
+       "type": "locker",
+       "room": 1,
+       "x": 661,
+       "y": 472
+      },
+      {
+       "id": "o5",
+       "kind": "search",
+       "searched": false,
+       "name": "Locker",
+       "sprite": "obj_locker",
+       "type": "locker",
+       "trapped": true,
+       "room": 0,
+       "x": 191,
+       "y": 472
+      },
+      {
+       "id": "o6",
+       "kind": "search",
+       "searched": false,
+       "name": "Desk",
+       "sprite": "obj_desk",
+       "type": "desk",
+       "room": 0,
+       "x": 117,
+       "y": 472
+      },
+      {
+       "id": "o7",
+       "kind": "search",
+       "searched": false,
+       "name": "Crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "room": 0,
+       "x": 117,
+       "y": 398
+      },
+      {
+       "id": "o8",
+       "kind": "search",
+       "searched": false,
+       "name": "Crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "room": 0,
+       "x": 339,
+       "y": 398
+      },
+      {
+       "id": "o9",
+       "kind": "search",
+       "searched": false,
+       "name": "Locker",
+       "sprite": "obj_locker",
+       "type": "locker",
+       "room": 0,
+       "x": 339,
+       "y": 472
+      },
+      {
+       "id": "o10",
+       "kind": "search",
+       "searched": false,
+       "name": "Body",
+       "sprite": "corpse_human",
+       "type": "body_human",
+       "room": 1,
+       "x": 809,
+       "y": 472
+      },
+      {
+       "id": "o11",
+       "kind": "search",
+       "searched": false,
+       "name": "Locker",
+       "sprite": "obj_locker",
+       "type": "locker",
+       "room": 1,
+       "x": 883,
+       "y": 398
+      },
+      {
+       "id": "o12",
+       "kind": "search",
+       "searched": false,
+       "name": "Heavy crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "heavy": true,
+       "room": 0,
+       "x": 265,
+       "y": 398
+      },
+      {
+       "id": "o13",
+       "kind": "train",
+       "searched": false,
+       "type": "train_fish",
+       "name": "Still water",
+       "sprite": "obj_fishing_spot",
+       "room": 1,
+       "x": 698,
+       "y": 398
+      },
+      {
+       "id": "o14",
+       "kind": "grate",
+       "searched": false,
+       "pid": "spillway",
+       "name": "Spillway Tunnel",
+       "sprite": "obj_passage_spillway",
+       "room": 0,
+       "x": 413,
+       "y": 472
+      }
+     ],
+     "props": [
+      {
+       "sprite": "prop_junk",
+       "x": 191,
+       "y": 398,
+       "room": 0,
+       "rot": 0
+      },
+      {
+       "sprite": "prop_junk",
+       "x": 883,
+       "y": 472,
+       "room": 1,
+       "rot": 270
+      },
+      {
+       "sprite": "prop_puddle",
+       "x": 587,
+       "y": 472,
+       "room": 1,
+       "rot": 90
+      }
+     ],
+     "decals": [],
+     "floor": "tile_floor_greyback_wet",
+     "visits": 1,
+     "visitSearches": 0,
+     "searches": 0,
+     "nextId": 15,
+     "pickedOver": false,
+     "restock": 0,
+     "enteredRun": 3,
+     "entry": {
+      "run": 3,
+      "level": 1,
+      "mult": 1,
+      "fresh": true
+     },
+     "squadAt": "o14"
+    },
+    "b5": {
+     "nid": "b5",
+     "loc": "b_cistern",
+     "zone": "b",
+     "size": "S",
+     "rooms": [
+      {
+       "i": 0,
+       "col": 0,
+       "row": 0,
+       "parent": -1,
+       "open": true,
+       "x": 38,
+       "y": 38,
+       "w": 924,
+       "h": 524,
+       "free": [
+        {
+         "x": 204,
+         "y": 337
+        },
+        {
+         "x": 574,
+         "y": 411
+        },
+        {
+         "x": 352,
+         "y": 411
+        },
+        {
+         "x": 722,
+         "y": 485
+        },
+        {
+         "x": 722,
+         "y": 115
+        },
+        {
+         "x": 796,
+         "y": 263
+        },
+        {
+         "x": 870,
+         "y": 337
+        },
+        {
+         "x": 870,
+         "y": 263
+        },
+        {
+         "x": 870,
+         "y": 115
+        },
+        {
+         "x": 352,
+         "y": 263
+        },
+        {
+         "x": 574,
+         "y": 263
+        },
+        {
+         "x": 130,
+         "y": 189
+        },
+        {
+         "x": 204,
+         "y": 485
+        },
+        {
+         "x": 796,
+         "y": 115
+        },
+        {
+         "x": 130,
+         "y": 263
+        },
+        {
+         "x": 796,
+         "y": 411
+        },
+        {
+         "x": 648,
+         "y": 115
+        },
+        {
+         "x": 648,
+         "y": 485
+        },
+        {
+         "x": 796,
+         "y": 337
+        },
+        {
+         "x": 278,
+         "y": 485
+        },
+        {
+         "x": 870,
+         "y": 189
+        },
+        {
+         "x": 130,
+         "y": 115
+        },
+        {
+         "x": 500,
+         "y": 263
+        },
+        {
+         "x": 500,
+         "y": 337
+        },
+        {
+         "x": 426,
+         "y": 411
+        },
+        {
+         "x": 130,
+         "y": 485
+        },
+        {
+         "x": 574,
+         "y": 337
+        },
+        {
+         "x": 500,
+         "y": 485
+        },
+        {
+         "x": 722,
+         "y": 411
+        },
+        {
+         "x": 722,
+         "y": 337
+        },
+        {
+         "x": 278,
+         "y": 337
+        },
+        {
+         "x": 796,
+         "y": 189
+        },
+        {
+         "x": 204,
+         "y": 189
+        },
+        {
+         "x": 352,
+         "y": 337
+        },
+        {
+         "x": 648,
+         "y": 189
+        },
+        {
+         "x": 278,
+         "y": 263
+        },
+        {
+         "x": 722,
+         "y": 263
+        },
+        {
+         "x": 204,
+         "y": 263
+        },
+        {
+         "x": 500,
+         "y": 115
+        },
+        {
+         "x": 574,
+         "y": 485
+        },
+        {
+         "x": 574,
+         "y": 189
+        },
+        {
+         "x": 426,
+         "y": 485
+        },
+        {
+         "x": 278,
+         "y": 189
+        },
+        {
+         "x": 500,
+         "y": 411
+        },
+        {
+         "x": 648,
+         "y": 411
+        },
+        {
+         "x": 352,
+         "y": 189
+        },
+        {
+         "x": 722,
+         "y": 189
+        },
+        {
+         "x": 426,
+         "y": 263
+        },
+        {
+         "x": 648,
+         "y": 337
+        },
+        {
+         "x": 352,
+         "y": 485
+        },
+        {
+         "x": 426,
+         "y": 115
+        },
+        {
+         "x": 796,
+         "y": 485
+        },
+        {
+         "x": 648,
+         "y": 263
+        },
+        {
+         "x": 204,
+         "y": 411
+        }
+       ]
+      }
+     ],
+     "objects": [
+      {
+       "id": "o1",
+       "kind": "exit",
+       "searched": false,
+       "style": "fence",
+       "name": "Hole in the fence",
+       "sprite": "obj_exit_fence_hole",
+       "room": 0,
+       "x": 500,
+       "y": 570
+      },
+      {
+       "id": "o2",
+       "kind": "search",
+       "searched": false,
+       "name": "Old terminal",
+       "sprite": "obj_computer",
+       "type": "terminal",
+       "room": 0,
+       "x": 426,
+       "y": 189
+      },
+      {
+       "id": "o3",
+       "kind": "search",
+       "searched": false,
+       "name": "Wrecked car",
+       "sprite": "obj_vehicle",
+       "type": "vehicle",
+       "room": 0,
+       "x": 315,
+       "y": 115
+      },
+      {
+       "id": "o4",
+       "kind": "search",
+       "searched": false,
+       "name": "Crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "room": 0,
+       "x": 870,
+       "y": 485
+      },
+      {
+       "id": "o5",
+       "kind": "search",
+       "searched": false,
+       "name": "Heavy crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "heavy": true,
+       "room": 0,
+       "x": 426,
+       "y": 337
+      },
+      {
+       "id": "o6",
+       "kind": "search",
+       "searched": false,
+       "name": "Locker",
+       "sprite": "obj_locker",
+       "type": "locker",
+       "room": 0,
+       "x": 130,
+       "y": 411
+      },
+      {
+       "id": "o7",
+       "kind": "search",
+       "searched": true,
+       "type": "body_human",
+       "name": "Body: Bones Hollis",
+       "sprite": "corpse_grunt",
+       "fresh": true,
+       "gibbed": false,
+       "gruntBody": "grunt_mut1o8gu_3a4yw",
+       "fixedLoot": {
+        "items": [],
+        "res": {}
+       },
+       "rot": 294,
+       "deadBag": {
+        "share": 0,
+        "gone": true
+       },
+       "examine": "[PLACEHOLDER] Their pack's still on them: what they were hauling for the squad.",
+       "room": 0,
+       "x": 500,
+       "y": 189,
+       "left": null
+      },
+      {
+       "id": "o8",
+       "kind": "search",
+       "searched": false,
+       "type": "body_human",
+       "name": "Body: Raider",
+       "sprite": "corpse_outlaw_raider",
+       "fresh": true,
+       "gibbed": false,
+       "unit": "raider",
+       "rot": 191,
+       "famDrops": "outlaws",
+       "room": 0,
+       "x": 204,
+       "y": 115
+      },
+      {
+       "id": "o9",
+       "kind": "search",
+       "searched": false,
+       "type": "body_human",
+       "name": "Body: Raider",
+       "sprite": "corpse_outlaw_raider",
+       "fresh": true,
+       "gibbed": false,
+       "unit": "raider",
+       "rot": 349,
+       "famDrops": "outlaws",
+       "room": 0,
+       "x": 870,
+       "y": 411,
+       "dropWeapon": "pipe_rifle"
+      },
+      {
+       "id": "o10",
+       "kind": "search",
+       "searched": false,
+       "type": "body_human",
+       "name": "Body: Raider",
+       "sprite": "corpse_outlaw_raider",
+       "fresh": true,
+       "gibbed": false,
+       "unit": "raider",
+       "rot": 201,
+       "famDrops": "outlaws",
+       "room": 0,
+       "x": 130,
+       "y": 337
+      }
+     ],
+     "props": [
+      {
+       "sprite": "prop_junk",
+       "x": 574,
+       "y": 115,
+       "room": 0,
+       "rot": 360
+      },
+      {
+       "sprite": "prop_growth",
+       "x": 278,
+       "y": 411,
+       "room": 0,
+       "rot": 180
+      }
+     ],
+     "decals": [
+      {
+       "sprite": "fx_blood_pool",
+       "x": 500,
+       "y": 195,
+       "room": 0
+      },
+      {
+       "sprite": "fx_blood_pool",
+       "x": 204,
+       "y": 121,
+       "room": 0
+      },
+      {
+       "sprite": "fx_blood_pool",
+       "x": 870,
+       "y": 417,
+       "room": 0
+      },
+      {
+       "sprite": "fx_blood_pool",
+       "x": 130,
+       "y": 343,
+       "room": 0
+      }
+     ],
+     "floor": "tile_floor_b_wet",
+     "visits": 1,
+     "visitSearches": 0,
+     "searches": 0,
+     "nextId": 11,
+     "pickedOver": true,
+     "restock": 0,
+     "enteredRun": 3,
+     "entry": {
+      "run": 3,
+      "level": 1,
+      "mult": 1,
+      "fresh": true
+     },
+     "squadAt": "o1",
+     "everPicked": true
+    },
+    "b4": {
+     "nid": "b4",
+     "loc": "b_clinic",
+     "zone": "b",
+     "size": "M",
+     "rooms": [
+      {
+       "i": 0,
+       "col": 0,
+       "row": 1,
+       "parent": -1,
+       "open": true,
+       "x": 38,
+       "y": 308,
+       "w": 454,
+       "h": 254,
+       "free": [
+        {
+         "x": 191,
+         "y": 398
+        },
+        {
+         "x": 117,
+         "y": 398
+        },
+        {
+         "x": 265,
+         "y": 398
+        },
+        {
+         "x": 339,
+         "y": 472
+        },
+        {
+         "x": 413,
+         "y": 398
+        },
+        {
+         "x": 191,
+         "y": 472
+        }
+       ]
+      },
+      {
+       "i": 1,
+       "col": 1,
+       "row": 1,
+       "parent": 0,
+       "open": false,
+       "x": 508,
+       "y": 308,
+       "w": 454,
+       "h": 254,
+       "free": [
+        {
+         "x": 883,
+         "y": 398
+        },
+        {
+         "x": 661,
+         "y": 398
+        },
+        {
+         "x": 661,
+         "y": 472
+        }
+       ]
+      },
+      {
+       "i": 2,
+       "col": 0,
+       "row": 0,
+       "parent": 0,
+       "open": false,
+       "x": 38,
+       "y": 38,
+       "w": 454,
+       "h": 254,
+       "free": [
+        {
+         "x": 117,
+         "y": 202
+        },
+        {
+         "x": 265,
+         "y": 128
+        },
+        {
+         "x": 191,
+         "y": 202
+        },
+        {
+         "x": 117,
+         "y": 128
+        },
+        {
+         "x": 265,
+         "y": 202
+        },
+        {
+         "x": 339,
+         "y": 128
+        }
+       ]
+      }
+     ],
+     "objects": [
+      {
+       "id": "o1",
+       "kind": "search",
+       "searched": false,
+       "type": "door",
+       "name": "Door",
+       "sprite": "obj_door",
+       "room": 0,
+       "opens": 1,
+       "vertical": true,
+       "x": 500,
+       "y": 435,
+       "locked": false
+      },
+      {
+       "id": "o2",
+       "kind": "search",
+       "searched": false,
+       "type": "door",
+       "name": "Door",
+       "sprite": "obj_door",
+       "room": 0,
+       "opens": 2,
+       "vertical": false,
+       "x": 265,
+       "y": 300,
+       "locked": true
+      },
+      {
+       "id": "o3",
+       "kind": "exit",
+       "searched": false,
+       "style": "stairwell",
+       "name": "Stairwell",
+       "sprite": "obj_exit_stairwell",
+       "room": 0,
+       "x": 265,
+       "y": 570
+      },
+      {
+       "id": "o4",
+       "kind": "search",
+       "searched": false,
+       "name": "Doc's desk",
+       "sprite": "obj_desk",
+       "type": "desk",
+       "searchSec": 3,
+       "questId": "ilse_ledger",
+       "room": 1,
+       "x": 809,
+       "y": 398
+      },
+      {
+       "id": "o5",
+       "kind": "search",
+       "searched": false,
+       "name": "Crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "room": 1,
+       "x": 735,
+       "y": 398
+      },
+      {
+       "id": "o6",
+       "kind": "search",
+       "searched": false,
+       "name": "Growth cluster",
+       "sprite": "obj_growth",
+       "type": "growth",
+       "room": 1,
+       "x": 587,
+       "y": 472
+      },
+      {
+       "id": "o7",
+       "kind": "search",
+       "searched": false,
+       "name": "Crate",
+       "sprite": "obj_crate",
+       "type": "crate",
+       "room": 2,
+       "x": 191,
+       "y": 128
+      },
+      {
+       "id": "o8",
+       "kind": "train",
+       "searched": false,
+       "type": "train_terminal",
+       "name": "Working terminal",
+       "sprite": "obj_computer",
+       "room": 1,
+       "x": 809,
+       "y": 472
+      },
+      {
+       "id": "o9",
+       "kind": "event",
+       "searched": false,
+       "eventId": "cryo_ward",
+       "name": "Cryo pod",
+       "sprite": "obj_cryo_pod",
+       "room": 1,
+       "x": 735,
+       "y": 472
+      },
+      {
+       "id": "o10",
+       "kind": "search",
+       "searched": false,
+       "type": "body_human",
+       "name": "Body: Brick Harrow",
+       "sprite": "corpse_grunt_dismembered",
+       "fresh": true,
+       "gibbed": true,
+       "gruntBody": "grunt_mut1o8gu_3br7",
+       "fixedLoot": {
+        "items": [],
+        "res": {}
+       },
+       "rot": 295,
+       "deadBag": {
+        "share": 0
+       },
+       "examine": "[PLACEHOLDER] Their pack's still on them: what they were hauling for the squad.",
+       "room": 0,
+       "x": 339,
+       "y": 398
+      },
+      {
+       "id": "o11",
+       "kind": "search",
+       "searched": false,
+       "type": "body_beast",
+       "name": "Dead Spitter",
+       "sprite": "corpse_beast_spitter_domed",
+       "fresh": true,
+       "gibbed": true,
+       "unit": "spitter",
+       "rot": 294,
+       "famDrops": "beasts",
+       "room": 0,
+       "x": 265,
+       "y": 472
+      },
+      {
+       "id": "o12",
+       "kind": "search",
+       "searched": false,
+       "type": "body_beast",
+       "name": "Dead Hound",
+       "sprite": "corpse_beast_hound",
+       "fresh": true,
+       "gibbed": false,
+       "unit": "hound",
+       "rot": 22,
+       "famDrops": "beasts",
+       "room": 0,
+       "x": 413,
+       "y": 472
+      }
+     ],
+     "props": [
+      {
+       "sprite": "prop_bed",
+       "x": 117,
+       "y": 472,
+       "room": 0,
+       "rot": 0
+      },
+      {
+       "sprite": "prop_growth",
+       "x": 883,
+       "y": 472,
+       "room": 1,
+       "rot": 180
+      },
+      {
+       "sprite": "prop_pod",
+       "x": 587,
+       "y": 398,
+       "room": 1,
+       "rot": 180
+      },
+      {
+       "sprite": "prop_pod",
+       "x": 339,
+       "y": 202,
+       "room": 2,
+       "rot": 180
+      },
+      {
+       "sprite": "prop_barrel",
+       "x": 413,
+       "y": 128,
+       "room": 2,
+       "rot": 90
+      },
+      {
+       "sprite": "prop_bones",
+       "x": 413,
+       "y": 202,
+       "room": 2,
+       "rot": 270
+      }
+     ],
+     "decals": [
+      {
+       "sprite": "fx_blood_pool",
+       "x": 339,
+       "y": 404,
+       "room": 0
+      },
+      {
+       "sprite": "fx_blood_pool",
+       "x": 265,
+       "y": 478,
+       "room": 0
+      },
+      {
+       "sprite": "fx_blood_pool",
+       "x": 413,
+       "y": 478,
+       "room": 0
+      }
+     ],
+     "floor": "tile_floor_b",
+     "visits": 1,
+     "visitSearches": 0,
+     "searches": 0,
+     "nextId": 13,
+     "pickedOver": true,
+     "restock": 0,
+     "enteredRun": 3,
+     "entry": {
+      "run": 3,
+      "level": 1,
+      "mult": 1,
+      "fresh": true
+     },
+     "squadAt": "o3",
+     "everPicked": true
+    }
+   }
+  },
+  "everSeen": {
+   "outpost": true,
+   "n1_0": true,
+   "n1_1": true,
+   "n1_2": true,
+   "n2_0": true,
+   "n2_1": true,
+   "n3_0": true,
+   "n3_1": true,
+   "n4_1": true,
+   "n5_1": true,
+   "n5_2": true,
+   "n4_0": true,
+   "n5_0": true,
+   "gb1": true,
+   "gb2": true,
+   "gb5": true,
+   "gb6": true,
+   "gb9": true,
+   "gb8": true,
+   "b1": true,
+   "b3": true,
+   "b4": true,
+   "b5": true,
+   "b6": true,
+   "b2": true
+  },
+  "locFlags": {},
+  "zonesUnlocked": {
+   "a": true,
+   "greyback": true
+  },
+  "passages": {
+   "deer_trail": true
+  },
+  "secrets": {},
+  "quests": {
+   "active": {},
+   "done": {},
+   "rep": {
+    "dunn": 0,
+    "ilse": 0
+   },
+   "flags": {}
+  },
+  "buildings": {
+   "vault": {
+    "level": 1,
+    "upgrading": null
+   },
+   "workbench": {
+    "level": 0,
+    "upgrading": null,
+    "queue": []
+   },
+   "infirmary": {
+    "level": 0,
+    "upgrading": null
+   },
+   "radio": {
+    "level": 0,
+    "upgrading": null,
+    "board": {
+     "made": null,
+     "list": []
+    }
+   },
+   "still": {
+    "level": 0,
+    "upgrading": null
+   }
+  },
+  "journal": [],
+  "mind": {
+   "skills": {
+    "engineering": {
+     "lvl": 1,
+     "xp": 0
+    },
+    "hacking": {
+     "lvl": 1,
+     "xp": 0
+    },
+    "medicine": {
+     "lvl": 3,
+     "xp": 181
+    },
+    "genetics": {
+     "lvl": 1,
+     "xp": 0
+    },
+    "piloting": {
+     "lvl": 2,
+     "xp": 90
+    },
+    "tactics": {
+     "lvl": 1,
+     "xp": 0
+    },
+    "leadership": {
+     "lvl": 1,
+     "xp": 0
+    },
+    "persuasion": {
+     "lvl": 1,
+     "xp": 0
+    },
+    "survival": {
+     "lvl": 3,
+     "xp": 31
+    },
+    "scavenging": {
+     "lvl": 3,
+     "xp": 131
+    },
+    "lore": {
+     "lvl": 1,
+     "xp": 0
+    },
+    "transference": {
+     "lvl": 2,
+     "xp": 0
+    }
+   }
+  },
+  "lifetimeXp": 10525.000000000002,
+  "bodies": [
+   {
+    "uid": "body_basic",
+    "name": "Basic Body",
+    "past": "a level-1 husk",
+    "family": "basic",
+    "cls": null,
+    "spec": null,
+    "quirks": [],
+    "skills": {
+     "athletics": {
+      "lvl": 5,
+      "xp": 3
+     },
+     "acrobatics": {
+      "lvl": 4,
+      "xp": 18
+     },
+     "endurance": {
+      "lvl": 3,
+      "xp": 60
+     },
+     "hauling": {
+      "lvl": 8,
+      "xp": 669.2
+     },
+     "brawling": {
+      "lvl": 2,
+      "xp": 55
+     },
+     "dual_wielding": {
+      "lvl": 1,
+      "xp": 0
+     },
+     "blades": {
+      "lvl": 1,
+      "xp": 0
+     },
+     "marksmanship": {
+      "lvl": 6,
+      "xp": 151
+     },
+     "feral": {
+      "lvl": 1,
+      "xp": 0
+     },
+     "stealth": {
+      "lvl": 1,
+      "xp": 0
+     },
+     "perception": {
+      "lvl": 5,
+      "xp": 183
+     }
+    },
+    "bodyXp": 5282.200000000001,
+    "restoreUntil": 0,
+    "injuries": [
+     {
+      "id": "torn_muscle",
+      "got": 1,
+      "src": "downed"
+     }
+    ]
+   },
+   {
+    "uid": "body_mut1ed50_br5qp",
+    "name": "Hale",
+    "past": "pit fighter",
+    "family": "human",
+    "cls": "gunner",
+    "spec": "marksman",
+    "quirks": [
+     "thick_neck",
+     "steady_breath"
+    ],
+    "skills": {
+     "athletics": {
+      "lvl": 7,
+      "xp": 300
+     },
+     "acrobatics": {
+      "lvl": 5,
+      "xp": 165
+     },
+     "endurance": {
+      "lvl": 4,
+      "xp": 174
+     },
+     "hauling": {
+      "lvl": 2,
+      "xp": 52.800000000000004
+     },
+     "brawling": {
+      "lvl": 1,
+      "xp": 0
+     },
+     "dual_wielding": {
+      "lvl": 1,
+      "xp": 0
+     },
+     "blades": {
+      "lvl": 1,
+      "xp": 0
+     },
+     "marksmanship": {
+      "lvl": 17,
+      "xp": 2460
+     },
+     "feral": {
+      "lvl": 1,
+      "xp": 0
+     },
+     "stealth": {
+      "lvl": 1,
+      "xp": 0
+     },
+     "perception": {
+      "lvl": 12,
+      "xp": 0
+     }
+    },
+    "bodyXp": 3882.7999999999997,
+    "restoreUntil": 1791071541341
+   }
+  ],
+  "grunts": [
+   {
+    "uid": "grunt_mut1o8gu_3a4yw",
+    "name": "Bones Hollis",
+    "rank": "grunt",
+    "tplKey": "grunt",
+    "weapon": "nat_shiv",
+    "skills": {
+     "marksmanship": {
+      "lvl": 5,
+      "xp": 0
+     },
+     "blades": {
+      "lvl": 5,
+      "xp": 192
+     },
+     "athletics": {
+      "lvl": 3,
+      "xp": 0
+     },
+     "acrobatics": {
+      "lvl": 3,
+      "xp": 84
+     },
+     "endurance": {
+      "lvl": 3,
+      "xp": 60
+     }
+    },
+    "hp": null,
+    "runs": 0,
+    "extractions": 0,
+    "kills": 0,
+    "history": [
+     {
+      "run": 2,
+      "what": "recruited",
+      "text": "Run 2: Recruited."
+     }
+    ],
+    "s3": true,
+    "traits": [
+     "loudmouth",
+     "coward"
+    ],
+    "nickname": null,
+    "gear": {
+     "weapon": null,
+     "offhand": null,
+     "head": null,
+     "body": null,
+     "pack": null
+    },
+    "dead": false
+   },
+   {
+    "uid": "grunt_mut1o8gu_3br7",
+    "name": "Brick Harrow",
+    "rank": "grunt",
+    "tplKey": "grunt",
+    "weapon": "nat_shiv",
+    "skills": {
+     "marksmanship": {
+      "lvl": 5,
+      "xp": 0
+     },
+     "blades": {
+      "lvl": 5,
+      "xp": 327
+     },
+     "athletics": {
+      "lvl": 3,
+      "xp": 0
+     },
+     "acrobatics": {
+      "lvl": 4,
+      "xp": 24
+     },
+     "endurance": {
+      "lvl": 3,
+      "xp": 90
+     }
+    },
+    "hp": null,
+    "runs": 0,
+    "extractions": 0,
+    "kills": 3,
+    "history": [
+     {
+      "run": 2,
+      "what": "recruited",
+      "text": "Run 2: Recruited."
+     }
+    ],
+    "s3": true,
+    "traits": [
+     "field_dresser",
+     "loudmouth"
+    ],
+    "nickname": null,
+    "gear": {
+     "weapon": null,
+     "offhand": null,
+     "head": null,
+     "body": null,
+     "pack": null
+    },
+    "dead": false
+   }
+  ],
+  "fallenGrunts": [
+   {
+    "uid": "grunt_mut15rvj_16l1",
+    "name": "Wick Drummond",
+    "rank": "grunt",
+    "tplKey": "grunt",
+    "weapon": "nat_shiv",
+    "skills": {
+     "marksmanship": {
+      "lvl": 5,
+      "xp": 0
+     },
+     "blades": {
+      "lvl": 5,
+      "xp": 297
+     },
+     "athletics": {
+      "lvl": 3,
+      "xp": 0
+     },
+     "acrobatics": {
+      "lvl": 4,
+      "xp": 42
+     },
+     "endurance": {
+      "lvl": 3,
+      "xp": 102
+     }
+    },
+    "hp": null,
+    "runs": 0,
+    "extractions": 0,
+    "kills": 2,
+    "history": [
+     {
+      "run": 1,
+      "what": "died",
+      "text": "Run 1: Killed by a Hound at Stillwater Pond, run 1.",
+      "where": "Stillwater Pond",
+      "cause": "battle"
+     },
+     {
+      "run": 0,
+      "what": "recruited",
+      "text": "Run 0: Recruited."
+     }
+    ],
+    "s3": true,
+    "traits": [
+     "steady_aim",
+     "pack_rat"
+    ],
+    "nickname": null,
+    "gear": {
+     "weapon": null,
+     "offhand": null,
+     "head": null,
+     "body": null,
+     "pack": null
+    },
+    "dead": true,
+    "diedRun": 1,
+    "diedAt": "Stillwater Pond",
+    "deathCause": "Killed by a Hound at Stillwater Pond, run 1"
+   },
+   {
+    "uid": "grunt_mut15rvj_02c7",
+    "name": "Sloan Sallow",
+    "rank": "grunt",
+    "tplKey": "grunt",
+    "weapon": "nat_shiv",
+    "skills": {
+     "marksmanship": {
+      "lvl": 8,
+      "xp": 91
+     },
+     "blades": {
+      "lvl": 4,
+      "xp": 0
+     },
+     "athletics": {
+      "lvl": 3,
+      "xp": 0
+     },
+     "acrobatics": {
+      "lvl": 5,
+      "xp": 177
+     },
+     "endurance": {
+      "lvl": 4,
+      "xp": 156
+     }
+    },
+    "hp": null,
+    "runs": 1,
+    "extractions": 1,
+    "kills": 2,
+    "history": [
+     {
+      "run": 2,
+      "what": "died",
+      "text": "Run 2: Killed by a Sentry Turret at Quarry Pit, run 2.",
+      "where": "Quarry Pit",
+      "cause": "battle"
+     },
+     {
+      "run": 1,
+      "what": "nickname",
+      "text": "Run 1: Earned the nickname \"Holdout\" (last one standing).",
+      "trig": "last_standing"
+     },
+     {
+      "run": 0,
+      "what": "recruited",
+      "text": "Run 0: Recruited."
+     }
+    ],
+    "s3": true,
+    "traits": [
+     "beast_scarred",
+     "field_dresser"
+    ],
+    "nickname": "Holdout",
+    "gear": {
+     "weapon": null,
+     "offhand": null,
+     "head": null,
+     "body": null,
+     "pack": null
+    },
+    "dead": true,
+    "diedRun": 2,
+    "diedAt": "Quarry Pit",
+    "deathCause": "Killed by a Sentry Turret at Quarry Pit, run 2"
+   },
+   {
+    "uid": "grunt_mut1i8iz_dd3vp",
+    "name": "Knox Sorrow",
+    "rank": "grunt",
+    "tplKey": "grunt",
+    "weapon": "nat_shiv",
+    "skills": {
+     "marksmanship": {
+      "lvl": 5,
+      "xp": 0
+     },
+     "blades": {
+      "lvl": 4,
+      "xp": 180
+     },
+     "athletics": {
+      "lvl": 3,
+      "xp": 0
+     },
+     "acrobatics": {
+      "lvl": 4,
+      "xp": 30
+     },
+     "endurance": {
+      "lvl": 3,
+      "xp": 108
+     }
+    },
+    "hp": null,
+    "runs": 0,
+    "extractions": 0,
+    "kills": 1,
+    "history": [
+     {
+      "run": 2,
+      "what": "died",
+      "text": "Run 2: Killed by a Scout Drone at Quarry Pit, run 2.",
+      "where": "Quarry Pit",
+      "cause": "battle"
+     },
+     {
+      "run": 1,
+      "what": "recruited",
+      "text": "Run 1: Recruited."
+     }
+    ],
+    "s3": true,
+    "traits": [
+     "trigger_happy",
+     "quick_feet"
+    ],
+    "nickname": null,
+    "gear": {
+     "weapon": null,
+     "offhand": null,
+     "head": null,
+     "body": null,
+     "pack": null
+    },
+    "dead": true,
+    "diedRun": 2,
+    "diedAt": "Quarry Pit",
+    "deathCause": "Killed by a Scout Drone at Quarry Pit, run 2"
+   }
+  ],
+  "perks": {
+   "mule": 1,
+   "squad_leader": 1,
+   "thick_skin": 1
+  },
+  "stash": {
+   "items": [
+    {
+     "uid": "it_mut18u5e_2m5ch",
+     "base": "nailbow",
+     "rarity": "yellow",
+     "ilvl": 2,
+     "affixes": [
+      {
+       "id": "flat_carry",
+       "v": 4
+      },
+      {
+       "id": "pct_jam",
+       "v": 21
+      },
+      {
+       "id": "adds_pierce",
+       "v": 1
+      }
+     ],
+     "req": 2
+    },
+    {
+     "uid": "it_mut15rvj_42vr",
+     "base": "rust_machete",
+     "rarity": "white",
+     "ilvl": 1,
+     "affixes": [
+      {
+       "id": "flat_carry",
+       "v": 5
+      }
+     ],
+     "req": 1
+    },
+    {
+     "uid": "it_mut15rvj_55hw",
+     "base": "patched_tunic",
+     "rarity": "white",
+     "ilvl": 1,
+     "affixes": [
+      {
+       "id": "flat_evasion",
+       "v": 3
+      }
+     ]
+    }
+   ],
+   "res": {
+    "food": 9,
+    "water": 4,
+    "scrap": 0,
+    "cloth": 3,
+    "electronics": 2,
+    "chemicals": 2,
+    "med": 2,
+    "fuel": 2,
+    "biomass": 3,
+    "data_shards": 0,
+    "relic": 0,
+    "fur": 1,
+    "teeth": 1
+   }
+  },
+  "loadout": {
+   "bodyId": "body_mut1ed50_br5qp",
+   "gear": {},
+   "pouch": [],
+   "grunts": [
+    "grunt_mut1o8gu_3a4yw",
+    "grunt_mut1o8gu_3br7"
+   ],
+   "med": 3,
+   "zone": "greyback"
+  },
+  "tutorialDone": true,
+  "humanOffer": null,
+  "runCount": 3,
+  "extractions": 1,
+  "deaths": 1,
+  "lore": [],
+  "difficulty": "standard",
+  "difficultyLocked": true,
+  "run": {
+   "seed": 393700682,
+   "zone": "b",
+   "loc": "b4",
+   "view": "site",
+   "moves": 4,
+   "heat": 16,
+   "visited": {
+    "gb1": true,
+    "gb5": true,
+    "gb9": true,
+    "b5": true,
+    "b4": true
+   },
+   "bodyUid": "body_mut1ed50_br5qp",
+   "gear": {
+    "backpack": {
+     "uid": "it_mut1rmci_3d4so",
+     "base": "school_bag",
+     "rarity": "white",
+     "ilvl": 1,
+     "affixes": [
+      {
+       "id": "check_skill",
+       "v": 2,
+       "skill": "stealth"
+      }
+     ]
+    }
+   },
+   "bag": {
+    "items": [],
+    "res": {
+     "med": 2
+    }
+   },
+   "pouch": [],
+   "squad": [
+    {
+     "g": {
+      "uid": "grunt_mut1o8gu_3a4yw",
+      "name": "Bones Hollis",
+      "rank": "grunt",
+      "tplKey": "grunt",
+      "weapon": "nat_shiv",
+      "skills": {
+       "marksmanship": {
+        "lvl": 5,
+        "xp": 0
+       },
+       "blades": {
+        "lvl": 5,
+        "xp": 192
+       },
+       "athletics": {
+        "lvl": 3,
+        "xp": 0
+       },
+       "acrobatics": {
+        "lvl": 3,
+        "xp": 84
+       },
+       "endurance": {
+        "lvl": 3,
+        "xp": 60
+       }
+      },
+      "hp": null,
+      "runs": 0,
+      "extractions": 0,
+      "kills": 0,
+      "history": [
+       {
+        "run": 2,
+        "what": "recruited",
+        "text": "Run 2: Recruited."
+       }
+      ],
+      "s3": true,
+      "traits": [
+       "loudmouth",
+       "coward"
+      ],
+      "nickname": null,
+      "gear": {
+       "weapon": null,
+       "offhand": null,
+       "head": null,
+       "body": null,
+       "pack": null
+      },
+      "dead": false
+     },
+     "hp": 0,
+     "died": {
+      "where": "b5",
+      "cause": "battle",
+      "corpse": "corpse_grunt",
+      "gibbed": false,
+      "killer": "Raider"
+     }
+    },
+    {
+     "g": {
+      "uid": "grunt_mut1o8gu_3br7",
+      "name": "Brick Harrow",
+      "rank": "grunt",
+      "tplKey": "grunt",
+      "weapon": "nat_shiv",
+      "skills": {
+       "marksmanship": {
+        "lvl": 5,
+        "xp": 0
+       },
+       "blades": {
+        "lvl": 5,
+        "xp": 327
+       },
+       "athletics": {
+        "lvl": 3,
+        "xp": 0
+       },
+       "acrobatics": {
+        "lvl": 4,
+        "xp": 24
+       },
+       "endurance": {
+        "lvl": 3,
+        "xp": 90
+       }
+      },
+      "hp": null,
+      "runs": 0,
+      "extractions": 0,
+      "kills": 3,
+      "history": [
+       {
+        "run": 2,
+        "what": "recruited",
+        "text": "Run 2: Recruited."
+       }
+      ],
+      "s3": true,
+      "traits": [
+       "field_dresser",
+       "loudmouth"
+      ],
+      "nickname": null,
+      "gear": {
+       "weapon": null,
+       "offhand": null,
+       "head": null,
+       "body": null,
+       "pack": null
+      },
+      "dead": false
+     },
+     "hp": 0,
+     "died": {
+      "where": "b4",
+      "cause": "battle",
+      "corpse": "corpse_grunt_dismembered",
+      "gibbed": true,
+      "killer": "Spitter"
+     }
+    }
+   ],
+   "bodyHp": 193.62727272727267,
+   "queue": [],
+   "log": [
+    "Scouting Switchback Road: Perception d20 7 + 3 (skill 12) = 10 vs DC 12 → Fail",
+    "Scouting Goatherd Terraces: Perception d20 11 + 3 (skill 12) = 14 vs DC 12 → Pass",
+    "Scouting Quarry Pit: Perception d20 13 + 3 (skill 12) = 16 vs DC 12 → Pass",
+    "Expedition 3 begins in Hale, pit fighter — Gunner / Marksman, The Greyback Hills. Seed 393700682.",
+    "No backpack: the outpost hands you a School Bag (free).",
+    "Switchback Road: restock 100% (1/1). Nothing was searched..",
+    "Switchback Road: Hostiles 30% → rolled 91: quiet.",
+    "Scouting Pinecrest Ski Lodge: Perception d20 14 + 3 (skill 12) = 17 vs DC 12 → Pass",
+    "Scouting Harlan Dam: Perception d20 12 + 3 (skill 12) = 15 vs DC 12 → Pass",
+    "→ Quarry Pit (Heat 1, Quiet)",
+    "Quarry Pit: restock 50% (1/2). Crate rolled 89 vs 50: still empty; Crate rolled 23 vs 50: refilled; Crate rolled 12 vs 50: refilled; Crate rolled 85 vs 50: still empty; Wrecked car rolled 86 vs 50: still empty.",
+    "Quarry Pit: Hostiles 55% × (0.35 + 0.65 × restock 50% = 0.675) = 37.1% → rolled 50: quiet.",
+    "Scouting Cable Car Station: Perception d20 6 + 3 (skill 12) = 9 vs DC 12 → Fail",
+    "→ Harlan Dam (Heat 2, Quiet)",
+    "Harlan Dam: Hostiles 45% → rolled 98: quiet.",
+    "You climb through the Spillway Tunnel into The Drowned Suburbs. +5 Heat.",
+    "Scouting Cistern Pumphouse: Perception d20 19 + 3 (skill 12) = 22 vs DC 12 → Pass",
+    "Scouting Hound Warrens: Perception d20 4 + 3 (skill 12) = 7 vs DC 12 → Fail",
+    "Scouting Harrow Street Clinic: Perception d20 14 + 3 (skill 12) = 17 vs DC 12 → Pass",
+    "Scouting Levee Boat Launch: Perception d20 15 + 3 (skill 12) = 18 vs DC 12 → Pass",
+    "→ Cistern Pumphouse (Heat 7, Quiet)",
+    "Cistern Pumphouse: Hostiles 45% → rolled 32: hostiles!",
+    "Bones Hollis died.",
+    "Brick Harrow patches up (+17 HP, Field Dresser).",
+    "Victory in 38 s.",
+    "Cistern Pumphouse is picked over now.",
+    "Carry −6 kg: Bones Hollis is gone. Their gear is on the body.",
+    "Bones Hollis's pack is gone: you didn't take it.",
+    "Scouting Flooded Cul-de-sac: Perception d20 3 + 3 (skill 12) = 6 vs DC 12 → Fail",
+    "→ Harrow Street Clinic (Heat 12, Quiet)",
+    "Harrow Street Clinic: Hostiles 50% → rolled 14: hostiles!",
+    "Brick Harrow died.",
+    "Victory in 45 s.",
+    "Harrow Street Clinic is picked over now.",
+    "Carry −6 kg: Brick Harrow is gone. Their gear is on the body.",
+    "Field heal on Hale: success (62% chance), +105 HP."
+   ],
+   "gruntsJoin": 0,
+   "claimedBodies": [],
+   "lore": [],
+   "done": {},
+   "distressFired": false,
+   "xpTally": {
+    "Athletics": 240,
+    "Body": 2040.4,
+    "Character": 2190.4,
+    "Hauling": 54.4,
+    "Acrobatics": 390,
+    "Endurance": 234,
+    "Marksmanship": 1524,
+    "Blades": 1005,
+    "Medicine": 150
+   },
+   "stats": {
+    "battles": 2,
+    "kills": 5,
+    "searches": 0,
+    "events": 0
+   },
+   "carriedCritical": [],
+   "extractOrder": {
+    "a": [
+     "n4_2",
+     "n2_0"
+    ],
+    "greyback": [
+     "gb8",
+     "gb3"
+    ],
+    "b": [
+     "b6"
+    ],
+    "hollis": [
+     "ho7",
+     "ho8"
+    ],
+    "scablands": [
+     "sc3_1",
+     "sc4_0"
+    ]
+   },
+   "pendingUnlocks": [],
+   "ammo": null,
+   "echoDraft": {
+    "version": 1,
+    "id": "echo_mut1rmcj_3h47z",
+    "handle": "Echo of Hale",
+    "source": "own",
+    "zone": "greyback",
+    "tier": 2,
+    "heat": 0,
+    "deployScore": 9,
+    "createdRun": 2,
+    "units": [
+     {
+      "kind": "body",
+      "name": "Hale",
+      "cls": "gunner",
+      "spec": "marksman",
+      "bodyLevel": 6,
+      "skills": {
+       "athletics": 7,
+       "acrobatics": 5,
+       "endurance": 4,
+       "hauling": 1,
+       "brawling": 1,
+       "dual_wielding": 1,
+       "blades": 1,
+       "marksmanship": 17,
+       "feral": 1,
+       "stealth": 1,
+       "perception": 12
+      },
+      "quirks": [
+       "thick_neck",
+       "steady_breath"
+      ],
+      "gear": [
+       {
+        "slot": "backpack",
+        "base": "school_bag",
+        "rarity": "white",
+        "ilvl": 1,
+        "affixes": [
+         {
+          "id": "check_skill",
+          "v": 2,
+          "skill": "stealth"
+         }
+        ]
+       }
+      ],
+      "traits": [],
+      "abilities": [
+       "called_shot",
+       "frag"
+      ]
+     },
+     {
+      "kind": "grunt",
+      "name": "Bones Hollis",
+      "nickname": null,
+      "tplKey": "grunt",
+      "weapon": "nat_shiv",
+      "skills": {
+       "marksmanship": 5,
+       "blades": 4,
+       "athletics": 3,
+       "acrobatics": 3,
+       "endurance": 3
+      },
+      "traits": [
+       "loudmouth",
+       "coward"
+      ],
+      "gear": [],
+      "abilities": []
+     },
+     {
+      "kind": "grunt",
+      "name": "Brick Harrow",
+      "nickname": null,
+      "tplKey": "grunt",
+      "weapon": "nat_shiv",
+      "skills": {
+       "marksmanship": 5,
+       "blades": 4,
+       "athletics": 3,
+       "acrobatics": 3,
+       "endurance": 3
+      },
+      "traits": [
+       "field_dresser",
+       "loudmouth"
+      ],
+      "gear": [],
+      "abilities": []
+     }
+    ],
+    "layout": null
+   },
+   "scout": {
+    "greyback:gb1": {
+     "d": 7,
+     "mod": 3,
+     "total": 10,
+     "dc": 12,
+     "pass": false,
+     "text": "Scouting Switchback Road: Perception d20 7 + 3 (skill 12) = 10 vs DC 12 → Fail"
+    },
+    "greyback:gb2": {
+     "d": 11,
+     "mod": 3,
+     "total": 14,
+     "dc": 12,
+     "pass": true,
+     "text": "Scouting Goatherd Terraces: Perception d20 11 + 3 (skill 12) = 14 vs DC 12 → Pass"
+    },
+    "greyback:gb5": {
+     "d": 13,
+     "mod": 3,
+     "total": 16,
+     "dc": 12,
+     "pass": true,
+     "text": "Scouting Quarry Pit: Perception d20 13 + 3 (skill 12) = 16 vs DC 12 → Pass"
+    },
+    "greyback:gb6": {
+     "d": 14,
+     "mod": 3,
+     "total": 17,
+     "dc": 12,
+     "pass": true,
+     "text": "Scouting Pinecrest Ski Lodge: Perception d20 14 + 3 (skill 12) = 17 vs DC 12 → Pass"
+    },
+    "greyback:gb9": {
+     "d": 12,
+     "mod": 3,
+     "total": 15,
+     "dc": 12,
+     "pass": true,
+     "text": "Scouting Harlan Dam: Perception d20 12 + 3 (skill 12) = 15 vs DC 12 → Pass"
+    },
+    "greyback:gb8": {
+     "d": 6,
+     "mod": 3,
+     "total": 9,
+     "dc": 12,
+     "pass": false,
+     "text": "Scouting Cable Car Station: Perception d20 6 + 3 (skill 12) = 9 vs DC 12 → Fail"
+    },
+    "b:b5": {
+     "d": 19,
+     "mod": 3,
+     "total": 22,
+     "dc": 12,
+     "pass": true,
+     "text": "Scouting Cistern Pumphouse: Perception d20 19 + 3 (skill 12) = 22 vs DC 12 → Pass"
+    },
+    "b:b3": {
+     "d": 4,
+     "mod": 3,
+     "total": 7,
+     "dc": 12,
+     "pass": false,
+     "text": "Scouting Hound Warrens: Perception d20 4 + 3 (skill 12) = 7 vs DC 12 → Fail"
+    },
+    "b:b4": {
+     "d": 14,
+     "mod": 3,
+     "total": 17,
+     "dc": 12,
+     "pass": true,
+     "text": "Scouting Harrow Street Clinic: Perception d20 14 + 3 (skill 12) = 17 vs DC 12 → Pass"
+    },
+    "b:b6": {
+     "d": 15,
+     "mod": 3,
+     "total": 18,
+     "dc": 12,
+     "pass": true,
+     "text": "Scouting Levee Boat Launch: Perception d20 15 + 3 (skill 12) = 18 vs DC 12 → Pass"
+    },
+    "b:b2": {
+     "d": 3,
+     "mod": 3,
+     "total": 6,
+     "dc": 12,
+     "pass": false,
+     "text": "Scouting Flooded Cul-de-sac: Perception d20 3 + 3 (skill 12) = 6 vs DC 12 → Fail"
+    }
+   },
+   "freeBackpack": "it_mut1rmci_3d4so",
+   "prevLoc": {
+    "zone": "b",
+    "nid": "b5"
+   },
+   "heatBy": {
+    "move": 3,
+    "passage": 5,
+    "battle": 8
+   },
+   "hunt": {
+    "pack": null,
+    "cooldown": 0,
+    "rolls": []
+   },
+   "echoLayout": [
+    {
+     "cx": 3,
+     "cy": 6
+    },
+    null,
+    {
+     "cx": 5,
+     "cy": 8
+    }
+   ],
+   "carryDrop": {
+    "nid": "b4",
+    "names": [
+     "Brick Harrow"
+    ],
+    "lostKg": 6,
+    "shareKg": 0,
+    "cap": 35,
+    "pct": 5
+   }
+  },
+  "lastResult": null,
+  "settings": {
+   "master": 0.6,
+   "sfx": 0.8,
+   "ambient": 0.5,
+   "music": 0.7,
+   "mute": false,
+   "aimMode": "slowmo",
+   "showDice": true
+  },
+  "tut": {
+   "mode": "full",
+   "steps": {
+    "t1_squad": 1,
+    "t1_med": 1,
+    "t1_carry": 1,
+    "t1_embark": 1,
+    "t2_routes": 1,
+    "t2_heat": 1,
+    "t2_notimer": 1,
+    "t3_auto": 1,
+    "t3_speed": 1,
+    "t3_abl": 1,
+    "t3_break": 1,
+    "t2_extract": 1,
+    "t4_how": 1,
+    "t4_graded": 1
+   },
+   "talked": true,
+   "notDead": false
+  },
+  "main": {
+   "quests": {
+    "m1": "done",
+    "m2": "active"
+   },
+   "pods": {
+    "sol": [
+     3,
+     2,
+     3
+    ]
+   }
+  },
+  "cards": {
+   "have": {
+    "npc:marta": {
+     "n": 1,
+     "foil": 0,
+     "first": 1791070949124
+    }
+   },
+   "searched": {
+    "gb5": true
+   },
+   "searchedRun": 2,
+   "rs": 2327826171,
+   "sets": {},
+   "full": null,
+   "wild": 0
+  },
+  "cosmetics": {
+   "unlocked": {}
+  },
+  "rivals": {
+   "echoes": [
+    {
+     "version": 1,
+     "id": "echo_mut1jo1z_dm3vh",
+     "handle": "Echo of Hale",
+     "source": "own",
+     "zone": "greyback",
+     "tier": 2,
+     "heat": 9,
+     "deployScore": 9,
+     "createdRun": 1,
+     "units": [
+      {
+       "kind": "body",
+       "name": "Hale",
+       "cls": "gunner",
+       "spec": "marksman",
+       "bodyLevel": 0,
+       "skills": {
+        "athletics": 7,
+        "acrobatics": 1,
+        "endurance": 1,
+        "hauling": 1,
+        "brawling": 1,
+        "dual_wielding": 1,
+        "blades": 1,
+        "marksmanship": 17,
+        "feral": 1,
+        "stealth": 1,
+        "perception": 12
+       },
+       "quirks": [
+        "thick_neck",
+        "steady_breath"
+       ],
+       "gear": [
+        {
+         "slot": "weapon",
+         "base": "zip_gun",
+         "rarity": "white",
+         "ilvl": 1,
+         "affixes": [
+          {
+           "id": "flat_hp",
+           "v": 15
+          }
+         ]
+        },
+        {
+         "slot": "backpack",
+         "base": "school_bag",
+         "rarity": "white",
+         "ilvl": 1,
+         "affixes": [
+          {
+           "id": "flat_carry",
+           "v": 7
+          }
+         ]
+        }
+       ],
+       "traits": [],
+       "abilities": [
+        "called_shot",
+        "frag"
+       ]
+      },
+      {
+       "kind": "grunt",
+       "name": "Sloan Sallow",
+       "nickname": "Holdout",
+       "tplKey": "grunt",
+       "weapon": "nat_shiv",
+       "skills": {
+        "marksmanship": 7,
+        "blades": 4,
+        "athletics": 3,
+        "acrobatics": 3,
+        "endurance": 3
+       },
+       "traits": [
+        "beast_scarred",
+        "field_dresser"
+       ],
+       "gear": [
+        {
+         "slot": "weapon",
+         "base": "pipe_rifle",
+         "rarity": "white",
+         "ilvl": 1,
+         "affixes": [
+          {
+           "id": "flat_carry",
+           "v": 5
+          }
+         ]
+        },
+        {
+         "slot": "body",
+         "base": "patched_tunic",
+         "rarity": "white",
+         "ilvl": 1,
+         "affixes": [
+          {
+           "id": "flat_evasion",
+           "v": 3
+          }
+         ]
+        }
+       ],
+       "abilities": []
+      },
+      {
+       "kind": "grunt",
+       "name": "Knox Sorrow",
+       "nickname": null,
+       "tplKey": "grunt",
+       "weapon": "nat_shiv",
+       "skills": {
+        "marksmanship": 5,
+        "blades": 4,
+        "athletics": 3,
+        "acrobatics": 3,
+        "endurance": 3
+       },
+       "traits": [
+        "trigger_happy",
+        "quick_feet"
+       ],
+       "gear": [
+        {
+         "slot": "weapon",
+         "base": "rust_machete",
+         "rarity": "white",
+         "ilvl": 1,
+         "affixes": [
+          {
+           "id": "flat_carry",
+           "v": 5
+          }
+         ]
+        },
+        {
+         "slot": "body",
+         "base": "patched_tunic",
+         "rarity": "white",
+         "ilvl": 1,
+         "affixes": [
+          {
+           "id": "flat_evasion",
+           "v": 3
+          }
+         ]
+        }
+       ],
+       "abilities": []
+      }
+     ],
+     "layout": null,
+     "outcome": "died"
+    },
+    {
+     "version": 1,
+     "id": "echo_mut1770g_b42r",
+     "handle": "Echo of Basic Body",
+     "source": "own",
+     "zone": "a",
+     "tier": 1,
+     "heat": 22,
+     "deployScore": 3,
+     "createdRun": 0,
+     "units": [
+      {
+       "kind": "body",
+       "name": "Basic Body",
+       "cls": null,
+       "spec": null,
+       "bodyLevel": 0,
+       "skills": {
+        "athletics": 1,
+        "acrobatics": 1,
+        "endurance": 1,
+        "hauling": 1,
+        "brawling": 1,
+        "dual_wielding": 1,
+        "blades": 1,
+        "marksmanship": 1,
+        "feral": 1,
+        "stealth": 1,
+        "perception": 1
+       },
+       "quirks": [],
+       "gear": [
+        {
+         "slot": "weapon",
+         "base": "zip_gun",
+         "rarity": "white",
+         "ilvl": 1,
+         "affixes": [
+          {
+           "id": "flat_hp",
+           "v": 15
+          }
+         ]
+        },
+        {
+         "slot": "backpack",
+         "base": "school_bag",
+         "rarity": "white",
+         "ilvl": 1,
+         "affixes": [
+          {
+           "id": "flat_carry",
+           "v": 7
+          }
+         ]
+        }
+       ],
+       "traits": [],
+       "abilities": [
+        "shove"
+       ]
+      },
+      {
+       "kind": "grunt",
+       "name": "Sloan Sallow",
+       "nickname": null,
+       "tplKey": "grunt",
+       "weapon": "nat_shiv",
+       "skills": {
+        "marksmanship": 5,
+        "blades": 4,
+        "athletics": 3,
+        "acrobatics": 3,
+        "endurance": 3
+       },
+       "traits": [
+        "beast_scarred",
+        "field_dresser"
+       ],
+       "gear": [
+        {
+         "slot": "weapon",
+         "base": "pipe_rifle",
+         "rarity": "white",
+         "ilvl": 1,
+         "affixes": [
+          {
+           "id": "flat_carry",
+           "v": 5
+          }
+         ]
+        },
+        {
+         "slot": "body",
+         "base": "patched_tunic",
+         "rarity": "white",
+         "ilvl": 1,
+         "affixes": [
+          {
+           "id": "flat_evasion",
+           "v": 3
+          }
+         ]
+        }
+       ],
+       "abilities": []
+      },
+      {
+       "kind": "grunt",
+       "name": "Wick Drummond",
+       "nickname": null,
+       "tplKey": "grunt",
+       "weapon": "nat_shiv",
+       "skills": {
+        "marksmanship": 5,
+        "blades": 4,
+        "athletics": 3,
+        "acrobatics": 3,
+        "endurance": 3
+       },
+       "traits": [
+        "steady_aim",
+        "pack_rat"
+       ],
+       "gear": [
+        {
+         "slot": "weapon",
+         "base": "rust_machete",
+         "rarity": "white",
+         "ilvl": 1,
+         "affixes": [
+          {
+           "id": "flat_carry",
+           "v": 5
+          }
+         ]
+        },
+        {
+         "slot": "body",
+         "base": "patched_tunic",
+         "rarity": "white",
+         "ilvl": 1,
+         "affixes": [
+          {
+           "id": "flat_evasion",
+           "v": 3
+          }
+         ]
+        }
+       ],
+       "abilities": []
+      }
+     ],
+     "layout": null,
+     "outcome": "extracted"
+    }
+   ],
+   "imported": [],
+   "defeated": 0,
+   "met": 0,
+   "next": null,
+   "force": null
+  },
+  "perkReady": true,
+  "nickOffers": [],
+  "recruitCands": [
+   {
+    "uid": "grunt_mut1o8gu_3cza",
+    "name": "Ember Fenwick",
+    "rank": "grunt",
+    "tplKey": "grunt",
+    "weapon": "nat_shiv",
+    "skills": {
+     "marksmanship": {
+      "lvl": 5,
+      "xp": 0
+     },
+     "blades": {
+      "lvl": 4,
+      "xp": 0
+     },
+     "athletics": {
+      "lvl": 3,
+      "xp": 0
+     },
+     "acrobatics": {
+      "lvl": 3,
+      "xp": 0
+     },
+     "endurance": {
+      "lvl": 3,
+      "xp": 0
+     }
+    },
+    "hp": null,
+    "runs": 0,
+    "extractions": 0,
+    "kills": 0,
+    "history": [],
+    "s3": true,
+    "traits": [
+     "loudmouth",
+     "quick_feet"
+    ],
+    "candidate": true,
+    "nickname": null,
+    "gear": {
+     "weapon": null,
+     "offhand": null,
+     "head": null,
+     "body": null,
+     "pack": null
+    },
+    "dead": false
+   }
+  ],
+  "debuffs": {}
+ }
+}
