@@ -19,7 +19,7 @@ DATA.prestige = {
   ],
   // Smudge's town_forest / town_bunker sets are on disk but not committed yet: until they are, every act draws the
   // current outpost art (+ the act's CSS tint, so the move still shows). Flip to true once the files are in the repo.
-  artReady: { forest: false, bunker: false },
+  artReady: { forest: true, bunker: false },   // SP-066 (Megan, Oct 2): the forest camp is Act I's home from the first save; the bunker waits for its overlays
   bonus: { xpPct: 5 },                                  // [DRAFT] per relocation
   keep: { items: 1, maxRarity: "purple" },              // [DRAFT] one item, Purple at most (no quest items, no pets)
   text: {

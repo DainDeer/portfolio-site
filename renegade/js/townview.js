@@ -52,6 +52,66 @@
     return el;
   };
 
+  // SP-066: the forest camp's ambient life, from Smudge's town_forest.json: the bonfire, wall torches, smoke, the tripwire
+  // mines' arming lights and owls' eyes in the trees. Each is a sprite strip over the background in canvas px (1000x600),
+  // like the hotspot overlays and under them. The fire and torch frame 0s are baked into the background, so a missing
+  // strip only leaves the still camp. Frames come from one clock (time, not render count), so the town's frequent
+  // re-renders never restart anything. Reduced motion: none of it.
+  const reducedMotion = () => !!(root.matchMedia && root.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const strip = (file, x, y, fw, fh, cols, rows, cls) => {
+    const el = h("div", { class: cls, style: `left:${x / 10}%;top:${y / 6}%;width:${fw / 10}%;height:${fh / 6}%;background-image:url("${src(file)}");background-size:${cols * 100}% ${rows * 100}%` });
+    el._cols = cols; el._rows = rows; return el;
+  };
+  const show = (el, col, row) => {
+    const k = col * 100 + row; if (el._f === k) return; el._f = k;
+    el.style.backgroundPosition = `${el._cols > 1 ? col / (el._cols - 1) * 100 : 0}% ${el._rows > 1 ? row / (el._rows - 1) * 100 : 0}%`;
+  };
+  // owls: frame 0 (eyes open) most of the time; a blink 1-2-1 (70 ms a step) every periodS +-40%. Now and then one shuts
+  // its eyes and is gone for a few seconds, then opens them again, in its own spot or another free one ("follow the eyes")
+  const OWL = { stepS: 0.07, holdS: 0.4, vanish: 0.2, goneS: [2.5, 6] };
+  let owls = null;
+  const owlFrame = (O, o, t) => {
+    const P = O.positions, period = () => P[o.spot].periodS * (0.6 + 0.8 * Math.random()), e = t - o.at;
+    if (o.mode === "open") { if (t < o.next) return 0; o.mode = Math.random() < OWL.vanish ? "vanish" : "blink"; o.at = t; return 1; }
+    if (o.mode === "blink") { if (e < 3 * OWL.stepS) return [1, 2, 1][Math.floor(e / OWL.stepS)]; o.mode = "open"; o.next = t + period(); return 0; }
+    if (o.mode === "vanish") { if (e < OWL.stepS) return 1; if (e < OWL.stepS + OWL.holdS) return 2; o.mode = "gone"; o.at = t + OWL.goneS[0] + Math.random() * (OWL.goneS[1] - OWL.goneS[0]); return 3; }
+    if (o.mode === "gone") {
+      if (t < o.at) return 3;
+      const held = new Set(owls.filter((x) => x !== o && x.mode !== "gone").map((x) => x.spot)), free = P.map((_, i) => i).filter((i) => !held.has(i));
+      o.spot = free[Math.floor(Math.random() * free.length)]; o.mode = "appear"; o.at = t; return 2;
+    }
+    if (e < 2 * OWL.stepS) return [2, 1][Math.floor(e / OWL.stepS)];   // "appear": eyes opening
+    o.mode = "open"; o.next = t + period(); return 0;
+  };
+  TV.ambient = function (A) {
+    if (!A || !(A.fire || A.torches || A.smoke || A.owls || A.mines) || reducedMotion()) return null;
+    const layer = h("div", { class: "town-anim", "aria-hidden": "true" }), parts = [];
+    const add = (el, at) => { layer.appendChild(el); parts.push([el, at]); };
+    const T = A.torches, F = A.fire, S = A.smoke, L = A.mines && A.mines.led, O = A.owls;
+    if (T) for (const p of T.positions || []) add(strip(T.file, p.x, p.y, T.frameW, T.frameH, T.frames, T.positions.length, "anim-torch"), (t) => [(Math.floor(t * T.fps) + (p.phase || 0)) % T.frames, p.row]);
+    if (F) add(strip(F.file, F.x, F.y, F.frameW, F.frameH, F.frames, 1, "anim-fire"), (t) => [Math.floor(t * F.fps) % F.frames, 0]);
+    if (S) add(strip(S.file, S.x, S.y, S.frameW, S.frameH, S.frames, 1, "anim-smoke"), (t) => [Math.floor(t * S.fps) % S.frames, 0]);
+    if (L) for (const p of L.positions || []) add(strip(L.file, p.x, p.y, L.frameW, L.frameH, L.frames.length, L.positions.length, "anim-mine"), (t) => [t % p.periodS < 0.12 ? 1 : 0, p.row]);
+    if (O && O.positions && O.positions.length) {
+      if (!owls || owls.src !== O) { const t0 = performance.now() / 1000; owls = O.positions.map((p, i) => ({ spot: i, mode: "open", at: t0, next: t0 + p.periodS * Math.random() })); owls.src = O; }
+      // one element per spot in the trees (near / far owls differ); a spot shows the owl sitting there, else nothing (frame 3)
+      const spots = O.positions.map((p) => { const V = O[p.variant]; const el = strip(V.file, p.x, p.y, V.frameW, V.frameH, O.frames.length, 1, "anim-owl"); layer.appendChild(el); return el; });
+      parts.push([null, (t) => { const f = spots.map(() => 3); for (const o of owls) { const fr = owlFrame(O, o, t); f[o.spot] = Math.min(f[o.spot], fr); } spots.forEach((el, i) => show(el, f[i], 0)); return null; }]);
+    }
+    layer._parts = parts;
+    return layer;
+  };
+  // one frame loop for whichever town is on screen; it stops when the town is gone and restarts with the next one
+  let looping = false;
+  const loop = () => {
+    const layer = document.querySelector(".town-stage .town-anim");
+    if (!layer) { looping = false; return; }
+    const t = performance.now() / 1000;
+    for (const [el, at] of layer._parts) { const f = at(t); if (el && f) show(el, f[0], f[1]); }
+    requestAnimationFrame(loop);
+  };
+  TV.animate = () => { if (!looping) { looping = true; requestAnimationFrame(loop); } };
+
   TV.render = function (container, onOpen) {
     const A = TV.art(), act = G.Prestige ? G.Prestige.act() : null;
     const stage = h("div", { class: "town-stage" + (act && act.tint && !G.Prestige.homeId() ? " home-" + act.tint : ""), "data-act": act ? act.id : null, "data-home": G.Prestige ? G.Prestige.homeId() || "outpost" : null });
@@ -59,6 +119,7 @@
     const bg = h("img", { class: "town-bg", src: src(bgFile), alt: "", draggable: "false" });
     bg.addEventListener("error", () => { bg.remove(); stage.classList.add("placeholder"); });
     stage.appendChild(bg);
+    const amb = TV.ambient(A); if (amb) { stage.appendChild(amb); TV.animate(); }
     for (const cp of TV.carried(A)) { const im = h("img", { class: "town-carried", src: src(cp.file), alt: "", draggable: "false", style: `left:${cp.x / 10}%;top:${cp.y / 6}%` }); im.addEventListener("load", () => { im.style.width = (im.naturalWidth / 10) + "%"; im.style.height = (im.naturalHeight / 6) + "%"; }); stage.appendChild(im); }   // canvas px, like the hotspot overlays
     if (act && act.id > 1) stage.appendChild(h("div", { class: "town-home", "data-home-name": act.homeName }, `${act.homeName} · ${act.label}`));   // Slice 5 §I: you moved
     for (const hs of TV.hotspots()) {
