@@ -284,6 +284,7 @@
       let st = o.s;
       if (st.version === 1) { st = St.migrate(st); St.loadNotice = "Your Slice 1 save was carried over to Slice 2" + (St.migrateNotes.length ? ": " + St.migrateNotes.join(" ") : "."); }
       if (st.version === 2) { st = St.migrate3(st); St.loadNotice = (St.loadNotice ? St.loadNotice + " " : "") + "Your save was carried over to Slice 3: locations now remember what you searched (every place starts fully stocked)."; }
+      if (st.version === 4) { st = St.migrate5(st); St.loadNotice = St.renameNotice(st); }
       if (st.version < DATA.config.version) throw new Error("it's from an older build (save version " + st.version + "; The Scablands reshaped the map in version 4)");   // Slice 5 §G (Vixie): a wipe, not a migration
       if (st.version !== DATA.config.version) throw new Error("unknown save version " + st.version);
       St.repair(st);
@@ -328,6 +329,29 @@
     return s;
   };
 
+  // Version 4 -> 5 (Megan, 10/3/26): the difficulties were renamed; each save keeps its rules under the new name.
+  // Casual -> Standard, Standard -> Hardcore, Hardcore -> Ragnarök. Also used by G.Scenario.prepare for v4 scenarios.
+  St.DIFF_RENAME_V5 = { casual: "standard", standard: "hardcore", hardcore: "ragnarok" };
+  St.migrate5 = function (s) {
+    const R = St.DIFF_RENAME_V5;
+    if (R[s.difficulty]) s.difficulty = R[s.difficulty];
+    const lr = s.lastResult;
+    if (lr && typeof lr === "object") {
+      if (R[lr.difficulty]) lr.difficulty = R[lr.difficulty];
+      if ("casual" in lr) { lr.standard = lr.casual; delete lr.casual; }   // the forgiving difficulty's death summary
+    }
+    // A run in progress carries the whole save from its deploy as a string (debug "Restart expedition" restores it): that
+    // copy is version 4 too, and restoring it unmigrated changed the rules (an old Hardcore save lost permadeath). Maple's catch
+    if (s.run && typeof s.run.snapshot === "string") {
+      try { const snap = JSON.parse(s.run.snapshot); if (snap && snap.version === 4) s.run.snapshot = JSON.stringify(St.migrate5(snap)); }
+      catch (e) { /* unreadable: left as it was; the restart path reports its own failure */ }
+    }
+    s.version = 5;
+    return s;
+  };
+  St.renameNotice = (s) => "The difficulties have new names: Casual is now Standard, Standard is now Hardcore and Hardcore is now Ragnarök. "
+    + "Your save keeps its rules" + (s.difficultyLocked && DATA.config.difficulty.list[s.difficulty] ? " (it's now called " + DATA.config.difficulty.list[s.difficulty].name + ")." : ".");
+
   // Fill any Slice 2 fields a save is missing (also used after migration). Never throws on partial saves.
   St.repair = function (s) {
     if (!s.maps || !s.maps.a) s.maps = G.Zones.buildAll((s.seed >>> 0) || 1);
@@ -362,7 +386,7 @@
       }
       if (s.run && s.run.squad) for (const m of s.run.squad) { const g = s.grunts.find((x) => x.uid === m.g.uid); if (g) m.g = g; }
       G.state = prev; }
-    if (!s.difficulty || !DATA.config.difficulty.list[s.difficulty]) { s.difficulty = DATA.config.difficulty.default; s.difficultyLocked = true; }   // Slice 4 §H: older saves are Standard
+    if (!s.difficulty || !DATA.config.difficulty.list[s.difficulty]) { s.difficulty = DATA.config.difficulty.default; s.difficultyLocked = true; }   // Slice 4 §H: older saves are Hardcore
     s.loadout = s.loadout || { bodyId: "body_basic", gear: {}, pouch: [], grunts: [] };
     s.loadout.gear = s.loadout.gear || {}; s.loadout.pouch = s.loadout.pouch || []; s.loadout.grunts = s.loadout.grunts || [];
     { const seen = new Set(); for (const k of Object.keys(s.loadout.gear)) { const u = s.loadout.gear[k]; if (u && seen.has(u)) delete s.loadout.gear[k]; else if (u) seen.add(u); } }   // an item in two body slots (pre-fix saves): keep the first

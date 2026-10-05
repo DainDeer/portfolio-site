@@ -1,7 +1,7 @@
 // Slice 4 §H: difficulties (DATA.config.difficulty). Picked on the start screen for a new save (js/title.js) and
-// locked for it; only the death rules change. Casual: equipped items come home, each found item (and found resource
-// unit) is lost on its own 50% roll, and a lost fight can be retried from its start (unlimited). Standard: as before.
-// Hardcore: a human body that dies is gone for good; the Basic body dies as in Standard (Vixie).
+// locked for it; only the death rules change. Standard: equipped items come home, each found item (and found resource
+// unit) is lost on its own 50% roll, and a lost fight can be retried from its start (unlimited). Hardcore: as before.
+// Ragnarök: a human body that dies is gone for good; the Basic body dies as in Hardcore (Vixie).
 (function (root) {
   const G = root.G, U = G.Util;
   const Df = G.Difficulty = {};
@@ -15,7 +15,7 @@
   Df.set = function (id, s) { s = s || G.state; if (!C().list[id]) return "No such difficulty."; if (Df.locked(s)) return "The difficulty is locked for this save."; s.difficulty = id; return null; };
   Df.lock = function (s) { s = s || G.state; if (!s || s.difficultyLocked) return; s.difficulty = Df.id(s); s.difficultyLocked = true; G.log(`Difficulty: ${Df.name(s)} (locked for this save).`); };
 
-  // ---- Casual: Retry fight. A snapshot of the save + the shared rng just before the battle is built (so the enemies,
+  // ---- Standard: Retry fight. A snapshot of the save + the shared rng just before the battle is built (so the enemies,
   // their gear and the ammo pack are the same); the retry gets a fresh battle seed.
   Df.canRetry = function () { const d = Df.def(); return !!(d.retries && G.state && G.state.run && Df.snap && (d.retries < 0 || (Df.snap.used || 0) < d.retries)) || Df.canToken(); };
   Df.snapBattle = function () {
@@ -26,7 +26,7 @@
   // back to the snapshot: returns the battle step to start again (the caller builds + mounts it), or null
   Df.retry = function () {
     if (!Df.canRetry()) return null;
-    const free = !!Df.def().retries;   // Casual: free; otherwise it costs a retry token
+    const free = !!Df.def().retries;   // Standard: free; otherwise it costs a retry token
     const sn = Df.snap; G.state = JSON.parse(sn.json); G.rng.setState(sn.rng); sn.used = (sn.used || 0) + 1;
     if (!free) G.state.retryTokens = Math.max(0, (G.state.retryTokens || 0) - 1);   // the snapshot still had it: spend it after
     const r = G.state.run; r.retries = (r.retries || 0) + 1;
@@ -40,7 +40,7 @@
   Df.tokens = (s) => { s = s || G.state; return Math.max(0, Math.floor((s && s.retryTokens) || 0)); };
   Df.tokenDiff = (s) => !!(TK().on && (TK().difficulties || []).includes(Df.id(s)));   // tokens exist on this difficulty
   Df.tokenSave = (s) => Df.tokenDiff(s) && Df.tokens(s) > 0;   // worth a pre-battle snapshot
-  // Hardcore: the lost fight would cost a human body for good, so a token can't undo it
+  // Ragnarök: the lost fight would cost a human body for good, so a token can't undo it
   Df.tokenBlocked = function (s) { s = s || G.state; return !!(s && s.run && Df.isPermadeath(s, G.Exp.body())); };
   Df.canToken = function () { const s = G.state; return !!(s && s.run && Df.snap && Df.tokenSave(s) && !Df.tokenBlocked(s)); };
   // on a successful extraction (G.Exp.extractSuccess): returns the tokens gained (0 if none)
@@ -73,9 +73,9 @@
     const u = Math.max(1e-12, rng()), v = rng(), z = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
     return Math.max(0, Math.min(n, Math.round(n * p + z * Math.sqrt(n * p * (1 - p)))));
   };
-  // Hardcore: does this body die for good? Human bodies only; the Basic body is never reset (Vixie)
+  // Ragnarök: does this body die for good? Human bodies only; the Basic body is never reset (Vixie)
   Df.isPermadeath = (s, body) => !!(Df.def(s).permadeath && body && body.family !== "basic" && body.uid !== "body_basic");
-  // Hardcore: the human body is gone for good. Returns the next body's title, or null (not a permadeath)
+  // Ragnarök: the human body is gone for good. Returns the next body's title, or null (not a permadeath)
   Df.permadeath = function (s, body) {
     if (!Df.isPermadeath(s, body)) return null;
     s.fallenBodies = s.fallenBodies || [];

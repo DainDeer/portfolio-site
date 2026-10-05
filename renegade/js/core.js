@@ -18,7 +18,7 @@
     rng.range = (lo, hi) => lo + rng() * (hi - lo);
     rng.pick = (arr) => arr[Math.floor(rng() * arr.length)];
     rng.chance = (pct) => rng() * 100 < pct;
-    rng.getState = () => a; rng.setState = (v) => { a = v | 0; };   // Slice 4 §H: Casual's Retry fight rewinds the shared stream
+    rng.getState = () => a; rng.setState = (v) => { a = v | 0; };   // Slice 4 §H: Standard's Retry fight rewinds the shared stream
     rng.shuffle = (arr) => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
     rng.weighted = (entries, wf) => { // entries array, wf(entry)->weight
       let tot = 0; for (const e of entries) tot += Math.max(0, wf(e));

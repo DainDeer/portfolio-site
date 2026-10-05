@@ -48,21 +48,33 @@
     }).catch((e) => { T.error = String(e && e.message || e); still(); });
   };
 
-  T.panel = function () {
-    const h = G.UI.h, A = C().art;
-    const field = (label, labelImg, type) => h("div", { class: "title-row" },
+  // one locked Username / Password field (for the future MMO: disabled, it does nothing)
+  T.field = function (h, label, labelImg, type) {
+    const A = C().art;
+    return h("div", { class: "title-row" },
       h("label", { class: "title-label" }, h("img", { src: url(labelImg.file), alt: label, draggable: "false" })),
       h("div", { class: "title-field" }, h("input", { type, disabled: true, placeholder: "", "aria-label": label + " (coming later)", tabindex: "-1" }), h("img", { class: "title-lock", src: url(A.lock.file), alt: "", draggable: "false" })));
+  };
+  // Megan: the locked fields stay on screen for a new save too. Its panel holds the difficulty picker, so they get their
+  // own small panel (placed per layout in css/title.css and css/mobile.css)
+  T.account = function (h) {
+    const A = C().art;
+    return h("div", { class: "title-account", "data-panel": "account", title: "Accounts are coming later" },
+      T.field(h, "Username", A.labelUser, "text"), T.field(h, "Password", A.labelPass, "password"));
+  };
+
+  T.panel = function () {
+    const h = G.UI.h, A = C().art;
     const diff = T.diffPending();
     const kids = diff ? [T.diffPicker(h), h("div", { class: "title-divider" })]   // Slice 4 §H: a new save picks its difficulty (Smudge's layout: in place of the fields)
-      : [field("Username", A.labelUser, "text"), field("Password", A.labelPass, "password"), h("div", { class: "title-divider" })];
+      : [T.field(h, "Username", A.labelUser, "text"), T.field(h, "Password", A.labelPass, "password"), h("div", { class: "title-divider" })];
     kids.push(h("button", { class: "title-play", "data-act": "play", "data-nosfx": "1", "aria-label": "Play", onclick: () => T.play() }, h("span", { class: "title-play-art" })));
     return h("div", { class: "title-panel" + (diff ? " diff" : "") }, kids);
   };
   // ---- Slice 4 §H: difficulty (config.difficulty; Smudge's sigils, assets/ui/difficulty) ----
   T.diffPending = () => !!(G.Difficulty && G.state && G.Difficulty.pending());
   T.choice = null;
-  const FPS = { casual: 5, standard: 4, hardcore: 8 };   // Smudge's strip speeds (difficulty_manifest.json)
+  const FPS = { standard: 5, hardcore: 4, ragnarok: 8 };   // Smudge's strip speeds (difficulty_manifest.json)
   const abs = (f) => new URL(url(f), document.baseURI).href;
   T.diffPicker = function (h) {
     const D = DATA.config.difficulty, box = h("div", { class: "t-diffs-wrap", "data-panel": "difficulty" });
@@ -95,7 +107,7 @@
     v("--t-play", A.play.normal.file); v("--t-play-h", A.play.hover.file); v("--t-play-p", A.play.pressed.file);
     v("--t-snd-on", A.soundOn.file); v("--t-snd-on-h", A.soundOnHover.file); v("--t-snd-off", A.soundOff.file); v("--t-snd-off-h", A.soundOffHover.file); v("--t-tag", A.versionTag.file);
     root.append(h("div", { class: "title-still" }), h("canvas", { class: "title-gl" }), h("div", { class: "title-shade" }),
-      h("h1", { class: "title-logo", "aria-label": "Renegade" }), T.panel(),
+      h("h1", { class: "title-logo", "aria-label": "Renegade" }), T.panel(), ...(T.diffPending() ? [T.account(h)] : []),
       h("div", { class: "title-version", "data-note": "build" }, !T.diffPending() && G.Difficulty && G.state ? h("img", { class: "title-diff", src: url(DATA.sprites["diff_" + G.Difficulty.id() + "_hud"].file), alt: G.Difficulty.name(), title: "Difficulty: " + G.Difficulty.name() }) : null, T.buildLabel(), G.state && G.Cards && G.Cards.title() ? h("span", { class: "title-cardtitle", "data-card-title": "1" }, "★ " + G.Cards.title()) : null),   // Slice 5 §J
       h("button", { class: "title-sound", "data-act": "title-sound", "data-nosfx": "1", onclick: (e) => { e.stopPropagation(); T.toggleSound(); } }));
     document.body.appendChild(root); document.body.classList.add("title-open");

@@ -180,8 +180,12 @@
   /* Slice 4 §G/§H title screen (css/title.css, loaded after this file: hence the extra "body"). A new save's difficulty
      panel is 342 px tall and covered the whole logo on a landscape phone (the fields panel fits under it). Here the
      panel goes to the right (clear of the sound toggle's column) and the logo to the middle of the space left of it. */
-  body #title:has(.title-panel.diff) .title-panel { left: auto; right: max(56px, calc(env(safe-area-inset-right) + 50px)); transform: none; }
+  body #title:has(.title-panel.diff) .title-panel { left: auto; right: max(56px, calc(env(safe-area-inset-right) + 50px)); transform: none; bottom: 8px; }   /* bottom: a 667x375 phone also gets #title.phone's bottom 64 px, which pushed the panel's top off screen */
   body #title:has(.title-panel.diff) .title-logo { left: calc((100vw - 392px - 56px) / 2); top: 50%; transform: translate(-50%, -50%) scale(.667); transform-origin: 50% 50%; }   /* 2x native, as in title.css landscape */
+  /* the locked account fields (Megan): side by side at the top of the column left of the panel, above the logo */
+  body #title:has(.title-panel.diff) .title-account { left: max(8px, env(safe-area-inset-left)); top: 6px; bottom: auto; transform: none;
+    width: calc(100vw - 392px - 56px - 16px); max-width: 352px; display: flex; flex-wrap: wrap; column-gap: 8px; border-width: 16px; border-image-width: 16px; padding: 2px 4px 0; }
+  body #title:has(.title-panel.diff) .title-account .title-row { flex: 1 1 110px; min-width: 0; margin-bottom: 2px; }   /* 110: the 100 px label art; narrower columns stack */
 }
 @media (pointer: coarse) and (max-height: 500px) and (orientation: landscape) and (max-width: 800px) {
   body #title:has(.title-panel.diff) .title-logo { transform: translate(-50%, -50%) scale(.5); }   /* 740 px: 1.5x native to fit left of the panel */

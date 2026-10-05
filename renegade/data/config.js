@@ -2,7 +2,7 @@
 // Tags follow the design doc: most numbers are [DRAFT] (design doc v0.4, Slice 2).
 window.DATA = window.DATA || {};
 DATA.config = {
-  version: 4,               // save format. 4 (Slice 5 §G, Vixie): The Scablands' map + the moved Rooftop Pickup, so older saves are set aside (new game). Slice 1 saves (version 1) and Slice 2 saves (version 2) are migrated on load (js/state.js St.migrate / St.migrate3)
+  version: 5,               // save format. 5 (Megan, 10/3/26): the difficulties were renamed (Casual -> Standard, Standard -> Hardcore, Hardcore -> Ragnarök); version 4 saves and scenarios are migrated on load (js/state.js St.migrate5), keeping their rules. 4 (Slice 5 §G, Vixie): The Scablands' map + the moved Rooftop Pickup, so version 1-3 saves are set aside (new game); St.migrate / St.migrate3 still exist for the tests
   saveKey: "renegade_slice1_save",      // same key as Slice 1 so an existing save is found and migrated
   overridesKey: "renegade_slice1_tuning",
   // Megan, for now: a new build (window.BUILD_ID from js/build_id.js, the commit hash in packaged builds) wipes the saved
@@ -40,35 +40,35 @@ DATA.config = {
   // (the Shiv, a Grunt's innate weapon, is 10).
   unarmed: { dmg: 3, interval: 0.8, range: 1.0, acc: 60 },
   // Slice 4 §H (Megan): difficulty, picked on the start screen for a new save and locked for it. Combat, weapons,
-  // enemies, loot and Heat are the same in all three; only the death rules change. Old saves are Standard.
+  // enemies, loot and Heat are the same in all three; only the death rules change. Old saves are Hardcore.
   difficulty: {
-    order: ["casual", "standard", "hardcore"],
-    default: "standard",   // saves from before §H, and a new game made without the start screen (?notitle, tests)
+    order: ["standard", "hardcore", "ragnarok"],
+    default: "hardcore",   // saves from before §H, and a new game made without the start screen (?notitle, tests)
     list: {
-      casual: { name: "Casual", keepEquipped: true, foundLossPct: 50, foundResLossPct: 50, retries: -1,
+      standard: { name: "Standard", keepEquipped: true, foundLossPct: 50, foundResLossPct: 50, retries: -1,
         // keepEquipped: the body's equipped items always come home (leftover ammo packs too). foundLossPct: each item found
         // that run (the bag) is lost on its own roll. foundResLossPct (Vixie): each UNIT of each found resource rolls on
         // its own, so a stack comes home at about half.
         // retries: "Retry fight" on the defeat screen restarts that battle from its start (-1 = unlimited).
-        desc: "Casual: death keeps your equipped gear. Each thing you found that run has a 50% chance to be lost. Retry a lost fight as often as you like." },
-      standard: { name: "Standard", desc: "Standard: today's rules. A body that dies goes on its restore timer." },
-      hardcore: { name: "Hardcore", permadeath: true,
+        desc: "Standard: death keeps your equipped gear. Each thing you found that run has a 50% chance to be lost. Retry a lost fight as often as you like." },
+      hardcore: { name: "Hardcore", desc: "Hardcore: death loses everything you carried and wore. A body that dies goes on its restore timer." },
+      ragnarok: { name: "Ragnarök", permadeath: true,
         // permadeath: a human body that dies is gone for good (no restore timer, its stats with it; state.fallenBodies).
-        // You go on in another body. The Basic body is never reset (Vixie): it dies as in Standard and keeps its levels.
-        desc: "Hardcore: a human body that dies is gone for good, stats and all. The Basic body comes back as in Standard." }
+        // You go on in another body. The Basic body is never reset (Vixie): it dies as in Hardcore and keeps its levels.
+        desc: "Ragnarök: a human body that dies is gone for good, stats and all. The Basic body comes back as in Hardcore." }
     },
     pickHint: "Pick a difficulty. It is locked for this save."
   },
   // Slice 5 §K: retry tokens [DRAFT Vixie]. Earned only (no shop): +perExtract on a successful extraction at Heat >= minHeat,
-  // at most cap held (state.retryTokens). Spend 1 on the defeat screen to retry that fight from its start (the Casual
-  // snapshot). Only on the listed difficulties (Casual already retries for free). Never on Hardcore when the fight would
+  // at most cap held (state.retryTokens). Spend 1 on the defeat screen to retry that fight from its start (the Standard
+  // snapshot). Only on the listed difficulties (Standard already retries for free). Never on Ragnarök when the fight would
   // cost a human body (that loss is final); the Basic body there may use one.
   retryTokens: {
-    on: true, minHeat: 40, perExtract: 1, cap: 3, difficulties: ["standard", "hardcore"],
+    on: true, minHeat: 40, perExtract: 1, cap: 3, difficulties: ["hardcore", "ragnarok"],
     name: "Retry token",
     earnText: "Retry token earned for a hot extraction",
     defeatHint: "Spend a retry token to fight this battle again from its start. Continue accepts the defeat.",
-    hardcoreBlocked: "Hardcore: a retry token can't undo the loss of a human body."
+    ragnarokBlocked: "Ragnarök: a retry token can't undo the loss of a human body."
   },
   // Slice 5 §K: a future premium hook (Megan). Nothing is sold: no UI reads this, and null means no product.
   premium: { retryTokenSku: null },

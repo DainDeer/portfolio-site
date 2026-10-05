@@ -5,7 +5,7 @@ DATA.items = {
   questColor: "#e8c060",   // Slice 2: quest items show in gold
   rarities: {
     grey:   { name: "Scrap",    color: "#8a8a8a", affixes: 0, tiers: [],                     weight: 0,   enabled: false },
-    white:  { name: "Standard", color: "#e8e8e8", affixes: 1, tiers: ["basic"],              weight: 80,  enabled: true },
+    white:  { name: "Normal",   color: "#e8e8e8", affixes: 1, tiers: ["basic"],              weight: 80,  enabled: true },
     blue:   { name: "Tuned",    color: "#4a8cff", affixes: 2, tiers: ["basic", "advanced"],  weight: 14,  enabled: true },
     yellow: { name: "Advanced", color: "#ffd84a", affixes: 3, tiers: ["basic", "advanced"],  weight: 4.5, enabled: true },
     // Slice 3 §6: Purple sits between Yellow and Orange (open question 2). minIlvl: below it the roll drops a tier.
@@ -42,7 +42,7 @@ DATA.items = {
     patched_tunic: { name: "Patched Tunic",     slot: "body",     armor: 1, weight: 1.0, req: 0, dropWeight: 0, sprite: "item_patched_tunic" },
     wool_cap:      { name: "Wool Cap",          slot: "head",     armor: 1, weight: 0.4, req: 0, dropWeight: 3, sprite: "item_wool_cap" },
     // Slice 5 §H silly outfits (Megan via Smudge) [DRAFT]: real gear with small stats, rare drops. Vixie: no special
-    // rarity: always Standard (rarityCap white, the common frame) with a "Cosmetic" tag (I.describe). Equipping one once
+    // rarity: always Normal (rarityCap white, the common frame) with a "Cosmetic" tag (I.describe). Equipping one once
     // unlocks its look as a cosmetic (DATA.gruntLook.cosmetics). Until Smudge's layers land under these keys, the doll
     // draws the stand-in part named in gruntLook.items. Icons: [PLACEHOLDER] badges.
     witch_hat:     { name: "Witch Hat",         slot: "head",     evasion: 1, weight: 0.3, req: 0, dropWeight: 0.3, silly: true, rarityCap: "white" },

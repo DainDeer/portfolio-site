@@ -522,7 +522,7 @@
 
   // ---------- battles ----------
   X.buildBattle = function (step, rollMath) {
-    if (G.Difficulty) G.Difficulty.snapBattle();   // Slice 4 §H: Casual's Retry fight goes back to here
+    if (G.Difficulty) G.Difficulty.snapBattle();   // Slice 4 §H: Standard's Retry fight goes back to here
     const r = run(), node = X.node(step.nid || r.loc);
     const allies = [G.Battle.unitFromBody(X.body(), r.gear, { carryPct: X.carryPct(), hp: r.bodyHp })];
     r.squad.forEach((s, i) => { if (s.hp > 0) { const u = G.Battle.unitFromGrunt(s.g, s.hp); u.squadIdx = i; allies.push(u); } });
@@ -765,10 +765,10 @@
     const lost = r.bag.items.length + Object.values(r.gear).filter(Boolean).length;
     const kept = [];
     for (const p of r.pouch) { if (p.item) { s.stash.items.push(p.item); kept.push(G.Items.name(p.item)); } else { s.stash.res[p.res] = (s.stash.res[p.res] || 0) + p.n; kept.push(p.n + " " + DATA.items.resources[p.res].name); } }
-    // Slice 4 §H: Casual keeps the equipped items and rolls each find; Hardcore loses the body for good
+    // Slice 4 §H: Standard keeps the equipped items and rolls each find; Ragnarök loses the body for good
     const DF = G.Difficulty, cas = DF ? DF.onDeath(s, r) : null;
     const lostNow = cas ? cas.foundLost.length : lost;
-    const hard = DF && DF.isPermadeath(s, body);   // Hardcore + a human body (the Basic body dies as in Standard)
+    const hard = DF && DF.isPermadeath(s, body);   // Ragnarök + a human body (the Basic body dies as in Hardcore)
     const ms = hard ? 0 : G.State.restoreMs(body);
     body.restoreUntil = ms ? G.now() + ms : 0;
     if (DF) DF.snap = null;
@@ -777,11 +777,11 @@
     X.settleSquad(false);
     s.deaths++;
     const next = hard ? DF.permadeath(s, body) : null;   // after the echo / squad (they read the body)
-    s.lastResult = { kind: "death", why, lost: lostNow, kept, restoreMs: ms, body: body.name, difficulty: DF ? DF.id(s) : "standard", casual: cas, permadeath: hard ? { next } : null, heat: r.heat, moves: r.moves, stats: r.stats, xp: r.xpTally || {}, zone: r.zone,
+    s.lastResult = { kind: "death", why, lost: lostNow, kept, restoreMs: ms, body: body.name, difficulty: DF ? DF.id(s) : "hardcore", standard: cas, permadeath: hard ? { next } : null, heat: r.heat, moves: r.moves, stats: r.stats, xp: r.xpTally || {}, zone: r.zone,
                      ammo: r.ammo ? { base: r.ammo.base, used: r.ammo.used, left: 0, lost: r.ammo.n } : null };
     X.log("☠ " + why, "bad");
-    if (cas) X.log(`Casual: your equipped gear came home${cas.foundKept.length || Object.keys(cas.resKept).length ? "; some finds too" : ""}.${cas.foundLost.length ? " Lost: " + cas.foundLost.join(", ") + "." : ""}`, "good");
-    if (hard) X.log(`Hardcore: ${body.name} is gone for good. You go on as ${next}.`, "bad");
+    if (cas) X.log(`Standard: your equipped gear came home${cas.foundKept.length || Object.keys(cas.resKept).length ? "; some finds too" : ""}.${cas.foundLost.length ? " Lost: " + cas.foundLost.join(", ") + "." : ""}`, "good");
+    if (hard) X.log(`Ragnarök: ${body.name} is gone for good. You go on as ${next}.`, "bad");
     X.endRun();
   };
 

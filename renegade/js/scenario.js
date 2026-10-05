@@ -130,7 +130,8 @@
   // Version table (saveVersion = DATA.config.version when captured):
   //   same version, same build  -> opens
   //   same version, other build -> opens with a warning in the banner (content tuning may differ)
-  //   older version             -> refused (the existing migrations only go v1 -> v2 -> v3, and v4 is a wipe)
+  //   version 4                 -> opens: St.migrate5 renames the difficulty (same rules)
+  //   older version (< 4)       -> refused (the existing migrations only go v1 -> v2 -> v3, and v4 is a wipe)
   //   newer version             -> refused: reload to update the game
   Sc.prepare = function (p) {
     if (!p || typeof p !== "object" || Array.isArray(p)) fail("it isn't a Renegade scenario");
@@ -150,6 +151,7 @@
     let st = clone(p.state);
     if (st.version === 1) st = St.migrate(st);
     if (st.version === 2) st = St.migrate3(st);
+    if (st.version === 4) st = St.migrate5(st);
     if (st.version < cur) fail("it was saved by an older build (save version " + sv + "; this game reads " + cur + " since The Scablands reshaped the map). Capture it again on the current build");
     if (st.version !== cur) fail("it has an unknown save version " + st.version);
     // ids the content may have dropped since it was captured
