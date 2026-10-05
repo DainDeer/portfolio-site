@@ -8,29 +8,31 @@
 <title>RENEGADE [working title] — Slice 5</title>
 <!-- SP-100: the 3D battle view's ES modules (js/b3d/, loaded on demand by js/gfx.js) find three.js + cannon-es here -->
 <script type="importmap">
-{"imports": {"three": "./vendor/three-0.185.0/three.module.min.js?v=974741d", "three/addons/": "./vendor/three-0.185.0/addons/", "cannon-es": "./vendor/cannon-es-0.20.0/cannon-es.js?v=974741d", "./js/b3d/view.js": "./js/b3d/view.js?v=974741d", "./js/b3d/scenes/scablands.js": "./js/b3d/scenes/scablands.js?v=974741d", "./js/b3d/world.js": "./js/b3d/world.js?v=974741d", "./js/b3d/scenes/hollis.js": "./js/b3d/scenes/hollis.js?v=974741d", "./js/b3d/scenes/drowned.js": "./js/b3d/scenes/drowned.js?v=974741d", "./js/b3d/scenes/hushwood.js": "./js/b3d/scenes/hushwood.js?v=974741d", "./js/b3d/scenes/greyback.js": "./js/b3d/scenes/greyback.js?v=974741d", "./vendor/three-0.185.0/addons/utils/BufferGeometryUtils.js": "./vendor/three-0.185.0/addons/utils/BufferGeometryUtils.js?v=974741d", "three/addons/utils/BufferGeometryUtils.js": "./vendor/three-0.185.0/addons/utils/BufferGeometryUtils.js?v=974741d", "./js/b3d/instancing.js": "./js/b3d/instancing.js?v=974741d", "./js/b3d/figures.js": "./js/b3d/figures.js?v=974741d", "./js/b3d/physics.js": "./js/b3d/physics.js?v=974741d", "./js/b3d/killcam.js": "./js/b3d/killcam.js?v=974741d", "./js/b3d/assets.js": "./js/b3d/assets.js?v=974741d", "./vendor/three-0.185.0/addons/loaders/GLTFLoader.js": "./vendor/three-0.185.0/addons/loaders/GLTFLoader.js?v=974741d", "three/addons/loaders/GLTFLoader.js": "./vendor/three-0.185.0/addons/loaders/GLTFLoader.js?v=974741d", "./vendor/three-0.185.0/addons/utils/SkeletonUtils.js": "./vendor/three-0.185.0/addons/utils/SkeletonUtils.js?v=974741d", "three/addons/utils/SkeletonUtils.js": "./vendor/three-0.185.0/addons/utils/SkeletonUtils.js?v=974741d", "./js/b3d/look.js": "./js/b3d/look.js?v=974741d", "./js/b3d/fx.js": "./js/b3d/fx.js?v=974741d", "./vendor/cannon-es-0.20.0/cannon-es.js": "./vendor/cannon-es-0.20.0/cannon-es.js?v=974741d", "./vendor/three-0.185.0/three.module.min.js": "./vendor/three-0.185.0/three.module.min.js?v=974741d", "./vendor/three-0.185.0/three.core.min.js": "./vendor/three-0.185.0/three.core.min.js?v=974741d"}}
+{"imports": {"three": "./vendor/three-0.185.0/three.module.min.js?v=abba39a", "three/addons/": "./vendor/three-0.185.0/addons/", "cannon-es": "./vendor/cannon-es-0.20.0/cannon-es.js?v=abba39a", "./js/b3d/view.js": "./js/b3d/view.js?v=abba39a", "./js/b3d/scenes/scablands.js": "./js/b3d/scenes/scablands.js?v=abba39a", "./js/b3d/world.js": "./js/b3d/world.js?v=abba39a", "./js/b3d/scenes/hollis.js": "./js/b3d/scenes/hollis.js?v=abba39a", "./js/b3d/scenes/drowned.js": "./js/b3d/scenes/drowned.js?v=abba39a", "./js/b3d/scenes/hushwood.js": "./js/b3d/scenes/hushwood.js?v=abba39a", "./js/b3d/scenes/greyback.js": "./js/b3d/scenes/greyback.js?v=abba39a", "./vendor/three-0.185.0/addons/utils/BufferGeometryUtils.js": "./vendor/three-0.185.0/addons/utils/BufferGeometryUtils.js?v=abba39a", "three/addons/utils/BufferGeometryUtils.js": "./vendor/three-0.185.0/addons/utils/BufferGeometryUtils.js?v=abba39a", "./js/b3d/instancing.js": "./js/b3d/instancing.js?v=abba39a", "./js/b3d/figures.js": "./js/b3d/figures.js?v=abba39a", "./js/b3d/physics.js": "./js/b3d/physics.js?v=abba39a", "./js/b3d/killcam.js": "./js/b3d/killcam.js?v=abba39a", "./js/b3d/assets.js": "./js/b3d/assets.js?v=abba39a", "./vendor/three-0.185.0/addons/loaders/GLTFLoader.js": "./vendor/three-0.185.0/addons/loaders/GLTFLoader.js?v=abba39a", "three/addons/loaders/GLTFLoader.js": "./vendor/three-0.185.0/addons/loaders/GLTFLoader.js?v=abba39a", "./vendor/three-0.185.0/addons/utils/SkeletonUtils.js": "./vendor/three-0.185.0/addons/utils/SkeletonUtils.js?v=abba39a", "three/addons/utils/SkeletonUtils.js": "./vendor/three-0.185.0/addons/utils/SkeletonUtils.js?v=abba39a", "./js/b3d/look.js": "./js/b3d/look.js?v=abba39a", "./js/b3d/fx.js": "./js/b3d/fx.js?v=abba39a", "./vendor/cannon-es-0.20.0/cannon-es.js": "./vendor/cannon-es-0.20.0/cannon-es.js?v=abba39a", "./vendor/three-0.185.0/three.module.min.js": "./vendor/three-0.185.0/three.module.min.js?v=abba39a", "./vendor/three-0.185.0/three.core.min.js": "./vendor/three-0.185.0/three.core.min.js?v=abba39a"}}
 </script>
 </head>
 <body class="entry-open">
 <style id="entry-style">
-body.entry-open { margin:0; min-height:100%; background:#111510; color:#efe9d7; font-family:system-ui,sans-serif; }
-#entry { position:fixed; inset:0; z-index:2147483646; overflow:auto; background:#111510; padding:max(24px,env(safe-area-inset-top)) 20px max(24px,env(safe-area-inset-bottom)); box-sizing:border-box; }
-#entry .entry-card { max-width:540px; margin:clamp(0px,8vh,80px) auto; }
-#entry h1 { letter-spacing:.12em; font-size:clamp(26px,7vw,42px); margin:0 0 8px; }
-#entry p { line-height:1.5; } #entry .entry-muted { color:#c1c6b6; }
-#entry button { min-height:48px; padding:10px 24px; font:inherit; font-weight:600; cursor:pointer; border:1px solid #dbc183; background:#dbc183; color:#141810; border-radius:5px; }
+body.entry-open { margin:0; min-height:100%; background:#0c0d10; color:#efe9d7; font-family:system-ui,sans-serif; }
+#entry { position:fixed; inset:0; z-index:2147483646; overflow:hidden; background:#0c0d10; display:flex; align-items:flex-end; justify-content:center; padding:16px 16px max(56px,calc(env(safe-area-inset-bottom) + 24px)); box-sizing:border-box; }
+#entry-backdrop { position:absolute; inset:0; pointer-events:none; }
+#entry .title-gl { position:absolute; inset:0; width:100%; height:100%; display:block; image-rendering:pixelated; image-rendering:crisp-edges; opacity:0; transition:opacity .6s; }
+#entry .title-gl.on { opacity:1; }
+#entry .entry-card { position:relative; width:min(420px,100%); padding:12px 16px 14px; box-sizing:border-box; text-align:center; background:rgba(12,13,16,.78); border:1px solid #6b5631; border-radius:6px; box-shadow:0 2px 12px rgba(0,0,0,.5); }
+#entry h1 { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+#entry p { line-height:1.5; margin:0; }
+#entry button { min-height:48px; margin-top:10px; padding:10px 24px; font:inherit; font-weight:600; cursor:pointer; border:1px solid #dbc183; background:#dbc183; color:#141810; border-radius:5px; }
 #entry button:disabled { opacity:.5; cursor:wait; } #entry button:focus-visible { outline:3px solid white; outline-offset:4px; }
-#entry progress { display:block; width:100%; margin:12px 0; height:12px; accent-color:#dbc183; }
+#entry progress { display:block; width:100%; margin:10px 0 0; height:10px; accent-color:#dbc183; }
 #entry [hidden] { display:none!important; } #entry-status { min-height:24px; overflow-wrap:anywhere; }
 #asset-notice { position:fixed; top:4px; right:4px; z-index:1000; max-width:240px; padding:6px 10px; border-radius:5px; background:#20251f; color:#fff; font:12px system-ui; box-shadow:0 1px 4px #000; }
 #asset-notice:empty { display:none; } #asset-notice button { margin-left:8px; min-height:32px; }
 </style>
-<section id="entry" aria-labelledby="entry-title"><div class="entry-card">
-<h1 id="entry-title">RENEGADE</h1><p class="entry-muted">Loading the title screen…</p>
+<section id="entry" aria-labelledby="entry-title"><div id="entry-backdrop"></div><div class="entry-card">
+<h1 id="entry-title">RENEGADE</h1>
 <p id="entry-status" role="status" aria-live="polite">Preparing the start screen…</p>
 <progress id="entry-progress" hidden></progress>
 <button id="entry-retry" hidden onclick="location.reload()">Retry</button>
-<p class="entry-muted">No account is required.</p>
 <noscript><p>Enable JavaScript to play. Your saved game has not been changed.</p></noscript>
 </div></section>
 
@@ -39,7 +41,7 @@ window.entryWatchdog = setTimeout(function () {
   if (!window.Entry) { document.getElementById('entry-status').textContent = 'The start screen could not load. Check your connection and retry.'; document.getElementById('entry-retry').hidden = false; }
 }, 12000);
 </script>
-<script src="js/entry.js?v=974741d" defer onerror="clearTimeout(window.entryWatchdog);document.getElementById('entry-status').textContent='The start screen could not load. Check your connection and retry.';document.getElementById('entry-retry').hidden=false"></script>
+<script src="js/entry.js?v=abba39a" defer onerror="clearTimeout(window.entryWatchdog);document.getElementById('entry-status').textContent='The start screen could not load. Check your connection and retry.';document.getElementById('entry-retry').hidden=false"></script>
 <div id="app" hidden inert>
   <header id="topbar"></header>
   <main id="screen"></main>
@@ -54,7 +56,7 @@ window.entryWatchdog = setTimeout(function () {
 <link rel="stylesheet" href="css/title.css">
 <link rel="stylesheet" href="css/scenario.css">
 <!-- data (all tuning numbers) -->
-<script src="js/build_id.js?v=974741d"></script>
+<script src="js/build_id.js?v=abba39a"></script>
 <script src="data/config.js"></script>
 <script src="data/resources.js"></script>
 <script src="data/sprites.js"></script>
@@ -147,6 +149,6 @@ window.entryWatchdog = setTimeout(function () {
 <script src="js/scenarioview.js"></script>
 <script src="js/main.js"></script>
 </template>
-<div id="build-stamp" style="position:fixed;right:4px;bottom:3px;z-index:2147483647;font:10px/1.2 monospace;color:#fff;opacity:.45;background:rgba(0,0,0,.35);padding:1px 4px;border-radius:3px;pointer-events:none;user-select:none">build 974741d</div>
+<div id="build-stamp" style="position:fixed;right:4px;bottom:3px;z-index:2147483647;font:10px/1.2 monospace;color:#fff;opacity:.45;background:rgba(0,0,0,.35);padding:1px 4px;border-radius:3px;pointer-events:none;user-select:none">build abba39a</div>
 </body>
 </html>

@@ -14,33 +14,34 @@
   T.buildLabel = () => (window.BUILD_ID && window.BUILD_ID !== "dev" ? "v" + window.BUILD_ID : "dev build");
   T.sceneMode = "none";   // "webgl" | "still" (for the browser checks)
 
-  T.soundOn = () => !!(G.Sfx && G.Sfx.unlocked && G.Sfx.enabled && !(G.state && G.state.settings && G.state.settings.mute));
+  T.soundOn = () => !!(G.Sfx && G.Sfx.unlocked && G.Sfx.enabled && !(G.state && G.state.settings && G.state.settings.mute) && !(G.Music && G.Music.muted));
   T.syncSound = function () {
     const b = document.querySelector("#title .title-sound"); if (!b) return;
     const on = T.soundOn(); b.classList.toggle("on", on); b.title = on ? "Music on (tap to mute)" : "Music off (tap to play)"; b.setAttribute("aria-pressed", on ? "true" : "false");
   };
   T.toggleSound = function () {
-    // by what the button shows: the tap that presses it has already unlocked audio (js/sfx.js resumes on pointerdown)
-    const st = G.state.settings = G.state.settings || {}, b = document.querySelector("#title .title-sound");
-    if (b && b.classList.contains("on")) st.mute = true; else { st.mute = false; G.Sfx.enabled = true; if (G.Sfx.resume) G.Sfx.resume(); }
-    G.Sfx.applySettings(); if (G.Music) { G.Music.applySettings(); G.Music.set("title"); }
-    G.State.save(); T.syncSound();
+    // by what the button shows: the tap that presses it has already unlocked audio (js/sfx.js resumes on pointerdown).
+    // It switches the music for this visit (Megan: music starts muted on every load), through G.Music.setOn
+    const b = document.querySelector("#title .title-sound");
+    if (G.Music) { G.Music.setOn(!(b && b.classList.contains("on"))); G.Music.set("title"); }
+    T.syncSound();
   };
 
   // the backdrop: WebGL into a tiny canvas (x2+ nearest), else the still
-  T.size = function (cv) {
-    const W = window.innerWidth, H = window.innerHeight, S = C().scene;
-    if (H > W) { cv.width = S.fboWidthPortrait; cv.height = Math.round(S.fboWidthPortrait * H / W); }
-    else { cv.height = S.fboHeight; cv.width = Math.round(S.fboHeight * W / H); }
-  };
-  T.startScene = function (root) {
+  T.size = (cv) => G.TitleScene.fit(cv);
+  T.startScene = function (root, pre) {
     const cv = root.querySelector(".title-gl"), still = () => { if (!T.open || !root.isConnected) return; T.sceneMode = "still"; root.classList.add("still"); if (G.TitleScene) G.TitleScene.stop(); };
+    // the loading screen's camp (js/entry.js) is already running in this canvas: keep it going instead of starting over
+    if (pre) {
+      window.removeEventListener("resize", pre.resize); pre.onError = (e) => { T.error = String(e && e.message || e); still(); }; window.Entry.backdrop = null;
+      T.sceneMode = "webgl"; T.onResize = () => T.size(cv); window.addEventListener("resize", T.onResize); return;
+    }
     if (!C().scene.webgl || T.reducedMotion() || !G.TitleScene) return still();
     fetch(url(C().scene.file)).then((r) => (r.ok ? r.json() : Promise.reject(new Error("scene " + r.status)))).then((S) => {
       if (!T.open || !root.isConnected) return;
       T.size(cv);
       let st = null;
-      try { st = G.TitleScene.start(cv, S, { fps: phone() ? C().scene.fpsPhone : C().scene.fpsDesktop, onError: (e) => { T.error = String(e && e.message || e); still(); } }); }
+      try { st = G.TitleScene.start(cv, S, { fps: G.TitleScene.fps(), onError: (e) => { T.error = String(e && e.message || e); still(); } }); }
       catch (e) { T.error = String(e && e.message || e); }
       if (!st) return still();
       T.sceneMode = "webgl"; root.classList.add("gl");
@@ -119,12 +120,13 @@
   };
   T.show = function () {
     if (T.open) return; T.open = true;
-    const h = G.UI.h, A = C().art, root = h("div", { id: "title", class: "title" + (phone() ? " phone" : "") });
+    const pre = window.Entry && window.Entry.backdrop && G.TitleScene && G.TitleScene.running ? window.Entry.backdrop : null;
+    const h = G.UI.h, A = C().art, root = h("div", { id: "title", class: "title" + (phone() ? " phone" : "") + (pre ? " gl" : "") });
     const v = (k, f) => root.style.setProperty(k, `url("${new URL(url(f), document.baseURI).href}")`);   // absolute: a url() in a custom property resolves against the stylesheet
     v("--t-still-d", A.stillDesktop.file); v("--t-still-p", A.stillPhone.file); v("--t-logo", A.logoStrip.file); v("--t-panel", A.panel.file); v("--t-div", A.divider.file); v("--t-field", A.field.file);
     v("--t-play", A.play.normal.file); v("--t-play-h", A.play.hover.file); v("--t-play-p", A.play.pressed.file);
     v("--t-snd-on", A.soundOn.file); v("--t-snd-on-h", A.soundOnHover.file); v("--t-snd-off", A.soundOff.file); v("--t-snd-off-h", A.soundOffHover.file); v("--t-tag", A.versionTag.file);
-    root.append(h("div", { class: "title-still" }), h("canvas", { class: "title-gl" }), h("div", { class: "title-shade" }),
+    root.append(h("div", { class: "title-still" }), pre ? pre.canvas : h("canvas", { class: "title-gl" }), h("div", { class: "title-shade" }),
       h("h1", { class: "title-logo art-fallback", "aria-label": "Renegade" }, h("span", { class: "title-logo-fallback" }, "RENEGADE")), T.panel(), ...(T.diffPending() ? [T.account(h)] : []),
       h("div", { class: "title-version", "data-note": "build" }, !T.diffPending() && G.Difficulty && G.state ? h("img", { class: "title-diff", src: url(DATA.sprites["diff_" + G.Difficulty.id() + "_hud"].file), alt: G.Difficulty.name(), title: "Difficulty: " + G.Difficulty.name() }) : null, T.buildLabel(), G.state && G.Cards && G.Cards.title() ? h("span", { class: "title-cardtitle", "data-card-title": "1" }, "★ " + G.Cards.title()) : null),   // Slice 5 §J
       h("button", { class: "title-sound", "data-act": "title-sound", "data-nosfx": "1", onclick: (e) => { e.stopPropagation(); T.toggleSound(); } }));
@@ -132,7 +134,7 @@
     T.keys = (e) => { if (G.Util.typing(e)) return; if ((e.key === "Enter" || e.key === " ") && T.open && !document.querySelector("#modal-root .modal")) { e.preventDefault(); T.play(); } };
     window.addEventListener("keydown", T.keys);
     T.tapSync = () => setTimeout(T.syncSound, 50); document.addEventListener("pointerup", T.tapSync, true);
-    T.prepareArt(root); T.startScene(root); T.syncSound();
+    T.prepareArt(root); T.startScene(root, pre); T.syncSound();
     if (G.Music) G.Music.set("title");
   };
   T.close = function () {

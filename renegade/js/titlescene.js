@@ -210,6 +210,14 @@ void main() { vC = aCol; vec3 p = aPos + normalize(uEye - aPos) * uPull; gl_Posi
     const Pm = [cam.f / asp, 0, 0, 0, 0, cam.f, 0, 0, 0, 0, (fa + n) / (n - fa), -1, 0, 0, 2 * fa * n / (n - fa), 0];
     const o = new Float32Array(16); for (let c = 0; c < 4; c++) for (let rr = 0; rr < 4; rr++) { let s = 0; for (let k = 0; k < 4; k++) s += Pm[k * 4 + rr] * V[c * 4 + k]; o[c * 4 + rr] = s; } return o;
   }
+  // the canvas for this window: a tiny framebuffer (x2+ nearest upscale), portrait fboWidthPortrait wide, else fboHeight
+  // tall; phones (narrow or portrait) draw at fpsPhone. Shared by the loading screen (js/entry.js) and the title (js/title.js)
+  TS.fit = function (canvas) {
+    const W = root.innerWidth, H = root.innerHeight, S = CFG();
+    if (H > W) { canvas.width = S.fboWidthPortrait; canvas.height = Math.round(S.fboWidthPortrait * H / W); }
+    else { canvas.height = S.fboHeight; canvas.width = Math.round(S.fboHeight * W / H); }
+  };
+  TS.fps = () => (root.innerWidth <= DATA.title.phoneBreakpoint || root.innerHeight > root.innerWidth ? CFG().fpsPhone : CFG().fpsDesktop);
   // start rendering into `canvas` (sized by the caller's resize()); returns false if WebGL isn't available
   TS.start = function (canvas, S, opts) {
     opts = opts || {};

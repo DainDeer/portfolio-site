@@ -5,10 +5,12 @@
 // position, on the bar grid; other switches crossfade and restart the incoming track from the top.
 // Under file:// (no fetch) it falls back to HTMLAudio elements: same mapping, approximate sync.
 // Starts after the first tap / click / key (G.Sfx.unlock). A file that fails to load is silent (tried once, ogg then mp3).
+// Megan: music starts muted on every page load (Mu.muted, never saved); the title's sound button or Settings > Music turns it
+// on for this visit. Muted, nothing is downloaded.
 (function (root) {
   const G = root.G;
   const M = () => DATA.audio.music;
-  const Mu = G.Music = { state: null, zone: null, want: null, main: null, voices: [], cache: {}, requests: {}, log: [], bus: null };
+  const Mu = G.Music = { state: null, zone: null, want: null, main: null, voices: [], cache: {}, requests: {}, log: [], bus: null, muted: true };
   const hasDom = typeof document !== "undefined" && typeof Audio !== "undefined";
   const S = () => G.Sfx;
   const base = () => (DATA.sprites.basePath || "assets/");
@@ -79,7 +81,7 @@
   Mu.status = (key) => (Mu.cache[key] ? Mu.cache[key].state : "not loaded");
 
   // ---- the music channel ----
-  Mu.gain = () => { const s = S() ? S().settings() : {}, d = DATA.audio.defaults; return s.mute ? 0 : (s.master ?? d.master) * (s.music ?? d.music ?? 0.7); };
+  Mu.gain = () => { const s = S() ? S().settings() : {}, d = DATA.audio.defaults; return s.mute || Mu.muted ? 0 : (s.master ?? d.master) * (s.music ?? d.music ?? 0.7); };
   Mu.ensureBus = function () { const c = S().ctx; if (c && !Mu.bus) { Mu.bus = c.createGain(); Mu.bus.gain.value = Mu.gain(); Mu.bus.connect(S().master || c.destination); } return Mu.bus; };
   Mu.applySettings = function () {
     if (Mu.bus) Mu.bus.gain.setTargetAtTime(Mu.gain(), S().ctx.currentTime, 0.05);
@@ -103,6 +105,15 @@
   };
   Mu.onReady = function (key) { if (Mu.want === key && (!Mu.main || Mu.main.key !== key)) Mu.go(key, Mu.state); };
   Mu.onUnlock = function () { if (Mu.state) Mu.set(Mu.state, Mu.zone); };
+  // Music on / off for this visit: the title's sound button and Settings > Music on both come here. On also lifts a
+  // saved Mute, so turning music on is never silent
+  Mu.setOn = function (on) {
+    Mu.muted = !on;
+    const st = G.state && G.state.settings;
+    if (on && st && st.mute) { st.mute = false; if (G.State && G.State.save) G.State.save(); }
+    if (on && S()) { S().enabled = true; if (S().resume) S().resume(); }
+    if (S() && S().applySettings) S().applySettings(); else Mu.applySettings();
+  };
   Mu.go = function (key, state) {
     const e = Mu.cache[key]; if (!e || e.state !== "ok" || (Mu.main && Mu.main.key === key)) return;
     if (e.buf && S().ctx) goWA(key, state, e.buf); else if (e.el) goEl(key, state, e);
