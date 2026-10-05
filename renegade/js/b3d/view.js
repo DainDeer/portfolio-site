@@ -129,6 +129,28 @@ export function mount(container, b, opts, v, prep) {
     if (Math.abs((parseFloat(ov.style.height) || 0) - css) > 1) { ov.style.width = "100%"; ov.style.height = css + "px"; }
     const oh = Math.round(OW * css / Math.max(1, r.width)); if (Math.abs(oh - ov.height) > 2) { ov.height = OH = oh; v.H = OH; }
   }
+  // every corner of the arena stays on screen (the 10/5 playtest: fights near the right edge ran off the view). The scene's
+  // fitW frames the arena at its middle, and perspective makes the near edge wider than that, so the camera backs off
+  // until all four corners fit, with a small margin. A scratch camera does the fitting, so a running kill cam is untouched
+  const arenaCorners = [[0, 0], [b.W, 0], [0, b.H], [b.W, b.H]].map(([sx, sy]) => world.map(sx, sy)), fitCam = new THREE.PerspectiveCamera(), fitP = new THREE.Vector3();
+  function fitCorners(dir, dist) {
+    fitCam.fov = camera.fov; fitCam.aspect = camera.aspect; fitCam.near = camera.near; fitCam.far = camera.far; fitCam.updateProjectionMatrix();
+    let lo = 1, hi = -1;
+    for (let i = 0; i < 40; i++) {
+      fitCam.position.copy(camTarget).addScaledVector(dir, dist); fitCam.lookAt(camTarget); fitCam.updateMatrixWorld(); lo = 1; hi = -1;
+      if (arenaCorners.every((p) => { fitP.copy(p).project(fitCam); lo = Math.min(lo, fitP.y); hi = Math.max(hi, fitP.y); return Math.abs(fitP.x) <= 0.97 && Math.abs(fitP.y) <= 0.95; })) break;
+      dist *= 1.03;
+    }
+    return { d: dist, off: Math.abs((1 - hi) - (lo + 1)) / 2 };   // off: how far from vertically centred (0 = centred)
+  }
+  // ...and slides the target along the ground (toward / away from the camera) to the spot that lets it stay closest while
+  // keeping the arena near the middle, instead of leaving an empty band above or below it (phone portrait especially)
+  function fitArena(dir, dist0) {
+    const g = new THREE.Vector3(dir.x, 0, dir.z).normalize(), base = camTarget.clone(); let best = null;
+    for (let i = 0; i <= 16; i++) { const s = (i % 2 ? 1 : -1) * Math.ceil(i / 2) * 0.5;   // 0, +0.5, -0.5, +1 ...: ties keep the smallest slide
+      camTarget.copy(base).addScaledVector(g, s); const f = fitCorners(dir, dist0), score = f.d * (1 + f.off); if (!best || score < best.score - 1e-6) best = { d: f.d, s, score }; }
+    camTarget.copy(base).addScaledVector(g, best.s); return best.d;
+  }
   function layout() {
     fitPortraitHeight();
     const r = ov.getBoundingClientRect(), sr = stack.getBoundingClientRect(), w = Math.max(2, Math.round(r.width - 2)), h = Math.max(2, Math.round(r.height - 2));
@@ -142,10 +164,12 @@ export function mount(container, b, opts, v, prep) {
       const across = (world.fitD || world.fitW * 0.6) / 2 / Math.tan(hfov / 2), along = (world.fitW / 2) * Math.sin(pitch) / tv;
       dist = Math.max(10, Math.max(across, along * 0.92));
       camTarget.x += (world.fitW || 0) * 0.04;   // a touch toward their side: yours stand nearer the camera
-      camBase.copy(camTarget).add(new THREE.Vector3(-Math.cos(pitch), Math.sin(pitch), 0).multiplyScalar(dist));
+      const dir = new THREE.Vector3(-Math.cos(pitch), Math.sin(pitch), 0); dist = fitArena(dir, dist);
+      camBase.copy(camTarget).addScaledVector(dir, dist);
     } else {
       dist = Math.max(world.minDist || 16, (world.fitW / 2) / Math.tan(hfov / 2));
-      camBase.copy(camTarget).add(new THREE.Vector3(0, Math.sin(pitch), Math.cos(pitch)).multiplyScalar(dist));
+      const dir = new THREE.Vector3(0, Math.sin(pitch), Math.cos(pitch)); dist = fitArena(dir, dist);
+      camBase.copy(camTarget).addScaledVector(dir, dist);
     }
     if (scene.fog) { scene.fog.near = dist + 8; scene.fog.far = dist + 70; }
     v.camDist = dist; v.portrait = isPortrait;
@@ -272,9 +296,13 @@ export function mount(container, b, opts, v, prep) {
   const ndc = new THREE.Vector2(), tmpV = new THREE.Vector3();
   const toOv = (e) => { const r = ov.getBoundingClientRect(); return { ox: ((e.clientX - r.left) / r.width) * OW, oy: ((e.clientY - r.top) / r.height) * OH, r }; };
   const proj = (p) => { tmpV.copy(p).project(camera); return { x: (tmpV.x + 1) / 2 * OW, y: (1 - tmpV.y) / 2 * OH, ok: tmpV.z < 1 }; };
+  // the zone's ground mesh: only the Greyback scene returns it as world.terrain; the others build theirs with kit.terrain
+  // (userData.terrain) or have none (Hollis is flat). Without this every click in those zones threw (the 10/5 playtest:
+  // no placement drag, no med kit, no aiming outside Greyback). The scene files stay as they are (Smudge's baker checks them)
+  const terrain = world.terrain || scene.children.find((o) => o.isMesh && o.userData.terrain) || null;
   function groundAt(e) {
     const o = toOv(e); ndc.set(o.ox / OW * 2 - 1, 1 - o.oy / OH * 2); ray.setFromCamera(ndc, camera); ray.far = 500;
-    const h = ray.intersectObject(world.terrain, false)[0]; let s;
+    const h = terrain ? ray.intersectObject(terrain, false)[0] : null; let s;
     if (h) s = world.toSim(h.point.x, h.point.z); else { const pl = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), q = new THREE.Vector3(); ray.ray.intersectPlane(pl, q); s = world.toSim(q.x, q.z); }
     return { x: Math.max(0, Math.min(b.W, s.x)), y: Math.max(0, Math.min(b.H, s.y)), o };
   }
@@ -341,7 +369,10 @@ export function mount(container, b, opts, v, prep) {
     if (!diceHeld) while (textQ.length) { const e = textQ.shift(); floaters.push({ x: e.x, y: e.y, text: e.text, color: e.color, big: e.big, life: e.big ? 1.6 : 1.0, max: e.big ? 1.6 : 1.0, dx: (rng() - 0.5) * 18, rise: 0, global: e.y <= 3.5 && e.big }); }
     if (v.barEls) BV.updateBar(v);
     if (v.touchCancel) BV.updateTouch(v);
-    const rate = b.phase === "fight" && !held ? G.Abilities.timeScale(b, v.speed, ts) : 0, dt = rdt * rate;
+    // after the fight the sim has stopped, but its last deaths still fall: ragdolls, debris and blood are cosmetic, so they
+    // keep running in real time (at the kill cam's pace during its final shot). The 10/5 playtest: the fight-ending victim
+    // froze standing, because everything here ran at the sim's rate, 0 once the battle was over
+    const rate = b.phase === "fight" && !held ? G.Abilities.timeScale(b, v.speed, ts) : b.over && !held ? (kc.active() ? ts : 1) : 0, dt = rdt * rate;
     for (const x of vmap.values()) updateUnit(x, rdt, dt);
     fx.update(rdt, dt); phys.step(dt); phys.check();
     muzzleLight.intensity = Math.max(0, muzzleLight.intensity - rdt * 160);
@@ -506,6 +537,14 @@ export function mount(container, b, opts, v, prep) {
       instancing: batches.state(), assets: assets.report(), files: prep.files, loadMs: Math.round(prep.ms) }),
     pump: (dtsMs) => { cancelAnimationFrame(v.raf); let t = v.last; for (const d of dtsMs) { t += d; frame(t); } v.raf = requestAnimationFrame(loop); return v.test.state(); },
     skipKillcam: () => kc.skip(),
+    // each ragdoll: its plan and scale, and per link the height above the ground, whether it's still simulated / asleep
+    rags: () => [...vmap.values()].filter((x) => x.rag).map((x) => ({ name: x.u.name, plan: x.fig.userData.plan || x.fig.userData.kind, scale: x.spec.scale,
+      links: x.rag.links.map((l) => { const p = l.body.position; return { name: l.name, above: +(p.y - world.ground(p.x, p.z).y).toFixed(2), half: l.body.shapes[0] && l.body.shapes[0].halfExtents ? +l.body.shapes[0].halfExtents.y.toFixed(2) : null, live: !!l.body.world, asleep: l.body.sleepState === 2, shown: l.mesh.visible }; }) })),
+    // where each unit and the arena's corners are on screen (overlay px; page px for units): drag / tap tests, the fit check
+    screen: () => { const r = ov.getBoundingClientRect(), page = (p) => ({ x: Math.round(r.left + p.x / OW * r.width), y: Math.round(r.top + p.y / OH * r.height) });
+      const units = [...vmap.values()].map((x) => ({ name: x.u.name, side: x.u.side, feet: page(proj(x.fig.position)), head: page(proj(x.fig.position.clone().add(new THREE.Vector3(0, height(x), 0)))), visible: x.fig.visible, rag: !!x.rag, sim: [x.u.x, x.u.y], fig: [x.fig.position.x, x.fig.position.z] }));
+      const corners = [[0, 0], [b.W, 0], [0, b.H], [b.W, b.H]].map(([sx, sy]) => { const p = simP(sx, sy, 0); return { sim: [sx, sy], ov: [Math.round(p.x), Math.round(p.y)], inside: p.ok && p.x >= 0 && p.x <= OW && p.y >= 0 && p.y <= OH }; });
+      return { overlay: [OW, OH], rect: [r.left, r.top, r.width, r.height], units, corners }; },
     // a hidden death on demand: the standing unit nearest the line moves onto it, frac of the way from the first victim to
     // the camera (sim position too: only for a test fight whose outcome doesn't matter). Returns what blocks the view now
     blockKillcam: (frac) => { const c = kc.current(); if (!c) return null; const f = c.focus[0], p = f.clone().lerp(camera.position, frac || 0.3);

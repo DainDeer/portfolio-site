@@ -98,7 +98,9 @@ DATA.config = {
     pouchMaxKg: 1,
     // Slice 5 §C [DRAFT Vixie call]: every living (standing) teammate on the run adds this toward squad capacity (on top
     // of any pack it wears). Early generosity: the School Bag went 8 -> 10 kg (data/items.js), the body base stays 20.
-    perTeammateKg: 6,
+    // SP-019 [DRAFT] (Megan, 10/2 and 10/5 playtests: "2-3x starting carry"; her pick A): ~3x the starting squad's capacity,
+    // mostly from teammates, so a teammate's death really bites. Body + 2 Grunts + School Bag: 20 + 10 + 2 x 45 = 120 kg (was 42)
+    perTeammateKg: 45,
     // A teammate who dies in a location (killed in battle, or a Critical left behind) drops its body there holding its
     // equipped gear + its share of the run bag: the share is its part of the squad's capacity (its kg / capacity before
     // it died) of every resource stack and of the bag's item weight (newest pickups first; quest items stay with you).

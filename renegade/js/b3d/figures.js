@@ -249,7 +249,9 @@ const JOINTS = {   // [parent, child, cone angle, twist]; the pivot is the child
 };
 export const GORE_PARTS = { human: ["arm_l", "arm_r", "leg_l", "head"], quad: ["head", "leg_fl", "leg_bl", "leg_fr"], hexapod: ["leg_fl", "leg_mr", "head"], hover: ["head"], turret: ["gun"] };
 export const MAIN_PART = { human: "torso", quad: "body", hexapod: "body", hover: "body", turret: "base" };
-const _p = new THREE.Vector3(), _q = new THREE.Quaternion();
+const _p = new THREE.Vector3(), _q = new THREE.Quaternion(), _s = new THREE.Vector3();
+// a part's collision box in world size: an elite (x1.15) or a pet (x0.72) keeps its figure's scale, and so must its box
+const worldHalf = (m, h) => { m.getWorldScale(_s); return { x: h.x * Math.abs(_s.x), y: h.y * Math.abs(_s.y), z: h.z * Math.abs(_s.z) }; };
 
 // Turn a figure into a ragdoll. dir: the killing hit's direction (unit, world xz). detach: a part to pop off (gore) or null.
 // Returns { links: [{mesh, body, name}], detached }. Part meshes are re-parented to the scene; the weapons drop as debris.
@@ -257,7 +259,7 @@ export function ragdoll(phys, scene, fig, dir, vel, detach, rng) {
   const ud = fig.userData, links = [], bodies = {}, plan = ud.plan || ud.kind;
   fig.updateMatrixWorld(true);
   for (const name in ud.parts) {
-    const m = ud.parts[name], h = m.userData.half; m.getWorldPosition(_p); m.getWorldQuaternion(_q);
+    const m = ud.parts[name], h = worldHalf(m, m.userData.half); m.getWorldPosition(_p); m.getWorldQuaternion(_q);
     const b = phys.addBox(h.x, h.y, h.z, MASS[name] || 3, _p, _q, { group: GROUP.RAGDOLL, damping: 0.12, angDamping: 0.35, sleepSpeed: 0.2 });
     b.velocity.set(vel.x, vel.y, vel.z); bodies[name] = b;
     scene.attach(m); links.push({ mesh: m, body: b, name });
@@ -277,7 +279,7 @@ export function ragdoll(phys, scene, fig, dir, vel, detach, rng) {
     phys.joint(bodies[pa], bodies[ch], pivotW, axis, ang, tw);
   }
   for (const w of [ud.main, ud.backup, ud.off, ud.shield]) { if (!w || !w.visible || !w.parent) continue;   // the weapons in hand / on the back drop
-    w.getWorldPosition(_p); w.getWorldQuaternion(_q); scene.attach(w); const h = w.userData.half;
+    w.getWorldPosition(_p); w.getWorldQuaternion(_q); const h = worldHalf(w, w.userData.half); scene.attach(w);
     const b = phys.addBox(h.x, h.y, h.z, 2.5, _p, _q, { group: GROUP.DEBRIS }); b.velocity.set(vel.x + dir.x * 1.5, 1.5, vel.z + dir.z * 1.5); b.angularVelocity.set(rng() * 4, rng() * 4, rng() * 4);
     links.push({ mesh: w, body: b, name: "weapon" }); }
   fig.visible = false;
