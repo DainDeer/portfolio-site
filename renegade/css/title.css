@@ -109,3 +109,11 @@ body.title-open { overflow: hidden; }
   #title .t-sigil { animation: none !important; background-position: 0 0 !important; }   /* frame 0 = the still */
   #title .t-diff-desc.warn { animation: none; }
 }
+
+/* Cosmetic downloads may fail: readable identity and Play remain available, with Retry art alongside. */
+#title .title-logo-fallback, #title .title-play-fallback { display: none; }
+#title .title-logo.art-fallback { background: none; animation: none; display: flex; align-items: center; justify-content: center; }
+#title .title-logo.art-fallback .title-logo-fallback { display: block; font-size: 36px; letter-spacing: .06em; color: #f8dc5a; text-shadow: 2px 2px 0 #120a0a; }
+#title .title-play.art-fallback { background: #322414; border: 1px solid #d4c8a0; color: #f8dc5a; font-size: 20px; font-weight: bold; }
+#title .title-play.art-fallback .title-play-fallback { display: inline; }
+#title .title-play.art-fallback .title-play-art { display: none; }

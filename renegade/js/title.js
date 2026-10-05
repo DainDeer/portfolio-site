@@ -68,7 +68,7 @@
     const diff = T.diffPending();
     const kids = diff ? [T.diffPicker(h), h("div", { class: "title-divider" })]   // Slice 4 §H: a new save picks its difficulty (Smudge's layout: in place of the fields)
       : [T.field(h, "Username", A.labelUser, "text"), T.field(h, "Password", A.labelPass, "password"), h("div", { class: "title-divider" })];
-    kids.push(h("button", { class: "title-play", "data-act": "play", "data-nosfx": "1", "aria-label": "Play", onclick: () => T.play() }, h("span", { class: "title-play-art" })));
+    kids.push(h("button", { class: "title-play art-fallback", "data-act": "play", "data-nosfx": "1", "aria-label": "Play", onclick: () => T.play() }, h("span", { class: "title-play-fallback" }, "PLAY"), h("span", { class: "title-play-art" })));
     return h("div", { class: "title-panel" + (diff ? " diff" : "") }, kids);
   };
   // ---- Slice 4 §H: difficulty (config.difficulty; Smudge's sigils, assets/ui/difficulty) ----
@@ -100,13 +100,22 @@
     G.Difficulty.set(T.choice); G.Difficulty.lock(); G.State.save(); return true;
   };
   // CSS backgrounds are not document.images: register title art so loading/retry covers them too.
-  T.prepareArt = function () {
+  T.prepareArt = function (root) {
     if (!G.Assets) return;
     const files = new Set();
     const walk = (o) => { if (!o || typeof o !== "object") return; if (o.file) files.add(o.file); else Object.values(o).forEach(walk); };
     walk(C().art);
     if (T.diffPending()) for (const id of DATA.config.difficulty.order) for (const suffix of ["", "_hover", "_sel", "_dim", "_anim", "_sel_anim"]) files.add(DATA.sprites["diff_" + id + suffix].file);
-    for (const file of files) G.Assets.image(DATA.sprites.basePath + file).catch(() => {});
+    for (const file of files) G.Assets.image(DATA.sprites.basePath + file).then(() => {
+      if (root.isConnected && file === C().art.logoStrip.file) root.querySelector(".title-logo").classList.remove("art-fallback");
+    }).catch(() => {
+      if (!root.isConnected) return;
+      if (file === C().art.logoStrip.file) root.querySelector(".title-logo").classList.add("art-fallback");
+      if (Object.values(C().art.play).some((art) => art.file === file)) root.querySelector(".title-play").classList.add("art-fallback");
+    });
+    Promise.all(Object.values(C().art.play).map((art) => G.Assets.image(DATA.sprites.basePath + art.file))).then(() => {
+      if (root.isConnected) root.querySelector(".title-play").classList.remove("art-fallback");
+    }).catch(() => {});
   };
   T.show = function () {
     if (T.open) return; T.open = true;
@@ -116,14 +125,14 @@
     v("--t-play", A.play.normal.file); v("--t-play-h", A.play.hover.file); v("--t-play-p", A.play.pressed.file);
     v("--t-snd-on", A.soundOn.file); v("--t-snd-on-h", A.soundOnHover.file); v("--t-snd-off", A.soundOff.file); v("--t-snd-off-h", A.soundOffHover.file); v("--t-tag", A.versionTag.file);
     root.append(h("div", { class: "title-still" }), h("canvas", { class: "title-gl" }), h("div", { class: "title-shade" }),
-      h("h1", { class: "title-logo", "aria-label": "Renegade" }), T.panel(), ...(T.diffPending() ? [T.account(h)] : []),
+      h("h1", { class: "title-logo art-fallback", "aria-label": "Renegade" }, h("span", { class: "title-logo-fallback" }, "RENEGADE")), T.panel(), ...(T.diffPending() ? [T.account(h)] : []),
       h("div", { class: "title-version", "data-note": "build" }, !T.diffPending() && G.Difficulty && G.state ? h("img", { class: "title-diff", src: url(DATA.sprites["diff_" + G.Difficulty.id() + "_hud"].file), alt: G.Difficulty.name(), title: "Difficulty: " + G.Difficulty.name() }) : null, T.buildLabel(), G.state && G.Cards && G.Cards.title() ? h("span", { class: "title-cardtitle", "data-card-title": "1" }, "★ " + G.Cards.title()) : null),   // Slice 5 §J
       h("button", { class: "title-sound", "data-act": "title-sound", "data-nosfx": "1", onclick: (e) => { e.stopPropagation(); T.toggleSound(); } }));
     document.body.appendChild(root); document.body.classList.add("title-open");
     T.keys = (e) => { if (G.Util.typing(e)) return; if ((e.key === "Enter" || e.key === " ") && T.open && !document.querySelector("#modal-root .modal")) { e.preventDefault(); T.play(); } };
     window.addEventListener("keydown", T.keys);
     T.tapSync = () => setTimeout(T.syncSound, 50); document.addEventListener("pointerup", T.tapSync, true);
-    T.prepareArt(); T.startScene(root); T.syncSound();
+    T.prepareArt(root); T.startScene(root); T.syncSound();
     if (G.Music) G.Music.set("title");
   };
   T.close = function () {

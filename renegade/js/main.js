@@ -1,4 +1,4 @@
-// Boot only after the entry gate has loaded code and the player has continued.
+// Boot once after the automatic loader has fetched all required code.
 (function () {
   const G = window.G;
   let prepared = false, running = false, inFlight = null;
@@ -26,7 +26,6 @@
     G.logListeners.push(() => {});
     if (G.Title && G.Title.shouldShow() && !G.State.sandbox) G.Title.show();
     G.UI.render();
-    if (window.Entry && Entry.audioContext && G.Sfx) G.Sfx.resume();
     if (G.Title && G.Title.open) G.Title.syncSound();
     if (G.State.buildNotice) G.UI.toast(G.State.buildNotice);
     setInterval(() => G.UI.tick(), DATA.config.timers.tickMs);

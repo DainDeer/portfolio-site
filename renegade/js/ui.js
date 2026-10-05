@@ -75,6 +75,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     // The title owns this screen; town artwork and tutorial/result dialogs wait until Play.
     if (G.Title && G.Title.open) { G.Sfx.setScreen("title"); if (G.Music) G.Music.set("title"); return; }
     if (G.Dice && G.Dice.busy()) { if (!UI._renderAfterDice) { UI._renderAfterDice = true; G.Dice.whenIdle(() => { UI._renderAfterDice = false; UI.render(); }); } return; }   // Slice 5 §B: the outcome shows once the die lands
+    if (G.GruntLook && G.GruntLook.loadOptions) G.GruntLook.loadOptions();
     UI.hideTip();
     if (G.TutView) setTimeout(G.TutView.check, 0);   // Slice 4 §A: a tutorial step due on the new screen (js/tutorialview.js)
     if (G.State.loadNotice) { const n = G.State.loadNotice; G.State.loadNotice = null; setTimeout(() => UI.modal(h("div", null, h("h2", null, "Save"), h("p", null, n), h("button", { class: "primary", onclick: () => UI.render() }, "OK"))), 0); }

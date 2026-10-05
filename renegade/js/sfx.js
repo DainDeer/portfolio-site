@@ -136,7 +136,7 @@
   // browsers only allow audio after a user gesture
   SFX.unlock = function () {
     if (SFX.unlocked) return; SFX.unlocked = true;
-    try { const AC = root.AudioContext || root.webkitAudioContext; if (AC) { SFX.ctx = (root.Entry && root.Entry.audioContext) || new AC(); SFX.master = SFX.ctx.createGain(); SFX.master.connect(SFX.ctx.destination); SFX.bus = SFX.makeBus(SFX.ctx, SFX.master); } } catch (x) { SFX.ctx = null; }
+    try { const AC = root.AudioContext || root.webkitAudioContext; if (AC) { SFX.ctx = new AC(); SFX.master = SFX.ctx.createGain(); SFX.master.connect(SFX.ctx.destination); SFX.bus = SFX.makeBus(SFX.ctx, SFX.master); } } catch (x) { SFX.ctx = null; }
     if (SFX.screen) SFX.setScreen(SFX.screen);
     if (G.Music) G.Music.onUnlock();
   };
