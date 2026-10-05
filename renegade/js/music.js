@@ -38,31 +38,43 @@
   const curve = (from, to, n) => { const c = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i / (n - 1); c[i] = from * Math.cos(x * Math.PI / 2) + to * Math.sin(x * Math.PI / 2); } return c; };
   Mu.curve = curve;
 
-  // ---- loading (once per track; ogg if the browser can play it, then mp3) ----
+  // ---- loading (cache the current pair; remember missing tracks; ogg then mp3) ----
   Mu.exts = () => M().exts.filter((x) => !(x === ".ogg" && hasDom && !(new Audio()).canPlayType('audio/ogg; codecs="vorbis"')));
   Mu.urls = (key) => Mu.exts().map((x) => base() + M().path + key + x);
   const useWA = () => !!(S() && S().ctx) && typeof location !== "undefined" && /^https?:/.test(location.protocol);
   Mu.load = function (key) {
     let e = Mu.cache[key]; if (e) return e;
-    e = Mu.cache[key] = { state: "pending", buf: null, el: null, url: null };
+    e = Mu.cache[key] = { state: "pending", buf: null, el: null, url: null, abort: typeof AbortController !== "undefined" ? new AbortController() : null };
     const urls = Mu.urls(key);
     const next = (i) => {
-      if (i >= urls.length) { e.state = "missing"; return; }
-      const url = urls[i]; Mu.requests[url] = (Mu.requests[url] || 0) + 1; e.url = url;
+      if (Mu.cache[key] !== e) return;
+      if (i >= urls.length) { e.state = "missing"; e.abort = null; e.loading = null; return; }
+      const url = G.Assets ? G.Assets.url(urls[i]) : urls[i]; Mu.requests[url] = (Mu.requests[url] || 0) + 1; e.url = url;
       if (useWA()) {
-        fetch(url).then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.arrayBuffer(); })
+        fetch(url, e.abort ? { signal: e.abort.signal } : undefined).then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.arrayBuffer(); })
           .then((ab) => new Promise((res, rej) => { const p = S().ctx.decodeAudioData(ab, res, rej); if (p && p.catch) p.catch(rej); }))   // callback form for old Safari
-          .then((buf) => { e.buf = buf; e.state = "ok"; Mu.onReady(key); })
+          .then((buf) => { if (Mu.cache[key] !== e) return; e.buf = buf; e.state = "ok"; Mu.onReady(key); Mu.trim(); })
           .catch(() => next(i + 1));
       } else {
-        const el = new Audio(); el.preload = "auto"; el.loop = true;
-        el.addEventListener("canplaythrough", () => { if (e.state === "pending") { e.el = el; e.state = "ok"; Mu.onReady(key); } }, { once: true });
-        el.addEventListener("error", () => { if (e.state === "pending") next(i + 1); }, { once: true });
+        const el = new Audio(); e.loading = el; el.preload = "auto"; el.loop = true;
+        el.addEventListener("canplaythrough", () => { if (Mu.cache[key] === e && e.state === "pending") { e.loading = null; e.el = el; e.state = "ok"; Mu.onReady(key); } }, { once: true });
+        el.addEventListener("error", () => { if (Mu.cache[key] === e && e.state === "pending") next(i + 1); }, { once: true });
         el.src = url; el.load();
       }
     };
     next(0);
     return e;
+  };
+  Mu.trim = function () {
+    const keep = new Set(Mu.voices.map((v) => v.key));
+    if (Mu.gain() > 0) {
+      if (Mu.want) keep.add(Mu.want);
+      if (Mu.state === "run" || Mu.state === "battle") { keep.add(Mu.trackFor("run", Mu.zone)); keep.add(Mu.trackFor("battle", Mu.zone)); }
+    }
+    for (const key of Object.keys(Mu.cache)) if (!keep.has(key) && Mu.cache[key].state !== "missing") {
+      const e = Mu.cache[key]; delete Mu.cache[key]; if (e.abort) e.abort.abort();
+      for (const el of [e.el, e.loading]) if (el) { el.pause(); if (el.removeAttribute) el.removeAttribute("src"); el.load(); } e.buf = null; e.loading = null;
+    }
   };
   Mu.status = (key) => (Mu.cache[key] ? Mu.cache[key].state : "not loaded");
 
@@ -72,6 +84,7 @@
   Mu.applySettings = function () {
     if (Mu.bus) Mu.bus.gain.setTargetAtTime(Mu.gain(), S().ctx.currentTime, 0.05);
     for (const v of Mu.voices) if (v.el) v.apply();
+    if (Mu.state) Mu.set(Mu.state, Mu.zone);
   };
 
   // ---- music state: called on every render (UI.render) and when a battle mounts ----
@@ -80,6 +93,8 @@
     const key = M().enabled === false ? null : Mu.trackFor(state, zone);
     Mu.want = key;
     if (!hasDom || !S() || !S().unlocked || !S().enabled) return;
+    if (Mu.gain() <= 0) { Mu.stopAll(); Mu.trim(); return; }
+    Mu.trim();
     for (const k of ((M().preload || {})[state] || [])) if (M().tracks[k]) Mu.load(k);
     if (state === "run") { const bk = Mu.trackFor("battle", zone); if (bk && M().tracks[bk]) Mu.load(bk); }   // this zone's battle track, decoded early (Snare's note)
     if (!key) { Mu.stopAll(); return; }
@@ -105,7 +120,7 @@
     v.fadeOut = (at, fade) => { const h = hold(), a = Math.max(at, h.t + 0.01), f = Math.max(0.02, fade); g.gain.setValueCurveAtTime(curve(h.cur, 0, 64), a, f); v.endAt = a + f;
       clearTimeout(v.timer); v.timer = setTimeout(() => v.kill(), (a + f - h.t) * 1000 + 250); };
     v.restore = () => { clearTimeout(v.timer); v.endAt = null; const h = hold(); g.gain.linearRampToValueAtTime(vol, h.t + 0.1); };
-    v.kill = () => { clearTimeout(v.timer); try { src.stop(); } catch (x) {} try { src.disconnect(); g.disconnect(); } catch (x) {} Mu.voices = Mu.voices.filter((o) => o !== v); if (Mu.main === v) Mu.main = null; };
+    v.kill = () => { clearTimeout(v.timer); try { src.stop(); } catch (x) {} try { src.disconnect(); g.disconnect(); } catch (x) {} Mu.voices = Mu.voices.filter((o) => o !== v); if (Mu.main === v) Mu.main = null; v.prev = null; for (const other of Mu.voices) if (other.prev === v) other.prev = null; Mu.trim(); };
     return v;
   }
   function goWA(key, state, buf) {
@@ -132,13 +147,13 @@
       vv.level = to > from0 ? from0 + (to - from0) * Math.sin(x * Math.PI / 2) : to + (from0 - to) * Math.cos(x * Math.PI / 2); vv.apply(); if (x >= 1) { clearInterval(vv.ramp); if (done) done(); } }, 40); };
     v.fadeOut = (fade) => ramp(v, 0, fade, () => v.kill());
     v.restore = () => { clearTimeout(v.timer); ramp(v, 1, 0.1); };
-    v.kill = () => { clearTimeout(v.timer); clearInterval(v.ramp); try { n.pause(); } catch (x) {} Mu.voices = Mu.voices.filter((o) => o !== v); if (Mu.main === v) Mu.main = null; };
+    v.kill = () => { clearTimeout(v.timer); clearInterval(v.ramp); try { n.pause(); } catch (x) {} Mu.voices = Mu.voices.filter((o) => o !== v); if (Mu.main === v) Mu.main = null; v.prev = null; for (const other of Mu.voices) if (other.prev === v) other.prev = null; Mu.trim(); };
     v.timer = setTimeout(() => { v.started = true; if (p.mode === "sync" && from && from.el) { try { n.currentTime = from.el.currentTime; } catch (x) {} }
       const pr = n.play(); if (pr && pr.catch) pr.catch(() => {}); ramp(v, 1, p.fade); if (from) from.fadeOut(p.fade); }, p.wait * 1000);
     Mu.voices.push(v); Mu.main = v;
     note({ at: Date.now() / 1000, from: from ? from.key : null, to: key, state, mode: p.mode, grid: p.grid || null, wait: p.wait, fade: p.fade, html: true });
   }
-  Mu.stopAll = function () { const f = M().restartFadeSec; for (const v of Mu.voices.slice()) { if (v.src) v.fadeOut(S().ctx.currentTime, f); else if (v.fadeOut) v.fadeOut(f); } Mu.main = null; };
+  Mu.stopAll = function () { const f = M().restartFadeSec; for (const v of Mu.voices.slice()) { if (v.stopping) continue; v.stopping = true; if (v.src) v.fadeOut(S().ctx.currentTime, f); else if (v.fadeOut) v.fadeOut(f); } Mu.main = null; };
   // debug / tests: what is playing and where
   Mu.snapshot = function () {
     const c = S() && S().ctx, now = c ? c.currentTime : 0;

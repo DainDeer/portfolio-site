@@ -8,9 +8,10 @@
   const FS = () => DATA.gruntLook.frameSize;
   // Smudge's grunt_options.json: new gear entries (her real layers for an item, keyed by its base) take over the
   // stand-ins without a code change (G.GruntGear.mergeOptions). Until it has loaded, the static DATA.gruntLook parts draw.
-  GL.options = (typeof fetch === "function" ? fetch(DATA.sprites.basePath + DATA.gruntLook.base + "grunt_options.json").then((r) => (r.ok ? r.json() : null)).catch(() => null) : Promise.resolve(null))
+  GL.options = (typeof fetch === "function" ? fetch(G.Assets ? G.Assets.url(DATA.sprites.basePath + DATA.gruntLook.base + "grunt_options.json") : DATA.sprites.basePath + DATA.gruntLook.base + "grunt_options.json").then((r) => (r.ok ? r.json() : null)).catch(() => null) : Promise.resolve(null))
     .then((j) => { const added = j && GG ? GG.mergeOptions(j) : []; if (added.length && G.state && G.UI && G.UI.render) G.UI.render(); return added; });
-  const load = (file) => GL.imgs[file] || (GL.imgs[file] = new Promise((res) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = DATA.sprites.basePath + file; }));
+  const load = (file) => GL.imgs[file] || (GL.imgs[file] = (G.Assets ? G.Assets.image(DATA.sprites.basePath + file) : new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = DATA.sprites.basePath + file; })).catch(() => null));
+  GL.retry = () => { const keys = Object.keys(GL.state); GL.imgs = {}; GL.state = {}; for (const k of keys) { delete SP.cache[k]; delete SP.cache[k + "_w"]; GL.ensure(k); } };
   // headwear clipsHairAbove: per column, hair above the hat's top edge is cut
   function clipHair(hairC, hat) {
     const W = hairC.width, H = hairC.height, t = document.createElement("canvas"); t.width = W; t.height = H;

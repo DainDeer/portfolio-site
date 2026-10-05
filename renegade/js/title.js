@@ -8,7 +8,7 @@
   const G = window.G, T = G.Title = { open: false }, C = () => DATA.title;
   const qs = () => (typeof location !== "undefined" ? location.search : "");
   T.shouldShow = () => C().enabled !== false && !/[?&]notitle\b/.test(qs()) && (!navigator.webdriver || /[?&]title\b/.test(qs()));
-  const url = (f) => DATA.sprites.basePath + f;
+  const url = (f) => G.Assets ? G.Assets.url(DATA.sprites.basePath + f) : DATA.sprites.basePath + f;
   const phone = () => window.innerWidth <= C().phoneBreakpoint || window.innerHeight > window.innerWidth;
   T.reducedMotion = () => !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   T.buildLabel = () => (window.BUILD_ID && window.BUILD_ID !== "dev" ? "v" + window.BUILD_ID : "dev build");
@@ -34,10 +34,10 @@
     else { cv.height = S.fboHeight; cv.width = Math.round(S.fboHeight * W / H); }
   };
   T.startScene = function (root) {
-    const cv = root.querySelector(".title-gl"), still = () => { T.sceneMode = "still"; root.classList.add("still"); if (G.TitleScene) G.TitleScene.stop(); };
+    const cv = root.querySelector(".title-gl"), still = () => { if (!T.open || !root.isConnected) return; T.sceneMode = "still"; root.classList.add("still"); if (G.TitleScene) G.TitleScene.stop(); };
     if (!C().scene.webgl || T.reducedMotion() || !G.TitleScene) return still();
     fetch(url(C().scene.file)).then((r) => (r.ok ? r.json() : Promise.reject(new Error("scene " + r.status)))).then((S) => {
-      if (!T.open) return;
+      if (!T.open || !root.isConnected) return;
       T.size(cv);
       let st = null;
       try { st = G.TitleScene.start(cv, S, { fps: phone() ? C().scene.fpsPhone : C().scene.fpsDesktop, onError: (e) => { T.error = String(e && e.message || e); still(); } }); }
@@ -99,6 +99,15 @@
     if (!T.choice) { if (T._desc) { T._desc.textContent = DATA.config.difficulty.pickHint; T._desc.classList.remove("warn"); void T._desc.offsetWidth; T._desc.classList.add("warn"); } return false; }
     G.Difficulty.set(T.choice); G.Difficulty.lock(); G.State.save(); return true;
   };
+  // CSS backgrounds are not document.images: register title art so loading/retry covers them too.
+  T.prepareArt = function () {
+    if (!G.Assets) return;
+    const files = new Set();
+    const walk = (o) => { if (!o || typeof o !== "object") return; if (o.file) files.add(o.file); else Object.values(o).forEach(walk); };
+    walk(C().art);
+    if (T.diffPending()) for (const id of DATA.config.difficulty.order) for (const suffix of ["", "_hover", "_sel", "_dim", "_anim", "_sel_anim"]) files.add(DATA.sprites["diff_" + id + suffix].file);
+    for (const file of files) G.Assets.image(DATA.sprites.basePath + file).catch(() => {});
+  };
   T.show = function () {
     if (T.open) return; T.open = true;
     const h = G.UI.h, A = C().art, root = h("div", { id: "title", class: "title" + (phone() ? " phone" : "") });
@@ -114,7 +123,7 @@
     T.keys = (e) => { if (G.Util.typing(e)) return; if ((e.key === "Enter" || e.key === " ") && T.open && !document.querySelector("#modal-root .modal")) { e.preventDefault(); T.play(); } };
     window.addEventListener("keydown", T.keys);
     T.tapSync = () => setTimeout(T.syncSound, 50); document.addEventListener("pointerup", T.tapSync, true);
-    T.startScene(root); T.syncSound();
+    T.prepareArt(); T.startScene(root); T.syncSound();
     if (G.Music) G.Music.set("title");
   };
   T.close = function () {

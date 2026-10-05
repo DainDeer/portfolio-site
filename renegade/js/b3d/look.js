@@ -41,7 +41,7 @@ export function canvasTex(size, draw) {
 // the game's blood decals (assets/fx) + a few canvas textures. A missing png is a blank decal, never a failed load.
 export async function loadFxTextures(root) {
   const L = new THREE.TextureLoader(), blank = () => canvasTex(4, () => {});
-  const load = (f) => L.loadAsync(root + "assets/fx/" + f + ".png").then((t) => { t.colorSpace = THREE.SRGBColorSpace; t.magFilter = t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; return t; }, () => blank());
+  const load = (f) => L.loadAsync(window.G.Assets ? window.G.Assets.url(root + "assets/fx/" + f + ".png") : root + "assets/fx/" + f + ".png").then((t) => { t.colorSpace = THREE.SRGBColorSpace; t.magFilter = t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; return t; }, () => blank());
   const [b1, b2, b3, spray, pool, drag] = await Promise.all(FX_PNGS.map(load));
   const radial = (inner, outer) => (g, s) => { const gr = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2); gr.addColorStop(0, inner); gr.addColorStop(1, outer); g.fillStyle = gr; g.fillRect(0, 0, s, s); };
   return { blood: [b1, b2, b3], spray, pool, drag,

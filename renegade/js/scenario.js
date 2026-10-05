@@ -214,7 +214,7 @@
     return null;
   };
   // resolve(req) -> Promise<payload>. Hosted ids are fetched relative to the page (same origin, scenarios/<id>.json).
-  Sc.resolve = async function (req) {
+  Sc.resolve = async function (req, signal) {
     if (req.kind === "bad") fail(req.error);
     if (req.kind === "fragment") return Sc.decode(req.code);
     if (req.kind === "local") {
@@ -223,7 +223,7 @@
       return Sc.parseJson(raw);
     }
     let res;
-    try { res = await root.fetch("scenarios/" + req.id + ".json", { cache: "no-cache", credentials: "same-origin" }); } catch (e) { fail("the scenario \"" + req.id + "\" couldn't be downloaded (are you offline?)"); }
+    try { res = await root.fetch("scenarios/" + req.id + ".json", { cache: "no-cache", credentials: "same-origin", signal }); } catch (e) { fail("the scenario \"" + req.id + "\" couldn't be downloaded (are you offline?)"); }
     if (res.status === 404) fail("there's no published scenario called \"" + req.id + "\"");
     if (!res.ok) fail("the scenario \"" + req.id + "\" couldn't be downloaded (HTTP " + res.status + ")");
     return Sc.parseJson(await res.text());

@@ -10,7 +10,7 @@ let manifestP = null, manifestBase = null, loader = null;
 export function loadManifest(base) {
   if (!manifestP || manifestBase !== base) {
     manifestBase = base;
-    manifestP = fetch(base + "manifest.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : null)).catch(() => null)
+    manifestP = fetch(window.G.Assets ? window.G.Assets.url(base + "manifest.json") : base + "manifest.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : null)).catch(() => null)
       .then((j) => (j && Array.isArray(j.files) ? j : { files: [], units: {}, gear: {}, plans: {}, weapon_item_to_file: {}, gear_item_to_part: {}, zone_props: {} }));
   }
   return manifestP;
@@ -25,7 +25,7 @@ export async function loadModels(base, names, mats) {
     if (models.has(n) || report.has(n)) return;
     if (!listed.has(n)) { report.set(n, { name: n, status: "placeholder", why: "not in manifest" }); return; }
     try {
-      const g = await loader.loadAsync(base + n); let tris = 0;
+      const g = await loader.loadAsync(window.G.Assets ? window.G.Assets.url(base + n) : base + n); let tris = 0;
       g.scene.traverse((o) => { if (!o.isMesh) return; o.castShadow = !mats.LOW; o.receiveShadow = true; geos.add(o.geometry);
         const geo = o.geometry; tris += (geo.index ? geo.index.count : geo.attributes.position.count) / 3;
         const swap = (m) => { if (!shaded.has(m)) shaded.set(m, mats.fromGltf(m)); return shaded.get(m); };

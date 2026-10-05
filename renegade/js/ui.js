@@ -72,6 +72,8 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
 
   // ---------- main render ----------
   UI.render = function () {
+    // The title owns this screen; town artwork and tutorial/result dialogs wait until Play.
+    if (G.Title && G.Title.open) { G.Sfx.setScreen("title"); if (G.Music) G.Music.set("title"); return; }
     if (G.Dice && G.Dice.busy()) { if (!UI._renderAfterDice) { UI._renderAfterDice = true; G.Dice.whenIdle(() => { UI._renderAfterDice = false; UI.render(); }); } return; }   // Slice 5 §B: the outcome shows once the die lands
     UI.hideTip();
     if (G.TutView) setTimeout(G.TutView.check, 0);   // Slice 4 §A: a tutorial step due on the new screen (js/tutorialview.js)
@@ -234,7 +236,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
   // Memorial Wall (Slice 3 §1, town hotspot `memorial`): every fallen named ally, newest first, no cap, scrolls.
   // Plaque background ui_memorial_plaque (320x96, 12 px border kept when stretched); Veterans get a larger plaque with a star.
   UI.panelMemorial = function (el) {
-    const A = G.Allies, list = A.memorial(), M = DATA.allies.memorial, pd = DATA.sprites[M.plaque], url = pd && pd.file ? DATA.sprites.basePath + pd.file : null;
+    const A = G.Allies, list = A.memorial(), M = DATA.allies.memorial, pd = DATA.sprites[M.plaque], url = pd && pd.file ? (G.Assets ? G.Assets.url(DATA.sprites.basePath + pd.file) : DATA.sprites.basePath + pd.file) : null;
     if (!list.length) { el.appendChild(h("p", { class: "hint" }, "No names on the wall yet.")); return; }
     const wall = h("div", { class: "memorial-wall" });
     for (const e of list) {

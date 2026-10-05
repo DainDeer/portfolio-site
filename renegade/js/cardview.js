@@ -4,7 +4,7 @@
 (function (root) {
   const G = root.G, UI = G.UI, SP = G.Sprites, h = UI.h;
   const CV = G.CardView = {};
-  const url = (key) => DATA.sprites.basePath + SP.def(key).file;
+  const url = (key) => G.Assets ? G.Assets.url(DATA.sprites.basePath + SP.def(key).file) : DATA.sprites.basePath + SP.def(key).file;
   const img = (key, cls) => h("img", { class: cls, src: url(key), alt: "", draggable: "false" });
   // a card element. o: { unfound, foil, isNew, px (card width) }
   CV.card = function (c, o) {

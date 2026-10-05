@@ -50,10 +50,10 @@
     if (ti && !ti.closest(CONTROL)) { UI.showTip(esc(ti.getAttribute("title")), e.clientX, e.clientY); return; }
     if (tipOpen()) UI.hideTip();
   }, true);
-  // a mouse event that no finger made, right after a tap (Chrome replays a stale mouse position after layout changes):
-  // don't let it close the tooltip the tap just opened
+  // Chrome replays mouse leaves around a tap and after layout changes. A leave from an old hotspot must not
+  // disarm the current two-tap action; tapping elsewhere still closes it in the click handler above.
   document.addEventListener("mouseleave", (e) => {
-    if (T.recent() && e.sourceCapabilities && !e.sourceCapabilities.firesTouchEvents && fresh()) e.stopPropagation();
+    if (T.recent() && e.sourceCapabilities && (e.sourceCapabilities.firesTouchEvents ? UI.tipArmed : fresh())) e.stopPropagation();
   }, true);
   // phones: the zone map scrolls inside its box (css/mobile.css); after each render, centre it on where you are
   T.centerMap = function () {

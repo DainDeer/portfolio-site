@@ -9,7 +9,7 @@
   const G = root.G, U = G.Util;
   const Dc = G.Dice = {};
   const C = () => DATA.config.dice;
-  const url = (f) => DATA.sprites.basePath + f;
+  const url = (f) => G.Assets ? G.Assets.url(DATA.sprites.basePath + f) : DATA.sprites.basePath + f;
   // ---- vectors / quaternions [w, x, y, z] ----
   const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], mul = (a, k) => [a[0] * k, a[1] * k, a[2] * k];
   const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2], cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];

@@ -26,10 +26,10 @@
     const entry = SP.cache[key] = { ok: false, img: null };
     if (reg().probeAssets === false || !d.file || typeof Image === "undefined") return null;
     if ((reg().pendingArt || []).some((p) => key.startsWith(p))) return null; // not delivered yet: don't request (avoids 404 noise)
-    const img = new Image();
-    img.onload = () => { entry.ok = true; entry.img = img; for (const f of SP.listeners) f(key); };
-    img.onerror = () => { entry.ok = false; entry.failed = true; if (d.fallback) { const f = SP.get(d.fallback); if (f) for (const fn of SP.listeners) fn(key); else { let done = false; SP.listeners.push((k) => { if (done || k !== d.fallback) return; done = true; setTimeout(() => { for (const fn of SP.listeners) fn(key); }, 0); }); } } };
-    img.src = reg().basePath + d.file;
+    const ready = (img) => { entry.ok = true; entry.failed = false; entry.img = img; for (const f of SP.listeners) f(key); };
+    const failed = () => { entry.failed = true; if (d.fallback) { const f = SP.get(d.fallback); if (f) for (const fn of SP.listeners) fn(key); else { let done = false; SP.listeners.push((k) => { if (done || k !== d.fallback) return; done = true; setTimeout(() => { for (const fn of SP.listeners) fn(key); }, 0); }); } } };
+    if (G.Assets) entry.promise = G.Assets.image(reg().basePath + d.file).then(ready, failed);
+    else { const img = new Image(); img.onload = () => ready(img); img.onerror = failed; img.src = reg().basePath + d.file; }
     return null;
   };
 
@@ -119,8 +119,20 @@
     if (typeof document === "undefined") return;
     document.querySelectorAll(`canvas.icon[data-sprite="${key}"]`).forEach((c) => SP.paintIcon(c));
   });
-  // request every registered image up front
-  SP.preload = function () { for (const k in reg()) if (reg()[k] && typeof reg()[k] === "object" && reg()[k].file) SP.get(k); };
+  // Prepare only the encounter's units and shared battle effects, before Fight can stamp them.
+  SP.prepareBattle = function (b) {
+    const keys = new Set(Object.keys(reg()).filter((k) => /^fx_/.test(k) && reg()[k].file));
+    const add = (k) => { if (!k || keys.has(k)) return; keys.add(k); const d = reg()[k]; if (d) for (const p of [d.walk, d.corpse, d.downed]) add(p); };
+    // Death chooses these at runtime, including for future waves. The 2D decal layer stamps only once.
+    for (const variant of Object.values(reg().corpseVariants || {})) for (const value of Object.values(variant)) {
+      if (typeof value === "string") add(value);
+      else if (value) for (const key of Object.values(value)) add(key);
+    }
+    for (const u of b.units) { add(u.sprite); add(u.corpse); }
+    for (const wave of b.waves || []) for (const e of wave) { const d = DATA.enemies.units[e.id]; if (d) add(d.sprite); }
+    for (const k of keys) SP.get(k);
+    return Promise.all([...keys].map((k) => SP.cache[k] && SP.cache[k].promise));
+  };
   // pattern helper for tiled backgrounds
   SP.pattern = function (ctx, key) { const img = SP.get(key); return img ? ctx.createPattern(img, "repeat") : null; };
 })(window);

@@ -70,7 +70,7 @@ export async function prepare(b, zone, step) {
   const man = await loadManifest(base);
   // m3 step 2: Smudge's shared part library + its tables (parts_shared/), for the instanced units. Missing -> clone path
   const ps = man.parts_shared && man.parts_shared.manifest && man.files.includes(LIB_FILE) ? man.parts_shared.manifest : null;
-  if (ps && (!partsP || partsBase !== base)) { partsBase = base; partsP = fetch(base + ps).then((r) => (r.ok ? r.json() : null)).catch(() => null); }
+  if (ps && (!partsP || partsBase !== base)) { partsBase = base; partsP = fetch(G.Assets ? G.Assets.url(base + ps) : base + ps).then((r) => (r.ok ? r.json() : null)).catch(() => null); }
   const names = G.Roster3D.filesFor(b, man, SCENES[zone].FILES.concat(CHUNKS[zone] || [], ps ? [LIB_FILE] : []));
   const [assets, tex, parts] = await Promise.all([loadModels(base, names, S.mats), texP || (texP = loadFxTextures("")), ps ? partsP : null]);
   return { zone, man, assets, tex, parts: parts && parts.units ? parts : null, low, ms: performance.now() - t0, files: names.length };

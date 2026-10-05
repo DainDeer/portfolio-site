@@ -5,7 +5,7 @@
   const G = root.G, U = G.Util;
   const TV = G.TownView = {};
   const h = (...a) => G.UI.h(...a);
-  const src = (file) => (DATA.sprites.basePath || "assets/") + file;
+  const src = (file) => G.Assets ? G.Assets.url((DATA.sprites.basePath || "assets/") + file) : (DATA.sprites.basePath || "assets/") + file;
 
   // Slice 5 §I: the current act's home (G.Prestige; the outpost art until a home set is committed) + its carried props
   TV.art = () => (G.Prestige ? G.Prestige.townArt() : DATA.townArt);

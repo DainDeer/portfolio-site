@@ -21,6 +21,8 @@
     const bar = document.createElement("div"); bar.className = "ability-bar"; container.appendChild(bar); v.bar = bar; BV.renderBar(v);   // Slice 3 §2
     const bottom = document.createElement("div"); bottom.className = "battle-bottom"; container.appendChild(bottom); v.bottom = bottom;
     const tc = document.createElement("div"); tc.className = "touch-ctl"; container.appendChild(tc); v.touchEl = tc;   // on-screen Pause / Break away (phones only, css/mobile.css)
+    v.artPending = !!SP.prepareBattle;
+    if (SP.prepareBattle) SP.prepareBattle(b).then(() => { if (!v.done) { v.artPending = false; BV.renderHud(v); } });
     BV.renderHud(v);
     canvas.addEventListener("mousedown", (e) => BV.onDown(v, e));
     canvas.addEventListener("mousemove", (e) => BV.onMove(v, e));
@@ -56,7 +58,7 @@
       pb.textContent = b.paused ? "▶ Resume (Space)" : "⏸ Pause (Space)"; pb.onclick = () => { pb.blur(); BV.togglePause(v); }; v.hud.appendChild(pb);
     }
     if (b.phase === "place") {
-      const go = document.createElement("button"); go.className = "primary"; go.textContent = "Fight!"; go.onclick = () => { G.Battle.start(b); BV.renderHud(v); };
+      const go = document.createElement("button"); go.className = "primary"; go.textContent = v.artPending ? "Loading battle artwork…" : "Fight!"; go.disabled = !!v.artPending; go.onclick = () => { G.Battle.start(b); BV.renderHud(v); };
       v.hud.appendChild(go);
     }
     BV.renderTouch(v);

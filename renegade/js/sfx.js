@@ -32,18 +32,19 @@
   const useWA = () => SFX.ctx && typeof location !== "undefined" && /^https?:/.test(location.protocol);
   function load(key, urls) {
     let e = SFX.cache[key]; if (e) return e;
-    e = SFX.cache[key] = { state: "pending", buf: null, el: null, url: null };
+    e = SFX.cache[key] = { state: "pending", buf: null, el: null, url: null, abort: typeof AbortController !== "undefined" ? new AbortController() : null };
     const tryUrl = (i) => {
+      if (SFX.cache[key] !== e) return;
       if (i >= urls.length) { e.state = "missing"; return; }
-      const url = urls[i]; SFX.requests[url] = (SFX.requests[url] || 0) + 1; e.url = url;
+      const url = G.Assets ? G.Assets.url(urls[i]) : urls[i]; SFX.requests[url] = (SFX.requests[url] || 0) + 1; e.url = url;
       if (useWA()) {
-        fetch(url).then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
-          .then((ab) => SFX.ctx.decodeAudioData(ab)).then((buf) => { e.buf = buf; e.state = "ok"; SFX.onReady(key); })
+        fetch(url, e.abort ? { signal: e.abort.signal } : undefined).then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+          .then((ab) => SFX.ctx.decodeAudioData(ab)).then((buf) => { if (SFX.cache[key] !== e) return; e.buf = buf; e.state = "ok"; SFX.onReady(key); })
           .catch(() => tryUrl(i + 1));
       } else {
-        const el = new Audio(); el.preload = "auto";
-        el.addEventListener("canplaythrough", () => { if (e.state === "pending") { e.el = el; e.state = "ok"; SFX.onReady(key); } }, { once: true });
-        el.addEventListener("error", () => { if (e.state === "pending") tryUrl(i + 1); }, { once: true });
+        const el = new Audio(); e.loading = el; el.preload = "auto";
+        el.addEventListener("canplaythrough", () => { if (SFX.cache[key] === e && e.state === "pending") { e.loading = null; e.el = el; e.state = "ok"; SFX.onReady(key); } }, { once: true });
+        el.addEventListener("error", () => { if (SFX.cache[key] === e && e.state === "pending") tryUrl(i + 1); }, { once: true });
         el.src = url; el.load();
       }
     };
@@ -56,7 +57,7 @@
     return exts.map((x) => base() + A().ambPath + key + x);
   };
   SFX.status = (key) => ((A().sfx[key] || {}).pending ? "pending (no file yet)" : SFX.cache[key] ? SFX.cache[key].state : "not loaded");
-  SFX.onReady = function (key) { if (A().loops[key] && SFX.wantLoop === key && (!SFX.amb || SFX.amb.key !== key)) SFX.startLoop(key); };
+  SFX.onReady = function (key) { if (SFX.vol("ambient") > 0 && A().loops[key] && SFX.wantLoop === key && (!SFX.amb || SFX.amb.key !== key)) SFX.startLoop(key); };
 
   // ---- one-shot SFX ----
   SFX.play = function (key, opts) {
@@ -91,7 +92,7 @@
   // ---- ambient loops: one per screen, 1 s crossfade ----
   SFX.setScreen = function (screen) {
     const key = A().screens[screen]; SFX.screen = screen; SFX.wantLoop = key;
-    if (!hasDom || !SFX.unlocked || !SFX.enabled) return;
+    if (!hasDom || !SFX.unlocked || !SFX.enabled || SFX.vol("ambient") <= 0) return;
     if (SFX.amb && SFX.amb.key === key) { SFX.amb.setVol(SFX.loopVol(key)); return; }
     const e = load(key, loopUrls(key)); if (e.state === "ok") SFX.startLoop(key);
   };
@@ -113,7 +114,14 @@
     if (old) old.fadeOut();
     SFX.amb = voice;
   };
-  SFX.applySettings = function () { if (SFX.amb) SFX.amb.setVol(SFX.loopVol(SFX.amb.key)); if (G.Music) G.Music.applySettings(); };   // music: js/music.js, its own channel
+  SFX.cancelMutedLoads = function () {
+    for (const key of Object.keys(SFX.cache)) {
+      const e = SFX.cache[key]; if (e.state !== "pending" || SFX.vol(A().loops[key] ? "ambient" : "sfx") > 0) continue;
+      delete SFX.cache[key]; if (e.abort) e.abort.abort();
+      if (e.loading) { e.loading.pause(); if (e.loading.removeAttribute) e.loading.removeAttribute("src"); e.loading.load(); }
+    }
+  };
+  SFX.applySettings = function () { SFX.cancelMutedLoads(); if (SFX.screen) SFX.setScreen(SFX.screen); if (SFX.amb) SFX.amb.setVol(SFX.loopVol(SFX.amb.key)); if (G.Music) G.Music.applySettings(); };   // music: js/music.js, its own channel
 
   // SFX bus: gain -> limiter -> master (loops connect to the master directly)
   SFX.makeBus = function (ctx, out) {
@@ -128,7 +136,7 @@
   // browsers only allow audio after a user gesture
   SFX.unlock = function () {
     if (SFX.unlocked) return; SFX.unlocked = true;
-    try { const AC = root.AudioContext || root.webkitAudioContext; if (AC) { SFX.ctx = new AC(); SFX.master = SFX.ctx.createGain(); SFX.master.connect(SFX.ctx.destination); SFX.bus = SFX.makeBus(SFX.ctx, SFX.master); } } catch (x) { SFX.ctx = null; }
+    try { const AC = root.AudioContext || root.webkitAudioContext; if (AC) { SFX.ctx = (root.Entry && root.Entry.audioContext) || new AC(); SFX.master = SFX.ctx.createGain(); SFX.master.connect(SFX.ctx.destination); SFX.bus = SFX.makeBus(SFX.ctx, SFX.master); } } catch (x) { SFX.ctx = null; }
     if (SFX.screen) SFX.setScreen(SFX.screen);
     if (G.Music) G.Music.onUnlock();
   };
