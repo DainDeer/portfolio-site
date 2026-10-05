@@ -25,7 +25,7 @@
   const landMq = root.matchMedia ? root.matchMedia(T.LANDSCAPE) : null;
   T.landscape = () => !!(landMq && landMq.matches);
   // committing actions: first tap = tooltip, second tap on the same element = the action
-  T.tapFirst = ".map-node.reachable, .map-node.enterable, .site-obj.usable";
+  T.tapFirst = ".map-node.reachable:not(.v2), .map-node.enterable:not(.v2), .site-obj.usable";   // a V2 map node only opens its panel (nothing to commit)
   const CONTROL = "button, a, input, select, textarea, label, .abl-btn, .card, .town-hs";
   const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const tipEl = () => document.getElementById("tooltip");

@@ -37,7 +37,7 @@
   M.onMartaTalked = () => M.activate("m1");   // Marta hands you Main 1 whatever tutorial choice you pick
 
   // ---------- the pods room ----------
-  M.isPodsSite = (site) => !!site && site.loc === P().loc && (site.zone || "a") === P().zone;
+  M.isPodsSite = (site) => !!site && site.loc === P().loc && (site.zone || "a") === P().zone && (!site.area || !!site.podsArea);   // a V2 Map: only its pods Area (data/mapsv2.js)
   // called by G.Exp.generateSite (and ensureSite for a site built before this existed). helpers = { mk, place, rng }.
   M.decorate = function (site, H) {
     if (!M.isPodsSite(site) || site.pods || site.rooms.length < 2) return;

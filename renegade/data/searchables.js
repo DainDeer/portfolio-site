@@ -78,7 +78,7 @@ DATA.searchables = {
     // Slice 5 §G: the Crater's pod (tag "crater": fixedByTag). orangePct: its own chance of one Orange (Prototype) item,
     // past the item-level cap (Orange needs iLvl 6; Greyback is tier 2). heat: added when you finish searching it.
     crater_pod: { name: "Glowing pod", examine: "[PLACEHOLDER] A scorched orbital pod, still warm, still humming. The hatch is ajar.", sprite: "obj_cryo_pod", searchSec: 10, noise: 12, gearRolls: 1, bonusItems: 1, rarityBonus: 60, resRolls: 2,
-                  orangePct: 12, searchHeat: 6,
+                  orangePct: 12, searchHeat: 6, orbitalChest: true,   // orbitalChest: SP-034 (LOCKED 10/3) "looting special orbital chests" is a Heat source: in a V2 run its searchHeat is that source, once per chest
                   table: [["electronics", 40, 1, 3], ["data_shards", 35, 1, 2], ["relic", 25, 1, 1]] },
     door:       { name: "Door", examine: "[PLACEHOLDER] A door. What's behind it is anyone's guess.",          sprite: "obj_door",   searchSec: 3, noise: 10, resRolls: 0, opensRoom: true,
                   stashChance: 10, stashAs: "crate",                                               // one crate roll behind it

@@ -73,6 +73,7 @@
       redraw();
     };
     const box = h("div", { class: "doll", "data-doll": tid });
+    const worn = SLOTS.map(([gs2, is2]) => equipped(gs2, is2)).filter(Boolean);   // the set line counts the other worn pieces
     // the figure: the composited Grunt at dollScale (the body: its own sprite)
     const fig = h("div", { class: "doll-fig" + (!g || G.State.gruntSlots(g).offhand ? " hands" : "") });
     const sc = DATA.gruntLook.dollScale, px = FS() * sc;
@@ -82,8 +83,8 @@
       if (g ? !G.State.gruntSlots(g)[gs] : false) continue;
       if (bk && g) continue;
       const it = equipped(gs, is), icon = it ? SP.icon(I.sprite(it), 36) : SP.icon(DATA.sprites["slot_" + gs] ? "slot_" + gs : "slot_gear", 36, "slot-empty");
-      const b = h("button", { class: "doll-slot s-" + gs + (cur === gs ? " on" : "") + (it ? " filled r-" + it.rarity : ""), "data-dslot": gs, title: it ? I.name(it) : label + " (empty)", onclick: () => { GL.sel[tid] = gs; redraw(); } }, icon, h("span", null, label));
-      fig.appendChild(b);
+      const b = h("button", { class: "doll-slot s-" + gs + (cur === gs ? " on" : "") + (it ? " filled r-" + it.rarity : ""), "data-dslot": gs, title: it ? null : label + " (empty)", onclick: () => { GL.sel[tid] = gs; redraw(); } }, icon, h("span", null, label));
+      fig.appendChild(it ? UI.itemTip(b, it, worn) : b);   // SP-014: an equipped item shows its stats on hover
     }
     box.appendChild(fig);
     // Slice 5 §H: the Outfit row (Grunts only): any unlocked look over the real gear. Cosmetic, so it works mid-run too
@@ -104,7 +105,7 @@
     const [gs, is, label, accepts] = SLOTS.find((x) => x[0] === cur) || SLOTS[3], it = equipped(gs, is);
     const side = h("div", { class: "doll-list" });
     const innate = g ? I.base(g.weapon).name : I.base(DATA.bodies.basicBody.naturalWeapon).name;
-    side.appendChild(h("div", { class: "doll-cur" }, h("b", null, label + ": "), it ? h("span", { style: "color:" + DATA.items.rarities[it.rarity].color }, I.name(it)) : h("i", null, gs === "weapon" ? `empty (fights with ${g ? "their" : "your"} ${innate})` : "empty"),
+    side.appendChild(h("div", { class: "doll-cur" }, h("b", null, label + ": "), it ? UI.itemTip(h("span", { style: "color:" + DATA.items.rarities[it.rarity].color }, I.name(it)), it, worn) : h("i", null, gs === "weapon" ? `empty (fights with ${g ? "their" : "your"} ${innate})` : "empty"),
       it && !inRun ? h("button", { "data-act": "doll-unequip", onclick: () => act(gs, is, null) }, "Unequip") : null));
     if (inRun && g) side.appendChild(h("p", { class: "hint" }, "Equip Grunts at the outpost, not during a run."));
     const bodyTaken = new Set(Object.values(lo.gear || {}));

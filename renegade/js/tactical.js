@@ -34,11 +34,20 @@
   };
   T.toggle = (b) => (b.paused ? (T.resume(b), null) : T.pause(b));
 
-  // what the squad carries for the pause menu: Med Supplies in the bag
+  // SP-002 (Megan, Oct 2): a Med kit leaves the bag when its heal lands, not when it's queued. Until then it's
+  // spoken for: queued, channelling or waiting in a unit's channel queue (living units only; a downed unit's kit is free).
+  T.medPending = function (b) {
+    const isMed = (c) => c && c.kind === "med";
+    let n = T.queue(b).filter(isMed).length;
+    for (const u of b.units) if (alive(u)) n += (isMed(u.channel) ? 1 : 0) + (u.chQ || []).filter(isMed).length;
+    return n;
+  };
+  T.medFree = (b) => { const r = run(); return r ? Math.max(0, (r.bag.res.med || 0) - T.medPending(b)) : 0; };
+  // what the squad carries for the pause menu: Med Supplies in the bag, less the kits already spoken for
   // TODO (design, milestone 5): special-ammo swaps were dropped from the pause for now (the step-9 pack auto-loads every gun)
-  T.items = function () {
+  T.items = function (b) {
     const r = run(); if (!r) return [];
-    const out = [{ kind: "med", name: DATA.resources.med.name, n: (r.bag.res.med || 0), sprite: DATA.resources.med.sprite }];
+    const out = [{ kind: "med", name: DATA.resources.med.name, n: b ? T.medFree(b) : (r.bag.res.med || 0), sprite: DATA.resources.med.sprite }];
     return out;
   };
   T.label = (a) => (a.kind === "ability" ? a.u.abl[a.i].d.name : a.kind === "escape" ? "Break away" : "Med kit");
@@ -50,17 +59,16 @@
     const r = run(); if (!r) return "No expedition.";
     if (kind === "med") {
       if (!(r.bag.res.med > 0)) return "No Med Supplies carried.";
+      if (!(T.medFree(b) > 0)) return "Every Med kit you carry is already queued.";
       if (u.medCd > 0) return `${u.name} can't take another Med kit for ${U.fmt1(u.medCd)} s.`;
       if (T.queue(b).some((a) => a.kind === "med" && a.u === u) || (u.channel && u.channel.kind === "med") || (u.chQ || []).some((c) => c.kind === "med")) return `${u.name} already has a Med kit coming (cooldown).`;
       if (u.hp >= u.maxHp - 0.5) return `${u.name} is at full HP.`; return null;
     }
     return "Unknown item.";
   };
-  // queue an item use: spent from the carried inventory now, refunded on cancel
+  // queue an item use: the kit stays in the bag until its heal lands (SP-002); cancelling just frees it again
   T.queueItem = function (b, kind, u) {
     const why = T.itemBlock(b, kind, u); if (why) return why;
-    const r = run();
-    r.bag.res.med--;
     const a = { kind, u, order: T.queue(b).length + 1 };
     T.queue(b).push(a); u.queued = (u.queued || 0) + 1; return null;
   };
@@ -85,14 +93,12 @@
     const C = CF().medCooldown || { baseSec: 0, perMedicine: 0, minSec: 0 }, body = b.units.find((o) => o.rank === "body" && o.side === 0);
     return Math.max(C.minSec, C.baseSec - C.perMedicine * (body ? body.medicine || 0 : 0));
   };
-  // cancel a queued action while paused (item refunded)
+  // cancel a queued action while paused (a Med kit was never taken out of the bag)
   T.cancel = function (b, idx) {
     if (!b.paused) return "Only while paused.";
     const q = T.queue(b), a = q[idx]; if (!a) return "Nothing there.";
     q.splice(idx, 1); a.u.queued = Math.max(0, (a.u.queued || 1) - 1);
-    const r = run();
     if (a.kind === "ability") a.u.abl[a.i].queued = false;
-    else if (a.kind === "med" && r) r.bag.res.med++;
     q.forEach((x, k) => (x.order = k + 1));
     return null;
   };
@@ -105,12 +111,14 @@
     const X = G.Battle._;
     if (ch.kind === "escape") { G.Escape.resolve(b); return; }
     if (ch.kind === "med") {
+      // SP-002: the kit comes out of the bag now, as the heal lands (a fight that ends mid-channel keeps it)
+      const r = run(); if (r) { if (!(r.bag.res.med > 0)) { b.log.push(`Med kit on ${u.name}: none left in the bag.`); return; } r.bag.res.med--; }
       // the field heal roll, made now (the pause never shows its outcome): Medicine chance, fail heals x0.25
       const R = DATA.config.rolls, body = b.units.find((o) => o.rank === "body" && o.side === 0), calm = body && (body.quirks || []).includes("heals_cant_fail");
       const med = body ? body.medicine || 0 : 0, chance = calm ? 100 : U.clamp(R.fieldHealBase + med / R.fieldHealSkillDiv, R.hitMin, R.hitMax), roll = b.rng() * 100, ok = roll < chance;
       const amt = u.maxHp * DATA.config.expedition.medHealPct / 100 * (ok ? 1 : R.fieldHealFailMult), was = u.hp;
       u.hp = Math.min(u.maxHp, u.hp + amt);
-      X.floatText(b, u, `+${Math.round(u.hp - was)} ${ok ? "" : "(fumbled) "}Med kit`, ok ? "#7ee07e" : "#f0b050", true);
+      X.floatText(b, u, `+${Math.round(u.hp - was)} ${ok ? "" : "(fumbled) "}Med kit`, ok ? "#7ee07e" : "#f0b050", true); X.bark(b, u, "healed");
       b.log.push(`Med kit on ${u.name}: field heal ${Math.round(chance)}% → rolled ${Math.floor(roll)}: ${ok ? "success" : "fumbled"}, +${Math.round(u.hp - was)} HP`);
       if (G.Escape) G.Escape.feed(b, `Med kit on ${u.name}: ${Math.round(chance)}% → rolled ${Math.floor(roll)}: ${ok ? "success" : "fumbled"}, +${Math.round(u.hp - was)} HP`, ok ? "good" : "bad");
       (b.tStats = b.tStats || []).push({ kind: "med", u: u.name, t: b.t, ok, amt: u.hp - was, order: ch.order });

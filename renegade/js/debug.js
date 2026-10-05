@@ -3,7 +3,7 @@
   const G = root.G, U = G.Util;
   const D = G.Debug = { on: false, rollMath: false, fastSearch: false, overrides: {}, section: "config.battle" };
   const h = (...a) => G.UI.h(...a);
-  const SECTIONS = ["config.tutorial", "config.deploy", "config.carry", "config.heat", "config.rolls", "config.checks", "config.battle", "config.enemies", "config.expedition", "config.world", "config.loot", "config.leveling", "config.restore", "config.grunts", "config.search", "config.revisit", "config.xpFloat",
+  const SECTIONS = ["config.tutorial", "config.deploy", "config.carry", "config.heat", "config.rolls", "config.checks", "config.battle", "config.enemies", "config.expedition", "config.world", "config.loot", "config.leveling", "config.restore", "config.grunts", "config.search", "config.revisit", "config.xpFloat", "mapsV2.walk", "mapsV2.pool", "mapsV2.alert", "mapsV2.heat.loud", "mapsV2.loot",
     "bodies.families", "bodies.basicBody", "bodies.classes", "bodies.specialties", "bodies.grunt", "bodies.criticalCare", "enemies.units", "enemies.elite", "items.rarities", "items.bases", "items.affixes", "items.tags", "resources", "map.locations", "events",
     "searchables", "zones", "quests", "outpost", "town", "abilities", "allies", "perks", "audio"];
 
@@ -124,6 +124,22 @@
       wr.appendChild(btn("Restock everything", () => { G.Exp.debugRestockAll(); return "Every place is back to 100% (refills on its next entry)."; }));
       el.appendChild(wr); }
     // expedition
+    // Maps, Areas & Loot: the rollout flag (new expeditions only) and this run's V2 state (development log, no analytics)
+    { const MV = DATA.mapsV2, v2 = h("div", { class: "dbg-sec" }, h("h4", null, "Maps V2"));
+      v2.appendChild(h("label", { class: "dbg-check" }, h("input", { type: "checkbox", checked: MV.enabled, onchange: (e) => { MV.enabled = e.target.checked; G.UI.toast(`Maps V2 ${MV.enabled ? "on" : "off"} for the next expedition (a run keeps the ruleset it started with).`); } }), " New expeditions use Maps V2 (data/mapsv2.js enabled; this page only)"));
+      if (r) {
+        const on = G.V2.on(r); v2.appendChild(h("div", null, on ? `This run: ruleset 2 (schema ${r.v2.schema}, content ${r.v2.content}).` : "This run: legacy ruleset."));
+        if (on) {
+          const m = G.V2.inst(r.loc, false);
+          v2.appendChild(h("div", null, "Heat ledger: " + (r.v2.heatLedger.map((x) => `${x.why} +${x.n}`).join(", ") || "none") + " · blocked: " + (Object.entries(r.v2.heatBlocked).map(([k, n]) => `${k} ${n}`).join(", ") || "none") + ` · loud fights ${r.v2.loud.n}`));
+          if (m) v2.appendChild(h("div", null, `${m.loc} (${m.kind}, ${m.classification}${m.area ? ", Area " + m.area : ""}) pool: ` + m.pool.groups.map((g) => `${g.id}${g.area ? "@" + g.area : ""} ${g.state}${g.waiting ? " (waiting)" : ""}`).join(", ")));
+          const a = G.V2.audit(); v2.appendChild(h("div", { class: a.length ? "bad" : "" }, "Audit: " + (a.join("; ") || "clean")));
+          if (m) v2.appendChild(btn("Alert a group here", () => { const st = G.V2.alert(G.V2.siteKey(r.loc), "debug", "Debug: something heard you."); return st ? "A group is coming." : "No eligible group here."; }, "Reserves the next eligible group of this Map's pool for the Area you're in"));
+          if (m) v2.appendChild(btn("Beat this Map's groups", () => { for (const g of m.pool.groups) if (g.state === "available") { g.state = "defeated"; m.defeated.push(g.id); } G.V2.updateOpps(m); return "Every available group here is marked beaten (opportunities update)."; }));
+          v2.appendChild(btn("Log V2 events (console)", () => { console.table(r.v2.events); return `${r.v2.events.length} events in the console.`; }));
+        }
+      }
+      el.appendChild(v2); }
     const ex = h("div", { class: "dbg-sec" }, h("h4", null, "Expedition"));
     if (r) {
       const hIn = h("input", { type: "number", value: r.heat, style: "width:50px" });

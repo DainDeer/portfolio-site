@@ -15,10 +15,13 @@
     for (const k in DATA.resources) { const per = DATA.resources[k].heatPerMove; if (!per) continue; let n = (r.bag.res[k] || 0); for (const p of r.pouch || []) if (p.res === k) n += p.n; h += n * per; }
     return h;
   };
+  // Maps/Areas/Loot (SP-034, LOCKED 10/3): in a V2 run Heat no longer scales enemies, odds, loot or extractions by
+  // itself; its tiers only summon the Hunters. So a V2 run's tier keeps its name / colour and drops the passive effects.
+  const V2_TIER = { budgetMult: 1, hostileBonus: 0, lootBonus: 0, siteBonus: 0, closeExtractions: 0, eliteUnits: false, forcedBattle: false };
   X.heatTier = function (heat) {
     const th = CFG().heat.thresholds; let t = th[0];
     for (const x of th) if ((heat == null ? run().heat : heat) >= x.min) t = x;
-    return t;
+    return G.V2 && G.V2.on() ? Object.assign({}, t, V2_TIER) : t;
   };
   X.capacity = function (r, body, gearItems) {
     r = r || run(); body = body || X.body(); gearItems = gearItems || Object.values(r.gear).filter(Boolean);
@@ -66,6 +69,9 @@
   X.pouchEntryKg = (p) => (p.item ? G.Items.weight(p.item) : p.n * DATA.items.resources[p.res].kgPerUnit);
   X.carryPct = () => (X.carried() / X.capacity()) * 100;
   X.immobile = () => X.carryPct() >= CFG().carry.immobileAtPct;
+  // SP-045: why you can't move, and how much to drop (the zone map, Area exits, traversal)
+  X.overloadText = function () { const over = X.carried() - X.capacity() * CFG().carry.immobileAtPct / 100; return `Overloaded: drop ${U.fmt1(Math.max(0.1, Math.ceil((over + 0.001) * 10) / 10))} kg to move.`; };
+  X.extractShort = (ex) => (ex.type === "free" ? "Free." : ex.type === "check" ? `${DATA.skills[ex.skill].name} DC ${ex.dc}.` : ex.type === "defense" ? `Hold out ${ex.surviveSec} s.` : "");
   X.members = function () { // refs for checks: body + standing grunts/core allies
     const r = run(), out = [{ kind: "body", body: X.body() }];
     for (const s of r.squad) if (s.hp > 0) out.push({ kind: "grunt", grunt: s.g });
@@ -73,7 +79,8 @@
   };
   X.itemLevel = function (node) {
     const L = CFG().loot, r = run();
-    return Math.max(1, (L.ilvlByTier[node.tier] || 1) + r.moves * L.ilvlPerDepth + Math.floor(r.heat / L.heatPerIlvl) + G.rng.int(-L.ilvlVariance, L.ilvlVariance));
+    const hl = G.V2 && G.V2.on() ? 0 : Math.floor(r.heat / L.heatPerIlvl);   // V2: no passive Heat reward scaling
+    return Math.max(1, (L.ilvlByTier[node.tier] || 1) + r.moves * L.ilvlPerDepth + hl + G.rng.int(-L.ilvlVariance, L.ilvlVariance));
   };
   X.rarityBonus = () => X.heatTier().lootBonus + G.Skills.level(G.state.mind.skills, "scavenging") * CFG().loot.scavengingRarityPerLevel + G.Perks.rarityBonus();   // + Scavenger's Eye (Slice 3 §3)
   X.odds = function (node) {
@@ -214,7 +221,8 @@
       stats: { battles: 0, kills: 0, searches: 0, events: 0 }, carriedCritical: [], extractOrder, pendingUnlocks: [], ammo
     };
     s.run.bodyHp = G.Battle.unitFromBody(body, gear, {}).maxHp;
-    if (G.Hunters) G.Hunters.onRunStart(s.run);   // Slice 3 §4b: "Marked by the Orbitals" (Heat 25 start)
+    if (G.V2) G.V2.pin(s.run);   // Maps/Areas/Loot: the ruleset is picked here and kept until the run ends (data/mapsv2.js enabled)
+    if (G.Hunters && !(G.V2 && G.V2.on(s.run))) G.Hunters.onRunStart(s.run);   // Slice 3 §4b: "Marked by the Orbitals" (Heat 25 start). V2: not an approved Heat source
     if (G.Radio) G.Radio.fogReveal(s.run, zone);   // Slice 3 §10b: Radio L2 lifts the fog 1 ring further around the insertion point
     if (G.Rivals) { G.Rivals.next(); G.Rivals.draftAtStart(s.run); }   // Slice 3 §7: this run's pre-rolled rival; the echo draft of the deployed squad
     s.runCount++;
@@ -273,7 +281,7 @@
     G.State.giveXp(bref, "hauling", X.carried() * CFG().leveling.xp.haulingPerMovePerKg);
     const first = !r.visited[nid];
     r.visited[nid] = true; X.markSeen();
-    X.log(`→ ${G.Map.label(node)} (Heat ${r.heat}, ${X.heatTier().name})`);
+    X.log(`→ ${G.Map.label(node)}` + (G.V2 && G.V2.on() ? "" : ` (Heat ${r.heat}, ${X.heatTier().name})`));
     // distress countdown (same run): every move that doesn't reach the town uses up one of its remaining moves
     if (G.state.world.hollow_creek === "ignored" && r.distressLeft > 0 && node.loc !== "hollow_creek") {
       r.distressLeft--;
@@ -298,12 +306,15 @@
     return true;
   };
 
+  // returns the Heat actually added. A V2 run only takes SP-034's approved sources (G.V2.heatGate; the rest are logged)
   X.addHeat = function (n, why) {
-    const r = run(); const before = X.heatTier(r.heat).name, h0 = r.heat;
+    const r = run(); if (G.V2 && !G.V2.heatGate(n, why)) return 0;
+    const before = X.heatTier(r.heat).name, h0 = r.heat;
     r.heat = U.clamp(r.heat + n, 0, CFG().heat.max);
     if (r.heat !== h0) { r.heatBy = r.heatBy || {}; r.heatBy[why || "other"] = (r.heatBy[why || "other"] || 0) + (r.heat - h0); }
     const after = X.heatTier(r.heat).name;
     if (after !== before) X.log(`Heat ${r.heat}: now ${after}!`, "heat");
+    return r.heat - h0;
   };
 
   // Tutorial overrides (DATA.config.tutorial): only while the tutorial is running
@@ -418,7 +429,14 @@
   // ---------- events ----------
   X.eventDef = (step) => DATA.events[step.eventId];
   // option text with its up-front Heat (option-level `heat`, Megan's playtest) so the player takes it knowingly
-  X.optionLabel = (opt) => opt.label + (opt.heat && !/Heat/.test(opt.label) ? ` (+${opt.heat} Heat)` : "");
+  X.optionLabel = function (opt) {
+    if (G.V2 && G.V2.on()) {   // V2: only Heat from an approved source is shown (and added)
+      const n = G.V2.optionHeat(opt); let l = opt.label;
+      if (!n) l = l.replace(/, \+\d+ Heat\)/, ")").replace(/ \(\+\d+ Heat\)/, "");
+      return l + (n && !/Heat/.test(l) ? ` (+${n} Heat)` : "");
+    }
+    return opt.label + (opt.heat && !/Heat/.test(opt.label) ? ` (+${opt.heat} Heat)` : "");
+  };
   X.optionChance = function (opt) {
     if (!opt.check) return null;
     return G.Checks.compute(opt.check.skill, opt.check.dc, X.members(), X.gearItems());
@@ -428,7 +446,7 @@
     const ev = X.eventDef(step), opt = ev.options[optIdx], r = run();
     r.stats.events++;
     let effects, roll = null, texts = [];
-    if (opt.heat) { X.addHeat(opt.heat, "bigEvent"); texts.push(`+${opt.heat} Heat`); }
+    if (opt.heat) { const got = X.addHeat(opt.heat, opt.heatSource || "bigEvent"); if (got || !(G.V2 && G.V2.on())) texts.push(`+${opt.heat} Heat`); }
     if (opt.check) {
       if (useGrunt && opt.gruntSpendable) { texts.push(X.spendGrunt()); effects = opt.outcomes.success; roll = { grade: "success", text: "Grunt sent ahead: automatic success." }; }
       else {
@@ -451,7 +469,7 @@
       const e = effects[i];
       if (!run() || G.state.run !== r) break; // died
       if (e.text) texts.push(e.text);
-      if (e.heat) { X.addHeat(e.heat, e.heat >= 10 ? "bigEvent" : "event"); texts.push(`${e.heat > 0 ? "+" : ""}${e.heat} Heat`); }
+      if (e.heat) { const got = X.addHeat(e.heat, e.source || (e.heat >= 10 ? "bigEvent" : "event")); if (got || !(G.V2 && G.V2.on())) texts.push(`${e.heat > 0 ? "+" : ""}${e.heat} Heat`); }   // source: data/events.js (V2 approves only SP-034's)
       if (e.res) { for (const k in e.res) { r.bag.res[k] = (r.bag.res[k] || 0) + e.res[k]; texts.push(`+${e.res[k]} ${DATA.items.resources[k].name}`); } }
       if (e.lore) { if (!G.state.lore.includes(e.lore)) G.state.lore.push(e.lore); texts.push("Lore: " + DATA.lore[e.lore]); }
       if (e.damagePct) X.damageBody(e.damagePct);
@@ -461,7 +479,7 @@
       if (e.distressCountdown) { const l = DATA.map.locations[e.distressCountdown]; r.distressLeft = (l.distress && l.distress.holdMoves) || 0; texts.push(`${l.name} holds for ${r.distressLeft} more moves.`); }
       if (e.travelTo) {
         const n = G.Map.nodeOfLoc(G.Zones.map(), e.travelTo);
-        if (n) { r.loc = n.id; r.visited[n.id] = true; X.markSeen(); const site = X.ensureSite(n); site.visitSearches = 0; site.visits++; r.view = "site"; texts.push(`You arrive at ${G.Map.label(n)}.`); }
+        if (n) { r.loc = n.id; r.visited[n.id] = true; X.markSeen(); if (G.V2 && G.V2.on()) G.V2.lockMods(n.id); const site = X.ensureSite(n); site.visitSearches = 0; site.visits++; r.view = "site"; texts.push(`You arrive at ${G.Map.label(n)}.`); }
       }
       if (e.hiddenContainer) { const site = X.site(); if (site) { X.addSearchObject(site, "crate", { name: "Hidden stash" }); texts.push("A hidden stash is now searchable here."); } }
       if (e.payKg) { const p = X.payKgDetail(e.payKg); texts.push(p.text); if (p.short !== p.text) shown[texts.length - 1] = p.short; }
@@ -469,10 +487,15 @@
       if (e.loot) {
         const n = X.node(); const ilvl = X.itemLevel(G.Map.loc(n) ? n : { tier: 1 });
         const items = []; for (let k = 0; k < e.loot.rolls; k++) items.push(G.Items.rollLoot(G.rng, ilvl, X.rarityBonus() + (e.loot.rarityBonus || 0)));
-        front.push({ type: "container", def: { id: "loot", name: "Loot" }, items, res: {}, opened: true, nid: r.loc, title: "Loot" });
+        const ls = G.V2 && G.V2.on() ? X.site() : null;
+        if (ls) {   // V2: the find sits somewhere in the Area as entries (Leave keeps it there); a UI step never owns it
+          const o = X._mk(ls, { kind: "search", type: "crate", name: "Loot", sprite: "obj_crate", searched: true, perRun: true, combat: { kind: "event" } }); X._place(ls, o, 0, G.rng);
+          o.loot = G.V2.toEntries("ev:" + G.state.runCount + ":" + (ls.key || ls.nid) + ":" + o.id, { items, res: {} });
+          front.push({ type: "loot", site: ls.key || ls.nid, objs: [o.id], title: "Loot" });
+        } else front.push({ type: "container", def: { id: "loot", name: "Loot" }, items, res: {}, opened: true, nid: r.loc, title: "Loot" });
       }
       if (e.battle) {
-        front.push({ type: "battle", family: e.battle.family, budgetMult: e.battle.budgetMult, defense: e.battle.defense, nid: r.loc, why: "Battle!", after: effects.slice(i + 1) });
+        front.push({ type: "battle", family: e.battle.family, budgetMult: e.battle.budgetMult, defense: e.battle.defense, nid: r.loc, why: "Battle!", after: effects.slice(i + 1), eventFight: true });
         break;
       }
     }
@@ -523,13 +546,14 @@
   // ---------- battles ----------
   X.buildBattle = function (step, rollMath) {
     if (G.Difficulty) G.Difficulty.snapBattle();   // Slice 4 §H: Standard's Retry fight goes back to here
+    if (G.V2 && G.V2.on()) G.V2.onBuild(step);   // Maps/Areas/Loot: the encounter (its pool group stays reserved until the result commits)
     const r = run(), node = X.node(step.nid || r.loc);
     const allies = [G.Battle.unitFromBody(X.body(), r.gear, { carryPct: X.carryPct(), hp: r.bodyHp })];
     r.squad.forEach((s, i) => { if (s.hp > 0) { const u = G.Battle.unitFromGrunt(s.g, s.hp); u.squadIdx = i; allies.push(u); } });
     const t = X.heatTier();
     const budget = X.enemyBudget(node, step.budgetMult);
     const elites = t.eliteUnits ? DATA.enemies.elite.count : 0;
-    const setup = { allies, family: step.family, rollMath };
+    const setup = { allies, family: step.family, rollMath }; let pool = null;
     if (step.defense && step.extraction) {
       const ex = step.extraction;
       setup.mode = "defense"; setup.surviveSec = ex.surviveSec;
@@ -542,7 +566,13 @@
     } else if (step.family === "rivals" && step.rival && G.Rivals) { setup.enemies = []; setup.enemyUnits = G.Rivals.units(step.rival); if (step.freeze) setup.freeze = step.freeze; }   // Slice 3 §7 snapshot
     else if (step.family === "hunters" && G.Hunters) { setup.enemies = G.Hunters.packUnits(step.pack || "Hunted"); setup.ambush = !!step.ambush; }   // fixed packs
     else if (step.enemies) setup.enemies = step.enemies.map((id) => ({ id }));   // debug / screenshots: an explicit unit list
+    else if (step.enc && G.V2 && G.V2.on() && (pool = G.V2.enemiesFor(step, elites))) setup.enemies = pool;   // a pool group: built once, the same force every time
     else setup.enemies = G.Battle.buildEnemyGroup(G.rng, step.family, budget, elites, r.zone);
+    if (G.V2 && G.V2.on() && !pool) {   // (a pool group's units carry it already)
+      const hm = G.V2.modNum(node.id, "enemyHpMult", 1), bump = (e) => { e.hpMult = (e.hpMult || 1) * hm; };
+      if (hm !== 1) { (setup.enemies || []).forEach(bump); (setup.waves || []).forEach((w) => w.forEach(bump)); }
+    }
+    if (G.V2 && G.V2.on()) G.V2.battleSetup(step, setup);
     const b = G.Battle.create(setup);
     b.escapable = true; b.pack = step.pack || null; b.nid = step.nid || r.loc;   // Break away (js/escape.js)
     const used = G.Workbench ? G.Workbench.applyAmmo(r, b.units) : null;   // Slice 3 §9: 1 pack per battle, every gun in the squad
@@ -552,6 +582,7 @@
 
   // result: battle object after it ended
   X.finishBattle = function (step, b) {
+    if (G.V2 && G.V2.on()) return X.finishBattleV2(step, b);
     const r = run();
     r.stats.battles++;
     if (G.Rivals) G.Rivals.noteLayout(b);   // Slice 3 §7: your placement becomes your echo's layout
@@ -613,6 +644,7 @@
   // Break away (Megan, milestone 5): standing units leave; downed allies are left behind and die; no loot, no corpses;
   // +heat Heat; back to the location you came from; the fight's enemies stay there for the rest of the run
   X.afterEscape = function (step, b, body) {
+    if (G.V2 && G.V2.on()) return X.afterEscapeV2(step, b, body);
     const r = run(), BA = CFG().battle.breakAway, nid = step.nid || r.loc, here = X.node(nid), label = G.Map.label(here);
     X.addHeat(BA.heat, "escape");
     r.bodyHp = Math.max(1, body.hp);
@@ -645,6 +677,94 @@
     return "escape";
   };
 
+  // ---------- Maps/Areas/Loot (V2): one result owner for a fight (draft §7, §8, §12) ----------
+  // A win commits the group's defeat and every eligible drop once (rolled from the encounter's reward seed, kept on the
+  // bodies), brings you back to the Area you fought in and opens the loot overlay. No "search these bodies" step.
+  X.finishBattleV2 = function (step, b) {
+    const r = run(), V = G.V2;
+    if (X.current() !== step) return "dup";   // a repeated callback (double click, a renderer firing twice) changes nothing
+    V.encFor(step);
+    r.stats.battles++;
+    if (G.Rivals) G.Rivals.noteLayout(b);
+    const body = b.units.find((u) => u.rank === "body" && u.side === 0);
+    V.noteFight(step, b);   // "lots of loud fights" (OPEN): a win or a retreat counts once per encounter
+    if (b.result === "escape") return X.afterEscape(step, b, body);
+    if (body.ironWillFired) r.ironWillUsed = true;
+    r.bodyHp = Math.max(0, body.hp);
+    const downed = body.state === "downed";
+    if (downed && b.result === "win") { r.bodyHp = Math.min(body.maxHp, CFG().battle.downedReviveHp); X.log(`You were downed, but your squad won. You get back up with ${r.bodyHp} HP.`, "bad"); if (G.Injuries) G.Injuries.add(X.body(), "downed"); }
+    const criticals = [], deadGrunts = [], where = step.nid || r.loc;
+    for (const u of b.units) {
+      if (u.side !== 0 || u.squadIdx == null) continue;
+      const s = r.squad[u.squadIdx];
+      s.hp = u.state === "alive" ? Math.max(1, u.hp) : 0;
+      if (u.state === "critical") { criticals.push(u.squadIdx); s.died = { where, cause: "critical" }; }
+      if (u.state === "dead") { X.log(`${G.Allies.name(s.g)} died.`, "bad"); s.died = { where, cause: "battle", corpse: u.corpseSprite, gibbed: !!u.gibbed, killer: u.killedBy ? u.killedBy.name : null }; deadGrunts.push(s); }
+    }
+    G.Allies.afterBattle(step, b, r);
+    const deadEnemies = b.units.filter((u) => u.side === 1 && u.state === "dead");
+    r.stats.kills += deadEnemies.length;
+    const kills = deadEnemies.map((u) => ({ eid: u.eid, family: u.family }));
+    if (b.result !== "win") {
+      V.commitLoss(step);
+      for (const qid of G.Quests.onKills(r.zone, kills)) X.addHeat(G.Quests.objectiveHeat(qid) || 0, "quest");   // as before: kill quests count at the kill
+      X.next();
+      if (r.carriedCritical.length) { X.log("The Critical allies you carried didn't make it.", "bad"); r.carriedCritical = []; }
+      X.die(downed ? "You were downed and nobody was left standing to win the fight." : body.hp <= 0 ? "Your body was killed in battle." : "Your squad was wiped out.");
+      return "loss";
+    }
+    // a committed victory: the kills count now (cards, kill quests, bounties)
+    if (G.Cards) G.Cards.onKills(deadEnemies);
+    for (const qid of G.Quests.onKills(r.zone, kills)) { const qh = G.Quests.objectiveHeat(qid); if (qh) X.addHeat(qh, "quest"); X.log(`Quest objective done: ${G.Quests.def(qid).name}.`, "good"); }
+    if (G.Radio) for (const bt of G.Radio.onKills(r.zone, kills)) X.log(`Bounty complete: ${G.Radio.text(bt)} Paid to the stockpile.`, "good");
+    X.next();
+    X.log(`Victory in ${Math.round(b.t)} s.`, "good");
+    if (G.Hunters) G.Hunters.afterBattle(step, b);
+    const enc = V.commitWin(step), siteKey = step.site || V.siteKey(where), site = X.site(siteKey);
+    if (site) { X.markPicked(site); site.everPicked = true; }
+    let bodies = [];
+    if (site) {
+      const firstId = site.nextId;
+      X.addGruntBodies(siteKey, deadGrunts);
+      if (step.family === "rivals" && step.rival && G.Rivals) G.Rivals.afterWin(step, b); else X.addBattleBodies(siteKey, deadEnemies);
+      bodies = V.lootBodies(step, site, firstId);
+    }
+    V.returnTo(step);   // back where you fought, same position
+    if (step.extraction) V.holdExtraction(step);   // the way out is held: the overlay's Finish extraction ends the run (SP-046)
+    if (step.after) X.applyEffects(step.after, step);   // an event's "battle, then ..."
+    if (bodies.some((o) => V.hasLoot(o)) || step.extraction) X.push({ type: "spoils", enc: enc.id, nid: V.nidOfKey(siteKey), site: siteKey, finish: !!step.extraction }, true);
+    for (let k = criticals.length - 1; k >= 0; k--) X.push({ type: "critical", squadIdx: criticals[k] }, true);
+    G.State.save();
+    return "win";
+  };
+  // Retreat (draft §12, CONFIRMED 5 Oct): the enemy force resets in full and waits at its source; your squad keeps the
+  // damage it took; no enemy loot, rewards, kill progress or clear credit; you fall back to the last safe place that
+  // isn't this one. SP-001: a teammate who died here leaves their body, gear and bag share here for the rest of the run.
+  X.afterEscapeV2 = function (step, b, body) {
+    const r = run(), V = G.V2, nid = step.nid || r.loc, label = G.Map.label(X.node(nid)), siteKey = step.site || V.siteKey(nid), lost = [];
+    r.bodyHp = Math.max(1, body.hp);
+    for (const u of b.units) {
+      if (u.side !== 0 || u.squadIdx == null) continue;
+      const s = r.squad[u.squadIdx];
+      if (u.state === "alive") { s.hp = Math.max(1, u.hp); continue; }
+      s.hp = 0; lost.push(s);
+      if (u.state === "dead") { X.log(`${G.Allies.name(s.g)} died.`, "bad"); s.died = { where: nid, cause: "battle", corpse: u.corpseSprite, gibbed: !!u.gibbed, killer: u.killedBy ? u.killedBy.name : null }; }
+      else { s.died = { where: nid, cause: "left_behind" }; X.log(`${G.Allies.name(s.g)} is left behind at ${label}.`, "bad"); }
+    }
+    G.Allies.afterBattle(step, b, r);
+    if (G.Hunters && G.Hunters.captainMark) G.Hunters.captainMark(b);   // a Captain you killed before breaking away still marks you
+    const site = X.site(siteKey);
+    if (site && lost.length) { const firstId = site.nextId; X.addGruntBodies(siteKey, lost, { keepRun: true }); V.lootBodies(step, site, firstId); }
+    V.commitRetreat(step);
+    V.releaseQueued(r.queue.filter((s) => s !== step));   // a fight queued behind this one never happened: its group goes back unharmed
+    r.queue = [];
+    r.stats.escapes = (r.stats.escapes || 0) + 1;
+    const t = V.retreatTarget(step); V.goTo(t);
+    X.log(`You broke away from ${label} and fell back to ${t.insertion ? DATA.zones.list[r.zone].insertionName || "the zone map" : G.Map.label(X.node(t.nid)) + (t.area ? ` (${((V.areaDef(t.nid) || { areas: {} }).areas[t.area] || {}).name})` : "")}. They're back at full strength. No loot.`, "bad");
+    G.State.save();
+    return "escape";
+  };
+
   // §9.4 Critical ally choice: heal / stabilize / carry / leave
   X.resolveCritical = function (step, choice) {
     const r = run(), s = r.squad[step.squadIdx], cc = DATA.bodies.criticalCare, max = G.Battle.unitFromGrunt(s.g).maxHp;
@@ -663,7 +783,11 @@
     return X.extractionOpen(node);
   };
   X.extract = function () {
+    const v2 = !!(G.V2 && G.V2.on());
+    if (v2) { const m = G.V2.inst(run().loc, false); if (m && m.finish) { const f = G.V2.finishExtraction(); return f.error ? { ok: false, text: f.error } : { ok: true, text: f.text }; } }   // a held defense: finish it
     if (!X.canExtract()) return { ok: false, text: "No open extraction here." };
+    if (v2 && run().v2.extractWait && run().v2.extractWait[run().loc]) return { ok: false, text: "It won't go again yet: step away from it and come back." };
+    if (v2 && !G.V2.persist()) return { ok: false, text: "The game couldn't save, so you stay put (try again)." };
     const r = run(), node = X.node(), ex = X.extractionDef(node);
     if (ex.type === "free") { X.extractSuccess(); return { ok: true, text: "Extracted." }; }
     if (ex.type === "check") {
@@ -688,9 +812,16 @@
       }
       if (G.Checks.isSuccess(roll.grade)) { X.extractSuccess(); return { ok: true, roll, text: roll.text + " — " + (ex.okText || "the engine turns over!") }; }
       if (roll.grade === "badFail" && ex.badFail === "crash") return X.crash(node, ex, roll);   // Slice 5 §A
-      if (roll.grade === "badFail" && ex.badFail === "battle") { X.push({ type: "battle", family: G.Map.loc(node).family, budgetMult: 1, nid: node.id, why: "The noise draws attention!" }); return { ok: false, roll, text: roll.text + " — the noise draws attention!" }; }
+      if (roll.grade === "badFail" && ex.badFail === "battle") {
+        if (v2) { const st = G.V2.alert(G.V2.siteKey(node.id), "extract_fail", "The noise draws attention!"); return { ok: false, roll, text: roll.text + (st ? " — the noise draws attention!" : " — loud, but nothing's left to hear it.") }; }
+        X.push({ type: "battle", family: G.Map.loc(node).family, budgetMult: 1, nid: node.id, why: "The noise draws attention!" }); return { ok: false, roll, text: roll.text + " — the noise draws attention!" }; }
       // Slice 5 §G Cable Car: a Bad Fail stalls it midway; you fight on the car, and a win carries you out (step.extraction)
       if (roll.grade === "badFail" && ex.badFail === "stall") { X.log(ex.stallText, "bad"); X.push({ type: "battle", family: G.Map.loc(node).family, budgetMult: ex.stallBudgetMult != null ? ex.stallBudgetMult : 1, nid: node.id, extraction: ex, stall: true, why: ex.stallText }); return { ok: false, stall: true, roll, text: roll.text + " — " + ex.stallText }; }
+      if (v2) {   // V2: a failed extraction check is loud (its stated cost), never Heat
+        const A = DATA.mapsV2.alert, la = G.V2.loudAlert(G.V2.siteKey(node.id), roll.grade === "badFail" ? A.extractBadFailPct : A.extractFailPct, "extract_fail", "The noise draws attention!");
+        r.v2.extractWait = r.v2.extractWait || {}; r.v2.extractWait[node.id] = true; G.State.save();   // a retry needs a state change (draft §11)
+        return { ok: false, roll, alert: la, text: roll.text + ` — ${ex.failText || "it won't start."}` + (la.step ? " The noise draws attention!" : "") + " Step away and come back to try again." };
+      }
       const fh = ex.failHeat || 0; if (fh) X.addHeat(fh, "extract");
       return { ok: false, roll, text: roll.text + ` — ${ex.failText || "it won't start."}${fh ? ` +${fh} Heat.` : ""}` + (ex.slow && ex.slowHeat ? ` (The climb: +${ex.slowHeat} Heat.)` : "") };
     }
@@ -702,11 +833,11 @@
   X.crash = function (node, ex, roll) {
     const r = run(), C = CFG().extraction.crash, heat = ex.crashHeat != null ? ex.crashHeat : ex.failHeat;
     r.wrecked = r.wrecked || {}; r.wrecked[node.id] = { moves: r.moves, loud: true };
-    X.addHeat(heat, "extract");
+    const got = X.addHeat(heat, "extract"), ht = G.V2 && G.V2.on() ? (got ? ` +${got} Heat.` : "") : ` +${heat} Heat.`;   // V2: not an approved source
     const way = X.otherExitsNote(node);
-    X.log(`${C.log} +${heat} Heat. ${G.Map.loc(node).name} is closed for this run. ${way}`, "bad");
+    X.log(`${C.log}${ht} ${G.Map.loc(node).name} is closed for this run. ${way}`, "bad");
     G.State.save();
-    return { ok: false, crash: true, roll, text: `${roll.text} — ${C.line} +${heat} Heat. ${way}`, line: C.line, sfx: C.sfx, heat };
+    return { ok: false, crash: true, roll, text: `${roll.text} — ${C.line}${ht} ${way}`, line: C.line, sfx: C.sfx, heat: G.V2 && G.V2.on() ? got : heat };
   };
   // Vixie (Hex beginning pass): a crashed exit names the other ways out still open in this zone, but only the ones the
   // player has discovered on the map (named there: in sight this run, or seen before when fog persists; an unfound secret

@@ -300,10 +300,12 @@
     });
   };
 
-  B.start = function (b) { b.phase = "fight"; b.t = 0; B.fx(b, { t: "text", x: b.W / 2, y: 2, text: "FIGHT!", color: "#fff", big: true }); };
+  B.start = function (b) { b.phase = "fight"; b.t = 0; B.fx(b, { t: "text", x: b.W / 2, y: 2, text: "FIGHT!", color: "#fff", big: true }); for (const u of b.units) if (alive(u)) bark(b, u, "start"); };
 
   B.fx = (b, e) => { b.fx.push(e); };
   const floatText = (b, u, text, color, big) => B.fx(b, { t: "text", x: u.x, y: u.y - 0.9, text, color, big: !!big });
+  // SP-010: something a unit might say something about (js/barks.js decides, in the view; extra = numbers it filters on)
+  const bark = (b, u, ev, extra) => B.fx(b, Object.assign({ t: "bark", i: b.units.indexOf(u), ev }, extra));
   const alive = (u) => u.state === "alive";
   const enemiesOf = (b, u) => b.units.filter((o) => o.side !== u.side && alive(o) && !o.unseen);   // an Unseen Stalker can't be targeted
   const alliesOf = (b, u) => b.units.filter((o) => o.side === u.side && alive(o) && o !== u);
@@ -350,6 +352,7 @@
     if (G.EnemyAI) G.EnemyAI.afterDamage(b, def, dmg, opts);   // Marksman aim reset
     if (def.ref && !opts.dot) xp(def, "endurance", XP().enduranceOnDamaged);
     if (!opts.silent) floatText(b, def, (opts.blocked ? "BLOCKED " : "") + (opts.crit ? "CRIT " : "") + Math.round(dmg), opts.crit ? "#ffd84a" : (def.side === 0 ? "#ff8080" : "#ffffff"), opts.crit);
+    if (!opts.dot && def.hp > 0) bark(b, def, "hurt", { pct: Math.round(dmg / def.maxHp * 100), hp: Math.round(def.hp / def.maxHp * 100) });
     if (dmg >= 2 && b.rng() < 0.6 + dmg / 30) B.fx(b, { t: "blood", x: def.x + b.rng.range(-0.6, 0.6), y: def.y + b.rng.range(-0.6, 0.6), size: U.clamp(dmg / 12, 0.4, 1.4), rot: opts.dir != null ? opts.dir : b.rng() * 6.28, spray: !!opts.crit, kind: def.corpseKind });
     def.lastHitDir = opts.dir != null ? opts.dir : def.lastHitDir;
     if (def.tm && def.tm.flee && !def.fled && def.hp > 0 && def.hp / def.maxHp * 100 < def.tm.flee.belowPct) {   // Coward (once per battle)
@@ -363,6 +366,7 @@
   function onZero(b, att, def, overkill, opts) {
     onZero0(b, att, def, overkill, opts);
     if (alive(def)) return;
+    bark(b, def, "ally_down");
     for (const o of b.units) if (o !== def && o.side === def.side && alive(o) && o.cx.cx_ally_down) { const c = o.cx.cx_ally_down; o.buffs.allyDown = { pct: c.asPct, t: c.sec }; floatText(b, o, `+${c.asPct}% AS`, "#ffb070"); }
   }
   function onZero0(b, att, def, overkill, opts) {
@@ -373,7 +377,7 @@
     }
     const overPct = (overkill / def.maxHp) * 100;
     if (att && att.side !== def.side) {
-      att.stats.kills++; (att.killed = att.killed || []).push({ eid: def.eid, elite: !!def.elite, family: def.family, name: def.name });
+      att.stats.kills++; (att.killed = att.killed || []).push({ eid: def.eid, elite: !!def.elite, family: def.family, name: def.name }); bark(b, att, "kill");
       if (att.cx.cx_kill_speed) att.buffs.killSpeed = { pct: att.cx.cx_kill_speed.movePct, t: att.cx.cx_kill_speed.sec };   // Complex: on kill +20% Move Speed 3 s
       if (att.cx.cx_kill_cd && att.abl) for (const s of att.abl) s.cd = Math.max(0, s.cd - att.cx.cx_kill_cd.sec);    // Complex: kills cut cooldowns 1 s
     }
@@ -437,6 +441,7 @@
     const roll = b.rng() * 100;
     xp(u, w.skill, XP().combatRoll); xp(tgt, "acrobatics", XP().evadeRoll);
     B.fx(b, { t: "shot", x1: u.x, y1: u.y, x2: tgt.x, y2: tgt.y, proj: w.projectile, melee: w.style !== "gun", hit: roll < chance, sfx: w.sfx });
+    if (w.style === "gun") b.gunShots = (b.gunShots || 0) + 1;   // Maps/Areas/Loot: a loud fight (js/v2.js, the loud-fight Heat rule)
     const math = b.rollMath ? ` (${Math.round(roll)}/${Math.round(chance)})` : "";
     if (roll >= chance) { u.stats.misses++; floatText(b, tgt, "MISS" + math, "#aaaaaa"); return; }
     // Slice 5 §E: a shield stops a hit from the front (its blockPct inside blockArcDeg of its facing); trains Brawling
@@ -505,8 +510,8 @@
     const f = safe ? 0 : fumbleChance(u), roll = b.rng() * 100;
     xp(u, u.weapon.skill, XP().handlingRoll);
     u.reloadT = u.weapon.reload / attackSpeedMult(u); B.fx(b, { t: "sfx", key: "sfx_reload" });
-    if (roll < f) { u.reloadT += R().fumblePenaltySec; u.stats.jams++; floatText(b, u, "JAMMED!" + (b.rollMath ? ` (${Math.round(f)}%)` : ""), "#ff5050"); B.fx(b, { t: "sfx", key: "sfx_jam" }); b.log.push(`${u.name} fumbled a reload (${U.fmt1(f)}% chance)`); }
-    else floatText(b, u, "reload", "#999");
+    if (roll < f) { u.reloadT += R().fumblePenaltySec; u.stats.jams++; floatText(b, u, "JAMMED!" + (b.rollMath ? ` (${Math.round(f)}%)` : ""), "#ff5050"); B.fx(b, { t: "sfx", key: "sfx_jam" }); b.log.push(`${u.name} fumbled a reload (${U.fmt1(f)}% chance)`); bark(b, u, "jam"); }
+    else { floatText(b, u, "reload", "#999"); bark(b, u, "reload"); }
   }
 
   // ---------- abilities: js/abilities.js (Slice 3 §2), called from B.step ----------
@@ -695,7 +700,7 @@
     return b.result;
   };
 
-  B._ = { armSet, attack, startReload, applyDamage, kill, floatText, xp, XP, enemiesOf, alliesOf, attackSpeedMult };   // for js/abilities.js
+  B._ = { armSet, attack, startReload, applyDamage, kill, floatText, bark, xp, XP, enemiesOf, alliesOf, attackSpeedMult };   // for js/abilities.js
 
   B.summary = function (b) {
     const rows = b.units.filter((u) => u.side === 0 || u.stats.dmg > 0).map((u) => ({

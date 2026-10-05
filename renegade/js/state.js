@@ -254,6 +254,12 @@
     if (St.sandbox && St.sandbox.exiting) return;   // Exit sandbox has cleared the sandbox keys: the unload save must not put them back
     try { St.store.set(St.key("save"), JSON.stringify({ s: G.state, clockOffset: G.clockOffset })); } catch (e) { /* storage may be unavailable */ }
   };
+  // Maps/Areas/Loot (V2): a consequential transition (an extraction) saves first and refuses to go on if it couldn't,
+  // instead of pretending it worked. true = written.
+  St.trySave = function () {
+    if (St.sandbox && St.sandbox.exiting) return true;
+    try { return St.store.set(St.key("save"), JSON.stringify({ s: G.state, clockOffset: G.clockOffset })) !== false; } catch (e) { return false; }
+  };
   // Load: current saves as-is; Slice 1 saves (version 1) are migrated; anything else (unknown / corrupt) is set aside
   // and a new game starts with a notice. St.loadNotice explains what happened (shown once by the UI).
   St.loadNotice = null;

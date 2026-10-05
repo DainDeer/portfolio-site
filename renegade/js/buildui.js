@@ -138,13 +138,13 @@
   };
   BU.badges.infirmary = () => { const J = G.Injuries, b = J.beds(); if (b.length) { const m = Math.min(...b.map((x) => x.until)); return { cls: "timer", text: "✚ " + U.fmtTime(Math.max(0, m - G.now())) }; } const st = O().stored("infirmary"); if (st.med) return { cls: "count", text: `+${st.med} Med` }; return null; };
   BU.giverExtra = function (el, g) { if (g === "ilse" && G.Injuries) BU.panelInfirmary(el); if (G.Quests.shop(g)) BU.panelShop(el, g); };
-  // Megan (milestone 5): Dunn's Stores sells Med kits for Scrap (no town currency yet)
+  // Megan (milestone 5): Dunn's Stores sells Med kits for Scrap (no town currency yet); SP-047: "(Owned: N)" counts the item, not the Scrap
   BU.panelShop = function (el, g) {
     const Q = G.Quests, sh = Q.shop(g), res = G.state.stash.res, sec = h("section", { class: "panel shop" }, h("h3", null, "Stores"));
     for (const key in sh) {
       const it = sh[key], R = DATA.resources[key], price = Object.entries(it.price).map(([r, n]) => `${n} ${DATA.resources[r].name}`).join(" + ");
       const buy = (n) => { const e = Q.buy(g, key, n); if (e) { G.UI.toast(e); G.Sfx.play("sfx_ui_error"); } else { G.Sfx.play("sfx_ui_click"); G.UI.toast(`+${n} ${R.name}`); } G.UI.render(); };
-      sec.appendChild(h("div", { class: "shop-row", "data-shop": key }, SP.icon(R.sprite, 24), h("span", null, `${R.name} — ${price} each (you have ${res[key] || 0})`),
+      sec.appendChild(h("div", { class: "shop-row", "data-shop": key }, SP.icon(R.sprite, 24), h("span", null, `${R.name} — ${price} each (Owned: ${res[key] || 0})`),
         h("button", { "data-buy": key + ":1", disabled: !!Q.canBuy(g, key, 1), onclick: () => buy(1) }, "Buy 1"),
         h("button", { "data-buy": key + ":5", disabled: !!Q.canBuy(g, key, 5), onclick: () => buy(5) }, "Buy 5")));
     }

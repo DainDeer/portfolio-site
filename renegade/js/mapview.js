@@ -139,7 +139,8 @@
       const cd = countdownOf(nid);
       if (cd > 0) { const b = document.createElement("div"); b.className = "mn-countdown"; b.textContent = `⏳ ${cd}`; b.title = `Hollow Creek holds for ${cd} more move${cd === 1 ? "" : "s"}. Arrive in time to defend it.`; el.appendChild(b); el.classList.add("distress"); }
       const name = document.createElement("div"); name.className = "mn-name"; name.textContent = G.Util.copy(G.Map.label(n)); el.appendChild(name);
-      if (loc && isVis && r) {
+      if (loc && isVis && r && G.V2 && G.V2.on()) MV.v2Node(el, n, loc, r);   // Maps/Areas/Loot: no headline odds; what's known
+      else if (loc && isVis && r) {
         const o = G.Exp.odds(n), revisit = r.visited[nid] && nid !== r.loc, rv = revisit ? G.Exp.revisitInfo(n) : null, site = G.Exp.site(nid), eh = G.Exp.entryHostiles(n);
         o.hostiles = Math.round(eh.pct * 10) / 10;   // Slice 3 §12: a picked-over place has fewer Hostiles on the first entry of a run
         const odds = document.createElement("div"); odds.className = "mn-odds";
@@ -160,7 +161,12 @@
       } else if (loc && !isVis) {
         const tg = document.createElement("div"); tg.className = "mn-tags"; tg.textContent = cd > 0 ? `Distress call · holds ${cd} more move${cd === 1 ? "" : "s"}` : "(remembered — fogged)"; el.appendChild(tg);
       }
-      if (r && G.Exp.canMoveTo(nid)) { el.classList.add("reachable"); el.addEventListener("click", () => onPick(nid)); }
+      if (r && loc && G.V2 && G.V2.on()) {   // V2: any known place opens its panel (Travel / Enter are in it)
+        el.classList.add("v2"); if (G.Exp.canMoveTo(nid)) el.classList.add("reachable"); if (r.loc === nid) el.classList.add("enterable");
+        if (G.Traversal && G.Traversal.sel === nid) el.classList.add("selected");
+        el.addEventListener("click", () => onPick(nid));
+      }
+      else if (r && G.Exp.canMoveTo(nid)) { el.classList.add("reachable"); el.addEventListener("click", () => onPick(nid)); }
       else if (r && r.loc === nid && loc && !r.queue.length) { el.classList.add("enterable"); el.addEventListener("click", () => onPick(nid)); }
       wrap.appendChild(el);
     }
@@ -197,6 +203,21 @@
     MV.layout(wrap);
     // re-place on resize (rotation, the side panel opening): positions are px in the bg's cover frame now
     if (typeof ResizeObserver !== "undefined") { const ro = new ResizeObserver(() => { if (!wrap.isConnected) { ro.disconnect(); return; } MV.layout(wrap); }); ro.observe(wrap); }
+  };
+
+  // Maps/Areas/Loot (V2): a node says what's known (classification, enemies, modifier tiers), never headline odds (draft §4)
+  MV.v2Node = function (el, n, loc, r) {
+    const I = G.V2.intel(n.id); if (!I) return;
+    const tags = [];
+    if (I.className) tags.push(I.className);
+    if (r.visited[n.id] && n.id !== r.loc) tags.push("visited");
+    tags.push("T" + n.tier + " · " + (I.enemies.known ? I.enemies.text : DATA.mapsV2.text.unknown));
+    const tg = document.createElement("div"); tg.className = "mn-tags"; tg.textContent = G.Util.copy(tags.join(" · ")); el.appendChild(tg);
+    if (I.mods.length) { const mm = document.createElement("div"); mm.className = "mn-mods"; for (const m of I.mods) { const d = document.createElement("span"); d.style.background = DATA.mapsV2.modifiers.tiers[m.tier].color; d.className = m.on ? "" : "off"; mm.appendChild(d); } el.appendChild(mm); }
+    if (I.classification === "peaceful" || (I.classification === "legacy" && I.extraction.open)) el.classList.add("extract");   // a way out (tutorial T2 rings it)
+    el.dataset.class = I.classification;
+    el.addEventListener("mouseenter", (e) => G.UI.showTip(`<b>${loc.name}</b>` + (I.className ? ` · ${I.className}` : "") + `<br>${I.mods.map((m) => m.name).join(", ")}<br><i>Click for what's known.</i>`, e.clientX, e.clientY));
+    el.addEventListener("mouseleave", () => G.UI.hideTip());
   };
 
   // Ground layer: map background, revealed-ground tile around visible locations, fog texture elsewhere.

@@ -25,6 +25,10 @@
   UI.showTip = function (html, x, y) { UI.tipAt = performance.now(); const t = $("#tooltip"); t.innerHTML = U.copy(html); t.classList.remove("hidden"); const w = t.offsetWidth, hh = t.offsetHeight; t.style.left = Math.min(window.innerWidth - w - 8, x + 14) + "px"; t.style.top = Math.min(window.innerHeight - hh - 8, y + 14) + "px"; };
   UI.hideTip = function () { UI.tipArmed = null; $("#tooltip").classList.add("hidden"); };   // tipAt / tipArmed: tap-to-show on touch (js/touch.js)
   const tipOn = UI.tipOn = (el, fn) => { el.addEventListener("mousemove", (e) => UI.showTip(typeof fn === "function" ? fn() : fn, e.clientX, e.clientY)); el.addEventListener("mouseleave", UI.hideTip); return el; };
+  // SP-014 (Megan, Oct 2): an item's full stat tooltip (the one the stash and bag rows show) on anything that names it,
+  // e.g. an equipped weapon. It wins over a tooltip on the row around it (a Grunt's row on the deploy panel).
+  UI.itemTipHtml = (item, ctx) => `<b style="color:${G.Items.color(item)}">${G.Items.name(item)}</b><br>` + G.Items.describe(item, ctx).join("<br>");
+  UI.itemTip = (el, item, ctx) => { el.dataset.itemTip = item.uid || item.base; el.addEventListener("mousemove", (e) => { e.stopPropagation(); UI.showTip(UI.itemTipHtml(item, ctx), e.clientX, e.clientY); }); el.addEventListener("mouseleave", UI.hideTip); return el; };
   UI.modal = function (content, cls) { const root = $("#modal-root"); root.innerHTML = ""; const m = h("div", { class: "modal " + (cls || "") }, content); root.appendChild(h("div", { class: "modal-back" }, m)); return m; };
   UI.closeModal = function () { $("#modal-root").innerHTML = ""; UI.hideTip(); };
   const bar = UI.bar = (frac, color, label) => h("div", { class: "bar" }, h("div", { class: "bar-fill", style: `width:${U.clamp(frac, 0, 1) * 100}%;background:${color}` }), h("span", { class: "bar-label" }, label));
@@ -39,7 +43,7 @@
     const acts = h("span", { class: "item-acts" });
     for (const a of actions || []) acts.appendChild(h("button", { onclick: a.fn, disabled: a.disabled || false }, a.label));
     row.appendChild(acts);
-    tipOn(row, () => `<b style="color:${G.Items.color(item)}">${G.Items.name(item)}</b><br>` + G.Items.describe(item, ctx).join("<br>"));
+    tipOn(row, () => UI.itemTipHtml(item, ctx));
     return row;
   };
   // "Scav Kit (2/3): +8 kg carry" lines for one unit's items (lit bonuses green, the next one grey)
@@ -213,6 +217,14 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     const items = Object.entries(g.gear || {}).filter(([k, v]) => v && k !== "weapon").map(([, v]) => G.Items.name(v)), w = g.gear && g.gear.weapon;
     return `${w ? G.Items.name(w) : G.Items.base(g.weapon).name + " (own)"}${items.length ? " + " + items.join(" + ") : ""}`;
   };
+  // the same line as gruntGearText, each equipped item hoverable for its stats (SP-014)
+  UI.gruntGearEl = function (g) {
+    const gear = g.gear || {}, w = gear.weapon, worn = Object.values(gear).filter(Boolean);
+    const name = (it) => UI.itemTip(h("span", { class: "gear-name", style: "color:" + G.Items.color(it) }, G.Items.name(it)), it, worn);
+    const out = h("span", { class: "gear-line" }, w ? name(w) : G.Items.base(g.weapon).name + (g.gear ? " (own)" : ""));
+    for (const [k, v] of Object.entries(gear)) if (v && k !== "weapon") { out.appendChild(document.createTextNode(" + ")); out.appendChild(name(v)); }
+    return out;
+  };
   // Grunt / Veteran screen: slots from the Vault stash (Grunt: weapon + one gear slot; Veteran: weapon / head / body / pack),
   // rename, traits, history (newest first)
   UI.panelGrunt = function (el, g) {
@@ -297,7 +309,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     if (!G.Zones.unlocked(UI.zone)) UI.zone = "a";
     const zd = DATA.zones.list[UI.zone];
     el.appendChild(h("div", { class: "deploy-zone" }, "Zone: ", h("b", null, zd.name), ` (${zd.size}, ${zd.tierLabel}) `, h("button", { onclick: () => UI.openPanel("zones") }, "Change zone")));
-    lo.med = lo.med == null ? Math.min(2, s.stash.res.med || 0) : Math.min(lo.med, s.stash.res.med || 0);
+    lo.med = lo.med == null ? Math.min(DATA.config.deploy.defaultMed, s.stash.res.med || 0) : Math.min(lo.med, s.stash.res.med || 0);
     if (!G.State.body(lo.bodyId) || !G.State.bodyReady(G.State.body(lo.bodyId))) { const was = G.State.body(lo.bodyId), rb = s.bodies.find((b) => G.State.bodyReady(b)); if (rb) { if (was) UI.bodyFallbackFrom = was.uid; lo.bodyId = rb.uid; } }
     // the body you had picked is restoring, so the panel fell back to a ready one: say so (until you pick one yourself)
     const fbFrom = UI.bodyFallbackFrom && G.State.body(UI.bodyFallbackFrom);
@@ -336,20 +348,21 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     for (const g of s.grunts) {
       const on = lo.grunts.includes(g.uid), cost = G.State.gruntTpl(g).deployCost;
       const cb = h("input", { type: "checkbox", checked: on, disabled: !on && used + cost > score, onchange: () => { if (on) lo.grunts = lo.grunts.filter((x) => x !== g.uid); else lo.grunts.push(g.uid); UI.render(); } });
-      ssec.appendChild(tipOn(h("label", { class: "grunt-row" }, cb, UI.gruntIcon(g, 32), ` ${G.Allies.name(g)} (${G.Allies.rankName(g)}, cost ${cost}) — ${g.gear ? UI.gruntGearText(g) : G.Items.base(g.weapon).name}; ` + Object.entries(g.skills).map(([k, v]) => DATA.skills[k].name + " " + v.lvl).join(", ") + " ", UI.traitChips(g.traits), UI.injuryChips ? UI.injuryChips(g) : null,
+      ssec.appendChild(tipOn(h("label", { class: "grunt-row" }, cb, UI.gruntIcon(g, 32), ` ${G.Allies.name(g)} (${G.Allies.rankName(g)}, cost ${cost}) — `, UI.gruntGearEl(g), "; " + Object.entries(g.skills).map(([k, v]) => DATA.skills[k].name + " " + v.lvl).join(", ") + " ", UI.traitChips(g.traits), UI.injuryChips ? UI.injuryChips(g) : null,
         h("button", { class: "grunt-gear-btn", "data-act": "grunt-doll", "data-grunt": g.uid, title: "Head, body, pack, weapon", onclick: (e) => { e.preventDefault(); e.stopPropagation(); UI.showDoll({ grunt: g }); } }, "Gear…")), `<b>${G.Allies.name(g)}</b>: ${g.rank === "core" ? "goes Critical at 0 HP (can be Domed)" : "dies at 0 HP"}.` + (g.traits.length ? "<br>" + UI.traitTipHtml(g.traits) : "")));
     }
     el.appendChild(ssec);
     // gear
     const gsec = h("section", { class: "panel" }, h("h3", null, "3 · Gear (taken from the Vault — lost if your body dies)"));
     // Slice 4 §F: the body's gear goes through the same paper doll as the Grunts (items stay in the Vault until you deploy)
-    { const chips = h("div", { class: "gear-chips" });
+    { const chips = h("div", { class: "gear-chips" }), worn = Object.values(lo.gear).map((uid) => s.stash.items.find((i) => i.uid === uid)).filter(Boolean);
       for (const slot of ["weapon", "offhand", "weapon2", "offhand2", "head", "body", "backpack"]) {
         const it = lo.gear[slot] && s.stash.items.find((i) => i.uid === lo.gear[slot]);
         if (!it && (slot === "offhand" || slot === "weapon2" || slot === "offhand2")) { if (lo.gear[slot]) delete lo.gear[slot]; continue; }   // Slice 5 §E: only filled extra hands show
         if (lo.gear[slot] && !it) delete lo.gear[slot];
-        chips.appendChild(h("span", { class: "gear-chip" + (it ? " r-" + it.rarity : " empty"), "data-gslot": slot }, SP.icon(it ? G.Items.sprite(it) : (DATA.sprites["slot_" + (slot === "backpack" ? "pack" : slot)] ? "slot_" + (slot === "backpack" ? "pack" : slot) : "slot_gear"), 24),
-          h("span", it ? { style: "color:" + DATA.items.rarities[it.rarity].color } : null, it ? G.Items.name(it) : slot === "weapon" ? `(natural: ${G.Items.base(body.cls ? DATA.bodies.classes[body.cls].naturalWeapon : DATA.bodies.basicBody.naturalWeapon).name})` : slot === "backpack" && DATA.config.deploy.freeBackpack ? "(free School Bag)" : "(none)")));
+        const chip = h("span", { class: "gear-chip" + (it ? " r-" + it.rarity : " empty"), "data-gslot": slot }, SP.icon(it ? G.Items.sprite(it) : (DATA.sprites["slot_" + (slot === "backpack" ? "pack" : slot)] ? "slot_" + (slot === "backpack" ? "pack" : slot) : "slot_gear"), 24),
+          h("span", it ? { style: "color:" + DATA.items.rarities[it.rarity].color } : null, it ? G.Items.name(it) : slot === "weapon" ? `(natural: ${G.Items.base(body.cls ? DATA.bodies.classes[body.cls].naturalWeapon : DATA.bodies.basicBody.naturalWeapon).name})` : slot === "backpack" && DATA.config.deploy.freeBackpack ? "(free School Bag)" : "(none)"));
+        chips.appendChild(it ? UI.itemTip(chip, it, worn) : chip);   // SP-014: hover an equipped item for its stats
       }
       chips.appendChild(h("button", { "data-act": "body-doll", onclick: () => { UI.showDoll({ body: true }); } }, "Equip…"));
       gsec.appendChild(chips); }
@@ -700,26 +713,32 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     scr.innerHTML = "";
     const layout = h("div", { class: "exp-layout" });
     const mapBox = h("div", { class: "exp-map" });
-    const inSite = X.inSite(), node = X.node(), loc = G.Map.loc(node), zd = DATA.zones.list[r.zone];
-    const head = h("div", { class: "exp-head" }, h("b", null, zd.name), " · ", inSite ? `${loc.name} (location view)` : "Zone map");
-    if (inSite) head.appendChild(h("button", { "data-act": "leave", disabled: !!r.queue.length || !!UI.search, onclick: () => { X.leaveSite(); UI.render(); } }, "Leave to the map ↩"));
-    else if (loc && X.site()) head.appendChild(h("button", { "data-act": "enter", disabled: !!r.queue.length, onclick: () => { X.enterSite(); UI.render(); } }, `Go back inside ${loc.name}`));
+    const inSite = X.inSite(), node = X.node(), loc = G.Map.loc(node), zd = DATA.zones.list[r.zone], v2 = !!(G.V2 && G.V2.on());
+    const area = v2 && inSite && G.V2.isAreaMap(r.loc) ? X.site() : null;   // Maps/Areas/Loot: "Hushwood / [Map] / [Area]"
+    const head = h("div", { class: "exp-head" }, h("b", null, zd.name), " · ", v2 ? (loc ? `${loc.name}${area ? " / " + G.Util.copy(area.name) : ""}${inSite ? "" : " (traversal)"}` : "Traversal") : inSite ? `${loc.name} (location view)` : "Zone map");
+    if (inSite) head.appendChild(h("button", { "data-act": "leave", disabled: !!r.queue.length || !!UI.search, onclick: () => { X.leaveSite(); UI.render(); } }, v2 ? DATA.mapsV2.text.backToTraversal + " ↩" : "Leave to the map ↩"));
+    else if (loc && X.site()) head.appendChild(h("button", { "data-act": "enter", disabled: !!r.queue.length, onclick: () => { const e = X.enterSite(); if (e) UI.fail(e); UI.render(); } }, v2 ? G.Traversal.enterLabel(r.loc) : `Go back inside ${loc.name}`));
     mapBox.appendChild(head);
     if (inSite) G.SiteView.render(mapBox, { onObject: UI.onSiteObject, onCancel: UI.cancelSearch });
-    else G.MapView.render(mapBox, (nid) => {
+    else G.MapView.render(mapBox, v2 ? (nid) => G.Traversal.select(nid) : (nid) => {   // V2: a Map opens its panel first (Travel / Enter there)
       if (nid === r.loc) { X.enterSite(); UI.render(); return; }
-      if (!X.moveTo(nid)) UI.toast(X.immobile() ? "Over 150% carry: drop something first." : "Can't move there."); UI.render();
+      if (!X.moveTo(nid)) UI.toast(X.immobile() ? X.overloadText() : "Can't move there."); UI.render();
     });
+    if (!inSite && v2) G.Traversal.mount(mapBox);
+    if (!inSite && G.AreaWalk) G.AreaWalk.reset();   // off to traversal: an abandoned walk (and its action) never replays later
     layout.appendChild(mapBox);
     const side = h("div", { class: "exp-side" });
     // heat
     const t = X.heatTier();
+    if (v2) { const hs = G.Traversal.heat(r, bar); if (hs) side.appendChild(hs); }   // SP-034: hidden while low, no passive effects
+    else {
     const heat = h("section", { class: "panel", "data-tut": "heat" }, h("h3", null, `Heat ${r.heat} — ${t.name}`), bar(r.heat / DATA.config.heat.max, t.color, `${r.heat}/100`));
     const marks = h("div", { class: "heat-marks" }); for (const th of DATA.config.heat.thresholds) marks.appendChild(th.min >= 80 ? h("span", { class: "hm-end", style: `right:${100 - th.min}%` }, th.name + "|") : h("span", { style: `left:${th.min}%` }, "|" + th.name));   // Slice 5: a label near the end reads leftward from its tick (Manhunt at 90 overflowed the side panel)
     heat.appendChild(marks);
     { const rh = X.carriedResHeat(); heat.appendChild(h("small", { class: "heat-move", "data-heat-move": String(DATA.config.heat.perMove + rh) }, `Each move: +${DATA.config.heat.perMove}` + (rh ? ` · Relic Tech: +${rh} (+${DATA.resources.relic.heatPerMove} per unit carried)` : "") + " Heat")); heat.appendChild(h("br")); }
     heat.appendChild(h("small", null, `Enemy budget ×${t.budgetMult} · loot rarity +${t.lootBonus}%` + (G.Perks.rarityBonus() ? ` (+${G.Perks.rarityBonus()}% Scavenger's Eye)` : "") + (t.hostileBonus ? ` · hostiles +${t.hostileBonus}%` : "") + (t.closeExtractions ? ` · ${t.closeExtractions >= 99 ? "only one extraction open" : t.closeExtractions + " extraction(s) closed"}` : "") + (t.forcedBattle ? " · strike team intercepts at next location" : "")));
     side.appendChild(heat);
+    }
     // squad
     const body = X.body(), maxHp = X.maxBodyHp();
     const sq = h("section", { class: "panel" }, h("h3", null, "Squad"));
@@ -735,7 +754,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     const cap = X.capacity(), kg = X.carried(), pct = (kg / cap) * 100;
     const carry = h("section", { class: "panel" }, h("h3", null, `Carry ${U.fmt1(kg)} / ${U.fmt1(cap)} kg`, G.Perks.carryKg() ? h("small", { class: "hint" }, ` (incl. Mule +${G.Perks.carryKg()} kg)`) : null), bar(pct / 150, pct >= 150 ? "#e04040" : pct > 100 ? "#e0a040" : "#6aa0ff", `${Math.round(pct)}%`));
     if (r.carryDrop && r.carryDrop.nid === r.loc) { const cd = r.carryDrop; carry.classList.add("carry-drop"); carry.appendChild(h("div", { class: "warn carry-drop-note", "data-note": "carry-drop" }, `−${U.fmt1(cd.lostKg)} kg capacity: ${cd.names.join(", ")} died.` + (cd.shareKg > 0 ? ` ${U.fmt1(cd.shareKg)} kg of the bag is on ${cd.names.length > 1 ? "their bodies" : "the body"} here: take it before you move on, or it's gone.` : " Their gear is on the body here: take it before you move on, or it's gone."))); }   // Slice 5 §C
-    if (pct > 100) carry.appendChild(h("div", { class: "warn" }, pct >= DATA.config.carry.immobileAtPct ? "Over 150%: you can't move until you drop something." : `Overloaded: −${Math.round(pct - 100)}% Move Speed in battle.`));
+    if (pct > 100) carry.appendChild(h("div", { class: "warn", "data-note": pct >= DATA.config.carry.immobileAtPct ? "immobile" : "overloaded" }, pct >= DATA.config.carry.immobileAtPct ? X.overloadText() + " (Over 150% you can't move.)" : `Overloaded: −${Math.round(pct - 100)}% Move Speed in battle.`));   // SP-045
     // gear
     const worn = Object.values(r.gear).filter(Boolean);
     for (const slot of ["weapon", "offhand", "head", "body", "backpack"]) { const it = r.gear[slot]; if (it) carry.appendChild(UI.itemEl(it, [{ label: "Unequip", fn: () => { X.unequip(slot); UI.render(); } }], UI.slotLabel[slot] || slot, worn)); }
@@ -756,12 +775,16 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     r.pouch.forEach((p, i) => { if (p.item) carry.appendChild(UI.itemEl(p.item, [{ label: "Take out", fn: () => { X.fromPouch(i); UI.render(); } }])); else carry.appendChild(h("div", { class: "item-row" }, `${p.n} × ${DATA.items.resources[p.res].name}`, h("button", { onclick: () => { X.fromPouch(i); UI.render(); } }, "Take out"))); });
     side.appendChild(carry);
     // extraction
-    if (loc && loc.extraction) {
+    if (area) side.insertBefore(G.Traversal.sideHere(), side.firstChild);   // V2 Area: what's here, nearest first
+    const ve = v2 && loc ? G.Traversal.sideExtract() : null;
+    if (ve) side.appendChild(ve);
+    else if (loc && loc.extraction) {
       const ex = X.extractionDef(node), open = X.extractionOpen(node);
       const label = UI.extractLabel(ex);
       side.appendChild(h("section", { class: "panel extract" }, h("h3", null, "Extraction point: " + loc.name), open ? h("button", { class: "primary big", "data-act": "extract", disabled: !X.canExtract(), onclick: () => UI.extractClick() }, label)
         : X.wrecked(node) ? h("div", { class: "warn wrecked", "data-note": "wrecked" }, `${DATA.config.extraction.crash.line} ${X.otherExitsNote(node)}`) : h("div", { class: "warn" }, "Closed at this Heat level.")));
-    } else side.appendChild(h("section", { class: "panel" }, h("small", null, inSite ? (TL() ? "Tap" : "Click") + " an object to search it. The tooltip shows the time and the disturbance chance. The EXIT you came in by takes you back to the zone map." : `${TL() ? "Tap" : "Click"} a highlighted neighbouring location to move (+${DATA.config.heat.perMove} Heat). ${TL() ? "Tap" : "Click"} where you are to go back inside. The outpost is hidden: extraction is the only way home.`)));
+    } else if (v2) { if (!area) side.appendChild(h("section", { class: "panel" }, h("small", null, inSite ? `${TL() ? "Tap" : "Click"} an object to search it. The way you came in takes you back to traversal.` : `${TL() ? "Tap" : "Click"} a place to see what's known about it, then travel there. Walking around inside a place never starts a fight; searching, forcing and noise can.`))); }
+    else side.appendChild(h("section", { class: "panel" }, h("small", null, inSite ? (TL() ? "Tap" : "Click") + " an object to search it. The tooltip shows the time and the disturbance chance. The EXIT you came in by takes you back to the zone map." : `${TL() ? "Tap" : "Click"} a highlighted neighbouring location to move (+${DATA.config.heat.perMove} Heat). ${TL() ? "Tap" : "Click"} where you are to go back inside. The outpost is hidden: extraction is the only way home.`)));
     // log
     const lg = h("section", { class: "panel log" }, h("h3", null, "Log"));
     for (const line of r.log.slice(-14).reverse()) lg.appendChild(h("div", null, line));
@@ -777,6 +800,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     if (step.type === "battle") return UI.stepBattleIntro(step);
     if (step.type === "event") return UI.stepEvent(step);
     if (step.type === "container") return UI.stepContainer(step);
+    if (step.type === "spoils" || step.type === "loot") return G.Traversal.lootStep(step);   // Maps/Areas/Loot: battle loot / a source's loot
     if (step.type === "message") return UI.modal(h("div", null, h("h2", null, step.title), h("p", null, step.text), h("button", { class: "primary", onclick: () => { G.Exp.resolveMessage(step); UI.render(); } }, "OK")));
     if (step.type === "critical") return UI.stepCritical(step);
     if (step.type === "spot") return UI.stepSpot(step);
@@ -856,6 +880,17 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
   };
   UI.onSiteObject = function (o, acts, el) {
     const X = G.Exp, site = X.site();
+    // Maps/Areas/Loot (V2): through to a linked Area, a body's / a container's loot (never a search), a duck, a Contested way out
+    if (acts[0] === "go") { UI.hideTip(); const e = G.V2.enterArea(G.state.run.loc, o.to, G.V2.curArea(G.state.run.loc)); if (e) UI.fail(e); UI.render(); return; }
+    if (acts[0] === "loot") { UI.hideTip(); G.V2.openLoot(site, o); UI.render(); return; }
+    if (acts[0] === "boop") { const res = X.useObject(o.id); if (res.text) UI.toast(res.text); return; }
+    if (acts[0] === "extract" && o.opp) {
+      const od = G.V2.oppDef(site.nid, o.opp), ck = od.check ? UI.checkLabel(G.Checks.compute(od.check.skill, od.check.dc, X.members(), X.gearItems())) : "No check.";
+      UI.modal(h("div", { "data-hotspot": "opportunity" }, h("h2", null, o.name), h("p", { class: "examine" }, X.examine(o)), h("p", null, ck), h("p", { class: "hint" }, "A failed attempt is loud (whatever's still nearby may come), and you'll have to step away before trying again."),
+        h("div", { class: "confirm-row" }, h("button", { class: "primary confirm-btn", "data-act": "extract-opportunity", onclick: () => { UI.closeModal(); const res = G.V2.attemptOpp(G.state.run.loc, o.opp); if (res.error) UI.fail(res.error); else UI.toast(res.text); UI.render(); } }, "Try it"),
+          h("button", { class: "confirm-btn", onclick: () => { UI.closeModal(); UI.render(); } }, "Not now"))));
+      return;
+    }
     // Slice 5 §D: the way out leaves to the zone map; the extraction hotspot asks first, then runs the panel's flow
     if (acts[0] === "leave") { UI.hideTip(); X.leaveSite(); UI.render(); return; }
     site.squadAt = o.id;
@@ -907,14 +942,15 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     G.Sfx.play(res.roll ? (G.Checks.isSuccess(res.roll.grade) ? "sfx_check_success" : "sfx_check_fail") : "sfx_search_done");
     UI.render();
     const el2 = G.SiteView.els[S.objId] || el;
-    if (el2 && G.XPFloat) G.XPFloat.text(el2, `Disturbance ${U.fmt1(res.disturb.pct)}% → ${Math.floor(res.disturb.roll)}: ${res.disturb.hit ? "heard!" : "quiet"}`, res.disturb.hit ? "#ff7a6a" : "#bbb", "below");
+    if (el2 && G.XPFloat) G.XPFloat.text(el2, res.disturb.v2 ? (res.fight ? "Something heard you!" : res.disturb.pct > 0 ? `Quiet (${U.fmt1(res.disturb.pct)}% → ${Math.floor(res.disturb.roll)})` : "Quiet") : `Disturbance ${U.fmt1(res.disturb.pct)}% → ${Math.floor(res.disturb.roll)}: ${res.disturb.hit ? "heard!" : "quiet"}`, res.disturb.hit || res.fight ? "#ff7a6a" : "#bbb", "below");
     if (res.texts.length && (res.empty || !G.Exp.current())) UI.toast(res.texts.join(" "));
   };
 
   UI.stepBattleIntro = function (step) {
     const fam = DATA.enemies.families[step.family];
-    UI.modal(h("div", null, h("h2", { class: "bad" }, step.why || "Hostiles!"), h("p", null, `${fam.name} ahead. You'll place your squad on the grid, then the fight plays out automatically.`),
-      h("button", { class: "primary", onclick: () => { UI.closeModal(); UI.startBattle(step); } }, "To battle")));
+    const go = h("button", { class: "primary", "data-act": "to-battle", onclick: () => { UI.closeModal(); UI.startBattle(step); } }, "To battle");
+    UI.modal(h("div", null, h("h2", { class: "bad" }, step.why || "Hostiles!"), h("p", null, `${fam.name} ahead. You'll place your squad on the grid, then the fight plays out automatically.`), go));
+    try { go.focus({ preventScroll: true }); } catch (e) {}   // SP-008: Space / Enter = To battle (then Space = Fight!)
   };
 
   UI.startBattle = function (step) {
@@ -940,7 +976,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
       tokenNote ? h("p", { class: "hint", "data-note": "retry-token-blocked" }, tokenNote) : null,
       h("div", { class: "confirm-row" },
         retry ? h("button", { class: "primary confirm-btn", "data-act": "retry-fight", onclick: () => UI.retryFight() }, token ? `↻ Retry fight (1 ${TKc.name.toLowerCase()})` : "↻ Retry fight") : null,
-        h("button", { class: (retry ? "" : "primary ") + "confirm-btn", "data-act": "battle-continue", onclick: () => { G.BattleView.unmount(UI.battle.v); UI.battle = null; UI.closeModal(); G.Exp.finishBattle(step, b); UI.render(); } }, "Continue")));
+        h("button", { class: (retry ? "" : "primary ") + "confirm-btn", "data-act": "battle-continue", onclick: () => { G.BattleView.unmount(UI.battle.v); UI.battle = null; UI.closeModal(); G.Exp.finishBattle(step, b); if (G.AreaWalk) G.AreaWalk.guard(); UI.render(); } }, "Continue")));   // V2: the last battle click can't walk you somewhere
     UI.modal(box, "wide");
   };
 

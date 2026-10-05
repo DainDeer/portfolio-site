@@ -8,7 +8,7 @@
   // vIn (SP-100, js/gfx.js): an existing view object to fill in (a 3D load that fell back to 2D keeps UI.battle.v)
   BV.mount = function (container, b, opts, vIn) {
     const c = C(), px = c.pxPerM, W = c.arenaW * px, H = c.arenaH * px;
-    const v = Object.assign(vIn || {}, { b, opts, px, W, H, speed: opts.speed == null ? 1 : opts.speed, floaters: [], tracers: [], gibs: [], booms: [], sparks: [], arcs: [], shake: 0, slowmo: 0, last: 0, raf: 0, drag: null, hover: null, mouse: null, corpseIdx: 0, clock: G.BattleClock.create(), rnd: U.makeRng(((b.seed >>> 0) ^ 0x5bd1e995) >>> 0), ip: null, done: false, ended: false, is3d: false, dispose: null, pausePanel: null, container });
+    const v = Object.assign(vIn || {}, { b, opts, px, W, H, speed: opts.speed == null ? 1 : opts.speed, floaters: [], tracers: [], gibs: [], booms: [], sparks: [], arcs: [], shake: 0, slowmo: 0, last: 0, raf: 0, drag: null, hover: null, mouse: null, corpseIdx: 0, clock: G.BattleClock.create(), rnd: U.makeRng(((b.seed >>> 0) ^ 0x5bd1e995) >>> 0), barks: G.Barks ? G.Barks.state(U.makeRng(((b.seed >>> 0) ^ 0x2545f491) >>> 0)) : null, heads: new Map(), ip: null, done: false, ended: false, is3d: false, dispose: null, pausePanel: null, container });
     container.innerHTML = "";
     if (G.Dice && G.Dice.dismissMini) G.Dice.dismissMini();   // a docked scouting die never lingers into a fight
     const wrap = document.createElement("div"); wrap.className = "battle-wrap";
@@ -58,7 +58,7 @@
       pb.textContent = b.paused ? "▶ Resume (Space)" : "⏸ Pause (Space)"; pb.onclick = () => { pb.blur(); BV.togglePause(v); }; v.hud.appendChild(pb);
     }
     if (b.phase === "place") {
-      const go = document.createElement("button"); go.className = "primary"; go.textContent = v.artPending ? "Loading battle artwork…" : "Fight!"; go.disabled = !!v.artPending; go.onclick = () => { G.Battle.start(b); BV.renderHud(v); };
+      const go = document.createElement("button"); go.className = "primary"; go.dataset.act = "fight"; go.textContent = v.artPending ? "Loading battle artwork…" : TL() ? "Fight!" : "Fight! (Space)"; go.disabled = !!v.artPending; go.onclick = () => { go.blur(); BV.fight(v); };
       v.hud.appendChild(go);
     }
     BV.renderTouch(v);
@@ -66,6 +66,14 @@
       const ar = document.createElement("button"); ar.textContent = "Auto-resolve"; ar.onclick = () => { if (b.phase === "place") G.Battle.start(b); while (!b.over) { G.Battle.step(b, 1 / 30); } BV.renderHud(v); };
       v.hud.appendChild(ar);
     }
+  };
+
+  // Fight!: the button, or Space during placement (SP-008)
+  BV.fight = function (v) {
+    const b = v.b; if (v.done || b.phase !== "place" || v.artPending) return false;
+    G.Battle.start(b); BV.renderHud(v);
+    if (G.TutView) G.TutView.event("fight");   // SP-003: Fight! ends the battle tutorial's placement steps
+    return true;
   };
 
   // Slice 4 §A2: combat speed slider, 0x (stopped) to 4x, live value, gentle snaps (DATA.config.battle.speedSlider).
@@ -265,7 +273,9 @@
   BV.onKey = function (v, e) {
     if (v.done || G.Util.typing(e)) return;
     const i = DATA.abilities.hotkeys.indexOf(e.key), TP = DATA.config.battle.tacticalPause;
-    if (TP && TP.enabled && e.key === TP.key && v.b.phase === "fight") { e.preventDefault(); BV.togglePause(v); }
+    if (e.key === " " && e.repeat) { e.preventDefault(); return; }   // a held Space never starts the fight and then pauses it too
+    if (e.key === " " && v.b.phase === "place") { e.preventDefault(); BV.fight(v); }   // SP-008: Space = Fight!
+    else if (TP && TP.enabled && e.key === TP.key && v.b.phase === "fight") { e.preventDefault(); BV.togglePause(v); }
     else if (i >= 0 && v.b.phase === "fight") { e.preventDefault(); BV.press(v, i); }
     else if (G.Escape && G.Escape.on(v.b) && e.key.toLowerCase() === DATA.config.battle.breakAway.key && v.b.phase === "fight") { e.preventDefault(); BV.pressEscape(v); }
     else if (e.key.toLowerCase() === DATA.config.battle.weaponSets.swap.key && v.b.phase === "fight") { e.preventDefault(); BV.pressSwap(v); }   // Slice 5 §E
@@ -287,7 +297,7 @@
     el.style.display = ""; el.innerHTML = "";
     const head = document.createElement("div"); head.className = "tp-head"; head.innerHTML = (TL() ? "<b>TACTICAL PAUSE</b> · tap a ready ability to aim it, tap Break away to queue it, and use carried Med kits on your units; they run in this order when you tap Resume. A Med kit" : "<b>TACTICAL PAUSE</b> · aim ready abilities (1/2), queue Break away (B) and use carried Med kits on your units; they run in this order when you resume (Space). A Med kit") + " channels " + DATA.config.battle.tacticalPause.channelSec.med + " s after the resume, then that unit can't take another for " + G.Tactical.medCooldown(b) + " s."; el.appendChild(head);
     const items = document.createElement("div"); items.className = "tp-items";
-    for (const it of T.items()) {
+    for (const it of T.items(b)) {
       const btn = document.createElement("button"); btn.className = "tp-item" + (b.itemAim && b.itemAim.kind === it.kind ? " on" : ""); btn.dataset.item = it.kind; btn.disabled = !(it.n > 0);
       btn.appendChild(G.Sprites.icon(it.sprite, 20)); btn.appendChild(document.createTextNode(` Med kit (${it.n})`));
       btn.onclick = () => { b.aim = null; b.itemAim = b.itemAim && b.itemAim.kind === it.kind ? null : { kind: it.kind }; BV.renderPause(v); BV.updateBar(v); };
@@ -300,7 +310,7 @@
     q.forEach((a, k) => {
       const row = document.createElement("span"); row.className = "tp-q"; row.dataset.q = k;
       row.appendChild(G.Sprites.icon(qIcon(a), 18)); row.appendChild(document.createTextNode(` ${k + 1}. ${T.label(a)} → ${a.kind === "ability" ? (a.tgt && a.tgt.name ? a.tgt.name : a.tgt ? "the spot" : a.u.name) : a.u.name} `));
-      const x = document.createElement("button"); x.textContent = "×"; x.title = a.kind === "med" ? "Cancel (the kit goes back to your bag)" : "Cancel"; x.onclick = () => { T.cancel(b, k); BV.renderPause(v); BV.updateBar(v); }; row.appendChild(x);
+      const x = document.createElement("button"); x.textContent = "×"; x.title = a.kind === "med" ? "Cancel (the kit stays in your bag)" : "Cancel"; x.onclick = () => { T.cancel(b, k); BV.renderPause(v); BV.updateBar(v); }; row.appendChild(x);
       list.appendChild(row);
     });
     el.appendChild(list);
@@ -479,7 +489,8 @@
     let dt = Math.min(0.05, (t - v.last) / 1000); v.last = t;
     const timeScale = v.slowmo > 0 ? C().slowMoOnKill : 1;
     v.slowmo = Math.max(0, v.slowmo - dt);
-    if (b.phase === "fight" && !v.tutSeen && G.TutView) { v.tutSeen = true; G.TutView.check(); }   // Slice 4 §A T3: first frame of the fight
+    if (v.barks) G.Barks.tick(v.barks, dt);
+    if (v.tutSeen !== b.phase && G.TutView) { v.tutSeen = b.phase; G.TutView.check(); }   // Slice 4 §A T3: the first frame of placement (SP-003) and of the fight
     const diceHeld = !!(G.Dice && G.Dice.busy()), held = !!(G.TutView && G.TutView.holds()) || diceHeld;   // + Slice 5 §B: Break away's die   // a tutorial step is showing: the fight holds (b.paused untouched)
     // SP-100: the same fixed 1/60 sim clock as the 3D view (js/battleclock.js): real time x G.Abilities.timeScale (aiming:
     // 25% of 1x or paused; the kill slow-mo on top) spent in whole steps, so 2D and 3D play a fight step for step.
@@ -519,6 +530,7 @@
   BV.drainFx = function (v) {
     const b = v.b, lift = bodyLiftM(v);
     for (const e of b.fx) {
+      if (e.t === "bark") { if (v.barks) G.Barks.event(v.barks, b, e); continue; }   // SP-010
       if (e.t === "text") v.floaters.push({ x: e.x, y: e.y - (v.art ? 1.0 : 0), text: e.text, color: e.color, big: e.big, life: e.big ? 1.6 : 1.0, max: e.big ? 1.6 : 1.0, dx: (v.rnd() - 0.5) * 0.6 });
       else if (e.t === "shot") {
         let x2 = e.x2, y2 = e.y2;
@@ -657,6 +669,7 @@
       } else top = y - px * 1.2;
       // hp bar
       const bw = art ? px * 1.3 : sz * 0.9, hpF = U.clamp(u.hp / u.maxHp, 0, 1), by = Math.round(top - 6);
+      v.heads.set(u, { x, y: by });   // SP-010: barks sit over this
       ctx.fillStyle = "rgba(0,0,0,.7)"; ctx.fillRect(x - bw / 2, by, bw, 4);
       ctx.fillStyle = hpF > 0.5 ? "#5fd35f" : hpF > 0.25 ? "#e0c040" : "#e04040"; ctx.fillRect(x - bw / 2, by, bw * hpF, 4);
       if (u.reloadT > 0) { ctx.fillStyle = "#aaa"; ctx.fillRect(x - bw / 2, by + 5, bw * (1 - u.reloadT / Math.max(0.1, u.weapon.reload + 2)), 2); }
@@ -715,6 +728,10 @@
       ctx.strokeText(f.text, f.x * px, f.y * px); ctx.fillStyle = f.color; ctx.fillText(f.text, f.x * px, f.y * px);
     }
     ctx.lineJoin = "miter";
+    // SP-010: what units say, yellow over their heads (phones: at least phoneFloatPx.word css px)
+    if (v.barks) { const bs = fk ? Math.max(14, Math.ceil(fp.word * 1.1 * fk)) : 14;
+      for (const k of G.Barks.list(v.barks)) { const hd = v.heads.get(k.u); if (hd) G.Barks.draw(ctx, k.text, hd.x, hd.y - Math.round(bs * 0.6), bs, k.left); } }
+    v.heads.clear();
     // XP floats (Slice 2 §10): small pale-cyan labels beside the unit, real-time fade, stacked upward
     if (G.XPFloat && G.XPFloat.battle.length) {
       ctx.textAlign = "left"; ctx.font = "10px sans-serif"; ctx.lineWidth = 2.5;

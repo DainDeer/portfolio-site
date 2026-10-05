@@ -215,7 +215,9 @@ export function mount(container, b, opts, v, prep) {
 
   // ---- sim fx -> 3D (called after every sim step, so unit positions are exactly the ones the event was made at) --------------
   const floaters = [], booms = [], arcs = [], textQ = [];
+  const barks = G.Barks ? G.Barks.state(G.Util.makeRng(((b.seed >>> 0) ^ 0x2545f491) >>> 0)) : null;   // SP-010 (same seed as the 2D view)
   function onFx(e) {
+    if (e.t === "bark") { if (barks) G.Barks.event(barks, b, e); return; }
     if (e.t === "text") { textQ.push(e); return; }
     if (e.t === "shot") {
       const s = nearest(e.x1, e.y1, (x) => !x.rag), sh = s && s.x; if (!sh) { G.Sfx.play(e.sfx); return; }
@@ -356,10 +358,11 @@ export function mount(container, b, opts, v, prep) {
   const perf = { frames: 0, fpsAcc: 0, fpsN: 0, fps: 0, steps: 0, fightFrames: 0, over33: 0, fightMs: 0 };
   function frame(t) {
     const real = t - v.last, rdt = Math.max(0, Math.min(0.05, real / 1000)); v.last = t; perf.frames++;
+    if (barks) G.Barks.tick(barks, rdt);
     if (b.phase === "fight") G.Gfx.countFrame(perf, real, { paused: !!b.paused || v.speed <= 0, hidden: typeof document !== "undefined" && document.hidden });
     perf.fpsAcc += rdt; perf.fpsN++; if (perf.fpsAcc >= 0.5) { perf.fps = Math.round(perf.fpsN / perf.fpsAcc); perf.fpsAcc = 0; perf.fpsN = 0; }
     layout();
-    if (b.phase === "fight" && !v.tutSeen && G.TutView) { v.tutSeen = true; G.TutView.check(); }
+    if (v.tutSeen !== b.phase && G.TutView) { v.tutSeen = b.phase; G.TutView.check(); }   // T3: placement (SP-003) and the fight's first frame
     const diceHeld = !!(G.Dice && G.Dice.busy()), held = !!(G.TutView && G.TutView.holds()) || diceHeld;
     const base = camBase.clone(); if (shake > 0) { base.add(new THREE.Vector3((rng() - 0.5) * shake, (rng() - 0.5) * shake, (rng() - 0.5) * shake)); shake = Math.max(0, shake - rdt * 1.2); }
     let ts = kc.update(rdt, base, camTarget, { live: b.phase === "fight" && !held && !b.paused && v.speed > 0, over: b.over });   // the 3 s live stretch counts only while the fight runs
@@ -476,6 +479,10 @@ export function mount(container, b, opts, v, prep) {
       if (f.global) label(f.text, OW / 2, 70 - f.rise * 0.2, f.color, Math.round(size * 1.6));
       else { const p = simP(f.x, f.y + 0.9, 2.1); label(f.text, p.x + f.dx * (1 - f.life / f.max), p.y - f.rise, f.color, Math.round(size)); } }
     ctx.globalAlpha = 1;
+    // SP-010: what units say, yellow over their heads (above the HP bar and any Med kit bar)
+    if (barks) { const bs = fsz(15, true);
+      for (const k of G.Barks.list(barks)) { const x = vmap.get(k.u); if (!x || x.rag || !x.fig.visible) continue; const hp = headP(x); if (!hp.ok) continue;
+        G.Barks.draw(ctx, k.text, hp.x, Math.round(hp.y) - 10 - (k.u.channel ? 16 : 0), bs, k.left); } }
     if (G.XPFloat && G.XPFloat.battle.length) for (const f of G.XPFloat.battle) { const x = vmap.get(f.unit); if (!x || x.rag) continue; const st = G.XPFloat.battleStyle(f), c = chestP(x); ctx.globalAlpha = st.alpha;
       ctx.font = "11px sans-serif"; ctx.textAlign = "left"; ctx.lineWidth = 2.5; ctx.strokeStyle = "rgba(0,0,0,.8)"; ctx.strokeText(f.text, c.x + 26, c.y - f.idx * 12 - st.rise); ctx.fillStyle = f.color; ctx.fillText(f.text, c.x + 26, c.y - f.idx * 12 - st.rise); }
     ctx.globalAlpha = 1;

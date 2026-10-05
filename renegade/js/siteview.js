@@ -12,6 +12,19 @@
     const cv = document.createElement("canvas"); cv.width = W; cv.height = H; cv.className = "site-canvas";
     wrap.appendChild(cv);
     SV.paint(cv, site);
+    if (site.art) {
+      wrap.classList.add("hushwood");
+      const A = G.Hushwood.layout(site), M = DATA.hushwood.manifest;
+      const img = (file, box, z) => {
+        const el = document.createElement("img"); el.className = "hw-scenery"; el.alt = ""; el.draggable = false;
+        el.src = G.Assets.url(DATA.sprites.basePath + "areas/hushwood_v1/" + file);
+        el.style.left = box[0]/20*100+"%"; el.style.top = box[1]/12*100+"%";
+        el.style.width = box[2]/20*100+"%"; el.style.height = box[3]/12*100+"%"; el.style.zIndex = z;
+        wrap.appendChild(el);
+      };
+      img(A.ground.file, [0,0,20,12], 0);
+      for (const p of A.decor) { const d = M.decor[p.asset] || M.props[p.asset]; img(d.file || d.states.closed,p.positionM.concat(p.sizeM),Math.round(p.sortYM*50)); }
+    }
     // Slice 4 §E: scenery props are canvas decor: hover (tap on phones) the nearest one for its examine line
     const propAt = (e) => { const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * W, y = (e.clientY - r.top) / r.height * H;
       // phones: at least a 44 px (css) circle, the tap-target minimum (the view is drawn at 0.4-0.6x there)
@@ -22,7 +35,7 @@
       else if (propTip) { propTip = null; G.UI.hideTip(); } });
     cv.addEventListener("mouseleave", () => { if (propTip) { propTip = null; G.UI.hideTip(); } });
     SV.els = {};
-    const busy = G.UI.search;
+    const busy = G.UI.search, walk = !!(G.AreaWalk && G.AreaWalk.active());   // Maps/Areas/Loot: a V2 Area walks (js/areawalk.js does the clicks)
     for (const o of site.objects) {
       if (!X.objVisible(o, site) || !X.roomOpen(site, o.room)) continue;   // rooms behind closed doors stay unseen
       const open = true, blockedWhy = X.objBlocked(o, site), acts = X.objActions(o);
@@ -31,11 +44,20 @@
       el.className = "site-obj" + (open ? "" : " dark") + (done ? " done" : "") + (o.kind !== "search" ? " " + o.kind : "") + (o.type === "door" ? " door" : "") + (o.fresh ? " corpse" : "") + (busy && busy.objId === o.id ? " busy" : "");
       el.dataset.obj = o.id; el.dataset.kind = o.kind; if (o.type) el.dataset.type = o.type;
       el.style.left = (o.x / W * 100) + "%"; el.style.top = (o.y / H * 100) + "%";
-      const V = DATA.searchables.view, px = o.type === "door" || o.kind === "exit" ? V.doorPx : V.objPx * (o.wide || (DATA.searchables.types[o.type] || {}).wide || 1);   // the car is wide (2 slots)
+      const V = DATA.searchables.view, px = o.type === "door" || o.kind === "exit" || o.kind === "areaExit" ? V.doorPx : V.objPx * (o.wide || (DATA.searchables.types[o.type] || {}).wide || 1);   // the car is wide (2 slots)
       el.style.width = (px / W * 100) + "%";           // scales with the view (objects are 32 native x2 on the 1000 px canvas)
       const spr = SV.spriteFor(o, site); el.dataset.sprite = spr;
+      if (site.art) el.style.zIndex = Math.round(o.sortY || o.y);
+      if (o.artBox) {
+        const b = o.artBox; el.classList.add("hw-object"); el.style.left = b[0]/W*100+"%"; el.style.top = b[1]/H*100+"%";
+        el.style.width = b[2]/W*100+"%"; el.style.height = b[3]/H*100+"%";
+        const ic = document.createElement("img"); ic.className = "site-art"; ic.alt = o.name; ic.draggable = false;
+        ic.src = G.Assets.url(DATA.sprites.basePath + SP.def(spr).file); el.appendChild(ic);
+      } else
       { const ic = SP.icon(spr, px, "site-art"); el.appendChild(ic); if (SP.def(spr).fps && G.MapView) G.MapView.animate(ic, SP.def(spr)); }   // Slice 5 §D: the burning wreck loops (MV's shared timer)
       if (o.kind === "exit") { const l = document.createElement("div"); l.className = "obj-exit-label"; l.textContent = DATA.searchables.access.exit.label; el.appendChild(l); }
+      if (o.kind === "areaExit") { const l = document.createElement("div"); l.className = "obj-exit-label area side-" + (o.side || "floor"); l.textContent = G.Util.copy(o.name.replace(/^To the /, "")); el.appendChild(l); if (o.vertical) el.classList.add("v"); }
+      if (o.loot && G.V2.hasLoot(o)) { const l = document.createElement("div"); l.className = "obj-loot"; l.title = "Loot here"; el.appendChild(l); }
       if (o.kind === "mural" && G.Main) G.Main.st().pods.sol.forEach((p, i) => el.appendChild(SP.icon(`obj_mural_arrow_${i + 1}_${["up", "right", "down", "left"][p]}`, px, "site-art mural-arrow")));   // the painted answer
       if (o.sealed != null && o.type === "door" && (o.vertical != null ? o.vertical : site.rooms[o.opens].row === site.rooms[o.room].row)) el.classList.add("sealed-v");   // the bulkhead art is horizontal: turned for a side wall
       const mk = SV.markerFor(o); if (mk) el.appendChild(SP.icon(mk, V.markerPx, "obj-marker"));
@@ -44,15 +66,16 @@
       if (X.hasLeft(o)) { const l = document.createElement("div"); l.className = "obj-left"; l.textContent = "…"; el.appendChild(l); }
       if (o.kind === "wheel") { SV.wheel(el, o, blockedWhy, busy); wrap.appendChild(el); SV.els[o.id] = el; continue; }   // Slice 4 §B pods puzzle
       if (open && !busy) {
-        el.addEventListener("mousemove", (e) => G.UI.showTip(SV.tip(o, acts, blockedWhy), e.clientX, e.clientY));
+        el.addEventListener("mousemove", (e) => { if (e.pointerType && e.pointerType !== "mouse") return; G.UI.showTip(SV.tip(o, acts, blockedWhy), e.clientX, e.clientY); });
         el.addEventListener("mouseleave", () => G.UI.hideTip());
-        if (!blockedWhy && acts.length) { el.classList.add("usable"); el.addEventListener("click", (e) => { e.stopPropagation(); G.UI.hideTip(); handlers.onObject(o, acts, el); }); }
+        if (walk) { if (!blockedWhy && acts.length) el.classList.add("walkable"); }   // walk there, then use it (js/areawalk.js)
+        else if (!blockedWhy && acts.length) { el.classList.add("usable"); el.addEventListener("click", (e) => { e.stopPropagation(); G.UI.hideTip(); handlers.onObject(o, acts, el); }); }
       }
       wrap.appendChild(el);
       SV.els[o.id] = el;
     }
     // squad token next to the last object you used (no pathfinding)
-    const at = site.objects.find((o) => o.id === site.squadAt) || X.exitObj(site) || { x: site.rooms[0].x + 40, y: site.rooms[0].y + site.rooms[0].h - 40 };
+    const at = site.objects.find((o) => o.id === site.squadAt) || X.exitObj(site) || site.objects.find((o) => o.kind === "areaExit") || { x: site.rooms[0].x + 40, y: site.rooms[0].y + site.rooms[0].h - 40 };
     const sq = document.createElement("div"); sq.className = "site-squad";
     sq.style.left = ((at.x + 2 + DATA.searchables.view.objPx * (at.wide || (DATA.searchables.types[at.type] || {}).wide || 1) / 2) / W * 100) + "%"; sq.style.top = ((at.y + (at.kind === "exit" ? -40 : 10)) / H * 100) + "%";   // beside it (wide objects: beside the whole car / truck; the exit sits in the wall, so just inside the room)
     sq.style.width = (DATA.searchables.view.objPx / W * 100) + "%";
@@ -68,13 +91,14 @@
       wrap.appendChild(pb);
     }
     const title = document.createElement("div"); title.className = "site-title";
-    title.textContent = `${G.Util.copy(loc.name)} · ${site.size} · ${site.objects.filter((o) => o.kind === "search" && !o.searched && !o.blocked).length} unsearched`;
+    title.textContent = walk ? `${G.Util.copy(loc.name)} / ${G.Util.copy(site.name || "")}` : `${G.Util.copy(loc.name)} · ${site.size} · ${site.objects.filter((o) => o.kind === "search" && !o.searched && !o.blocked).length} unsearched`;
     wrap.appendChild(title);
     container.appendChild(wrap);
+    if (walk) { wrap.classList.add("walk"); G.AreaWalk.attach(wrap, site, handlers); }
     return wrap;
   };
 
-  SV.actionLabel = { leave: "Leave to the zone map ↩", extract: "Extract", search: "Search", pick: "Pick the lock", force: "Force it", kick: "Kick it", reopen: "Take what's left", use: "Interact", cross: "Crawl through", claim: "Claim the body", examine: "Examine", train: "Train" };
+  SV.actionLabel = { leave: "Leave to the zone map ↩", go: "Go through", loot: "Take what's on it (no search, no risk)", boop: "Boop", extract: "Extract", search: "Search", pick: "Pick the lock", force: "Force it", kick: "Kick it", reopen: "Take what's left", use: "Interact", cross: "Crawl through", claim: "Claim the body", examine: "Examine", train: "Train" };
   // Slice 4 §B: a wall wheel. Its arrow points at one of 4 positions. Click the left half to turn it counterclockwise,
   // the right half clockwise; on touch screens two small arrow buttons sit under it (css: .wheel-btns).
   SV.wheel = function (el, o, why, busy) {
@@ -107,11 +131,12 @@
     if (ex) t += `<br><span class="examine">${ex}</span>`;
     if (why) return t + `<br><i>${why}</i>`;
     for (const a of acts) {
+      if (a === "extract" && o.opp) { const od = G.V2.oppDef(X.site().nid, o.opp); t += "<br>" + (od.check ? G.UI.checkLabel(G.Checks.compute(od.check.skill, od.check.dc, X.members(), X.gearItems())) : "Extract"); continue; }   // V2: a Contested way out
       if (a === "extract") { t += `<br>${G.UI.extractLabel(X.extractionDef(X.node()))}`; continue; }   // Slice 5 §D: the same line as the panel button
-      if (a === "leave" || a === "use" || a === "cross" || a === "reopen" || a === "claim" || a === "examine") { t += `<br>${SV.actionLabel[a]}`; continue; }
+      if (a === "leave" || a === "use" || a === "cross" || a === "reopen" || a === "claim" || a === "examine" || a === "go" || a === "loot" || a === "boop") { t += `<br>${SV.actionLabel[a]}`; continue; }
       const i = X.searchInfo(o.id, a);
       const TR = a === "train" && X.trainDef(o);   // Slice 5 §F
-      t += `<br>${TR ? TR.label || SV.actionLabel[a] : SV.actionLabel[a]}: <b>${U.fmt1(i.sec)} s</b>${TR ? ` · +${TR.xp} ${DATA.skills[TR.skill].name} XP` : ""} · disturbance <b>${U.fmt1(i.pct)}%</b>` + (i.heatGain ? ` · +${i.heatGain} Heat` : "") + (i.check ? ` · ${DATA.skills[i.check.skill].name} DC ${i.check.dc} ${Math.round(i.check.chance)}%` : "");
+      t += `<br>${TR ? TR.label || SV.actionLabel[a] : SV.actionLabel[a]}: <b>${U.fmt1(i.sec)} s</b>${TR ? ` · +${TR.xp} ${DATA.skills[TR.skill].name} XP` : ""} · ` + (i.v2 ? (i.free ? "nobody left to hear you" : i.natural && a === "search" ? "quiet" : `may draw attention <b>${U.fmt1(i.pct)}%</b>`) : `disturbance <b>${U.fmt1(i.pct)}%</b>`) + (i.heatGain ? ` · +${i.heatGain} Heat` : "") + (i.check ? ` · ${DATA.skills[i.check.skill].name} DC ${i.check.dc} ${Math.round(i.check.chance)}%` : "");
       if (G.Debug && G.Debug.rollMath) t += `<br><small>${i.math}</small>`;
     }
     return t;
@@ -120,6 +145,7 @@
   // Sprite for an object in its current state (falls back to the base sprite when a state has no art key).
   SV.spriteFor = function (o, site) {
     const X = G.Exp, has = (k) => !!DATA.sprites[k];
+    if (o.artAsset) return "hw_props_" + o.artAsset + "_" + (G.UI && G.UI.search && G.UI.search.objId === o.id ? "open" : !o.searched ? "closed" : X.hasLeft(o) || (G.V2 && G.V2.hasLoot(o)) ? "open" : "searched");
     if (o.type === "door" && o.sealed != null) return site.rooms[o.opens].open ? "obj_door_sealed_open" : "obj_door_sealed";   // Slice 4 §B pods bulkhead
     if (o.type === "door") {
       const base = (o.vertical != null ? o.vertical : site.rooms[o.opens] && site.rooms[o.room] && site.rooms[o.opens].row === site.rooms[o.room].row) ? "obj_door_v" : "obj_door";
@@ -131,6 +157,7 @@
       const base = !still && P.anim && has(P.anim) ? P.anim : (P.sprite && has(P.sprite) ? P.sprite : has(P.fallbackSprite) ? P.fallbackSprite : o.sprite);   // fallbackSprite: the Rail Spur until Smudge's marker lands
       return G.Zones.passageFound(o.pid) && has(base + "_open") ? base + "_open" : base;
     }
+    if (o.kind === "extract" && o.opp) return o.sprite;   // V2: the opportunity's own art (the pickup, the log truck, the ferry)
     if (o.kind === "extract") return X.extractSprite(o, typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches);   // Slice 5 §D: the wreck burns (the still under reduced motion)
     if (o.kind === "exit") { const E = DATA.searchables.access.exit; return (E.styles[o.style] || E.styles[E.default]).sprite; }   // from data, so new art is a one-line swap
     if (o.kind === "wheel") { const k = `obj_wheel_${"abc"[o.idx] || "a"}_${["up", "right", "down", "left"][o.pos]}`; return has(k) ? k : o.sprite; }   // Slice 4 §B
@@ -164,6 +191,7 @@
 
   // Order (art README): wall fill, edge bands, corner caps, then the face inside each room's top edge; doorway plates under doors.
   SV.paint = function (cv, site) {
+    if (site.art) return;
     const ctx = cv.getContext("2d"), S = DATA.searchables, V = S.view, WL = S.walls, wz = Object.assign({}, WL.default);
     { const zw = (WL.byZone || {})[site.zone] || {}; for (const k in zw) if (DATA.sprites[zw[k]]) wz[k] = zw[k]; }   // Slice 5 §G: a zone's wall art only once it's registered (Scablands hooks)
     const T = V.wall;
@@ -186,7 +214,8 @@
       if (v) put(ctx, WL.doorwayV, o.x - T / 2, o.y - 2 * T, T, 4 * T, o.x - T / 2, o.y - 2 * T); else put(ctx, WL.doorwayH, o.x - 2 * T, o.y - T / 2, 4 * T, T, o.x - 2 * T, o.y - T / 2);
     }
     // Slice 5 §D: the way out sits in the outer wall on a doorway plate
-    for (const o of site.objects) if (o.kind === "exit") put(ctx, WL.doorwayH, o.x - 2 * T, o.y - T / 2, 4 * T, T, o.x - 2 * T, o.y - T / 2);
+    for (const o of site.objects) if (o.kind === "exit" || (o.kind === "areaExit" && !o.vertical && o.side !== "floor")) put(ctx, WL.doorwayH, o.x - 2 * T, o.y - T / 2, 4 * T, T, o.x - 2 * T, o.y - T / 2);
+    for (const o of site.objects) if (o.kind === "areaExit" && o.vertical) put(ctx, WL.doorwayV, o.x - T / 2, o.y - 2 * T, T, 4 * T, o.x - T / 2, o.y - 2 * T);   // Maps/Areas/Loot: the ways between Areas
     // south-facing wall face on the floor just inside each room's top wall
     for (const R of site.rooms) tile(ctx, wz.face, R.x, R.y, R.w, T, R.x, R.y);
     const openR = (i) => site.rooms[i] && site.rooms[i].open;

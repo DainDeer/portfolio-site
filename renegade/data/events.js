@@ -35,7 +35,8 @@ DATA.events = {
           success: [{ text: "The loop cuts out. Local war-bands lose your trail." }, { heat: -15 }],
           fail:    [{ text: "The panel sparks. Nothing happens." }],
           badFail: [{ text: "An alarm tone replaces the loop." }, { heat: 8 }] } },
-      { label: "Destroy it (battle, then loot, +20 Heat)", effects: [{ heat: 20 }, { battle: { family: "outlaws", budgetMult: 1.2 } }, { loot: { rolls: 2 } }] },
+      // source: in a V2 run (data/mapsv2.js heat.sources) Heat only comes from approved sources; this is SP-034's "breaking orbital faction things"
+      { label: "Destroy it (battle, then loot, +20 Heat)", effects: [{ heat: 20, source: "orbital_object" },{ battle: { family: "outlaws", budgetMult: 1.2 } }, { loot: { rolls: 2 } }] },
       { label: "Decode it", check: { skill: "lore", dc: 15 }, outcomes: {
           success: [{ text: "Buried in the loop: coordinates and a name." }, { lore: "relay_decoded" }],
           fail:    [{ text: "Just noise to you." }] } },

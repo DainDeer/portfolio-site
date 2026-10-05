@@ -279,6 +279,9 @@ button.promote { background: #6a5a1a; }
 .tut .tut-dim { position: absolute; inset: 0; background: rgba(0, 0, 0, var(--tut-dim, 0.6)); pointer-events: none; }
 .tut .tut-ring { position: fixed; border: 3px solid #ffd84a; border-radius: 8px; pointer-events: none; box-shadow: 0 0 0 200vmax rgba(0, 0, 0, var(--tut-dim, 0.6)), 0 0 14px 3px #ffd84aaa inset, 0 0 16px 4px #ffd84a88; transition: left .15s, top .15s, width .15s, height .15s; }
 .tut.no-target .tut-ring { display: none; }
+/* SP-003: a free step (T3's "press Fight!") lets you play under it: no blocking layer, no dim, just the ring and the box */
+.tut.free .tut-block, .tut.free .tut-dim { display: none; }
+.tut.free .tut-ring { box-shadow: 0 0 14px 3px #ffd84aaa inset, 0 0 16px 4px #ffd84a88; }
 .tut .tut-arrow { position: fixed; width: 36px; height: 36px; font-size: 34px; line-height: 36px; text-align: center; color: #ffd84a; text-shadow: 0 0 6px #000, 0 0 2px #000; pointer-events: none; }
 .tut .tut-arrow.up { animation: tutBobV 0.9s ease-in-out infinite reverse; }
 .tut .tut-arrow.down { animation: tutBobV 0.9s ease-in-out infinite; }
