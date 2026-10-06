@@ -212,11 +212,12 @@
     if (I.className) tags.push(I.className);
     if (r.visited[n.id] && n.id !== r.loc) tags.push("visited");
     tags.push("T" + n.tier + " · " + (I.enemies.known ? I.enemies.text : DATA.mapsV2.text.unknown));
+    if (I.danger) tags.push("☠".repeat(I.danger));   // danger pips: always shown, never explained (design §1)
     const tg = document.createElement("div"); tg.className = "mn-tags"; tg.textContent = G.Util.copy(tags.join(" · ")); el.appendChild(tg);
-    if (I.mods.length) { const mm = document.createElement("div"); mm.className = "mn-mods"; for (const m of I.mods) { const d = document.createElement("span"); d.style.background = DATA.mapsV2.modifiers.tiers[m.tier].color; d.className = m.on ? "" : "off"; mm.appendChild(d); } el.appendChild(mm); }
+    if (I.mods.length) { const mm = document.createElement("div"); mm.className = "mn-mods"; for (const m of I.mods) { const d = document.createElement("span"); d.style.background = m.color; d.className = m.on ? "" : "off"; d.title = m.name; mm.appendChild(d); } el.appendChild(mm); }
     if (I.classification === "peaceful" || (I.classification === "legacy" && I.extraction.open)) el.classList.add("extract");   // a way out (tutorial T2 rings it)
     el.dataset.class = I.classification;
-    el.addEventListener("mouseenter", (e) => G.UI.showTip(`<b>${loc.name}</b>` + (I.className ? ` · ${I.className}` : "") + `<br>${I.mods.map((m) => m.name).join(", ")}<br><i>Click for what's known.</i>`, e.clientX, e.clientY));
+    el.addEventListener("mouseenter", (e) => G.UI.showTip(`<b>${loc.name}</b>` + (I.className ? ` · ${I.className}` : "") + (I.danger ? ` · ${"☠".repeat(I.danger)}` : "") + `<br>${I.mods.map((m) => m.name).join(", ")}${I.hiddenMods ? ` <i>(+${I.hiddenMods} unknown)</i>` : ""}<br><i>Click for what's known.</i>`, e.clientX, e.clientY));
     el.addEventListener("mouseleave", () => G.UI.hideTip());
   };
 

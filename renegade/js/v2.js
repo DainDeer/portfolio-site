@@ -70,43 +70,143 @@
     const r = run(); if (!V.on(r) || !nid) return null;
     let m = r.v2.maps[nid]; if (m || create === false) return m || null;
     const node = G.Zones.node(nid), loc = G.Map.loc(node); if (!loc) return null;
-    const def = V.v2Def(nid);
-    m = r.v2.maps[nid] = { id: nid, loc: node.loc, zone: G.Zones.zoneOf(nid), kind: def ? "v2" : "legacy", content: r.v2.content,
-      classification: def ? def.classification : loc.extraction ? "legacy" : "none",
-      mods: V.rollMods(nid), locked: false, pool: V.makePool(nid, def, node), area: def ? V.entryArea(def) : null, seenAreas: {}, opps: {}, defeated: [], finish: null };
+    const def = V.v2Def(nid), zone = G.Zones.zoneOf(nid), plan = V.classPlan(zone);
+    m = r.v2.maps[nid] = { id: nid, loc: node.loc, zone, kind: def ? "v2" : "legacy", content: r.v2.content,
+      classification: plan[nid] || (def ? def.classification : loc.extraction ? "legacy" : "none"),
+      mods: V.rollMods(nid), locked: false, pool: null, area: def ? V.entryArea(def) : null, seenAreas: {}, opps: {}, defeated: [], finish: null };
+    m.pool = V.makePool(nid, def, node, m);
     if (def) for (const o of def.opportunities || []) m.opps[o.id] = { revealed: !o.hidden, unlocked: !(o.reveal && (o.reveal.groups || []).length), closed: false, attempts: 0, last: null };
     V.ev("map_instance", { nid, kind: m.kind, classification: m.classification, mods: m.mods.map((x) => x.id) });
     return m;
   };
-  V.makePool = function (nid, def, node) {
-    const groups = [];
+  // m: the Map instance being built (its active modifiers, classification and danger shape the pool: design §1, §4)
+  V.makePool = function (nid, def, node, m) {
+    const groups = [], C = D().classification, loc = G.Map.loc(node), zone = G.Zones.zoneOf(nid);
     if (def) for (const g of def.groups || []) groups.push({ id: g.id, area: g.area || null, arrival: !!g.arrival, budgetMult: g.budgetMult || 1, family: g.family || null, state: "available" });
     else {   // the legacy pool adapter (§13): a reviewed, stable, finite set for a Map that has no authored groups
       const P = D().pool, h = X().baseHostiles(node), n = h > 0 ? Math.min(P.legacyMax, Math.ceil(h / P.legacyPerGroupPct)) : 0;
       for (let i = 0; i < n; i++) groups.push({ id: "g" + (i + 1), area: null, arrival: true, budgetMult: 1, family: null, state: "available" });
     }
+    if (m) {
+      const mods = V.activeMods(nid, m), cls = m.classification;
+      const add = (id) => groups.push({ id, area: null, arrival: true, budgetMult: 1, family: null, state: "available" });
+      // A smaller pool must still contain every group whose defeat opens an extraction.
+      const required = new Set((def && def.opportunities || []).flatMap(o => (o.reveal && o.reveal.groups) || []));
+      const drop = () => {
+        if (groups.length <= 1) return false;
+        let k = -1;
+        for (let j = groups.length - 1; j >= 0; j--) if (!required.has(groups[j].id)) {
+          if (k < 0) k = j;
+          if (!groups[j].arrival) { k = j; break; }
+        }
+        if (k < 0) return false;
+        groups.splice(k, 1); return true;
+      };
+      let extra = 0; for (const x of mods) extra += x.groups || 0;
+      extra += Math.floor(V.dangerOf(m) / (D().danger.groupPerPips || 99));
+      if (cls === "occupied") extra += (C.pool.occupied || {}).plus || 0;
+      for (let i = 0; i < extra; i++) add("x" + (i + 1));
+      for (let i = extra; i < 0; i++) drop();
+      if (mods.some((x) => x.patrol)) add("patrol");   // unbound: answers noise anywhere on the Map
+      if (cls === "peaceful") while (groups.length > ((C.pool.peaceful || {}).max || 99) && drop()) {}
+      const all = mods.find((x) => x.allFamily); if (all && !X().familyBarred(all.allFamily, zone)) for (const g of groups) g.family = all.allFamily;
+      if (mods.some((x) => x.secondFamily) && groups.length && loc) { const other = loc.family === "beasts" ? "outlaws" : "beasts"; if (!X().familyBarred(other, zone)) (groups.find((q) => !q.arrival) || groups[groups.length - 1]).family = other; }
+    }
     return { groups, nextR: 1 };
   };
+  // the pool is rebuilt from the enabled set when the crossing locks it, as long as nothing in it has been touched
+  V.rebuildPool = function (m) {
+    if (!m || m.pool.groups.some((g) => g.state !== "available" || g.enc || g.waiting || g.units || g.reinforcement) || m.defeated.length) return;
+    m.pool = V.makePool(m.id, V.v2Def(m.id), G.Zones.node(m.id), m);
+  };
   V.group = (m, gid) => (m ? m.pool.groups.find((g) => g.id === gid) : null);
+
+  // ---------- classification (design §4): every Map gets one; Peaceful is the extraction-density dial ----------
+  // One seeded plan per zone per expedition: V2 definitions keep theirs, a Map with its own extraction is "legacy", every
+  // other Map rolls Peaceful / Occupied / none (a legacy Map has no opportunities, so its Contested share is "none").
+  // Then: Occupied never in the first row or next to another Occupied; and every Map has a way out (a Peaceful Map or a
+  // legacy extraction) within exitWithin steps, else the nearest eligible Map is promoted to Peaceful (deterministic).
+  V.classPlan = function (zone) {
+    const r = run(); if (!V.on(r)) return {};
+    r.v2.classes = r.v2.classes || {};
+    if (r.v2.classes[zone]) return r.v2.classes[zone];
+    const C = D().classification, map = G.Zones.map(zone), plan = {};
+    if (!map) return {};
+    const ids = Object.keys(map.nodes).filter((id) => G.Map.loc(map.nodes[id])).sort();
+    const fixed = (id) => !!V.v2Def(id) || plan[id] === "legacy";
+    for (const id of ids) {
+      const node = map.nodes[id], loc = G.Map.loc(node), def = V.v2Def(id);
+      if (def) plan[id] = def.classification;
+      else if (loc.extraction) plan[id] = "legacy";
+      else { const k = V.rngFor(r.seed, zone, id, "class").weighted(Object.keys(C.shares), (x) => C.shares[x]); plan[id] = k === "contested" ? "none" : k; }
+    }
+    for (const id of ids) if (plan[id] === "occupied" && !V.v2Def(id) && ((map.nodes[id].row || 0) < C.occupiedMinRow || G.Map.neighbors(map, id).some((n) => plan[n] === "occupied"))) plan[id] = "none";
+    // Like X.canMoveTo: the insertion point cannot be entered again or used as a shortcut.
+    const dists = (from) => { const d = { [from]: 0 }, q = [from]; while (q.length) { const x = q.shift(); for (const y of G.Map.neighbors(map, x)) if (y !== map.insertion && d[y] == null) { d[y] = d[x] + 1; q.push(y); } } return d; };
+    const exit = (id) => plan[id] === "peaceful" || plan[id] === "legacy";
+    const need = ids.filter((id) => !map.nodes[id].secret);
+    for (let guard = 0; guard <= ids.length; guard++) {
+      let bad = null, bd = null;
+      for (const id of need) { const d = dists(id); if (!ids.some((e) => exit(e) && d[e] != null && d[e] <= C.exitWithin)) { bad = id; bd = d; break; } }
+      if (!bad) break;
+      const cand = ids.filter((id) => !fixed(id) && plan[id] !== "peaceful" && bd[id] != null && bd[id] <= C.exitWithin)
+        .sort((a, b) => (bd[a] - bd[b]) || ((map.nodes[a].row || 0) - (map.nodes[b].row || 0)) || (a < b ? -1 : 1));
+      if (!cand.length) break;
+      plan[cand[0]] = "peaceful";
+    }
+    r.v2.classes[zone] = plan;
+    return plan;
+  };
+  // danger pips (design §1): active hazards + the classification baseline, clamped. Always shown, never explained.
+  V.dangerOf = function (m) {
+    if (!m) return 0; const C = D().classification.danger || {}, DG = D().danger;
+    const n = V.activeMods(m.id, m).reduce((a, x) => a + (x.danger || 0), 0) + (C[m.classification] || 0);
+    return U.clamp(n, 0, DG.max);
+  };
+  V.danger = (nid) => V.dangerOf(V.inst(nid));
+  V.lootRarityBonus = (nid) => V.danger(nid) * (D().danger.rarityPerPip || 0);
+  // resource weight multipliers in force on a Map (resMult of its active modifiers, multiplied)
+  V.resMult = function (nid) { const out = {}; for (const x of V.activeMods(nid)) for (const k in x.resMult || {}) out[k] = (out[k] || 1) * x.resMult[k]; return out; };
   V.available = (m) => (m ? m.pool.groups.filter((g) => g.state === "available" && !g.reinforcement) : []);
 
   // ---------- modifiers (SP-039, draft §5) ----------
   const MODS = () => D().modifiers;
   V.modDef = (id) => MODS().list[id];
-  V.canDisable = (id) => !!(MODS().categories[V.modDef(id).cat] || {}).canDisable;
-  // seeded by expedition + Map + table version: the same roll every time it's loaded, never rerolled
+  // a hazard (danger > 0) can be turned off before the crossing; anything else is just how the place is
+  V.canDisable = (id) => ((V.modDef(id) || {}).danger || 0) > 0;
+  // seeded by expedition + Map + table version: the same roll every time it's loaded, never rerolled (design §1):
+  // 2-4 modifiers, exactly one HEADLINE (always shown), the rest hidden; two of one category never roll together
   V.rollMods = function (nid) {
-    const M = MODS(), ids = Object.keys(M.list), rng = V.rngFor(run().seed, nid, "mods", D().modTableVersion);
-    const n = 1 + rng.weighted([0, 1, 2], (i) => M.countWeights[i] || 0);
-    const pick = (pool) => { const tiers = Object.keys(M.tierWeights).filter((t) => pool.some((id) => M.list[id].tier === t)); const t = rng.weighted(tiers, (x) => M.tierWeights[x]); return rng.pick(pool.filter((id) => M.list[id].tier === t)); };
+    const M = MODS(), L = M.list, ids = Object.keys(L), rng = V.rngFor(run().seed, nid, "mods", D().modTableVersion);
+    const n = 2 + rng.weighted([0, 1, 2], (i) => M.countWeights[i] || 0);
     const out = [];
-    for (let i = 0; i < n; i++) { const pool = ids.filter((id) => !out.includes(id)); if (!pool.length) break; out.push(pick(pool)); }
-    if (!out.some((id) => M.list[id].cat === "boon")) out[0] = pick(ids.filter((id) => M.list[id].cat === "boon" && !out.includes(id)));   // LOCKED: every Map has a Boon
-    return out.map((id) => ({ id, on: true }));
+    const okWith = (id) => !out.some((o) => o.id === id || L[o.id].cat === L[id].cat || (L[o.id].excludes || []).includes(id) || (L[id].excludes || []).includes(o.id));
+    const heads = ids.filter((id) => L[id].headline);
+    out.push({ id: rng.weighted(heads, (id) => L[id].headlineWeight || 1), on: true, headline: true });
+    for (let i = 1; i < n; i++) {
+      const pool = ids.filter(okWith); if (!pool.length) break;
+      const cats = Object.keys(M.catWeights).filter((c) => pool.some((id) => L[id].cat === c));
+      const cat = rng.weighted(cats, (c) => M.catWeights[c]);
+      out.push({ id: rng.weighted(pool.filter((id) => L[id].cat === cat), (id) => L[id].weight || 1), on: true });
+    }
+    return out;
   };
-  V.mods = (nid) => { const m = V.inst(nid); return m ? m.mods : []; };
-  // the modifiers in force on Map nid (rolled, enabled; before the crossing they're a preview)
-  V.activeMods = (nid) => V.mods(nid).filter((x) => x.on).map((x) => Object.assign({ id: x.id }, V.modDef(x.id)));
+  V.mods = (nid, m) => { m = m || V.inst(nid); return m ? m.mods : []; };
+  // the modifiers in force on Map nid (rolled, enabled; before the crossing they're a preview). m: an instance being built
+  V.activeMods = (nid, m) => V.mods(nid, m).filter((x) => x.on && V.modDef(x.id)).map((x) => Object.assign({ id: x.id }, V.modDef(x.id)));   // (an id a newer table dropped is inert)
+  // what the player can see of a Map's roll: the headline, anything experienced, and anything a skill reveals (design §1)
+  V.modVisible = function (x) {
+    if (x.headline || x.seen) return true;
+    const d = V.modDef(x.id); if (!d || !d.reveal) return true;
+    return run() ? X().bestSkill(d.reveal.skill) >= d.reveal.level : false;
+  };
+  V.visibleMods = (nid) => V.mods(nid).filter(V.modVisible);
+  // a hidden modifier flips to shown once its effect has been felt: when = its seenOn (area | fight | object | trap | force | search)
+  V.markSeen = function (nid, when) {
+    const m = nid && V.inst(nid, false); if (!m) return;
+    for (const x of m.mods) { const d = V.modDef(x.id); if (x.on && !x.seen && d && d.seenOn === when) { x.seen = true; V.ev("mod_seen", { nid, mod: x.id, when }); } }
+  };
+  V.seenMod = function (nid, id) { const m = nid && V.inst(nid, false), x = m && m.mods.find((q) => q.id === id); if (x && !x.seen) { x.seen = true; V.ev("mod_seen", { nid, mod: id, when: "object" }); } };
   V.modActive = (nid, id) => V.activeMods(nid).some((x) => x.id === id);
   V.modNum = (nid, field, base) => V.activeMods(nid).reduce((v, x) => (x[field] != null ? v * x[field] : v), base == null ? 1 : base);
   V.modSum = (nid, field) => V.activeMods(nid).reduce((v, x) => v + (x[field] || 0), 0);
@@ -116,26 +216,56 @@
     if (m.locked) return "Locked: you've crossed into this Map.";
     const x = m.mods.find((q) => q.id === id); if (!x) return "No such modifier here.";
     if (!V.canDisable(id)) return `${V.modDef(id).name} can't be turned off.`;
+    if (!V.modVisible(x)) return "You don't know about that yet.";
     x.on = !!on; V.ev("mod_toggle", { nid, mod: id, on: x.on }); G.State.save(); return null;
   };
   // the crossing commits the enabled set before anything on the Map resolves (draft §5 step 4)
-  V.lockMods = function (nid) { const m = V.inst(nid); if (m && !m.locked) { m.locked = true; V.ev("mods_locked", { nid, on: m.mods.filter((x) => x.on).map((x) => x.id) }); } return m; };
+  V.lockMods = function (nid) { const m = V.inst(nid); if (m && !m.locked) { V.rebuildPool(m); m.locked = true; V.ev("mods_locked", { nid, on: m.mods.filter((x) => x.on).map((x) => x.id) }); } return m; };
 
   // the modifier objects (a closet, a cache, a vending machine...) of Map nid that belong in site `site`; once per run
   V.addModObjects = function (site, nid) {
     const r = run(); if (!V.on(r)) return;
     const m = V.inst(nid); if (!m || !m.locked) return;
-    const def = V.areaDef(nid);
-    for (const x of V.activeMods(nid)) {
+    const def = V.areaDef(nid), rc = G.state.runCount, mods = V.activeMods(nid);
+    // where a guarded / deep object goes: an Area that holds a group (seeded pick), else the Area farthest from the way in
+    const areaFor = (x) => {
+      const ids = Object.keys(def.areas), rng = V.rngFor(r.seed, nid, "modarea", x.id);
+      if (x.object.guard || x.object.deep) {
+        const held = (def.groups || []).filter((g) => g.area && !g.arrival).map((g) => g.area);
+        if (held.length) return rng.pick(held);
+        const entry = V.entryArea(def), d = { [entry]: 0 }, q = [entry]; while (q.length) { const a = q.shift(); for (const b of V.links(def, a)) if (d[b] == null) { d[b] = d[a] + 1; q.push(b); } }
+        return ids.slice().sort((a, b) => (d[b] || 0) - (d[a] || 0))[0];
+      }
+      return rng.pick(ids);
+    };
+    for (const x of mods) {
       if (!x.object) continue;
-      if (def) { const ids = Object.keys(def.areas), want = V.rngFor(r.seed, nid, "modarea", x.id).pick(ids); if (site.area !== want) continue; }
-      if (site.objects.some((o) => o.mod === x.id && o.modRun === G.state.runCount)) continue;
-      const O = x.object, f = Object.assign({ kind: O.kind || "search", mod: x.id, modRun: G.state.runCount, perRun: true }, O);
-      delete f.object;
+      if (def && site.area !== areaFor(x)) continue;
+      // Saves can contain an object placed by an older table. Its identity, contents and Area win over a new roll.
+      const existingSites = def ? V.areaSites(nid).concat(site) : [site];
+      if (existingSites.some(s => s.objects.some(o => o.mod === x.id && o.modRun === rc))) continue;
+      const O = x.object, f = Object.assign({ kind: O.kind || "search", mod: x.id, modRun: rc, perRun: true }, O);
+      delete f.object; delete f.deep;
       const o = X()._mk(site, f);
       if (o.kind === "search" && !o.type) o.type = "crate";
       if (O.unlocked) o.locked = false;
       X()._place(site, o, G.rng.int(0, site.rooms.length - 1), G.rng);
+    }
+    // Picked over: whoever got here first may have left a pack (the way in only, once per run)
+    const po = mods.find((x) => x.rivalPack);
+    if (po && (!def || site.area === V.entryArea(def)) && site.rivalPackRun !== rc) {
+      site.rivalPackRun = rc;
+      if (V.rngFor(r.seed, nid, "rivalpack").chance(po.rivalPack) && DATA.searchables.types.rival_pack) { const T = DATA.searchables.types.rival_pack, o = X()._mk(site, { type: "rival_pack", name: T.name, sprite: T.sprite, mod: po.id, modRun: rc, perRun: true }); X()._place(site, o, G.rng.int(0, site.rooms.length - 1), G.rng); }
+    }
+    // Locked down: every door shut, half the containers locked (once per site per run; nothing already opened changes)
+    const ld = mods.find((x) => x.lockdown);
+    if (ld && site.lockdownRun !== rc) {
+      site.lockdownRun = rc; const rng = V.rngFor(r.seed, nid, site.area || "site", "lockdown");
+      for (const o of site.objects) {
+        if (o.kind !== "search" || o.searched || o.sealed) continue;
+        if (o.type === "door") { if (ld.lockdown.doors && !site.rooms[o.opens].open && !o.broken) o.locked = true; }
+        else if ((X().typeDef(o).lock || {}).check && rng.chance(ld.lockdown.containersPct || 0)) o.locked = true;
+      }
     }
   };
 
@@ -209,6 +339,9 @@
     r.view = "site";
     V.markSafe(nid, aid, site.pos);
     V.ev("area_enter", { nid, area: aid, via: via || null });
+    V.markSeen(nid, "area");
+    const dmg = V.modSum(nid, "areaEntryDmgPct");   // Chemical leak: every room you enter here costs a little health (once per Area per run)
+    if (dmg > 0 && site.leakRun !== G.state.runCount) { site.leakRun = G.state.runCount; X().log("The air burns your throat.", "bad"); X().damageBody(dmg); if (!run()) return null; }
     V.reengage(nid, aid);
     G.State.save();
     return null;
@@ -263,6 +396,7 @@
   };
   V.pushFight = function (m, g, siteKey, source, why, front) {
     const enc = V.reserve(m, g, source, siteKey), loc = DATA.map.locations[m.loc];
+    V.markSeen(m.id, "fight");
     const step = Object.assign({}, g.step || {}, { type: "battle", family: g.family || loc.family, nid: m.id, site: siteKey, enc: enc.id, why });
     X().push(step, front);
     return step;
@@ -292,8 +426,8 @@
     const r = run(), enc = V.encOf(step), m = enc && V.inst(enc.nid, false), g = m && enc.groups.length && V.group(m, enc.groups[0]);
     if (!g || g.reinforcement) return null;
     if (!g.units) {
-      const mult = (g.area ? D().pool.areaBudgetMult : D().pool.budgetMult) * (g.budgetMult || 1), budget = X().enemyBudget(G.Zones.node(enc.nid), mult);
-      g.units = G.Battle.buildEnemyGroup(V.rngFor(r.seed, enc.nid, g.id, "units"), step.family, budget, elites, G.Zones.zoneOf(enc.nid)); g.family = step.family;
+      const mult = (g.area ? D().pool.areaBudgetMult : D().pool.budgetMult) * (g.budgetMult || 1) * V.modNum(enc.nid, "budgetMult", 1), budget = X().enemyBudget(G.Zones.node(enc.nid), mult);
+      g.units = G.Battle.buildEnemyGroup(V.rngFor(r.seed, enc.nid, g.id, "units"), step.family, budget, (elites || 0) + V.modSum(enc.nid, "elites"), G.Zones.zoneOf(enc.nid)); g.family = step.family;
     }
     const hp = V.modNum(enc.nid, "enemyHpMult", 1);
     return g.units.map((u) => Object.assign({}, u, hp !== 1 ? { hpMult: (u.hpMult || 1) * hp } : {}));
@@ -345,10 +479,31 @@
     let pct = natural && !forced ? 0 : forced ? A.forcedPct : (o.noise != null ? o.noise : T.noise || 0) * A.noiseMult;
     const stealth = Math.floor(X().bestSkill("stealth") / 10) * A.stealthPer10;
     const tm = X().tutorialOn() && CFG().tutorial.disturbanceMult != null ? CFG().tutorial.disturbanceMult : 1;
-    pct = Math.max(0, (pct - stealth) * tm);
+    const am = V.modNum(site.nid, "alertMult", 1);   // patrols / sleepers / the dark
+    pct = Math.max(0, (pct - stealth) * tm * am);
     const free = V.freeLoot(key);
     if (free) pct = 0;
-    return { pct, free, natural, forced, math: free ? "nobody left nearby to hear you" : natural && !forced ? "a body: only a trap could give you away" : `${forced ? "forced " + A.forcedPct : "noise " + (o.noise != null ? o.noise : T.noise || 0) + " × " + A.noiseMult} − Stealth ${stealth}${tm !== 1 ? " × tutorial " + tm : ""} = ${Math.round(pct * 100) / 100}%` };
+    return { pct, free, natural, forced, math: free ? "nobody left nearby to hear you" : natural && !forced ? "a body: only a trap could give you away" : `${forced ? "forced " + A.forcedPct : "noise " + (o.noise != null ? o.noise : T.noise || 0) + " × " + A.noiseMult} − Stealth ${stealth}${tm !== 1 ? " × tutorial " + tm : ""}${am !== 1 ? " × " + am : ""} = ${Math.round(pct * 100) / 100}%` };
+  };
+  // Sweep the area: go looking for whoever's here, on your terms. The fight comes from the same pool as every other
+  // encounter (an Area's own group first, then an unbound one); a fight you broke away from here is met again instead.
+  V.canSweep = function () {
+    const r = run(); if (!V.on(r) || r.view !== "site" || !V.exploring()) return false;
+    const site = X().site(); if (!site) return false;
+    const m = V.inst(site.nid, false); if (!m) return false;
+    if (m.pool.groups.some((g) => g.state === "available" && g.waiting)) return true;
+    return V.eligibleCount(site.key || site.nid) > 0;
+  };
+  V.sweep = function () {
+    const r = run(); if (!V.on(r)) return { error: "No expedition." };
+    if (!V.exploring()) return { error: "Finish what's in front of you first." };
+    const site = r.view === "site" ? X().site() : null; if (!site) return { error: "Go inside first." };
+    const key = site.key || site.nid, m = V.inst(site.nid);
+    if (V.reengage(site.nid, site.area || null)) { G.State.save(); return { ok: true, text: "They're still here." }; }
+    const g = V.pick(m, { area: site.area || null }); if (!g) return { error: D().text.sweepNone };
+    V.pushFight(m, g, key, "sweep", "You go looking for trouble, and find it.");
+    G.State.save();
+    return { ok: true };
   };
   // a loud moment with a chance (a failed extraction check, a tripped alarm): roll it against the pool
   V.loudAlert = function (siteKey, pct, source, why) {
@@ -426,20 +581,27 @@
   // Every object this commit created (ids >= firstId) gets its loot as entries: enemy bodies (rolled from the
   // encounter's reward seed), a fallen teammate's body (its gear + bag share), a rival's pack.
   V.lootBodies = function (step, site, firstId) {
-    const enc = V.encOf(step), node = G.Zones.node(enc.nid), out = [], dropPct = V.modSum(enc.nid, "dropPct");
+    const enc = V.encOf(step), node = G.Zones.node(enc.nid), out = [], m = V.inst(enc.nid, false), mods = V.activeMods(enc.nid);
     const rng = U.makeRng(enc.rewardSeed);
+    const leader = mods.find((x) => x.leaderDrop), victory = enc.outcome === "victory" && enc.groups.length;
     V.withRng(rng, () => {
       for (const o of site.objects) {
         if (+String(o.id).slice(1) < firstId || (o.combat && o.combat.enc)) continue;
         if (!o.fresh && !o.rival) continue;
         const kind = o.gruntBody ? "teammate" : o.rivalBody || o.rival ? "rival" : o.hunter ? "hunter" : "enemy";
         if (!o.loot) {   // (a teammate's body already holds its own gear and bag share: X.addGruntBodies)
+          if (kind === "enemy" && leader && victory && m && !m.leaderDone) { m.leaderDone = true; o.weaponRarity = leader.leaderDrop; o.name = "Body: " + (leader.leaderName || "the leader"); }   // Named leader: a Tuned+ weapon on one body
           const l = o.fixedLoot ? { items: o.fixedLoot.items.slice(), res: Object.assign({}, o.fixedLoot.res) } : X().rollObjectLoot(node, o.type, o);
-          if ((kind === "enemy" || kind === "hunter") && dropPct && rng.chance(dropPct)) l.items.push(G.Items.rollLoot(rng, X().itemLevel(node), X().rarityBonus()));   // Hazard reward: +drops
           o.loot = V.toEntries(enc.id + ":" + o.id, l);
         }
         o.combat = { enc: enc.id, kind }; o.searched = true; o.left = null;
         out.push(o);
+      }
+      // Deserter: after the first win on the Map, one of theirs is left alive among the bodies, asking to come along
+      if (victory && m && !m.deserterDone && mods.some((x) => x.deserter) && out.some((o) => o.combat.kind === "enemy")) {
+        m.deserterDone = true; const S = DATA.searchables.survivorObject;
+        const o = X()._mk(site, { kind: "survivor", name: "Deserter", sprite: S.sprite, examine: "[PLACEHOLDER] Hands up, weapon down. They'd rather come with you than stay with what's left here.", mod: "deserter", modRun: G.state.runCount, perRun: true });
+        X()._place(site, o, 0, rng);
       }
     });
     V.ev("rewards", { enc: enc.id, bodies: out.map((o) => o.id), entries: out.reduce((a, o) => a + o.loot.length, 0) });
@@ -572,8 +734,7 @@
     const N = D().extraction.names, B = D().extraction.blurb;
     if (!m) return { category: "none", text: "—" };
     if (m.finish) return { category: m.classification, name: N[m.classification] || "", canNow: here && V.exploring(), finish: true, text: "Your way out is held: finish the extraction." };
-    if (m.kind === "legacy") {
-      if (!loc.extraction) return { category: "none", name: "", canNow: false, text: "No extraction on this Map." };
+    if (m.kind === "legacy" && loc.extraction) {
       const ex = X().extractionDef(node), open = X().extractionOpen(node);
       return { category: "legacy", name: N.legacy, canNow: here && open && V.exploring(), legacy: ex, open, text: open ? `${B.legacy} ${X().extractShort(ex)}` : X().wrecked(node) ? "Wrecked. Find another way out." : "Closed." };
     }
@@ -582,6 +743,7 @@
       const it = V.escapeItem(nid);
       return { category: "occupied", name: N.occupied, canNow: !!it && here && V.exploring(), item: it, text: it ? `${G.Items.name(it)} could get you out of here.` : B.occupied };
     }
+    if (m.kind === "legacy" || !V.areaDef(nid)) return { category: "none", name: "", canNow: false, text: "No extraction on this Map." };
     const opps = (V.areaDef(nid).opportunities || []).map((od) => {
       const os = m.opps[od.id], ck = od.check ? `${DATA.skills[od.check.skill].name} DC ${od.check.dc}` : "no check";
       const state = os.closed ? "closed" : !os.revealed ? "hidden" : !os.unlocked ? "locked" : "ready";
@@ -664,9 +826,10 @@
     const known = !scoutHid && (X().visible(nid) || r.visited[nid]);
     const loot = [];
     const modObjs = (def ? V.areaSites(nid) : [X().site(nid)].filter(Boolean)).flatMap((s) => s.objects.filter((o) => o.mod && o.modRun === G.state.runCount));
-    for (const x of V.activeMods(nid)) if (x.object && x.cat === "boon") {   // a modifier's find is Known until it's used up
+    for (const x of m.mods) {   // a visible modifier's find is Known until it's used up
+      const d = V.modDef(x.id); if (!x.on || !d || !d.object || d.cat !== "loot" || !V.modVisible(x)) continue;
       const o = modObjs.find((q) => q.mod === x.id); if (o && (o.done || (o.searched && !V.hasLoot(o)))) continue;
-      loot.push({ kind: "known", text: `${x.name}: ${x.reward}` });
+      loot.push({ kind: "known", text: `${d.name}: ${d.reward}` });
     }
     const gl = loc.guaranteedLoot; if (gl && !(gl.once !== false && G.state.locFlags[node.loc + "_gl"])) loot.push({ kind: "rumored", text: `${(DATA.items.bases[gl.base] || {}).name || gl.base} (${gl.object.name})` });
     for (const q of G.Quests.findObjectsAt(G.Zones.zoneOf(nid), node.loc)) if (G.Quests.itemAvailable(q)) loot.push({ kind: "known", text: `Quest: ${G.Quests.def(q).name}` });
@@ -679,7 +842,9 @@
     return {
       nid, name: loc.name, zone: DATA.zones.list[m.zone].name, visited: !!r.visited[nid], here: r.loc === nid, kind: m.kind,
       classification: m.classification, className: (D().extraction.names[m.classification] || ""), blurb: D().extraction.blurb[m.classification] || "",
-      mods: m.mods.map((x) => { const d = V.modDef(x.id); return { id: x.id, name: d.name, cat: d.cat, catName: MODS().categories[d.cat].name, tier: d.tier, effect: d.effect, reward: d.reward, on: x.on, canDisable: V.canDisable(x.id) && !m.locked, locked: m.locked }; }),
+      mods: m.mods.filter((x) => V.modDef(x.id) && V.modVisible(x)).map((x) => { const d = V.modDef(x.id), C = MODS().categories[d.cat] || {}; return { id: x.id, name: d.name, cat: d.cat, catName: C.name || d.cat, color: C.color || "#e8e8e8", headline: !!x.headline, seen: !!x.seen, danger: d.danger || 0, effect: d.effect, reward: d.reward, on: x.on, canDisable: V.canDisable(x.id) && !m.locked, locked: m.locked }; }),
+      hiddenMods: m.mods.filter((x) => V.modDef(x.id) && !V.modVisible(x)).length,
+      danger: V.dangerOf(m),
       enemies: { known, text: known ? fam.name : D().text.unknown, beaten, hunters: !!hp },
       loot,
       extraction: V.extractInfo(nid),
@@ -693,6 +858,8 @@
     for (const h of r.v2.heatLedger) if (!V.heatAllowed(h.why)) out.push("unapproved Heat source " + h.why);
     for (const id in r.v2.maps) { const m = r.v2.maps[id], legacy = G.state.world.sites[id]; if (m.kind === "v2" && legacy && legacy.enteredRun === G.state.runCount) out.push("two controllers for Map " + id); }
     for (const id in r.v2.enc) { const e = r.v2.enc[id]; if (/corpse|body/.test(e.source)) out.push("combat started by a body: " + id); }
+    for (const z in r.v2.classes || {}) { const map = G.state.maps[z]; if (!map) continue; const plan = r.v2.classes[z], C = D().classification;
+      for (const id in plan) if (plan[id] === "occupied" && (map.nodes[id].row || 0) < C.occupiedMinRow && !V.v2Def(id)) out.push("Occupied Map in the first row: " + id); }
     return out;
   };
 })(typeof window !== "undefined" ? window : globalThis);

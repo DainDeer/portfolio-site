@@ -82,7 +82,8 @@
     const hl = G.V2 && G.V2.on() ? 0 : Math.floor(r.heat / L.heatPerIlvl);   // V2: no passive Heat reward scaling
     return Math.max(1, (L.ilvlByTier[node.tier] || 1) + r.moves * L.ilvlPerDepth + hl + G.rng.int(-L.ilvlVariance, L.ilvlVariance));
   };
-  X.rarityBonus = () => X.heatTier().lootBonus + G.Skills.level(G.state.mind.skills, "scavenging") * CFG().loot.scavengingRarityPerLevel + G.Perks.rarityBonus();   // + Scavenger's Eye (Slice 3 §3)
+  X.rarityBonus = () => X.heatTier().lootBonus + G.Skills.level(G.state.mind.skills, "scavenging") * CFG().loot.scavengingRarityPerLevel + G.Perks.rarityBonus()   // + Scavenger's Eye (Slice 3 §3)
+    + (G.V2 && G.V2.on() && run() && run().loc ? G.V2.lootRarityBonus(run().loc) : 0);   // Maps/Areas/Loot: danger pips pay (design §1)
   X.odds = function (node) {
     const loc = G.Map.loc(node); if (!loc) return null;
     const o = Object.assign({}, loc.odds);

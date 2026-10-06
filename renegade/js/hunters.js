@@ -44,6 +44,7 @@
     }
     if (h.cooldown > 0) { h.cooldown--; return; }
     if (!H.canRoll()) return;
+    if (G.V2 && G.V2.on() && G.V2.activeMods(r.loc).some(m => m.noHunterRolls)) { X().log("Jammer: nothing up there can see you here. No Hunter roll.", "roll"); return; }   // the Jammer modifier
     const pct = H.spawnPct(), roll = G.rng() * 100, hit = roll < pct;
     h.rolls.push({ move: r.moves, pct, roll: Math.floor(roll), hit });
     X().log(`Hunter roll (${H.tierName()}): ${pct}% → rolled ${Math.floor(roll)}: ${hit ? "a pack picks up your trail!" : "no pack."}`, "roll");

@@ -24,11 +24,12 @@
   X.enterSite = function () {
     const r = run(); if (!r) return null;
     if (G.V2 && G.V2.isAreaMap(r.loc)) return G.V2.enterArea(r.loc, G.V2.curArea(r.loc));
-    if (X.site()) { r.view = "site"; X.site().seen = true; if (G.V2 && G.V2.on()) { G.V2.clearWaits(r.loc); G.V2.markSafe(r.loc, null); G.V2.reengage(r.loc, null); } }
+    if (X.site()) { r.view = "site"; X.site().seen = true; if (G.V2 && G.V2.on()) { G.V2.clearWaits(r.loc); G.V2.markSafe(r.loc, null); G.V2.markSeen(r.loc, "area"); G.V2.reengage(r.loc, null); } }
     return null;
   };
   X.obj = (id, site) => (site || X.site()).objects.find((o) => o.id === id);
   X.typeDef = (o) => SD().types[o.type] || {};
+  X.lockDef = (o) => o.lock || X.typeDef(o).lock || null;   // an object's own lock (a modifier's locker) or its type's
 
   // ---------- generation ----------
   X.ensureSite = function (node) {
@@ -357,7 +358,7 @@
       const a = [];
       if (!o.jammed) a.push("pick");
       if (o.type === "door") a.push("kick");
-      else if (T.lock && T.lock.force) a.push("force");
+      else if (X.lockDef(o) && X.lockDef(o).force) a.push("force");
       return a;
     }
     return ["search"];
@@ -375,8 +376,9 @@
     const site = X.site(), o = X.obj(objId, site), T = X.typeDef(o), C = CFG().search, node = X.node(site.nid);
     action = action || X.objActions(o)[0] || "search";
     let sec = o.searchSec != null ? o.searchSec : T.searchSec || 0;
-    if (action === "pick" && T.lock && T.lock.pickSec) sec = T.lock.pickSec;
-    if (action === "kick" && T.lock && T.lock.kick) sec = T.lock.kick.sec;
+    const LK = X.lockDef(o);
+    if (action === "pick" && LK && LK.pickSec) sec = LK.pickSec;
+    if (action === "kick" && LK && LK.kick) sec = LK.kick.sec;
     const scav = X.bestSkill("scavenging");
     if (action !== "train") sec = sec * Math.max(0, 1 - (C.scavTimePctPer10 / 100) * Math.floor(scav / 10));
     if (action === "search") sec *= Math.max(0, 1 - G.Items.setStat(X.gearItems(), "search_pct") / 100);   // Scav Kit (3): 15% faster
@@ -390,10 +392,11 @@
     const pct = Math.max(C.minPct, raw * tm);
     const heatGain = action === "force" ? CFG().heat.forceLock : action === "kick" ? CFG().heat.kickDoor : action === "train" ? (T.train.heat || 0) : action === "search" && o.type !== "door" ? (T.searchHeat || 0) : 0;   // searchHeat: Slice 5 §G Crater pod
     let check = null;
-    if (action === "pick" && T.lock) check = G.Checks.compute(T.lock.check.skill, T.lock.check.dc, X.members(), X.gearItems());
+    if (action === "pick" && LK) check = G.Checks.compute(LK.check.skill, LK.check.dc, X.members(), X.gearItems());
     if (action === "search" && o.heavy && T.heavy) check = G.Checks.compute(T.heavy.check.skill, T.heavy.check.dc, X.members(), X.gearItems());
     if (G.V2 && G.V2.on()) {   // Maps/Areas/Loot: an alert roll against the Map's finite pool; never Heat (an orbital chest's aside)
       const ai = G.V2.alertInfo(site, o, action), hg = action === "search" && T.orbitalChest ? T.searchHeat || 0 : 0;
+      sec *= G.V2.modNum(site.nid, "searchTimeMult", 1);   // Blackout: searching takes longer
       return { action, sec, noise, pct: ai.pct, free: ai.free, natural: ai.natural, heatGain: hg, check, math: ai.math, v2: true };
     }
     const math = `noise ${noise}${forced ? " (forced)" : ""} + Hostiles ${H}/${C.hostilesDiv} = ${f1(H / C.hostilesDiv)} + Heat ${heat} + searches ${prior} − Stealth ${stealth}${loud ? ` + Loudmouth ${loud}` : ""}${tm !== 1 ? ` = ${f1(raw)} × tutorial ${tm}` : ""} = ${f1(pct)}%`;
@@ -417,20 +420,28 @@
       if (T.orangePct && rng.chance(T.orangePct)) { const oi = Math.max(ilvl, DATA.items.rarities.orange.minIlvl || 0); items.push(G.Items.make(G.Items.rollBase(rng), "orange", oi, rng)); }   // Slice 5 §G Crater pod
     }
     const tags = loc.tags || [], mult = SD().tagWeightMult;
+    // Maps/Areas/Loot modifiers (design §1-2): resMult weights, danger pips' extra resource roll, the Armoury locker's piece
+    const v2 = !!(G.V2 && G.V2.on() && !(o && o.resOnly)), rm = v2 ? G.V2.resMult(node.id) : {};
+    const extraRes = v2 && rng.chance(G.V2.danger(node.id) * (DATA.mapsV2.danger.extraResPctPerPip || 0)) ? 1 : 0;
+    if (o && o.armorPiece && !o.resOnly) {
+      const B = DATA.items.bases, ids = Object.keys(B).filter((k) => (B[k].slot === "body" || B[k].slot === "head") && (B[k].dropWeight || 0) > 0), ilvl = X.itemLevel(node) + 2;
+      if (ids.length) items.push(G.Items.make(rng.weighted(ids, (k) => B[k].dropWeight), G.Items.rollRarity(rng, X.rarityBonus(), ilvl), ilvl, rng));
+    }
     if (o && o.weaponRarity && !o.resOnly) {   // Maps/Areas/Loot: the Rare weapon cache modifier's container: one weapon of at least this rarity
       const B = DATA.items.bases, ids = Object.keys(B).filter((k) => B[k].slot === "weapon" && !B[k].natural && !B[k].hunterOnly && (B[k].dropWeight || 0) > 0), order = Object.keys(DATA.items.rarities), ilvl = X.itemLevel(node);
       let rar = G.Items.rollRarity(rng, X.rarityBonus(), ilvl); if (order.indexOf(rar) < order.indexOf(o.weaponRarity)) rar = o.weaponRarity;
       items.push(G.Items.make(rng.weighted(ids, (k) => B[k].dropWeight), rar, ilvl, rng));
     }
-    for (let k = 0; k < (T.resRolls || 0) + ((o && o.bonusRes) || 0); k++) {
+    for (let k = 0; k < (T.resRolls || 0) + ((o && o.bonusRes) || 0) + extraRes; k++) {
       const medK = (SD().medWeightByKind || {})[loc.kind] ?? 1;   // Med Supplies by location kind (medical / industrial)
-      const e = rng.weighted(T.table, (x) => x[1] * (x[0] && tags.includes((DATA.resources[x[0]] && DATA.resources[x[0]].tag) || x[0]) ? mult : 1) * (x[0] === "med" ? medK : 1));
+      const e = rng.weighted(T.table, (x) => x[1] * (x[0] && tags.includes((DATA.resources[x[0]] && DATA.resources[x[0]].tag) || x[0]) ? mult : 1) * (x[0] === "med" ? medK : 1) * (x[0] && rm[x[0]] ? rm[x[0]] : 1));
       if (!e[0] || DATA.resources[e[0]].hidden) continue;
       const m = (zone.resourceMult || 1) * (DATA.resources[e[0]].dropMult || 1);   // zone x resource drop multiplier, randomly rounded
       const amt = Math.floor(rng.int(e[2], e[3]) * m + (m !== 1 ? rng() : 0));
       if (amt > 0) res[e[0]] = (res[e[0]] || 0) + amt;
     }
     X.rollExtras((T.extras || []).concat((o && o.extras) || []), res, rng);
+    if (o && o.addRes && !o.resOnly) for (const k in o.addRes) { const R = DATA.resources[k]; if (!R || R.hidden) continue; const n = rng.int(o.addRes[k][0], o.addRes[k][1]); if (n > 0) res[k] = (res[k] || 0) + n; }   // a modifier object's own stock
     if (o && o.famDrops) X.rollFamilyDrops(o.famDrops, items, res, rng, X.itemLevel(node), !!o.resOnly, o.unit);   // Slice 5 §F
     return { items, res };
   };
@@ -463,6 +474,11 @@
   // Click on an event / survivor / grate object (no timer). Returns { confirm: "cross", pid } for the grate.
   X.useObject = function (objId) {
     const site = X.site(), o = X.obj(objId, site), why = X.objBlocked(o, site); if (why) return { error: why };
+    if (G.V2 && G.V2.on() && o.guard && !o.guardDone) {   // a guarded object: its watchers come first (design §4)
+      o.guardDone = true; const f = G.V2.alert(site.key || site.nid, "guard", DATA.mapsV2.text.guarded);
+      if (f) { G.State.save(); return { text: DATA.mapsV2.text.guarded, fight: true }; }
+    }
+    if (G.V2 && G.V2.on() && o.mod) G.V2.seenMod(site.nid, o.mod);
     if (o.kind === "grate") return { confirm: "cross", pid: o.pid };
     if (o.kind === "decor" && o.boop) { X.log(`${o.name}: ${o.boop}`); return { text: o.boop }; }
     if (o.kind === "mod") return G.V2.useModObject(site, o);   // a modifier's vending machine, printer, shrine
@@ -502,6 +518,11 @@
     const why = X.objBlocked(o, site); if (why) return { error: why };
     action = action || X.objActions(o)[0];
     if (!X.objActions(o).includes(action)) return { error: "Can't " + action + " that." };
+    if (v2 && o.guard && !o.guardDone) {   // a guarded object (design §4-5): whoever watches it comes at you first; the search itself waits
+      o.guardDone = true;
+      const f = G.V2.alert(key, "guard", DATA.mapsV2.text.guarded);
+      if (f) { if (o.mod) G.V2.seenMod(site.nid, o.mod); G.State.save(); return { texts: [DATA.mapsV2.text.guarded], roll: null, disturb: { pct: 100, roll: 0, hit: true, math: "guarded", v2: true }, alarm: null, empty: true, fight: true }; }
+    }
     const info = X.searchInfo(objId, action), T = X.typeDef(o), texts = [];
     const heat = (n, w) => { const got = X.addHeat(n, w); if (got || !v2) texts.push(`+${v2 ? got : n} Heat`); return got; };   // a V2 run only adds (and says) approved sources (js/v2.js)
     const noGroup = () => texts.push(DATA.mapsV2.text.noGroup);
@@ -514,7 +535,7 @@
     };
     const check = (c) => { const ci = G.Checks.compute(c.skill, c.dc, X.members(), X.gearItems()); const rr = G.XP.at({ obj: o.id }, () => G.Checks.roll(ci, null, "search")); X.log(rr.text, "check"); return rr; };
     if (action === "pick") {
-      roll = check(T.lock.check);
+      roll = check(X.lockDef(o).check);
       if (G.Checks.isSuccess(roll.grade)) { o.locked = false; texts.push("Lock picked."); if (o.type === "door") openDoor(); else { loot = X.rollObjectLoot(node, o.type, o); o.searched = true; } }
       else { o.jammed = true; texts.push(o.type === "door" ? "The lock jams. You'll have to kick it." : "The lock jams. You'll have to force it."); }
     } else if (action === "train") {   // Slice 5 §F: time -> skill XP, a little Heat; the disturbance roll below is the risk
@@ -523,6 +544,11 @@
       if (info.heatGain) heat(info.heatGain, "train");
       texts.unshift(TR.line); X.log(`${TR.label || "Train"} at ${o.name}: +${TR.xp} ${DATA.skills[TR.skill].name} XP.`, "good");
     } else if (action === "force" || action === "kick") {
+      if (v2) {   // Unstable structure: forcing anything may bring part of the place down on you
+        G.V2.markSeen(site.nid, "force");
+        const fd = G.V2.activeMods(site.nid).find((x) => x.forceDmg);
+        if (fd && G.rng.chance(fd.forceDmg.pct)) { texts.push(`Part of the ceiling comes down on you! You take ${Math.round(X.maxBodyHp() * fd.forceDmg.dmgPct / 100)} damage.`); X.damageBody(fd.forceDmg.dmgPct); if (!run() || run() !== r) return { texts, roll, died: true }; }
+      }
       if (info.heatGain) heat(info.heatGain, action);
       o.locked = false;
       if (o.type === "door") { o.broken = true; openDoor(); } else { loot = X.rollObjectLoot(node, o.type, o); o.searched = true; texts.push("Forced open."); }
@@ -541,6 +567,7 @@
         if (o.trapped && TT && !o.blocked) {
           roll = check(TT.check);
           o.trapped = false; o.wasTrapped = true;
+          if (v2 && o.boobyTrap) G.V2.markSeen(site.nid, "trap");
           if (G.Checks.isSuccess(roll.grade)) texts.push(TT.spotText || "You spot a trap wire and disarm it.");
           else if (TT.failHeat != null) {   // Slice 5 §G: a noise trap (the Garage's car alarm): Heat, not damage, and it blares
             o.tripped = true; texts.push(TT.tripText || "It was alarmed!");
@@ -571,6 +598,7 @@
     // quest item: only while the quest is active and you don't already have one
     if (o.questId && (o.searched || !loot) && !o.blocked && G.Quests.itemAvailable(o.questId)) { loot = loot || { items: [], res: {} }; loot.items.push(G.Items.makeQuest(G.Quests.def(o.questId).objective.item)); texts.push("Found what you came for.");
       const qh = G.Quests.objectiveHeat(o.questId); if (qh) heat(qh, "quest"); }
+    if (v2 && o.searched && o.type !== "door") { G.V2.markSeen(site.nid, "search"); if (o.mod) G.V2.seenMod(site.nid, o.mod); }   // what a search here reveals
     // disturbance (legacy) / alert (V2: the Map's finite pool, at most one fight per action)
     const dr = G.rng() * 100, hit = !fight && dr < info.pct;
     const loc = G.Map.loc(node);

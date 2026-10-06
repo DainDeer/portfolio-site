@@ -777,6 +777,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     // extraction
     if (area) side.insertBefore(G.Traversal.sideHere(), side.firstChild);   // V2 Area: what's here, nearest first
     const ve = v2 && loc ? G.Traversal.sideExtract() : null;
+    if (v2 && inSite && loc) { const sw = G.Traversal.sideSweep(); if (sw) side.appendChild(sw); }   // Sweep the area: pick the fight yourself
     if (ve) side.appendChild(ve);
     else if (loc && loc.extraction) {
       const ex = X.extractionDef(node), open = X.extractionOpen(node);
@@ -901,7 +902,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
           h("button", { class: "confirm-btn", onclick: () => { UI.closeModal(); UI.render(); } }, "Not now"))));
       return;
     }
-    if (acts[0] === "use") { const r = X.useObject(o.id); if (r.error) UI.fail(r.error); UI.render(); return; }
+    if (acts[0] === "use") { const r = X.useObject(o.id); if (r.error) UI.fail(r.error); else if (r.text) UI.toast(r.text); UI.render(); return; }
     if (acts[0] === "reopen") { X.reopen(o.id); UI.render(); return; }
     // Slice 4 §B pods room: the mural (examine: a tap on phones reads it), the working pod
     if (acts[0] === "examine") { UI.modal(h("div", { class: "examine", "data-examine": o.id }, h("h2", null, o.name), h("p", { class: "ev-text" }, G.Main.examine(o)), h("button", { class: "primary", onclick: () => UI.closeModal() }, "OK"))); return; }

@@ -18,6 +18,9 @@
 .holo-class, .holo-tag { font-size: 11px; padding: 1px 7px; border-radius: 10px; border: 1px solid currentColor; }
 .holo-class.c-peaceful { color: #7fe8a0; } .holo-class.c-contested { color: #ffd070; } .holo-class.c-occupied { color: #ff8a7a; } .holo-class.c-legacy, .holo-class.c-none { color: #b8b8b8; }
 .holo-tag { color: #9fd6de; }
+.holo-danger { font-size: 11px; padding: 1px 7px; border-radius: 10px; border: 1px solid #ff9a8a66; color: #ffb3a6; } .holo-danger b { letter-spacing: 1px; color: #ff9a8a; } .holo-danger i { color: #9fd6de; }
+.holo-mod.head .holo-tier { font-weight: bold; } .holo-hidden { font-size: 11px; padding-top: 4px; }
+.panel.sweep button { width: 100%; }
 .holo-blurb { margin: 4px 0 6px; color: #bfeff5; font-size: 12px; }
 .holo-sec { border-top: 1px solid var(--holo-dim); padding: 7px 0 5px; }
 .holo-mod { display: flex; gap: 8px; align-items: flex-start; padding: 3px 0; }
