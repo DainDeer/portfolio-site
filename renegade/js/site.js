@@ -571,7 +571,7 @@
           if (G.Checks.isSuccess(roll.grade)) texts.push(TT.spotText || "You spot a trap wire and disarm it.");
           else if (TT.failHeat != null) {   // Slice 5 §G: a noise trap (the Garage's car alarm): Heat, not damage, and it blares
             o.tripped = true; texts.push(TT.tripText || "It was alarmed!");
-            if (v2) { fight = G.V2.alert(key, "alarm_trap", TT.tripText || "An alarm goes off!"); if (!fight) noGroup(); }   // V2: an alarm is local attention, never Heat
+            if (v2) { const ah = G.V2.alarmHeat(site, o); if (ah) texts.push(`+${ah} Heat`); fight = G.V2.alert(key, "alarm_trap", TT.tripText || "An alarm goes off!"); if (!fight) noGroup(); }   // V2: local attention, plus the alarm's own Heat (an approved source)
             else { const th = roll.grade === "badFail" ? TT.badFailHeat : TT.failHeat; X.addHeat(th, "trap"); texts.push(`+${th} Heat`); X.log(`${TT.tripText || "An alarm goes off!"} +${th} Heat.`, "bad"); }
           }
           else {
@@ -584,7 +584,7 @@
         if (v2 && o.ntrap === "armed" && !o.blocked) {
           const NT = DATA.mapsV2.naturalTraps[o.type]; roll = check(NT.check);
           if (G.Checks.isSuccess(roll.grade)) { o.ntrap = "disarmed"; texts.push(NT.spotText); }
-          else { o.ntrap = "triggered"; o.tripped = true; texts.push(NT.tripText); fight = G.V2.alert(key, "natural_trap", NT.tripText); if (!fight) noGroup(); }
+          else { o.ntrap = "triggered"; o.tripped = true; texts.push(NT.tripText); if (NT.kind === "alarm") { const ah = G.V2.alarmHeat(site, o); if (ah) texts.push(`+${ah} Heat`); } fight = G.V2.alert(key, "natural_trap", NT.tripText); if (!fight) noGroup(); }
         }
         if (!o.blocked) {
           const lo = v2 && o.boobyTrap && o.wasTrapped ? Object.assign({}, o, { rarityBonus: (o.rarityBonus || 0) + G.V2.modSum(site.nid, "trappedRarityBonus") }) : o;   // the Hazard's reward
@@ -614,7 +614,7 @@
     if (al && o.searched && !hit && !fight && DATA.enemies.families[al.family] && !X.familyBarred(al.family, site.zone)) {   // Slice 5 §G: no drone alarms in the Hushwood
       const ar = G.rng() * 100; alarm = { pct: al.chance, roll: ar, hit: ar < al.chance };
       X.log(`Alarm ${o.name}: ${al.chance}% → rolled ${Math.floor(ar)}: ${alarm.hit ? "a drone answers!" : "quiet."}`, "roll");
-      if (alarm.hit) { if (v2) { fight = G.V2.alert(key, "alarm", al.why); if (!fight) noGroup(); } else X.push({ type: "battle", family: al.family, budgetMult: al.budgetMult, nid: site.nid, why: al.why }); }
+      if (alarm.hit) { if (v2) { const ah = G.V2.alarmHeat(site, o); if (ah) texts.push(`+${ah} Heat`); fight = G.V2.alert(key, "alarm", al.why); if (!fight) noGroup(); } else X.push({ type: "battle", family: al.family, budgetMult: al.budgetMult, nid: site.nid, why: al.why }); }
     }
     if (o.searched && o.type !== "door") { X.markPicked(site); site.everPicked = true; }   // Slice 3 §12
     if (o.searched && o.type !== "door" && G.Cards) G.Cards.onSearch(site.nid, node.loc);   // Slice 4 §D: the location's card (first search here this run)

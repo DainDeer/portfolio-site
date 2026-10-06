@@ -38,17 +38,33 @@ DATA.mapsV2 = {
     legacyPerGroupPct: 25, legacyMax: 4,
     // SP-033 "if there are not many groups left then you can loot freely": when this many or fewer of the Map's groups
     // are still available (or none can reach the spot you're in), ordinary searches stop rolling alerts. Combat bodies
-    // are always free regardless. [DRAFT]
-    freeLootAtOrBelow: 1,
+    // are always free regardless. 0 (encounter tuning, Oct 2026): "nobody left to hear you" means the Map is cleared.
+    freeLootAtOrBelow: 0,
+    // Every V2 Map that isn't Peaceful also has one unbound group ("whoever's walking around") so noise in an Area with no
+    // group of its own can still pull something, at alert.unboundMult of the chance. The `patrol` modifier adds another.
+    roam: { id: "roam", skip: ["peaceful"] },
     // A group's fight is built once from the Map's budget x budgetMult and kept (retreat restores exactly it). [DRAFT]
-    budgetMult: 1, areaBudgetMult: 0.8
+    budgetMult: 1, areaBudgetMult: 0.8,
+    // The rest heard the first: each group already defeated on the Map adds this much enemy budget to the next fight
+    // built there (V2's escalation; it resets per Map and replaces the Heat tiers' passive budget multipliers).
+    defeatedBudgetPct: 15
   },
 
   // Ordinary actions that can alert local enemies (draft §9 allowlist). Never Heat. Chances in %. [DRAFT]
+  // Encounter tuning (Oct 2026, reopening SP-025 "barely ever"): a search is object noise again (a crate 5%, a locker 8%,
+  // a door 10%), each search already made in this Area this visit adds perSearchPct, and forcing adds forcedNoise to the
+  // object's noise. Target: about half the time, fully searching an Area that still has a group costs one fight. The
+  // dials were retuned on Oct 6 against the corrected bot (docs/encounter-tuning.md): perSearchPct 2 -> 3, unboundMult
+  // 0.5 -> 1, entryPct 40 -> 50.
   alert: {
-    noiseMult: 0.25,      // ordinary search: object noise x this (a crate 5 -> 1.25%, a locker 8 -> 2%) (SP-025: "barely ever")
-    forcedPct: 12,        // forcing a lock or kicking a door (SP-017: may attract enemies in the area)
-    stealthPer10: 0.25,   // - this per 10 levels of the squad's best Stealth
+    noiseMult: 1,         // ordinary search: object noise x this
+    perSearchPct: 3,      // + this per search already made in this Area this visit (the sixth is riskier than the first)
+    forcedNoise: 10,      // forcing a lock or kicking a door: object noise + this (SP-017: may attract enemies in the area)
+    stealthPer10: 1,      // - this per 10 levels of the squad's best Stealth
+    unboundMult: 1,       // x this when no group is posted in this Area and only the Map's unbound group could answer (1: noise is noise)
+    // Entering an Area whose own group is still there: the first time per expedition, roll this (x the Map's arrivalMult).
+    // A miss leaves the group where it is for later noise. Arrival groups are the Map crossing's roll, never this one.
+    entryPct: 50,
     extractFailPct: 50,   // a failed extraction check is loud (the retry's stated cost)
     extractBadFailPct: 100
   },
@@ -68,11 +84,15 @@ DATA.mapsV2 = {
   // Heat (SP-034, LOCKED 10/3): it comes ONLY from these sources. In a V2 run every other addHeat call adds nothing and
   // is recorded in run.v2.heatBlocked (development log), so a forgotten legacy path can't add Heat quietly.
   heat: {
-    sources: { orbital_object: true, loud_fights: true, orbital_chest: true, lower: false },   // lower: reserved for SP-035, inactive
+    // alarm (Oct 2026): a fourth authored source, which the draft allows: a tripped alarm (the Garage's car, a wire on a
+    // body, a terminal's drone alarm) adds `alarm` Heat once per object, as well as alerting the Map's pool.
+    sources: { orbital_object: true, loud_fights: true, orbital_chest: true, alarm: true, lower: false },   // lower: reserved for SP-035, inactive
+    alarm: 5,
     revealAt: 25,          // OPEN (Megan): Heat stays hidden while low; the meter appears at this much
     // OPEN (Megan): what "getting into lots of loud fights" means. Placeholder: a committed fight (a win or a retreat)
-    // with at least minGunShots gunshots is loud; every `every` loud fights add `amount`. Retreating can't earn it twice.
-    loud: { minGunShots: 6, every: 3, amount: 10 }
+    // with at least minGunShots gunshots is loud; every `every` loud fights add `amount`. (every 3 -> 2, Oct 2026: a
+    // long, noisy run should reach Hunted and meet a Hunter pack again.)
+    loud: { minGunShots: 6, every: 2, amount: 10 }
   },
 
   // Battle loot (draft §8). "Take all that fits" keeps you at or under fitPct of capacity; a single Take may go over it

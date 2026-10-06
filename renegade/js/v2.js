@@ -82,8 +82,11 @@
   // m: the Map instance being built (its active modifiers, classification and danger shape the pool: design §1, §4)
   V.makePool = function (nid, def, node, m) {
     const groups = [], C = D().classification, loc = G.Map.loc(node), zone = G.Zones.zoneOf(nid);
-    if (def) for (const g of def.groups || []) groups.push({ id: g.id, area: g.area || null, arrival: !!g.arrival, budgetMult: g.budgetMult || 1, family: g.family || null, state: "available" });
-    else {   // the legacy pool adapter (§13): a reviewed, stable, finite set for a Map that has no authored groups
+    if (def) {
+      for (const g of def.groups || []) groups.push({ id: g.id, area: g.area || null, arrival: !!g.arrival, budgetMult: g.budgetMult || 1, family: g.family || null, state: "available" });
+      // "whoever's walking around": one unbound group, so an Area with no group of its own is never a guaranteed safe room
+      const RM = D().pool.roam; if (RM && !(RM.skip || []).includes(m ? m.classification : def.classification)) groups.push({ id: RM.id || "roam", area: null, arrival: false, budgetMult: 1, family: null, state: "available", roam: true });
+    } else {   // the legacy pool adapter (§13): a reviewed, stable, finite set for a Map that has no authored groups
       const P = D().pool, h = X().baseHostiles(node), n = h > 0 ? Math.min(P.legacyMax, Math.ceil(h / P.legacyPerGroupPct)) : 0;
       for (let i = 0; i < n; i++) groups.push({ id: "g" + (i + 1), area: null, arrival: true, budgetMult: 1, family: null, state: "available" });
     }
@@ -106,6 +109,8 @@
       extra += Math.floor(V.dangerOf(m) / (D().danger.groupPerPips || 99));
       if (cls === "occupied") extra += (C.pool.occupied || {}).plus || 0;
       for (let i = 0; i < extra; i++) add("x" + (i + 1));
+      // Non-Peaceful Maps also keep their guaranteed unbound group when optional groups are removed.
+      for (const g of groups) if (g.roam) required.add(g.id);
       for (let i = extra; i < 0; i++) drop();
       if (mods.some((x) => x.patrol)) add("patrol");   // unbound: answers noise anywhere on the Map
       if (cls === "peaceful") while (groups.length > ((C.pool.peaceful || {}).max || 99) && drop()) {}
@@ -342,9 +347,23 @@
     V.markSeen(nid, "area");
     const dmg = V.modSum(nid, "areaEntryDmgPct");   // Chemical leak: every room you enter here costs a little health (once per Area per run)
     if (dmg > 0 && site.leakRun !== G.state.runCount) { site.leakRun = G.state.runCount; X().log("The air burns your throat.", "bad"); X().damageBody(dmg); if (!run()) return null; }
-    V.reengage(nid, aid);
+    if (!V.reengage(nid, aid)) V.entryRoll(m, aid, site);
     G.State.save();
     return null;
+  };
+  // Entering an Area whose own group is still there is the second encounter moment (the first is the Map crossing):
+  // once per Area per expedition, roll alert.entryPct x the Map's arrivalMult. A miss leaves the group for later noise.
+  // Arrival groups are the crossing's business, and a group bound elsewhere can't be met here.
+  V.entryRoll = function (m, aid, site) {
+    const A = D().alert, r = run(); if (!A.entryPct || !m || !site) return null;
+    if (site.entryRun === G.state.runCount) return null;
+    const g = V.available(m).find((x) => x.area === aid && !x.arrival && !x.waiting); if (!g) return null;
+    site.entryRun = G.state.runCount;
+    const tm = X().tutorialOn() && CFG().tutorial.disturbanceMult != null ? CFG().tutorial.disturbanceMult : 1;
+    const pct = U.clamp(A.entryPct * V.modNum(m.id, "arrivalMult", 1) * tm, 0, 100), dr = G.rng() * 100, hit = dr < pct;
+    X().log(`${V.areaDef(m.id).areas[aid].name || aid}: entry check ${Math.round(pct * 10) / 10}% → rolled ${Math.floor(dr)}: ${hit ? "they're in here!" : "quiet."}`, "roll");
+    V.ev("area_entry", { nid: m.id, area: aid, pct, roll: Math.floor(dr), hit, group: hit ? g.id : null });
+    return hit ? V.pushFight(m, g, V.key(m.id, aid), "entry", "They're in here!") : null;
   };
   V.markSafe = function (nid, aid, pos) {
     const r = run(); if (!V.on(r)) return;
@@ -426,7 +445,8 @@
     const r = run(), enc = V.encOf(step), m = enc && V.inst(enc.nid, false), g = m && enc.groups.length && V.group(m, enc.groups[0]);
     if (!g || g.reinforcement) return null;
     if (!g.units) {
-      const mult = (g.area ? D().pool.areaBudgetMult : D().pool.budgetMult) * (g.budgetMult || 1) * V.modNum(enc.nid, "budgetMult", 1), budget = X().enemyBudget(G.Zones.node(enc.nid), mult);
+      const heard = 1 + ((D().pool.defeatedBudgetPct || 0) / 100) * m.defeated.length;   // the rest heard the first
+      const mult = (g.area ? D().pool.areaBudgetMult : D().pool.budgetMult) * (g.budgetMult || 1) * V.modNum(enc.nid, "budgetMult", 1) * heard, budget = X().enemyBudget(G.Zones.node(enc.nid), mult);
       g.units = G.Battle.buildEnemyGroup(V.rngFor(r.seed, enc.nid, g.id, "units"), step.family, budget, (elites || 0) + V.modSum(enc.nid, "elites"), G.Zones.zoneOf(enc.nid)); g.family = step.family;
     }
     const hp = V.modNum(enc.nid, "enemyHpMult", 1);
@@ -472,18 +492,25 @@
   // free looting (SP-033): few groups left on the whole Map, or none that could reach this spot
   V.freeLoot = (siteKey) => V.available(V.inst(V.nidOfKey(siteKey), false)).length <= D().pool.freeLootAtOrBelow || V.eligibleCount(siteKey) === 0;
   // the alert chance of an ordinary search (SP-025 "barely ever"); a body that was never a fight: only its authored trap
+  // Alert % = object noise x noiseMult (+ forcedNoise when forcing) + perSearchPct x searches already made in this Area
+  // this visit - stealthPer10 x floor(best Stealth / 10), x the Map's alertMult, x unboundMult when only an unbound group
+  // could answer. A natural body only gives you away through its trap; a cleared Map (free looting) never does.
   V.alertInfo = function (site, o, action) {
     const A = D().alert, T = X().typeDef(o), key = site.key || site.nid;
     const forced = action === "force" || action === "kick";
     const natural = /^body_/.test(o.type || "") && !o.fresh;
-    let pct = natural && !forced ? 0 : forced ? A.forcedPct : (o.noise != null ? o.noise : T.noise || 0) * A.noiseMult;
+    const noise = (o.noise != null ? o.noise : T.noise || 0), prior = (site.visitSearches || 0) * (A.perSearchPct || 0);
     const stealth = Math.floor(X().bestSkill("stealth") / 10) * A.stealthPer10;
     const tm = X().tutorialOn() && CFG().tutorial.disturbanceMult != null ? CFG().tutorial.disturbanceMult : 1;
     const am = V.modNum(site.nid, "alertMult", 1);   // patrols / sleepers / the dark
-    pct = Math.max(0, (pct - stealth) * tm * am);
+    const a = V.areaOfKey(key), m = V.inst(site.nid, false);
+    const nobodyPosted = !!a && !!m && !V.available(m).some((g) => !g.waiting && g.area === a), unbound = nobodyPosted && A.unboundMult != null ? A.unboundMult : 1;
+    let pct = natural && !forced ? 0 : Math.max(0, noise * A.noiseMult + (forced ? A.forcedNoise || 0 : 0) + prior - stealth) * tm * am * unbound;
     const free = V.freeLoot(key);
     if (free) pct = 0;
-    return { pct, free, natural, forced, math: free ? "nobody left nearby to hear you" : natural && !forced ? "a body: only a trap could give you away" : `${forced ? "forced " + A.forcedPct : "noise " + (o.noise != null ? o.noise : T.noise || 0) + " × " + A.noiseMult} − Stealth ${stealth}${tm !== 1 ? " × tutorial " + tm : ""}${am !== 1 ? " × " + am : ""} = ${Math.round(pct * 100) / 100}%` };
+    const math = free ? "nobody left nearby to hear you" : natural && !forced ? "a body: only a trap could give you away"
+      : `noise ${noise}${A.noiseMult !== 1 ? " × " + A.noiseMult : ""}${forced ? " + forced " + (A.forcedNoise || 0) : ""} + searches ${prior} − Stealth ${stealth}${tm !== 1 ? " × tutorial " + tm : ""}${am !== 1 ? " × " + am : ""}${unbound !== 1 ? " × " + unbound + " (nobody posted here)" : ""} = ${Math.round(pct * 100) / 100}%`;
+    return { pct, free, natural, forced, unbound: nobodyPosted, math };
   };
   // Sweep the area: go looking for whoever's here, on your terms. The fight comes from the same pool as every other
   // encounter (an Area's own group first, then an unbound one); a fight you broke away from here is met again instead.
@@ -708,6 +735,8 @@
     V.ev("loud_fight", { enc: enc.id, shots: b.gunShots, weight: w });
     while (L.every > 0 && r.v2.loud.n + 1e-9 >= (r.v2.loud.paid + 1) * L.every) { r.v2.loud.paid++; V.heat(L.amount, "loud_fights", "loud:" + r.v2.loud.paid); }
   };
+  // a tripped alarm (a noise trap, a wire on a body, a terminal's drone alarm): approved Heat, once per object
+  V.alarmHeat = (site, o) => V.heat(D().heat.alarm || 0, "alarm", "alarm:" + (site.key || site.nid) + ":" + o.id);
   V.heatShown = () => { const r = run(); return !V.on(r) || r.heat >= D().heat.revealAt; };
   // an event option's own Heat (option-level `heat`, or a heat effect) only counts when its source is approved
   V.optionHeat = function (opt) {
