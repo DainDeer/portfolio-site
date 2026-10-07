@@ -164,7 +164,8 @@
   "props_merged/scablands_railline.glb",
   "props_merged/hollis_outskirts.glb",
   "props_merged/hollis_outskirts_ground.glb",
-  "parts_shared/parts_library.glb"
+  "parts_shared/parts_library.glb",
+  "parts_shared/parts_library_q.glb"
  ],
  "_note": "Rivet's loader reads only 'files'. The rest is reference data (Smudge kit, Oct 3 2026): see README.md.",
  "plans": {
@@ -1276,7 +1277,7 @@
   ]
  },
  "parts_shared": {
-  "manifest": "parts_shared/manifest.json",
+  "manifest": "parts_shared/manifest_q.json",
   "note": "win 1: the deduplicated shared part-mesh library for InstancedMesh batching. See parts_shared/README.md",
   "files": [
    "parts_shared/parts_library.glb"

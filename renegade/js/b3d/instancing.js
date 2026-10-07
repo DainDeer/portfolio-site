@@ -10,7 +10,11 @@
 import * as THREE from "three";
 import { SELF_LIT } from "./figures.js";
 
-export const LIB_FILE = "parts_shared/parts_library.glb";
+// Smudge fdd44a8 (parts_shared/README.md): the smaller KHR_mesh_quantization twin. Positions and COLOR_0 stay float32
+// (bit-identical to parts_library.glb), only normals (SHORT), _TINT (UNSIGNED_BYTE) and indices (uint16) are packed;
+// the part nodes carry identity transforms, so batch() folding the node's matrixWorld into s.local is a no-op here.
+// The tables come from parts_shared/manifest_q.json (the main manifest's parts_shared.manifest).
+export const LIB_FILE = "parts_shared/parts_library_q.glb";
 const TINT_MIX = 0.45;   // tintMaterials: color.lerp(tint, 0.45) on the "tint" material = _tint faces
 
 export function createUnitBatches(scene, assets, lib, low) {
