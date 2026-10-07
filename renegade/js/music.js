@@ -36,6 +36,31 @@
     else fade = bar * (D.fromBattle.fadeBars || 1);
     return { mode: "sync", wait, fade, grid, offset: mod(pos + wait, len) };
   };
+  // ---- RNG-077 / SP-006: the battle reveal's combat_start_beat flags (pure, tested headless) ----
+  // A zone track's flagged beats: Snare's explicit list when the track has one (tracks[key].combatStartBeats: beat numbers
+  // from the loop start, in the track's own beats), otherwise derived from its grid: every bar line, halved (on even
+  // meters) until the gap is at most reveal.maxGridSec, so the wait after loading stays short on long bars (Hushwood
+  // 3.2 s -> 1.6 s, Drowned 3.0 -> 1.5, Hollis 2.0 -> 1.0). When the zone's battle track switches on bar lines only
+  // (quantize "bar": Greyback's 4/4 over the 3/4 run track) the flags stay on bar lines.
+  Mu.startGrid = function (key) {
+    const D = M(), T = D.tracks[key]; if (!T) return null;
+    const R = D.reveal || {}, beat = Mu.beatSec(key), bpb = T.beatsPerBar || 4, len = T.loopSec;
+    if (Array.isArray(T.combatStartBeats) && T.combatStartBeats.length) return { key, list: T.combatStartBeats.map((n) => mod(n * beat, len)).sort((a, b) => a - b), len, source: "flags" };
+    const partner = Object.keys(D.tracks).find((k) => k !== key && Mu.sameGroup(k, key) && D.tracks[k].quantize === "bar");
+    let n = bpb;
+    if (!partner) { while (n * beat > (R.maxGridSec ?? 1.6) + 1e-9 && n % 2 === 0) n /= 2; if (n * beat > (R.maxGridSec ?? 1.6) + 1e-9) n = 1; }
+    return { key, every: n * beat, beats: n, len, source: partner ? "bar (battle track quantize bar)" : n === bpb ? "bar" : n + " beats" };
+  };
+  // seconds from playback position pos (s) of track key to its next flagged beat (0 = on one)
+  Mu.untilStartBeat = function (key, pos) {
+    const g = Mu.startGrid(key); if (!g) return null;
+    const p = mod(pos, g.len);
+    if (g.list) { for (const x of g.list) if (x >= p - 1e-3) return Math.max(0, x - p); return g.len - p + g.list[0]; }
+    return Mu.untilLine(p, g.every);
+  };
+  // the loading dip: the zone track's level (x its starting level) after t s of loading. Very gradual, never below the floor
+  Mu.dipLevel = function (t) { const R = M().reveal || {}, floor = Math.max(0.8, R.dipFloor ?? 0.8), sec = Math.max(0.1, R.dipSec ?? 6); return Math.max(floor, 1 - (1 - floor) * Math.min(1, Math.max(0, t) / sec)); };
+
   // equal-power fade curves (N points), scaled to a start level
   const curve = (from, to, n) => { const c = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i / (n - 1); c[i] = from * Math.cos(x * Math.PI / 2) + to * Math.sin(x * Math.PI / 2); } return c; };
   Mu.curve = curve;
@@ -92,7 +117,7 @@
   // ---- music state: called on every render (UI.render) and when a battle mounts ----
   Mu.set = function (state, zone) {
     Mu.state = state; Mu.zone = zone == null ? null : zone;
-    const key = M().enabled === false ? null : Mu.trackFor(state, zone);
+    const key = M().enabled === false ? null : Mu.trackFor(Mu.held(state), zone);
     Mu.want = key;
     if (!hasDom || !S() || !S().unlocked || !S().enabled) return;
     if (Mu.gain() <= 0) { Mu.stopAll(); Mu.trim(); return; }
@@ -101,9 +126,9 @@
     if (state === "run") { const bk = Mu.trackFor("battle", zone); if (bk && M().tracks[bk]) Mu.load(bk); }   // this zone's battle track, decoded early (Snare's note)
     if (!key) { Mu.stopAll(); return; }
     if (Mu.main && Mu.main.key === key) return;
-    const e = Mu.load(key); if (e.state === "ok") Mu.go(key, state);
+    const e = Mu.load(key); if (e.state === "ok") Mu.go(key, Mu.held(state));
   };
-  Mu.onReady = function (key) { if (Mu.want === key && (!Mu.main || Mu.main.key !== key)) Mu.go(key, Mu.state); };
+  Mu.onReady = function (key) { if (Mu.want === key && (!Mu.main || Mu.main.key !== key)) Mu.go(key, Mu.held(Mu.state)); };
   Mu.onUnlock = function () { if (Mu.state) Mu.set(Mu.state, Mu.zone); };
   // Music on / off for this visit: the title's sound button and Settings > Music on both come here. On also lifts a
   // saved Mute, so turning music on is never silent
@@ -131,6 +156,9 @@
     v.fadeOut = (at, fade) => { const h = hold(), a = Math.max(at, h.t + 0.01), f = Math.max(0.02, fade); g.gain.setValueCurveAtTime(curve(h.cur, 0, 64), a, f); v.endAt = a + f;
       clearTimeout(v.timer); v.timer = setTimeout(() => v.kill(), (a + f - h.t) * 1000 + 250); };
     v.restore = () => { clearTimeout(v.timer); v.endAt = null; const h = hold(); g.gain.linearRampToValueAtTime(vol, h.t + 0.1); };
+    // RNG-077 loading dip: a linear ramp from the current level to floor x the track's full level over sec (a track still
+    // fading in finishes towards that floor instead), so never below floor x its level when the loading screen came up
+    v.dip = (floor, sec) => { const h = hold(); v.dipFrom = h.cur; v.dipTo = Math.max(h.cur, vol) * floor; g.gain.linearRampToValueAtTime(v.dipTo, h.t + sec); };
     v.kill = () => { clearTimeout(v.timer); try { src.stop(); } catch (x) {} try { src.disconnect(); g.disconnect(); } catch (x) {} Mu.voices = Mu.voices.filter((o) => o !== v); if (Mu.main === v) Mu.main = null; v.prev = null; for (const other of Mu.voices) if (other.prev === v) other.prev = null; Mu.trim(); };
     return v;
   }
@@ -158,17 +186,60 @@
       vv.level = to > from0 ? from0 + (to - from0) * Math.sin(x * Math.PI / 2) : to + (from0 - to) * Math.cos(x * Math.PI / 2); vv.apply(); if (x >= 1) { clearInterval(vv.ramp); if (done) done(); } }, 40); };
     v.fadeOut = (fade) => ramp(v, 0, fade, () => v.kill());
     v.restore = () => { clearTimeout(v.timer); ramp(v, 1, 0.1); };
+    v.dip = (floor, sec) => { v.dipFrom = v.level; v.dipTo = Math.max(v.level, 1) * floor; ramp(v, v.dipTo, sec); };
     v.kill = () => { clearTimeout(v.timer); clearInterval(v.ramp); try { n.pause(); } catch (x) {} Mu.voices = Mu.voices.filter((o) => o !== v); if (Mu.main === v) Mu.main = null; v.prev = null; for (const other of Mu.voices) if (other.prev === v) other.prev = null; Mu.trim(); };
     v.timer = setTimeout(() => { v.started = true; if (p.mode === "sync" && from && from.el) { try { n.currentTime = from.el.currentTime; } catch (x) {} }
       const pr = n.play(); if (pr && pr.catch) pr.catch(() => {}); ramp(v, 1, p.fade); if (from) from.fadeOut(p.fade); }, p.wait * 1000);
     Mu.voices.push(v); Mu.main = v;
     note({ at: Date.now() / 1000, from: from ? from.key : null, to: key, state, mode: p.mode, grid: p.grid || null, wait: p.wait, fade: p.fade, html: true });
   }
+  // ---- RNG-077 / SP-006: the battle loading screen holds the music ----
+  // Mu.hold(zone): from "To battle" until the reveal, the battle state keeps the zone's run track playing (Mu.set maps
+  // "battle" to "run"), dipping very gradually to no less than 80% of its level (data/audio.js music.reveal).
+  // Mu.nextStartBeat(): once loading is done, when the next flagged beat of the playing track is (Web Audio clock), or null
+  // when there is no music to sync to (muted, locked, nothing playing yet, HTMLAudio under file://): the reveal then
+  // doesn't wait. Mu.releaseAt(T): the battle track starts at audio time T (that beat), crossfading reveal.fadeSec;
+  // Mu.release(): no beat to land on, back to the usual switch (the next bar line of the battle track, js/music.js plan).
+  Mu.revealHold = null;
+  Mu.held = (state) => (Mu.revealHold && state === "battle" ? "run" : state);
+  Mu.hold = function (zone) {
+    const c = S() && S().ctx, R = M().reveal || {}, floor = Math.max(0.8, R.dipFloor ?? 0.8), sec = Math.max(0.1, R.dipSec ?? 6);
+    const h = Mu.revealHold = { zone: zone == null ? null : zone, t0: c ? c.currentTime : 0, at0: Date.now(), floor, sec, voice: null };
+    const v = Mu.main; if (v && v.dip && (!v.startAt || !c || v.startAt <= c.currentTime + 0.005) && !v.stopping) { v.dip(floor, sec); h.voice = v; }
+    note({ at: h.t0, hold: zone, dip: h.voice ? h.voice.key : null });
+    return h;
+  };
+  Mu.nextStartBeat = function () {
+    const c = S() && S().ctx, v = Mu.main;
+    if (!c || c.state !== "running" || !v || !v.src || v.stopping || Mu.gain() <= 0) return null;
+    const lead = M().leadSec || 0.05, t = c.currentTime + lead; if (v.startAt > t) return null;
+    const pos = v.pos(t), wait = Mu.untilStartBeat(v.key, pos); if (wait == null) return null;
+    const g = Mu.startGrid(v.key);
+    return { key: v.key, now: c.currentTime, at: t + wait, wait: lead + wait, pos, grid: g.list ? "flags" : g.every, source: g.source };
+  };
+  Mu.releaseAt = function (T) {
+    const h = Mu.revealHold; Mu.revealHold = null;
+    const c = S() && S().ctx, key = M().enabled === false ? null : Mu.trackFor("battle", h ? h.zone : Mu.zone), from = Mu.main, e = key && Mu.cache[key];
+    if (!c || !key || !e || e.state !== "ok" || !e.buf || !from || !from.src || Mu.gain() <= 0) { note({ at: c ? c.currentTime : 0, release: "plan" }); if (Mu.state) Mu.set(Mu.state, Mu.zone); return false; }
+    if (from.key === key) return true;
+    const R = M().reveal || {}, fade = R.fadeSec ?? 0.12, at = Math.max(T, c.currentTime + 0.01);
+    const off = Mu.sameGroup(from.key, key) ? mod(from.pos(at), e.buf.duration) : 0;
+    const v = voiceWA(key, e.buf, at, off); v.prev = from; v.fadeIn(at, fade); from.fadeOut(at, fade);
+    Mu.voices.push(v); Mu.main = v; Mu.want = key;
+    note({ at: c.currentTime, from: from.key, to: key, state: "battle", mode: "reveal", startAt: at, offset: off, fade, fromPosAtStart: from.pos(at), fromGain: from.g.gain.value });
+    return true;
+  };
+  Mu.release = function () {
+    const h = Mu.revealHold; if (!h) return;
+    Mu.revealHold = null;
+    if (Mu.state === "battle") Mu.set("battle", Mu.zone);
+    else if (h.voice && Mu.main === h.voice) h.voice.restore();   // left before the reveal (exit / failure): back to full level
+  };
   Mu.stopAll = function () { const f = M().restartFadeSec; for (const v of Mu.voices.slice()) { if (v.stopping) continue; v.stopping = true; if (v.src) v.fadeOut(S().ctx.currentTime, f); else if (v.fadeOut) v.fadeOut(f); } Mu.main = null; };
   // debug / tests: what is playing and where
   Mu.snapshot = function () {
     const c = S() && S().ctx, now = c ? c.currentTime : 0;
-    return { state: Mu.state, want: Mu.want, main: Mu.main ? Mu.main.key : null, now, bus: Mu.bus ? Mu.bus.gain.value : null, ctx: c ? c.state : null,
+    return { state: Mu.state, want: Mu.want, main: Mu.main ? Mu.main.key : null, hold: !!Mu.revealHold, now, bus: Mu.bus ? Mu.bus.gain.value : null, ctx: c ? c.state : null,
       voices: Mu.voices.map((v) => ({ key: v.key, main: v === Mu.main, startAt: v.startAt, off: v.off, gain: v.g ? v.g.gain.value : v.level, pos: v.pos ? v.pos(now) : v.el && v.el.currentTime, endAt: v.endAt || null, dur: v.dur })) };
   };
 })(window);

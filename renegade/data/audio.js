@@ -100,6 +100,15 @@ DATA.audio = {
     // the outgoing one's next bar line, so the beat grids line up during the crossfade (Snare: title -> outpost)
     barAlign: [["music_title", "music_outpost"]],
     restartFadeSec: 1.75,                       // different groups (outpost <-> Hushwood): equal-power crossfade, incoming from 0
+    // RNG-077 / SP-006 (Megan, Oct 2): the 3D battle's loading screen keeps the zone track playing, dipping very gradually
+    // (linear over dipSec) to no less than dipFloor (80%) of its level; once loaded it ends on the zone track's next
+    // combat_start_beat (tracks[key].combatStartBeats when Snare adds them, else every bar line halved down to
+    // maxGridSec: js/music.js Mu.startGrid). On that beat the battle track starts, crossfading fadeSec. maxWaitSec caps
+    // the wait for a beat (then it reveals unsynced); with no music to sync to (muted, locked, file://) it doesn't wait.
+    // The 2D view (Low / no WebGL / Auto on phones) mounts at once and keeps toBattle below.
+    // uiOpen: the SP-082 combat UI opening on the reveal (combination-lock end panels, 3 spins, beam; js/gfx.js Gfx.openUI).
+    // Megan (Oct 6): OFF until Smudge's end-panel art; false = SP-006's plain reveal (the HUD fades in on the beat).
+    reveal: { dipFloor: 0.8, dipSec: 6, maxGridSec: 1.6, maxWaitSec: 2.0, fadeSec: 0.12, uiOpen: false },
     toBattle: { quantize: "bar", maxBarWaitBars: 1, fadeSec: 0.4 },   // next bar line, or the next beat if the bar line is more than maxBarWaitBars of the incoming track's own bars away (Snare: was a fixed 2.4 s)
     fromBattle: { quantize: "bar", fadeBars: 1 },                       // starts on the next bar line, one bar long, so it ends on a bar line
     firstFadeSec: 1.5,                          // fade-in when music starts from silence (first tap / unmute)

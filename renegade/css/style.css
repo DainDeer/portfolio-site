@@ -475,7 +475,36 @@ button.promote { background: #6a5a1a; }
 .b3d-stack { position: relative; }
 .b3d-stack > .b3d-gl { position: absolute; display: block; pointer-events: none; image-rendering: pixelated; }
 .battle-canvas.b3d-overlay { position: relative; background: transparent; image-rendering: auto; }
-.b3d-loading { display: flex; align-items: center; justify-content: center; aspect-ratio: 40 / 24; max-height: calc(100vh - 190px); background: #15130f; border: 1px solid #444; }
+/* RNG-077 / SP-006: the 3D battle's loading screen (covers the real load, then waits for the beat; js/gfx.js) */
+.b3d-loading { position: fixed; inset: 0; z-index: 121; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, #1d1a12 0%, #0b0a07 75%); }
+.b3d-loading .b3d-ready { margin: 8px 0 0; color: #7fe8ff; font-family: monospace; letter-spacing: 3px; text-transform: uppercase; visibility: hidden; }
+.b3d-loading[data-state="ready"] { cursor: pointer; }
+.b3d-loading[data-state="ready"] .b3d-ready { visibility: visible; animation: rvReady 0.8s ease-in-out infinite alternate; }
+@keyframes rvReady { from { opacity: 0.45; } to { opacity: 1; } }
+/* SP-082 placeholder: the combat UI opening on the reveal beat. The end panels unlock like a combination lock (3 spins),
+   expand and project a beam across the HUD bar; the interface appears under it. Decorative only (pointer-events: none). */
+.battle-wrap.b3d { position: relative; }
+.rv-open { position: absolute; left: 0; right: 0; top: 0; height: 40px; pointer-events: none; z-index: 5; --rv-ms: 1300ms; }
+.rv-lock { position: absolute; top: 2px; width: 36px; height: 36px; border-radius: 50%; box-sizing: border-box; border: 3px solid #5fd8ff;
+  background: repeating-conic-gradient(#0d2a33 0 10deg, #5fd8ff 10deg 13deg), #0d2a33; box-shadow: 0 0 10px #29c4ff, inset 0 0 6px #000;
+  animation: rvSpin var(--rv-ms) cubic-bezier(.3,.05,.3,1) both; }
+.rv-lock b { position: absolute; left: 50%; top: 3px; width: 4px; height: 12px; margin-left: -2px; background: #e8ffff; border-radius: 2px; box-shadow: 0 0 6px #fff; }
+.rv-l { left: 0; } .rv-r { right: 0; animation-name: rvSpinR; }
+.rv-beam { position: absolute; left: 18px; right: 18px; top: 17px; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #bff4ff, #29c4ff 20%, #e8ffff 50%, #29c4ff 80%, #bff4ff);
+  box-shadow: 0 0 14px 4px #29c4ffaa; transform: scaleX(0); opacity: 0; animation: rvBeam var(--rv-ms) ease-out both; }
+@keyframes rvSpin { 0% { transform: rotate(0) scale(0.6); opacity: 0; } 8% { opacity: 1; transform: rotate(0) scale(1); }
+  20% { transform: rotate(360deg); } 23% { transform: rotate(340deg); } 38% { transform: rotate(720deg); } 41% { transform: rotate(700deg); } 58% { transform: rotate(1080deg) scale(1); }
+  68% { transform: rotate(1080deg) scale(1.35); } 85% { transform: rotate(1080deg) scale(1.15); opacity: 1; } 100% { transform: rotate(1080deg) scale(1); opacity: 0; } }
+@keyframes rvSpinR { 0% { transform: rotate(0) scale(0.6); opacity: 0; } 8% { opacity: 1; transform: rotate(0) scale(1); }
+  20% { transform: rotate(-360deg); } 23% { transform: rotate(-340deg); } 38% { transform: rotate(-720deg); } 41% { transform: rotate(-700deg); } 58% { transform: rotate(-1080deg) scale(1); }
+  68% { transform: rotate(-1080deg) scale(1.35); } 85% { transform: rotate(-1080deg) scale(1.15); opacity: 1; } 100% { transform: rotate(-1080deg) scale(1); opacity: 0; } }
+@keyframes rvBeam { 0%, 62% { transform: scaleX(0); opacity: 0; } 66% { opacity: 1; } 82% { transform: scaleX(1); opacity: 1; height: 6px; } 100% { transform: scaleX(1); opacity: 0; height: 2px; } }
+.rv-opening .battle-hud, .rv-opening .ability-bar, .rv-opening .battle-bottom { animation: rvHud var(--rv-hud-ms, 1300ms) ease-out both; }
+@keyframes rvHud { 0%, 66% { opacity: 0; clip-path: inset(0 50% 0 50%); } 86% { opacity: 1; clip-path: inset(0 0 0 0); } 100% { opacity: 1; clip-path: none; } }
+.rv-open.rv-reduced .rv-lock, .rv-open.rv-reduced .rv-beam { display: none; }
+.rv-opening.rv-reduced-motion .battle-hud, .rv-opening.rv-reduced-motion .ability-bar, .rv-opening.rv-reduced-motion .battle-bottom { animation: rvFade 250ms ease-out both; }
+@keyframes rvFade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .b3d-loading[data-state="ready"] .b3d-ready { animation: none; } }
 .b3d-card { background: #0c0c09e8; border: 1px solid #5a4a2a; padding: 12px 18px; min-width: 240px; font-size: 13px; }
 .b3d-card h3 { margin: 0 0 6px; color: #e8c880; }
 .b3d-card ol { margin: 0; padding-left: 18px; } .b3d-card li { display: flex; justify-content: space-between; gap: 16px; } .b3d-card li b { font-family: monospace; color: #9a9; }

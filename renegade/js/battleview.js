@@ -43,7 +43,7 @@
     return v;
   };
 
-  BV.unmount = function (v) { if (v.dispose) { v.dispose(); v.dispose = null; } v.done = true; cancelAnimationFrame(v.raf); window.removeEventListener("mouseup", v.onUp); window.removeEventListener("keydown", v.onKey); G.UI.hideTip(); if (BV.active === v) BV.active = null; };
+  BV.unmount = function (v) { if (v.cancelReveal) v.cancelReveal(); if (v.dispose) { v.dispose(); v.dispose = null; } v.done = true; cancelAnimationFrame(v.raf); window.removeEventListener("mouseup", v.onUp); window.removeEventListener("keydown", v.onKey); G.UI.hideTip(); if (BV.active === v) BV.active = null; };
 
   BV.renderHud = function (v) {
     const b = v.b;
