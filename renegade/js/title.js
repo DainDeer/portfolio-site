@@ -56,21 +56,32 @@
       h("label", { class: "title-label" }, h("img", { src: url(labelImg.file), alt: label, draggable: "false" })),
       h("div", { class: "title-field" }, h("input", { type, disabled: true, placeholder: "", "aria-label": label + " (coming later)", tabindex: "-1" }), h("img", { class: "title-lock", src: url(A.lock.file), alt: "", draggable: "false" })));
   };
-  // Megan: the locked fields stay on screen for a new save too. Its panel holds the difficulty picker, so they get their
-  // own small panel (placed per layout in css/title.css and css/mobile.css)
-  T.account = function (h) {
-    const A = C().art;
-    return h("div", { class: "title-account", "data-panel": "account", title: "Accounts are coming later" },
-      T.field(h, "Username", A.labelUser, "text"), T.field(h, "Password", A.labelPass, "password"));
+  // Megan (Oct 7): two screens over the camp, both in the bottom third under the fire. 1. Login: the blank, locked
+  // Username / Password and a Login button that only moves on (no accounts yet). 2. A new save's difficulty + Play.
+  // A save whose difficulty is already locked has no step 2: Login continues straight into the game.
+  T.step = "login";   // "login" | "diff"; kept across an art-retry re-show, back to "login" after Play
+  T.loginPanel = function (h) {
+    return h("div", { class: "title-panel login", "data-panel": "login" },
+      h("div", { class: "title-fields", title: "Accounts are coming later" }, T.field(h, "Username", C().art.labelUser, "text"), T.field(h, "Password", C().art.labelPass, "password")),
+      h("div", { class: "title-divider" }),
+      h("button", { class: "title-login", "data-act": "login", "data-nosfx": "1", onclick: () => T.login() }, "LOGIN"));
   };
-
   T.panel = function () {
-    const h = G.UI.h, A = C().art;
-    const diff = T.diffPending();
-    const kids = diff ? [T.diffPicker(h), h("div", { class: "title-divider" })]   // Slice 4 §H: a new save picks its difficulty (Smudge's layout: in place of the fields)
-      : [T.field(h, "Username", A.labelUser, "text"), T.field(h, "Password", A.labelPass, "password"), h("div", { class: "title-divider" })];
-    kids.push(h("button", { class: "title-play art-fallback", "data-act": "play", "data-nosfx": "1", "aria-label": "Play", onclick: () => T.play() }, h("span", { class: "title-play-fallback" }, "PLAY"), h("span", { class: "title-play-art" })));
-    return h("div", { class: "title-panel" + (diff ? " diff" : "") }, kids);
+    const h = G.UI.h;
+    return h("div", { class: "title-panel diff", "data-panel": "diffstep" }, T.diffPicker(h),
+      h("div", { class: "t-diff-side" }, h("div", { class: "title-divider" }),
+        h("button", { class: "title-play art-fallback", "data-act": "play", "data-nosfx": "1", "aria-label": "Play", onclick: () => T.play() }, h("span", { class: "title-play-fallback" }, "PLAY"), h("span", { class: "title-play-art" }))));
+  };
+  T.setStep = function (step) {
+    T.step = step; const root = document.getElementById("title"); if (root) root.dataset.step = step;
+  };
+  // Login: no auth. A new save goes on to its difficulty; a locked one continues into the game
+  T.login = function () {
+    if (!T.open) return;
+    if (!T.diffPending()) return T.play();
+    if (G.Sfx && G.Sfx.play) G.Sfx.play("sfx_ui_click");
+    T.setStep("diff");
+    const first = document.querySelector("#title .t-diff.sel") || document.querySelector("#title .t-diff"); if (first && first.focus) first.focus({ preventScroll: true });
   };
   // ---- Slice 4 §H: difficulty (config.difficulty; Smudge's sigils, assets/ui/difficulty) ----
   T.diffPending = () => !!(G.Difficulty && G.state && G.Difficulty.pending());
@@ -112,26 +123,28 @@
     }).catch(() => {
       if (!root.isConnected) return;
       if (file === C().art.logoStrip.file) root.querySelector(".title-logo").classList.add("art-fallback");
-      if (Object.values(C().art.play).some((art) => art.file === file)) root.querySelector(".title-play").classList.add("art-fallback");
+      const pb = root.querySelector(".title-play"); if (pb && Object.values(C().art.play).some((art) => art.file === file)) pb.classList.add("art-fallback");
     });
     Promise.all(Object.values(C().art.play).map((art) => G.Assets.image(DATA.sprites.basePath + art.file))).then(() => {
-      if (root.isConnected) root.querySelector(".title-play").classList.remove("art-fallback");
+      const pb = root.querySelector(".title-play"); if (root.isConnected && pb) pb.classList.remove("art-fallback");
     }).catch(() => {});
   };
   T.show = function () {
     if (T.open) return; T.open = true;
     const pre = window.Entry && window.Entry.backdrop && G.TitleScene && G.TitleScene.running ? window.Entry.backdrop : null;
     const h = G.UI.h, A = C().art, root = h("div", { id: "title", class: "title" + (phone() ? " phone" : "") + (pre ? " gl" : "") });
+    const diff = T.diffPending(); if (!diff) T.step = "login"; root.dataset.step = T.step;
     const v = (k, f) => root.style.setProperty(k, `url("${new URL(url(f), document.baseURI).href}")`);   // absolute: a url() in a custom property resolves against the stylesheet
     v("--t-still-d", A.stillDesktop.file); v("--t-still-p", A.stillPhone.file); v("--t-logo", A.logoStrip.file); v("--t-panel", A.panel.file); v("--t-div", A.divider.file); v("--t-field", A.field.file);
     v("--t-play", A.play.normal.file); v("--t-play-h", A.play.hover.file); v("--t-play-p", A.play.pressed.file);
+    v("--t-btn", A.button.normal.file); v("--t-btn-h", A.button.hover.file); v("--t-btn-p", A.button.pressed.file);
     v("--t-snd-on", A.soundOn.file); v("--t-snd-on-h", A.soundOnHover.file); v("--t-snd-off", A.soundOff.file); v("--t-snd-off-h", A.soundOffHover.file); v("--t-tag", A.versionTag.file);
     root.append(h("div", { class: "title-still" }), pre ? pre.canvas : h("canvas", { class: "title-gl" }), h("div", { class: "title-shade" }),
-      h("h1", { class: "title-logo art-fallback", "aria-label": "Renegade" }, h("span", { class: "title-logo-fallback" }, "RENEGADE")), T.panel(), ...(T.diffPending() ? [T.account(h)] : []),
-      h("div", { class: "title-version", "data-note": "build" }, !T.diffPending() && G.Difficulty && G.state ? h("img", { class: "title-diff", src: url(DATA.sprites["diff_" + G.Difficulty.id() + "_hud"].file), alt: G.Difficulty.name(), title: "Difficulty: " + G.Difficulty.name() }) : null, T.buildLabel(), G.state && G.Cards && G.Cards.title() ? h("span", { class: "title-cardtitle", "data-card-title": "1" }, "★ " + G.Cards.title()) : null),   // Slice 5 §J
+      h("h1", { class: "title-logo art-fallback", "aria-label": "Renegade" }, h("span", { class: "title-logo-fallback" }, "RENEGADE")), T.loginPanel(h), ...(diff ? [T.panel()] : []),
+      h("div", { class: "title-version", "data-note": "build" }, !diff && G.Difficulty && G.state ? h("img", { class: "title-diff", src: url(DATA.sprites["diff_" + G.Difficulty.id() + "_hud"].file), alt: G.Difficulty.name(), title: "Difficulty: " + G.Difficulty.name() }) : null, T.buildLabel(), G.state && G.Cards && G.Cards.title() ? h("span", { class: "title-cardtitle", "data-card-title": "1" }, "★ " + G.Cards.title()) : null),   // Slice 5 §J
       h("button", { class: "title-sound", "data-act": "title-sound", "data-nosfx": "1", onclick: (e) => { e.stopPropagation(); T.toggleSound(); } }));
     document.body.appendChild(root); document.body.classList.add("title-open");
-    T.keys = (e) => { if (G.Util.typing(e)) return; if ((e.key === "Enter" || e.key === " ") && T.open && !document.querySelector("#modal-root .modal")) { e.preventDefault(); T.play(); } };
+    T.keys = (e) => { if (G.Util.typing(e)) return; if ((e.key === "Enter" || e.key === " ") && T.open && !document.querySelector("#modal-root .modal")) { e.preventDefault(); if (T.step === "login") T.login(); else T.play(); } };
     window.addEventListener("keydown", T.keys);
     T.tapSync = () => setTimeout(T.syncSound, 50); document.addEventListener("pointerup", T.tapSync, true);
     T.prepareArt(root); T.startScene(root, pre); T.syncSound();
@@ -148,6 +161,6 @@
     if (!T.open) return;
     if (T.beforePlay() === false) return;   // Slice 4 §H: a new save picks its difficulty first
     if (G.Sfx && G.Sfx.play) G.Sfx.play("sfx_ui_click");
-    T.close(); G.UI.render();   // the render's music state is outpost / run: title -> outpost crossfades on the bar line
+    T.close(); T.step = "login"; G.UI.render();   // the render's music state is outpost / run: title -> outpost crossfades on the bar line
   };
 })();

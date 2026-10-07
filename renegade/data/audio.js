@@ -70,12 +70,12 @@ DATA.audio = {
     // Tracks in the same sync group share one bar grid (same length and tempo): switching between them keeps the
     // playback position and lands on the grid. Different groups crossfade and restart the incoming track from the top.
     tracks: {
-      music_outpost:         { vol: 1, bpm: 100, beatsPerBar: 4, loopSec: 76.8 },                      // bar 2.4 s
+      music_outpost:         { vol: 1, bpm: 100, beatsPerBar: 4, loopSec: 153.6 },                     // forest v2: 64 bars, bar 2.4 s
       music_hushwood:        { vol: 1, bpm: 75, beatsPerBar: 4, loopSec: 102.4, sync: "hushwood" },  // bar 3.2 s
       music_hushwood_battle: { vol: 1, bpm: 75, beatsPerBar: 4, loopSec: 102.4, sync: "hushwood" },
       // Slice 4 §G (Snare, assets/music_src/README.md + README_zones2.md). Only tracks a state / zone / preload names are
       // requested or packaged (tools/asset-manifest.js), so the future-zone pairs cost nothing until a zone uses them.
-      music_title:           { vol: 1, bpm: 100, beatsPerBar: 4, loopSec: 96 },                        // bar 2.4 s; the start screen
+      music_title:           { vol: 1, bpm: 100, beatsPerBar: 4, loopSec: 134.4 },                     // v6 "dark toms": 56 bars, bar 2.4 s; the start screen
       music_greyback:        { vol: 1, bpm: 125, beatsPerBar: 3, loopSec: 92.16, sync: "greyback" },   // 3/4, bar 1.44 s (Greyback Hills, Slice 5 §G)
       music_greyback_battle: { vol: 1, bpm: 500 / 3, beatsPerBar: 4, loopSec: 92.16, sync: "greyback", quantize: "bar" },   // 4/4 on the same 1.44 s bar: bar lines only
       music_scablands:       { vol: 1, bpm: 150, beatsPerBar: 4, loopSec: 102.4, sync: "scablands" }, // bar 1.6 s (the late wasteland; NOT zone a)
@@ -112,6 +112,9 @@ DATA.audio = {
     toBattle: { quantize: "bar", maxBarWaitBars: 1, fadeSec: 0.4 },   // next bar line, or the next beat if the bar line is more than maxBarWaitBars of the incoming track's own bars away (Snare: was a fixed 2.4 s)
     fromBattle: { quantize: "bar", fadeBars: 1 },                       // starts on the next bar line, one bar long, so it ends on a bar line
     firstFadeSec: 1.5,                          // fade-in when music starts from silence (first tap / unmute)
-    leadSec: 0.06                               // scheduling headroom for Web Audio start times
+    leadSec: 0.06,                              // scheduling headroom for Web Audio start times
+    // SP-118: decoded PCM budget for Mu.trim's LRU (tunable). Phone uses the Touch layout test.
+    cacheMB: { desktop: 220, phone: 120 },
+    oneShot: ["music_title"]                    // dropped as soon as nothing plays or wants it (the title plays once per load), budget or not
   }
 };

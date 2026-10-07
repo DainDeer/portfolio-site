@@ -180,6 +180,28 @@ void main() {
     });
   };
 
+  // SP-118: one shared WebGL context for big d20 rolls. Creating a new context per roll hits Chrome's ~16-context
+  // cap and can force-lose the persistent 3D battle renderer. Reuse lazily; recreate only if the context is lost.
+  Dc._gl = null;   // { frame, tint, gl, canvas }
+  Dc.ensureRender = function (canvas) {
+    const live = Dc._gl && Dc._gl.gl && !Dc._gl.gl.isContextLost() && Dc._gl.canvas;
+    if (live) {
+      if (Dc._gl.canvas !== canvas) {
+        // Keep the live canvas; swap it into the panel in place of the fresh placeholder.
+        const parent = canvas.parentNode;
+        if (parent) { parent.replaceChild(Dc._gl.canvas, canvas); }
+        Dc._gl.canvas.className = canvas.className;
+        Dc._gl.canvas.style.cssText = canvas.style.cssText;
+        if (Dc._gl.canvas.width !== canvas.width || Dc._gl.canvas.height !== canvas.height) {
+          Dc._gl.canvas.width = canvas.width; Dc._gl.canvas.height = canvas.height;
+          try { Dc._gl.gl.viewport(0, 0, canvas.width, canvas.height); } catch (x) {}
+        }
+      }
+      return Promise.resolve(Dc._gl);
+    }
+    return Dc.render(canvas).then((rr) => { Dc._gl = Object.assign({ canvas }, rr); return Dc._gl; });
+  };
+
   // ---- the panel ----
   Dc.enabled = (consumer) => { const c = C(); return !!(c && c.enabled && (c.consumers || []).includes(consumer) && typeof document !== "undefined" && Dc.on()); };
   Dc.on = () => !(G.state && G.state.settings && G.state.settings.showDice === false);   // "Show dice rolls" (settings)
@@ -257,7 +279,7 @@ void main() {
       if (Dc.reduced() || opts.still) return still("reduced motion");
       Dc.load().then(() => { if (done || landed) return;
         plan = Dc.plan(roll.d, opts.seed || ((Math.random() * 4294967295) >>> 0) || 1);
-        return Dc.render(cv).then((rr) => { if (done || landed) return; r = rr; Dc.mode = "webgl";
+        return Dc.ensureRender(cv).then((rr) => { if (done || landed) return; r = rr; Dc.mode = "webgl";
           const speed = (Dc.phone() ? cf.phoneSpeed : 1) * (opts.speed || 1), maxB = (cf.sfx || {}).maxBounces || 3; let t0 = 0, bi = 0;
           const tick = (now) => { if (!t0) t0 = now; const i = Math.floor((now - t0) / 1000 * 60 * speed); if (i >= plan.frames.length) return land();
             while (bi < plan.bounces.length && plan.bounces[bi] <= i) { if (bi < maxB) Dc.sfx("bounce"); bi++; }   // a tumble per wall hit, up to maxBounces
@@ -364,5 +386,11 @@ void main() {
     if (Dc.cur && Dc.cur.mini) Dc.cur.finish();
     return had;
   };
-  Dc.close = function () { if (typeof document === "undefined") return; for (const el of document.querySelectorAll(".dice-panel, .dice-shield, .dice-mini")) el.remove(); Dc.cur = null; };
+  Dc.close = function () {
+    if (typeof document === "undefined") return;
+    // SP-118: pull the shared GL canvas out before removing the panel so the context stays alive for the next roll.
+    if (Dc._gl && Dc._gl.canvas && Dc._gl.canvas.parentNode) Dc._gl.canvas.remove();
+    for (const el of document.querySelectorAll(".dice-panel, .dice-shield, .dice-mini")) el.remove();
+    Dc.cur = null;
+  };
 })(typeof window !== "undefined" ? window : globalThis);

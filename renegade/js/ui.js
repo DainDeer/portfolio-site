@@ -719,6 +719,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     if (inSite) head.appendChild(h("button", { "data-act": "leave", disabled: !!r.queue.length || !!UI.search, onclick: () => { X.leaveSite(); UI.render(); } }, v2 ? DATA.mapsV2.text.backToTraversal + " ↩" : "Leave to the map ↩"));
     else if (loc && X.site()) head.appendChild(h("button", { "data-act": "enter", disabled: !!r.queue.length, onclick: () => { const e = X.enterSite(); if (e) UI.fail(e); UI.render(); } }, v2 ? G.Traversal.enterLabel(r.loc) : `Go back inside ${loc.name}`));
     mapBox.appendChild(head);
+    { const ab = v2 && loc ? UI.attentionEl(r.loc) : null; if (ab) mapBox.appendChild(ab); }   // SP-133: the Map's Attention bar (never Heat)
     if (inSite) G.SiteView.render(mapBox, { onObject: UI.onSiteObject, onCancel: UI.cancelSearch });
     else G.MapView.render(mapBox, v2 ? (nid) => G.Traversal.select(nid) : (nid) => {   // V2: a Map opens its panel first (Travel / Enter there)
       if (nid === r.loc) { X.enterSite(); UI.render(); return; }
@@ -916,7 +917,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     }
     if (acts.length === 1) return UI.beginSearch(o.id, acts[0]);
     const box = h("div", null, h("h2", null, o.name), h("p", null, o.jammed ? "The lock is jammed." : "It's locked."));
-    for (const a of acts) { const i = X.searchInfo(o.id, a); box.appendChild(h("div", { class: "ev-opt" }, h("button", { "data-act": a, onclick: () => { UI.closeModal(); UI.beginSearch(o.id, a); } }, G.SiteView.actionLabel[a]), h("span", { class: "chance" }, `${U.fmt1(i.sec)} s · disturbance ${U.fmt1(i.pct)}%` + (i.heatGain ? ` · +${i.heatGain} Heat` : "") + (i.check ? ` · ${UI.checkLabel(i.check)}` : "")))); }
+    for (const a of acts) { const i = X.searchInfo(o.id, a); box.appendChild(h("div", { class: "ev-opt" }, h("button", { "data-act": a, onclick: () => { UI.closeModal(); UI.beginSearch(o.id, a); } }, G.SiteView.actionLabel[a]), h("span", { class: "chance" }, `${U.fmt1(i.sec)} s · ` + (i.att != null ? `+${i.att} ${DATA.attention.text.label}` : `disturbance ${U.fmt1(i.pct)}%`) + (i.heatGain ? ` · +${i.heatGain} Heat` : "") + (i.check ? ` · ${UI.checkLabel(i.check)}` : "")))); }
     box.appendChild(h("button", { onclick: () => UI.closeModal() }, "Leave it"));
     UI.modal(box);
   };
@@ -943,14 +944,32 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     G.Sfx.play(res.roll ? (G.Checks.isSuccess(res.roll.grade) ? "sfx_check_success" : "sfx_check_fail") : "sfx_search_done");
     UI.render();
     const el2 = G.SiteView.els[S.objId] || el;
-    if (el2 && G.XPFloat) G.XPFloat.text(el2, res.disturb.v2 ? (res.fight ? "Something heard you!" : res.disturb.pct > 0 ? `Quiet (${U.fmt1(res.disturb.pct)}% → ${Math.floor(res.disturb.roll)})` : "Quiet") : `Disturbance ${U.fmt1(res.disturb.pct)}% → ${Math.floor(res.disturb.roll)}: ${res.disturb.hit ? "heard!" : "quiet"}`, res.disturb.hit || res.fight ? "#ff7a6a" : "#bbb", "below");
+    if (el2 && G.XPFloat) G.XPFloat.text(el2, res.disturb.v2 ? (res.fight ? "Something heard you!" : res.att ? `+${res.att} ${DATA.attention.text.label}` : res.disturb.pct > 0 ? `Quiet (${U.fmt1(res.disturb.pct)}% → ${Math.floor(res.disturb.roll)})` : "Quiet") : `Disturbance ${U.fmt1(res.disturb.pct)}% → ${Math.floor(res.disturb.roll)}: ${res.disturb.hit ? "heard!" : "quiet"}`, res.disturb.hit || res.fight ? "#ff7a6a" : "#bbb", "below");
     if (res.texts.length && (res.empty || !G.Exp.current())) UI.toast(res.texts.join(" "));
   };
 
+  // SP-133 Enemy Attention: the Map's bar + notoriety icon, inside the Map (a separate thing from Heat, never its numbers)
+  UI.attentionEl = function (nid) {
+    const A = G.V2 && G.V2.attView(nid); if (!A) return null;
+    const T = DATA.attention.text;
+    if (A.off) return A.peaceful ? h("div", { class: "att-bar off", "data-att": "peaceful" }, h("span", { class: "att-label" }, T.label), h("small", null, T.peaceful)) : null;
+    return h("div", { class: "att-bar" + (A.bar >= A.max ? " full" : ""), "data-att": String(A.bar), "data-att-max": String(A.max), title: `${T.label}: looting and noise raise it. When it fills, a patrol comes for you.` },
+      h("span", { class: "att-label" }, T.label),
+      h("div", { class: "att-track" }, h("div", { class: "att-fill", style: `width:${Math.round(100 * A.bar / A.max)}%` })),
+      h("span", { class: "att-num" }, `${A.bar}/${A.max}`),
+      h("span", { class: "att-noto" + (A.fills ? " on" : ""), "data-notoriety": String(A.fills), title: `${T.notoriety} ${A.fills}: ${T.notorietyTip}`, "aria-label": `${T.notoriety} ${A.fills}` }, h("i", null, "!"), String(A.fills)),
+      A.esc ? h("span", { class: "att-esc", "data-esc": String(A.esc) }, `Next fight +${A.esc}`) : null,
+      A.owed ? h("small", { class: "att-owed" }, T.owed) : null);
+  };
   UI.stepBattleIntro = function (step) {
     const fam = DATA.enemies.families[step.family];
     const go = h("button", { class: "primary", "data-act": "to-battle", onclick: () => { UI.closeModal(); UI.startBattle(step); } }, "To battle");
-    UI.modal(h("div", null, h("h2", { class: "bad" }, step.why || "Hostiles!"), h("p", null, `${fam.name} ahead. You'll place your squad on the grid, then the fight plays out automatically.`), go));
+    const v2 = !!(G.V2 && G.V2.on()), AT = DATA.attention && DATA.attention.text, fi = v2 ? G.V2.attFleeInfo(step) : null, esc = v2 ? G.V2.attEscFor(step) : 0;
+    const box = h("div", { "data-intro": step.attention ? "attention" : "battle" }, h("h2", { class: "bad" }, step.why || "Hostiles!"), h("p", null, `${fam.name} ahead. You'll place your squad on the grid, then the fight plays out automatically.`),
+      esc ? h("p", { class: "att-esc-note", "data-esc": String(esc) }, `${AT.label}: ${AT.escalation.replace("{n}", esc)}`) : null, go);
+    if (fi && !step.fleeTried) box.appendChild(h("div", { class: "ev-opt att-flee" }, h("button", { "data-act": "att-flee", onclick: () => { const res = G.V2.attFlee(step); if (res.error) return UI.fail(res.error); UI.closeModal(); UI.toast(res.text); UI.render(); } }, AT.flee),
+      h("small", null, " " + (fi.free ? AT.fleeFree : AT.fleeCheck.replace("{check}", UI.checkLabel(fi.check))))));
+    UI.modal(box);
     try { go.focus({ preventScroll: true }); } catch (e) {}   // SP-008: Space / Enter = To battle (then Space = Fight!)
   };
 

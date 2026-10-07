@@ -14,6 +14,7 @@ DATA.title = {
     field: { file: "ui/login/field_disabled_9slice.png", slice: 5, border: 10 },
     lock: { file: "ui/login/icon_field_lock.png" },
     labelUser: { file: "ui/login/label_username.png" }, labelPass: { file: "ui/login/label_password.png" },
+    button: { normal: { file: "ui/login/btn_play_9slice_normal.png" }, hover: { file: "ui/login/btn_play_9slice_hover.png" }, pressed: { file: "ui/login/btn_play_9slice_pressed.png" } },   // DOM-text button (Login): 10 fill / 20px stretch
     play: { normal: { file: "ui/login/btn_play_normal.png" }, hover: { file: "ui/login/btn_play_hover.png" }, pressed: { file: "ui/login/btn_play_pressed.png" } },
     soundOn: { file: "ui/login/btn_sound_on.png" }, soundOnHover: { file: "ui/login/btn_sound_on_hover.png" },
     soundOff: { file: "ui/login/btn_sound_off.png" }, soundOffHover: { file: "ui/login/btn_sound_off_hover.png" },

@@ -85,7 +85,7 @@
     if (def) {
       for (const g of def.groups || []) groups.push({ id: g.id, area: g.area || null, arrival: !!g.arrival, budgetMult: g.budgetMult || 1, family: g.family || null, state: "available" });
       // "whoever's walking around": one unbound group, so an Area with no group of its own is never a guaranteed safe room
-      const RM = D().pool.roam; if (RM && !(RM.skip || []).includes(m ? m.classification : def.classification)) groups.push({ id: RM.id || "roam", area: null, arrival: false, budgetMult: 1, family: null, state: "available", roam: true });
+      const RM = D().pool.roam; if (RM && !(RM.skip || []).includes(m ? m.classification : def.classification) && !(m && V.attOld(m, "roam"))) groups.push({ id: RM.id || "roam", area: null, arrival: false, budgetMult: 1, family: null, state: "available", roam: true });
     } else {   // the legacy pool adapter (§13): a reviewed, stable, finite set for a Map that has no authored groups
       const P = D().pool, h = X().baseHostiles(node), n = h > 0 ? Math.min(P.legacyMax, Math.ceil(h / P.legacyPerGroupPct)) : 0;
       for (let i = 0; i < n; i++) groups.push({ id: "g" + (i + 1), area: null, arrival: true, budgetMult: 1, family: null, state: "available" });
@@ -347,7 +347,7 @@
     V.markSeen(nid, "area");
     const dmg = V.modSum(nid, "areaEntryDmgPct");   // Chemical leak: every room you enter here costs a little health (once per Area per run)
     if (dmg > 0 && site.leakRun !== G.state.runCount) { site.leakRun = G.state.runCount; X().log("The air burns your throat.", "bad"); X().damageBody(dmg); if (!run()) return null; }
-    if (!V.reengage(nid, aid)) V.entryRoll(m, aid, site);
+    if (!V.attOwed(nid, V.key(nid, aid)) && !V.reengage(nid, aid)) V.entryRoll(m, aid, site);
     G.State.save();
     return null;
   };
@@ -357,6 +357,7 @@
   V.entryRoll = function (m, aid, site) {
     const A = D().alert, r = run(); if (!A.entryPct || !m || !site) return null;
     if (site.entryRun === G.state.runCount) return null;
+    if (V.attOld(m, "entryRoll")) return null;   // SP-133: Attention replaces this roll on a non-Peaceful Map (data/attention.js disableOld)
     const g = V.available(m).find((x) => x.area === aid && !x.arrival && !x.waiting); if (!g) return null;
     site.entryRun = G.state.runCount;
     const tm = X().tutorialOn() && CFG().tutorial.disturbanceMult != null ? CFG().tutorial.disturbanceMult : 1;
@@ -388,6 +389,7 @@
     if (!revisit && loc.entryHeat) X().addHeat(loc.entryHeat, "secret");   // the Crater: not an approved source, so nothing (logged)
     // a fight you broke away from on the way in is still waiting at the door
     if (V.reengage(nid, def ? m.area : null, true)) { X().pushSpots(node, loc, X().site(siteKey)); return; }
+    if (V.attOwed(nid, siteKey)) { X().pushSpots(node, loc, X().site(siteKey)); return; }   // SP-133: you fled a patrol here: coming back means that fight
     if (!revisit && G.Rivals && G.Rivals.onArrive(node)) { X().pushSpots(node, loc, X().site(siteKey)); return; }   // a separate, explicit source
     const base = X().baseHostiles(node), mult = (revisit ? CFG().revisit.hostileMult : 1) * V.modNum(nid, "arrivalMult", 1);
     const pct = U.clamp(base * mult, 0, 100), dr = G.rng() * 100, hit = dr < pct;
@@ -397,6 +399,9 @@
     if (g) V.pushFight(m, g, siteKey, "arrival", revisit ? "They were waiting for you." : "Hostiles!");
     else V.markSafe(nid, null, null);   // a quiet crossing: this Map (on traversal) is somewhere a retreat can fall back to
     X().pushSpots(node, loc, X().site(siteKey));
+    // next-playtest (Hazel / Megan): after travel, enter the first Area automatically — same side effects as the Enter
+    // click (entry roll, markSeen, …). Skip when a fight or spot check is already queued.
+    if (run() && !run().queue.length && (def || X().site(nid))) X().enterSite();
   };
 
   // ---------- the finite enemy pool (SP-033, draft §9) ----------
@@ -417,6 +422,7 @@
     const enc = V.reserve(m, g, source, siteKey), loc = DATA.map.locations[m.loc];
     V.markSeen(m.id, "fight");
     const step = Object.assign({}, g.step || {}, { type: "battle", family: g.family || loc.family, nid: m.id, site: siteKey, enc: enc.id, why });
+    if (source === "attention") step.attention = true;   // SP-133: a max-Attention pull (its own Flee rules)
     X().push(step, front);
     return step;
   };
@@ -445,12 +451,15 @@
     const r = run(), enc = V.encOf(step), m = enc && V.inst(enc.nid, false), g = m && enc.groups.length && V.group(m, enc.groups[0]);
     if (!g || g.reinforcement) return null;
     if (!g.units) {
-      const heard = 1 + ((D().pool.defeatedBudgetPct || 0) / 100) * m.defeated.length;   // the rest heard the first
+      const heard = V.attOld(m, "defeatedBudget") ? 1 : 1 + ((D().pool.defeatedBudgetPct || 0) / 100) * m.defeated.length;   // the rest heard the first (SP-133: Attention's escalation replaces it where it runs)
       const mult = (g.area ? D().pool.areaBudgetMult : D().pool.budgetMult) * (g.budgetMult || 1) * V.modNum(enc.nid, "budgetMult", 1) * heard, budget = X().enemyBudget(G.Zones.node(enc.nid), mult);
       g.units = G.Battle.buildEnemyGroup(V.rngFor(r.seed, enc.nid, g.id, "units"), step.family, budget, (elites || 0) + V.modSum(enc.nid, "elites"), G.Zones.zoneOf(enc.nid)); g.family = step.family;
     }
-    const hp = V.modNum(enc.nid, "enemyHpMult", 1);
-    return g.units.map((u) => Object.assign({}, u, hp !== 1 ? { hpMult: (u.hpMult || 1) * hp } : {}));
+    const hp = V.modNum(enc.nid, "enemyHpMult", 1), st = V.attState(enc.nid);
+    // SP-133: a patrol's notoriety extras (g.extra) and the Map's pending escalation (+units), copies of the group's own units
+    enc.esc = st && st.esc > 0 && step.family !== "hunters" && step.family !== "rivals" ? st.esc : 0;
+    const units = g.units.slice(); for (let i = 0; i < (g.extra || 0) + enc.esc; i++) units.push({ id: g.units[i % g.units.length].id, elite: false });
+    return units.map((u) => Object.assign({}, u, hp !== 1 ? { hpMult: (u.hpMult || 1) * hp } : {}));
   };
   // Capture the complete scripted force, including future waves, before battle mutates any units.
   V.battleSetup = function (step, setup) {
@@ -484,7 +493,7 @@
   // ordinary alerts (draft §9 allowlist). Returns the battle step, or null (no eligible group: nothing comes).
   V.alert = function (siteKey, source, why) {
     const nid = V.nidOfKey(siteKey), m = V.inst(nid); if (!m) return null;
-    const g = V.pick(m, { area: V.areaOfKey(siteKey) });
+    const g = V.pick(m, { area: V.areaOfKey(siteKey) }) || (V.attOnM(m) ? V.attGroup(m, V.areaOfKey(siteKey)) : null);   // SP-133: a non-Peaceful Map never runs out
     if (!g) { V.ev("alert_empty", { nid, site: siteKey, source }); return null; }
     return V.pushFight(m, g, siteKey, source, why);
   };
@@ -506,6 +515,10 @@
     const a = V.areaOfKey(key), m = V.inst(site.nid, false);
     const nobodyPosted = !!a && !!m && !V.available(m).some((g) => !g.waiting && g.area === a), unbound = nobodyPosted && A.unboundMult != null ? A.unboundMult : 1;
     let pct = natural && !forced ? 0 : Math.max(0, noise * A.noiseMult + (forced ? A.forcedNoise || 0 : 0) + prior - stealth) * tm * am * unbound;
+    if (V.attOld(m || V.inst(site.nid), "searchAlert")) {   // SP-133: Attention replaces the alert roll (and its per-search ramp) on a non-Peaceful Map
+      const att = V.attValue(o, action);
+      return { pct: 0, free: false, natural, forced, unbound: false, att, math: `${AT().text.label} +${att}` };
+    }
     const free = V.freeLoot(key);
     if (free) pct = 0;
     const math = free ? "nobody left nearby to hear you" : natural && !forced ? "a body: only a trap could give you away"
@@ -546,7 +559,7 @@
     enc.outcome = "victory";
     const m = V.inst(enc.nid, false);
     for (const gid of enc.groups) { const g = V.group(m, gid); if (g) { g.state = "defeated"; if (!m.defeated.includes(gid)) m.defeated.push(gid); } }
-    if (m) V.updateOpps(m);
+    if (m) { V.updateOpps(m); V.attWin(m, enc); }
     V.ev("victory", { enc: enc.id, nid: enc.nid, groups: enc.groups });
     return enc;
   };
@@ -729,6 +742,7 @@
   // "lots of loud fights" (OPEN, data heat.loud): a committed fight with enough gunfire counts once per encounter
   V.noteFight = function (step, b) {
     const r = run(), L = D().heat.loud, enc = V.encOf(step); if (!enc || !L) return;
+    if (enc.source === "attention" && AT() && !AT().heat.attentionFightsLoud && step.family !== "hunters") { V.ev("loud_skipped", { enc: enc.id, why: "attention" }); return; }   // SP-133: local Attention fights add no Heat
     if ((b.gunShots || 0) < L.minGunShots || r.v2.loud.credited[enc.id] != null) return;
     const w = V.modNum(enc.nid, "loudMult", 1);
     r.v2.loud.credited[enc.id] = w; r.v2.loud.n += w;
@@ -879,6 +893,128 @@
       extraction: V.extractInfo(nid),
       areas: def ? Object.keys(def.areas).map((a) => ({ id: a, name: def.areas[a].name, seen: !!m.seenAreas[a], current: r.loc === nid && m.area === a, entry: !!def.areas[a].entry })) : null
     };
+  };
+
+  // ---------- Enemy Attention (SP-133, DEC-92): a per-Map local alertedness bar. Never Heat. Data: data/attention.js ----------
+  // run.v2.att = { maps: { nid: { bar, fills, esc, owed } }, nextA }, added lazily (an older save's run starts every Map
+  // at 0). bar: 0..barMax. fills: the Map's notoriety level (bar fills this expedition). esc: the escalation (+units)
+  // the next battle on this Map shows. owed: { area } after a successful flee from a pull (entering again = that fight).
+  const AT = () => DATA.attention;
+  // Peaceful (explicit flag in data, else the Map's classification): no bar running, finite pool, can be cleared
+  V.attPeacefulM = function (m) {
+    const P = (AT() && AT().peaceful) || {}, by = P.maps || {};
+    if (!m) return false;
+    if (m.kind === "v2" && by[m.loc] != null) return !!by[m.loc];   // an authored V2 Map's own flag
+    return (P.classifications || []).includes(m.classification);
+  };
+  V.attOnM = (m) => !!(m && AT() && AT().enabled && !(X().tutorialOn() && !AT().tutorial) && !(AT().peacefulClearable && V.attPeacefulM(m)));   // Megan (Oct 7): Peaceful Maps keep producing enemies too, unless peacefulClearable
+  V.attTutMult = () => (X().tutorialOn() && AT().tutorialMult != null ? AT().tutorialMult : 1);
+  V.attOn = (nid) => { const r = run(); return !!(V.on(r) && nid && G.Map.loc(G.Zones.node(nid)) && V.attOnM(V.inst(nid))); };
+  V.peaceful = (nid) => V.attPeacefulM(V.inst(nid));
+  // an old V2 roll switched off because Attention runs on this Map (data disableOld; reversible)
+  V.attOld = (m, which) => !!(V.attOnM(m) && (AT().disableOld || {})[which]);
+  V.attState = function (nid) { const r = run(); return (V.on(r) && r.v2.att && r.v2.att.maps[nid]) || null; };
+  V.att = function (nid) {
+    const r = run(); if (!V.on(r)) return null;
+    const A = r.v2.att || (r.v2.att = { maps: {}, nextA: 0 });
+    return A.maps[nid] || (A.maps[nid] = { bar: 0, fills: 0, esc: 0, owed: null });
+  };
+  // what one interaction is worth (data: actions + object noise, or an absolute per type). A fight's body: 0, always.
+  V.attValue = function (o, action) {
+    const C = AT(); if (!o || o.combat) return 0;
+    const T = X().typeDef(o), noise = o.noise != null ? o.noise : T.noise || 0, base = C.actions[action] != null ? C.actions[action] : C.actions.search;
+    const v = (action || "search") === "search" && C.types[o.type] != null ? C.types[o.type] : base + noise * C.noiseMult;
+    return Math.max(0, Math.round(v * V.attTutMult()));
+  };
+  // raise Map nid's bar; at max: notoriety +1 and the pull (straight to battle prep). Returns the battle step or null.
+  V.attAdd = function (siteKey, n, source) {
+    const nid = V.nidOfKey(siteKey), m = V.inst(nid); if (!V.attOnM(m) || !(n > 0)) return null;
+    const st = V.att(nid), max = AT().barMax;
+    if (st.bar >= max) return null;   // a pull is already out (fought, waiting or owed): the bar resets after that fight
+    st.bar = Math.min(max, st.bar + n);
+    X().log(`${AT().text.label} +${n} (${source}) → ${st.bar}/${max}`, "roll");
+    V.ev("attention", { nid, n, source, bar: st.bar });
+    if (st.bar < max) return null;
+    st.fills++;
+    V.ev("attention_full", { nid, fills: st.fills });
+    return V.attPull(m, siteKey, AT().text.pullWhy);
+  };
+  // a fresh group: the "effectively infinite" enemies of a non-Peaceful Map
+  V.attGroup = function (m, area) {
+    const A = run().v2.att || (run().v2.att = { maps: {}, nextA: 0 });
+    const g = { id: "a" + (++A.nextA), area: area || null, arrival: false, budgetMult: AT().patrol.budgetMult || 1, family: null, state: "available", attention: true };
+    m.pool.groups.push(g); V.ev("attention_group", { nid: m.id, group: g.id });
+    return g;
+  };
+  // the patrol a full bar sends: the Area's own group if it's still there, else a fresh one; sized by notoriety
+  V.attPull = function (m, siteKey, why) {
+    const st = V.att(m.id), a = V.areaOfKey(siteKey), L = AT().patrol.extraUnitsByNotoriety || [0];
+    const g = V.available(m).find((x) => !x.waiting && !x.arrival && a && x.area === a) || V.attGroup(m, a);
+    g.extra = L[Math.min(st.fills, L.length - 1)] || 0;
+    return V.pushFight(m, g, siteKey, "attention", why);
+  };
+  // you fled a pull here: entering this Map again (an Area, the site, or the crossing) starts that fight
+  V.attOwed = function (nid, siteKey) {
+    const st = V.attState(nid); if (!st || !st.owed) return null;
+    const m = V.inst(nid); st.owed = null;
+    if (!V.attOnM(m)) return null;
+    X().log(AT().text.owedWhy, "bad");
+    return V.attPull(m, siteKey, AT().text.owedWhy);
+  };
+  // a committed win: an Attention fight resets the bar and arms the next battle's escalation; a battle that showed the
+  // escalation used it up
+  V.attWin = function (m, enc) {
+    const st = V.attState(m.id); if (!st) return;
+    if (enc.esc) st.esc = 0;
+    if (enc.source === "attention") { st.bar = 0; st.owed = null; st.esc = AT().escalation.units || 0; V.ev("attention_reset", { nid: m.id, esc: st.esc }); }
+  };
+  // Flee from a max-Attention pull (only that pull). Standard: free. Hardcore / Ragnarök: the Athletics check.
+  V.attFleeInfo = function (step) {
+    if (!step || !step.attention || !V.on()) return null;
+    const F = AT().flee, free = (F.free || []).includes(G.Difficulty ? G.Difficulty.id() : "hardcore");
+    return { free, check: free ? null : G.Checks.compute(F.check.skill, F.check.dc, X().members(), X().gearItems()) };
+  };
+  V.attFlee = function (step) {
+    const r = run(), fi = V.attFleeInfo(step); if (!fi || X().current() !== step || step.fleeTried) return { error: "Nothing to flee from." };
+    const F = AT().flee, T = AT().text;
+    let roll = null;
+    if (!fi.free) {
+      roll = G.Checks.roll(fi.check, null, "flee"); X().log(roll.text, "check");
+      if (!G.Checks.isSuccess(roll.grade)) {   // no downside, except a natural 1: stunned at battle start
+        const nat1 = roll.d === 1; step.fleeTried = true;
+        if (nat1) step.freeze = { side: 0, sec: F.nat1StunSec };
+        V.ev("attention_flee", { ok: false, nat1 }); G.State.save();
+        return { fled: false, roll, nat1, text: `${roll.text} — ${nat1 ? T.fleeNat1 : T.fleeFail}` };
+      }
+    }
+    const enc = V.encOf(step), nid = (enc && enc.nid) || step.nid || r.loc, m = V.inst(nid, false);
+    if (enc && !enc.outcome) {
+      enc.outcome = "fled";
+      for (const gid of enc.groups) { const g = V.group(m, gid); if (g) { g.enc = null; delete g.waiting; g.state = g.attention ? "dismissed" : "available"; } }
+    }
+    V.releaseQueued(r.queue.filter((s) => s !== step));
+    r.queue = [];
+    V.att(nid).owed = { area: V.areaOfKey(step.site) };
+    r.loc = nid; r.view = "map"; V.clearWaits(nid);   // ejected: on traversal, travel on or extract
+    V.ev("attention_flee", { ok: true, nid, free: fi.free });
+    X().log(T.fled, "good");
+    G.State.save();
+    return { fled: true, roll, text: (roll ? roll.text + " — " : "") + T.fled };
+  };
+  // what the Map header shows (never Heat): null when it isn't a place with a bar
+  V.attView = function (nid) {
+    const r = run(); if (!V.on(r) || !nid || !G.Map.loc(G.Zones.node(nid))) return null;
+    const m = V.inst(nid); if (!m || !AT() || !AT().enabled) return null;
+    if (!V.attOnM(m)) return { peaceful: V.attPeacefulM(m), off: true };
+    const st = V.attState(nid) || { bar: 0, fills: 0, esc: 0, owed: null };
+    return { bar: st.bar, max: AT().barMax, fills: st.fills, esc: st.esc, owed: !!st.owed };
+  };
+  // the escalation a battle step about to start will show (+units), 0 if none
+  V.attEscFor = function (step) {
+    if (!step || step.family === "hunters" || step.family === "rivals") return 0;
+    const enc = V.encOf(step), m = enc && V.inst(enc.nid, false), g = m && V.group(m, enc.groups[0]);
+    if (!g || g.reinforcement) return 0;
+    const st = V.attState(enc.nid); return (st && st.esc) || 0;
   };
 
   // ---------- development assertions (tests/maps_v2.js; the debug panel) ----------

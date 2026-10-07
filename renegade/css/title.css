@@ -68,40 +68,55 @@ body.title-open { overflow: hidden; }
 #title .t-diff-desc { min-height: 60px; margin: 8px 2px 0; font-size: 14px; line-height: 20px; color: #d4c8a0; text-shadow: 2px 2px 0 #120a0a; }
 #title .t-diff-desc.warn { color: #f8dc5a; animation: t-warn .4s; }
 @keyframes t-warn { 0%, 100% { transform: none; } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
-/* Megan: a new save's locked account fields (js/title.js T.account), in a small panel of their own: bottom-left on
-   desktop (clear of the version tag), side by side between the logo and the panel on portrait phones. Landscape phones:
-   css/mobile.css */
-#title .title-account { position: absolute; left: 12px; bottom: 48px; width: 240px; box-sizing: border-box;
-  border: 24px solid transparent; border-image: var(--t-panel) 12 fill / 24px repeat; padding: 6px 6px 0; }
-#title.phone .title-account { left: 50%; bottom: auto; top: calc(max(16px, env(safe-area-inset-top)) + 92px); transform: translateX(-50%);
-  width: 352px; display: flex; gap: 8px; }
-@media (max-width: 370px) { #title.phone .title-account { width: 344px; } }
-#title.phone .title-account .title-row { flex: 1; min-width: 0; }
-/* portrait phones with a new save: logo, fields and panel as one column (the panel pushed to the bottom), so a tall
-   screen looks as before and a short one (320x568) stacks and scrolls instead of the fields covering the difficulty
-   names (Maple's catch). The scene, the version tag and the sound toggle stay put while it scrolls */
+/* Megan (Oct 7): two screens, login then a new save's difficulty, each one short wide panel in the bottom third under
+   the fire (the camp's fire ends near 57% of the height on desktop, 47% on portrait phones). Only the step's panel shows */
+#title[data-step="login"] .title-panel.diff, #title[data-step="diff"] .title-panel.login { display: none !important; }   /* over every layout's display */
+#title .title-panel.login, #title .title-panel.diff { width: 640px; bottom: clamp(32px, 6vh, 96px); }
+#title .title-fields { display: flex; gap: 16px; }
+#title .title-fields .title-row { flex: 1; min-width: 0; }
+/* Login: Smudge's 9-slice button with DOM text (assets/ui/login/README.md) */
+#title .title-login { display: block; margin: 4px auto 2px; width: 224px; height: 48px; box-sizing: border-box; padding: 0; border: 0 solid transparent;
+  border-image: var(--t-btn) 10 fill / 20px stretch; background: none; cursor: pointer; font: inherit; font-size: 22px; font-weight: bold; letter-spacing: 3px;
+  color: #f8dc5a; text-shadow: 2px 2px 0 #3e1410; image-rendering: pixelated; }
+#title .title-login:hover, #title .title-login:focus-visible { color: #f2efe4; border-image-source: var(--t-btn-h); }
+#title .title-login:active { border-image-source: var(--t-btn-p); }
+#title .title-login:focus { outline: none; }
+/* difficulty, wide: sigils left, the description and Play right */
+#title .title-panel.diff { display: grid; grid-template-columns: 312px 1fr; column-gap: 20px; grid-template-areas: "head desc" "cols desc" "cols side"; }
+#title .title-panel.diff .t-diffs-wrap { display: contents; }
+#title .title-panel.diff .t-diff-head { grid-area: head; }
+#title .title-panel.diff .t-diffs { grid-area: cols; }
+#title .title-panel.diff .t-diff-desc { grid-area: desc; margin-top: 0; min-height: 0; }
+#title .title-panel.diff .t-diff-side { grid-area: side; align-self: end; }
+#title .title-panel.diff .t-diff-side .title-divider { display: none; }
+/* portrait phones: the 352 px column (344 at 360) at the bottom, Username / Password side by side */
 @media (orientation: portrait) {
-  #title.phone:has(.title-panel.diff) { display: flex; flex-direction: column; align-items: center; overflow-x: hidden; overflow-y: auto; box-sizing: border-box;
-    bottom: max(52px, calc(env(safe-area-inset-bottom) + 48px)); padding: max(16px, env(safe-area-inset-top)) 0 8px; }   /* the scroll area ends above the version / sound row */
-  #title.phone:has(.title-panel.diff) :is(.title-still, .title-gl, .title-shade, .title-version, .title-sound) { position: fixed; }
-  #title.phone:has(.title-panel.diff) :is(.title-logo, .title-account, .title-panel) { position: relative; z-index: 1; left: auto; top: auto; bottom: auto; transform: none; flex: none; }   /* z-index: flex order also reorders painting, which put the scene over the logo */
-  #title.phone:has(.title-panel.diff) .title-logo { order: -2; }
-  #title.phone:has(.title-panel.diff) .title-account { order: -1; margin: 14px 0 12px; }   /* after the panel in the DOM */
-  #title.phone:has(.title-panel.diff) .title-panel { margin-top: auto; }
+  #title.phone .title-panel.login, #title.phone .title-panel.diff { width: 352px; bottom: max(56px, calc(env(safe-area-inset-bottom) + 50px)); }
+  #title.phone .title-fields { gap: 8px; }
+  #title.phone .title-panel.diff { display: block; }
+  #title.phone .title-panel.diff .t-diffs-wrap { display: block; }
+  #title.phone .title-panel.diff .t-diff-desc { min-height: 60px; margin-top: 8px; }
+  #title.phone .title-panel.diff .t-diff-side .title-divider { display: block; }
 }
-/* 320 px wide: the 350 px logo and the 344 px panels didn't fit (all title layouts) */
+@media (orientation: portrait) and (max-width: 370px) { #title.phone .title-panel.login, #title.phone .title-panel.diff { width: 344px; } }
+/* short portrait phones (360x640, 320x568): a tighter difficulty panel so less of the fire is covered */
+@media (orientation: portrait) and (max-height: 700px) {
+  #title.phone .title-panel.diff .t-diff-desc { min-height: 40px; }
+  #title.phone .title-panel.diff .t-diff-side .title-divider { display: none; }
+  #title.phone .title-panel.diff .t-diff-head { display: none; }   /* the three names say it; keeps the fire's stones clear */
+}
+/* landscape phones and small windows: the wide panels, scaled down from the bottom edge */
+@media (orientation: landscape) and (max-height: 500px), (orientation: landscape) and (max-width: 680px) {
+  #title .title-panel.login, #title .title-panel.diff { bottom: 4px; transform: translateX(-50%) scale(.7); transform-origin: 50% 100%; }
+  #title.phone .title-panel.login, #title.phone .title-panel.diff { width: 640px; }
+  #title.phone .t-diff { width: 104px; }
+  #title.phone .t-diff-label { font-size: 15px; }
+}
+/* 320 px wide: the 350 px logo and the 344 px panels didn't fit */
 @media (max-width: 340px) {
-  #title.phone .title-panel, #title.phone .title-panel.diff, #title.phone .title-account { width: calc(100vw - 8px); }
+  #title.phone .title-panel.login, #title.phone .title-panel.diff { width: calc(100vw - 8px); }
   #title.phone .title-logo { transform: translateX(-50%) scale(.88); }
-  #title.phone:has(.title-panel.diff) .title-logo { transform: scale(.88); }
   #title.phone .t-diff { width: 84px; }
-}
-/* a narrow desktop window has no room for the fields beside the centred panel: there the panel goes right and the logo
-   and the fields share the column to its left, as on a landscape phone (css/mobile.css overrides this on touch screens) */
-@media (min-width: 701px) and (max-width: 919px) and (orientation: landscape) {
-  #title:has(.title-panel.diff) .title-panel { left: auto; right: 56px; transform: none; }
-  #title:has(.title-panel.diff) .title-logo { left: calc((100vw - 392px - 56px) / 2); top: 50%; transform: translate(-50%, -50%) scale(.6); transform-origin: 50% 50%; }
-  #title:has(.title-panel.diff) .title-account { left: 12px; top: 12px; bottom: auto; width: min(240px, calc(100vw - 392px - 56px - 24px)); }
 }
 #title .title-version { display: flex; align-items: center; gap: 4px; }
 #title .title-diff { width: 32px; height: 32px; image-rendering: pixelated; }

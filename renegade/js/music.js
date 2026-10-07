@@ -69,9 +69,10 @@
   Mu.exts = () => M().exts.filter((x) => !(x === ".ogg" && hasDom && !(new Audio()).canPlayType('audio/ogg; codecs="vorbis"')));
   Mu.urls = (key) => Mu.exts().map((x) => base() + M().path + key + x);
   const useWA = () => !!(S() && S().ctx) && typeof location !== "undefined" && /^https?:/.test(location.protocol);
+  Mu.now = () => (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
   Mu.load = function (key) {
-    let e = Mu.cache[key]; if (e) return e;
-    e = Mu.cache[key] = { state: "pending", buf: null, el: null, url: null, abort: typeof AbortController !== "undefined" ? new AbortController() : null };
+    let e = Mu.cache[key]; if (e) { e.used = Mu.now(); return e; }
+    e = Mu.cache[key] = { state: "pending", buf: null, el: null, url: null, used: Mu.now(), abort: typeof AbortController !== "undefined" ? new AbortController() : null };
     const urls = Mu.urls(key);
     const next = (i) => {
       if (Mu.cache[key] !== e) return;
@@ -80,7 +81,7 @@
       if (useWA()) {
         fetch(url, e.abort ? { signal: e.abort.signal } : undefined).then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.arrayBuffer(); })
           .then((ab) => new Promise((res, rej) => { const p = S().ctx.decodeAudioData(ab, res, rej); if (p && p.catch) p.catch(rej); }))   // callback form for old Safari
-          .then((buf) => { if (Mu.cache[key] !== e) return; e.buf = buf; e.state = "ok"; Mu.onReady(key); Mu.trim(); })
+          .then((buf) => { if (Mu.cache[key] !== e) return; e.buf = buf; e.state = "ok"; e.used = Mu.now(); Mu.onReady(key); Mu.trim(); })
           .catch(() => next(i + 1));
       } else {
         const el = new Audio(); e.loading = el; el.preload = "auto"; el.loop = true;
@@ -92,15 +93,47 @@
     next(0);
     return e;
   };
+  // SP-118: byte-budgeted LRU. Always pin live voices, Mu.want and the current zone pair; music_outpost is a soft pin.
+  // Evict least-recently-used (by e.used) only while total decoded PCM exceeds DATA.audio.music.cacheMB.
+  Mu.bufBytes = (e) => (e && e.buf) ? e.buf.length * e.buf.numberOfChannels * 4 : 0;
+  Mu.cacheBudget = function () {
+    const mb = (M().cacheMB || { desktop: 220, phone: 120 });
+    const phone = !!(G.Touch && G.Touch.layout && G.Touch.layout());
+    return (phone ? mb.phone : mb.desktop) * 1024 * 1024;
+  };
+  Mu.drop = function (key) {
+    const e = Mu.cache[key]; if (!e) return;
+    delete Mu.cache[key]; if (e.abort) try { e.abort.abort(); } catch (x) {}
+    for (const el of [e.el, e.loading]) if (el) { try { el.pause(); } catch (x) {} if (el.removeAttribute) el.removeAttribute("src"); try { el.load(); } catch (x) {} }
+    e.buf = null; e.loading = null; e.el = null;
+  };
   Mu.trim = function () {
     const keep = new Set(Mu.voices.map((v) => v.key));
-    if (Mu.gain() > 0) {
-      if (Mu.want) keep.add(Mu.want);
-      if (Mu.state === "run" || Mu.state === "battle") { keep.add(Mu.trackFor("run", Mu.zone)); keep.add(Mu.trackFor("battle", Mu.zone)); }
+    if (Mu.want) keep.add(Mu.want);
+    if (Mu.state === "run" || Mu.state === "battle") { keep.add(Mu.trackFor("run", Mu.zone)); keep.add(Mu.trackFor("battle", Mu.zone)); }
+    // music_outpost is a soft pin: kept across expeditions while it fits, but the hard pins above come first, so a
+    // phone's budget (outpost + a zone pair can pass 120 MB) drops it during a run rather than overrunning cacheMB
+    const soft = new Set(["music_outpost"].filter((k) => !keep.has(k)));
+    // Never kept past their use, whatever the budget: an unpinned download while muted (cancelled, as before SP-118:
+    // muting must not keep fetching), and one-shot tracks (the title's music plays once per load) once nothing plays or wants them
+    const muted = Mu.gain() <= 0, oneShot = new Set(M().oneShot || []);
+    const live = new Set(Mu.voices.map((v) => v.key));
+    for (const key of Object.keys(Mu.cache)) { const st = Mu.cache[key].state;
+      if (!live.has(key) && st !== "missing" && ((muted && st === "pending") || (oneShot.has(key) && !keep.has(key)))) Mu.drop(key); }   // muted: even a pinned download stops (decoded pins stay)
+    const budget = Mu.cacheBudget();
+    let total = 0;
+    const lru = [];
+    for (const key of Object.keys(Mu.cache)) {
+      const e = Mu.cache[key]; if (e.state === "missing") continue;
+      const bytes = Mu.bufBytes(e);
+      if (keep.has(key)) { total += bytes; continue; }
+      lru.push({ key, used: e.used || 0, bytes, soft: soft.has(key) });
+      total += bytes;
     }
-    for (const key of Object.keys(Mu.cache)) if (!keep.has(key) && Mu.cache[key].state !== "missing") {
-      const e = Mu.cache[key]; delete Mu.cache[key]; if (e.abort) e.abort.abort();
-      for (const el of [e.el, e.loading]) if (el) { el.pause(); if (el.removeAttribute) el.removeAttribute("src"); el.load(); } e.buf = null; e.loading = null;
+    lru.sort((a, b) => (a.soft - b.soft) || (a.used - b.used));   // unpinned LRU first, the soft pin last
+    for (const x of lru) {
+      if (total <= budget) break;
+      Mu.drop(x.key); total -= x.bytes;
     }
   };
   Mu.status = (key) => (Mu.cache[key] ? Mu.cache[key].state : "not loaded");
@@ -121,7 +154,6 @@
     Mu.want = key;
     if (!hasDom || !S() || !S().unlocked || !S().enabled) return;
     if (Mu.gain() <= 0) { Mu.stopAll(); Mu.trim(); return; }
-    Mu.trim();
     for (const k of ((M().preload || {})[state] || [])) if (M().tracks[k]) Mu.load(k);
     if (state === "run") { const bk = Mu.trackFor("battle", zone); if (bk && M().tracks[bk]) Mu.load(bk); }   // this zone's battle track, decoded early (Snare's note)
     if (!key) { Mu.stopAll(); return; }
@@ -141,6 +173,7 @@
   };
   Mu.go = function (key, state) {
     const e = Mu.cache[key]; if (!e || e.state !== "ok" || (Mu.main && Mu.main.key === key)) return;
+    e.used = Mu.now();
     if (e.buf && S().ctx) goWA(key, state, e.buf); else if (e.el) goEl(key, state, e);
   };
   const note = (x) => { Mu.log.push(x); if (Mu.log.length > 40) Mu.log.shift(); };
@@ -159,7 +192,7 @@
     // RNG-077 loading dip: a linear ramp from the current level to floor x the track's full level over sec (a track still
     // fading in finishes towards that floor instead), so never below floor x its level when the loading screen came up
     v.dip = (floor, sec) => { const h = hold(); v.dipFrom = h.cur; v.dipTo = Math.max(h.cur, vol) * floor; g.gain.linearRampToValueAtTime(v.dipTo, h.t + sec); };
-    v.kill = () => { clearTimeout(v.timer); try { src.stop(); } catch (x) {} try { src.disconnect(); g.disconnect(); } catch (x) {} Mu.voices = Mu.voices.filter((o) => o !== v); if (Mu.main === v) Mu.main = null; v.prev = null; for (const other of Mu.voices) if (other.prev === v) other.prev = null; Mu.trim(); };
+    v.kill = () => { clearTimeout(v.timer); try { src.stop(); } catch (x) {} try { src.disconnect(); g.disconnect(); } catch (x) {} v.src = v.g = null; Mu.voices = Mu.voices.filter((o) => o !== v); if (Mu.main === v) Mu.main = null; v.prev = null; for (const other of Mu.voices) if (other.prev === v) other.prev = null; Mu.trim(); };
     return v;
   }
   function goWA(key, state, buf) {

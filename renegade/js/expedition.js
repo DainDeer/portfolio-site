@@ -574,6 +574,7 @@
       if (hm !== 1) { (setup.enemies || []).forEach(bump); (setup.waves || []).forEach((w) => w.forEach(bump)); }
     }
     if (G.V2 && G.V2.on()) G.V2.battleSetup(step, setup);
+    if (step.freeze && !setup.freeze) setup.freeze = step.freeze;   // SP-133: a natural 1 on the Attention flee check stuns your units at battle start
     const b = G.Battle.create(setup);
     b.escapable = true; b.pack = step.pack || null; b.nid = step.nid || r.loc;   // Break away (js/escape.js)
     const used = G.Workbench ? G.Workbench.applyAmmo(r, b.units) : null;   // Slice 3 §9: 1 pack per battle, every gun in the squad

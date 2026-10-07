@@ -24,7 +24,7 @@
   X.enterSite = function () {
     const r = run(); if (!r) return null;
     if (G.V2 && G.V2.isAreaMap(r.loc)) return G.V2.enterArea(r.loc, G.V2.curArea(r.loc));
-    if (X.site()) { r.view = "site"; X.site().seen = true; if (G.V2 && G.V2.on()) { G.V2.clearWaits(r.loc); G.V2.markSafe(r.loc, null); G.V2.markSeen(r.loc, "area"); G.V2.reengage(r.loc, null); } }
+    if (X.site()) { r.view = "site"; X.site().seen = true; if (G.V2 && G.V2.on()) { G.V2.clearWaits(r.loc); G.V2.markSafe(r.loc, null); G.V2.markSeen(r.loc, "area"); if (!G.V2.attOwed(r.loc, r.loc)) G.V2.reengage(r.loc, null); } }   // SP-133: a fled patrol is owed first
     return null;
   };
   X.obj = (id, site) => (site || X.site()).objects.find((o) => o.id === id);
@@ -397,7 +397,7 @@
     if (G.V2 && G.V2.on()) {   // Maps/Areas/Loot: an alert roll against the Map's finite pool; never Heat (an orbital chest's aside)
       const ai = G.V2.alertInfo(site, o, action), hg = action === "search" && T.orbitalChest ? T.searchHeat || 0 : 0;
       sec *= G.V2.modNum(site.nid, "searchTimeMult", 1);   // Blackout: searching takes longer
-      return { action, sec, noise, pct: ai.pct, free: ai.free, natural: ai.natural, heatGain: hg, check, math: ai.math, v2: true };
+      return { action, sec, noise, pct: ai.pct, free: ai.free, natural: ai.natural, heatGain: hg, check, math: ai.math, v2: true, att: ai.att };
     }
     const math = `noise ${noise}${forced ? " (forced)" : ""} + Hostiles ${H}/${C.hostilesDiv} = ${f1(H / C.hostilesDiv)} + Heat ${heat} + searches ${prior} − Stealth ${stealth}${loud ? ` + Loudmouth ${loud}` : ""}${tm !== 1 ? ` = ${f1(raw)} × tutorial ${tm}` : ""} = ${f1(pct)}%`;
     return { action, sec, noise, H, heat, prior, stealth, loud, pct, tutorialMult: tm, heatGain, check, math };
@@ -603,7 +603,7 @@
     const dr = G.rng() * 100, hit = !fight && dr < info.pct;
     const loc = G.Map.loc(node);
     if (v2) {
-      X.log(`Alert ${o.name}: ${info.math} → rolled ${Math.floor(dr)}: ${hit ? "something heard you!" : "quiet."}`, "roll");
+      if (info.att == null) X.log(`Alert ${o.name}: ${info.math} → rolled ${Math.floor(dr)}: ${hit ? "something heard you!" : "quiet."}`, "roll");
       if (hit) { fight = G.V2.alert(key, action === "force" || action === "kick" ? "forced" : "search", "Something heard you."); if (!fight) noGroup(); }
     } else {
       X.log(`Disturbance ${o.name}: ${info.math} → rolled ${Math.floor(dr)}: ${hit ? "something heard you!" : "quiet."}`, "roll");
@@ -616,6 +616,14 @@
       X.log(`Alarm ${o.name}: ${al.chance}% → rolled ${Math.floor(ar)}: ${alarm.hit ? "a drone answers!" : "quiet."}`, "roll");
       if (alarm.hit) { if (v2) { const ah = G.V2.alarmHeat(site, o); if (ah) texts.push(`+${ah} Heat`); fight = G.V2.alert(key, "alarm", al.why); if (!fight) noGroup(); } else X.push({ type: "battle", family: al.family, budgetMult: al.budgetMult, nid: site.nid, why: al.why }); }
     }
+    // SP-133 Enemy Attention (non-Peaceful V2 Maps): this interaction's own value (data/attention.js), plus failedCheck for
+    // a failed object check; a full bar pulls a patrol straight into battle prep. At most one fight per action.
+    let att = 0;
+    if (v2 && !fight && G.V2.attOn(site.nid)) {
+      att = (info.att != null ? info.att : G.V2.attValue(o, action)) + (roll && !G.Checks.isSuccess(roll.grade) ? DATA.attention.failedCheck || 0 : 0);
+      const pull = G.V2.attAdd(key, att, action);
+      if (pull) { fight = pull; texts.push(DATA.attention.text.pullWhy); }
+    }
     if (o.searched && o.type !== "door") { X.markPicked(site); site.everPicked = true; }   // Slice 3 §12
     if (o.searched && o.type !== "door" && G.Cards) G.Cards.onSearch(site.nid, node.loc);   // Slice 4 §D: the location's card (first search here this run)
     const empty = !loot || (!loot.items.length && !Object.keys(loot.res).length);
@@ -626,7 +634,7 @@
     else if (!empty) X.push({ type: "container", items: loot.items, res: loot.res, opened: true, nid: site.nid, objId: o.id, title: o.name, def: { id: o.type, name: o.name } });
     else if (o.searched && o.type !== "door") texts.push("Nothing useful.");
     G.State.save();
-    return { texts, roll, disturb: { pct: info.pct, roll: dr, hit, math: info.math, free: info.free, v2 }, alarm, empty, fight: !!fight };
+    return { texts, roll, disturb: { pct: info.pct, roll: dr, hit, math: info.math, free: info.free, v2 }, alarm, empty, fight: !!fight, att };
   };
 
   // leftovers stay in the object
