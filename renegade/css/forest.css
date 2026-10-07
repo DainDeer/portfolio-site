@@ -1,0 +1,46 @@
+/* SP-131: the 3D forest map screen (SP-129 style C v2, Smudge's mockup2.css): the map is the screen, the chrome is a few
+   small woodcraft tags and pins, and the Map card replaces the blue holo panel (Megan dropped it). js/forestmap.js. */
+:root { --fo: #120a0a; --fl0: #2e2418; --fl1: #5e4a30; --fbone: #d4c8a0; --fglow: #f0c83c; --fink: #ddd8c8; }
+.exp-map.forest { position: relative; }
+.forest-wrap { position: relative; flex: 1; min-height: 520px; overflow: hidden; background: #0c0d10; border: 2px solid var(--fo); border-radius: 4px; }
+.forest-stage { position: absolute; inset: 0; }
+.forest-wrap::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 45% 50%, transparent 60%, #000a 100%); z-index: 2; }
+.forest-chrome { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.forest-loading { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: #c9b98f; font-size: 12px; z-index: 1; }
+.forest-wrap[data-forest="on"] .forest-loading { display: none; }
+.forest-hint { position: absolute; left: 10px; bottom: 8px; font-size: 11px; color: #c9b98fcc; text-shadow: 0 1px 0 #000; }
+.forest-tag { position: absolute; transform: translate(-50%, 0); white-space: nowrap; padding: 1px 7px 2px; min-width: 0; min-height: 0; font: 700 11.5px/1.3 system-ui, sans-serif; color: #fff3d0; text-shadow: 0 1px 0 var(--fo);
+  background: #2e2418d9; border: 2px solid var(--fo); border-radius: 0; box-shadow: 0 2px 0 #0008; pointer-events: auto; cursor: pointer; }
+.forest-tag small { display: block; font-size: 9.5px; font-weight: 500; color: #c9b98f; text-align: center; }
+.forest-tag .ft-here { display: block; font-style: normal; font-size: 8.5px; letter-spacing: 1px; color: #46b8a4; text-align: center; text-transform: uppercase; }
+.forest-tag .ft-noto { width: 24px; height: 24px; image-rendering: pixelated; vertical-align: -7px; margin-left: 4px; filter: drop-shadow(0 1px 0 #000) drop-shadow(0 0 4px #c65a3055); }
+.forest-tag.fog { background: #1d2026bb; border-color: #0c0d10; color: #9aa0aa; font-style: italic; font-weight: 600; cursor: default; }
+.forest-tag.reachable { border-color: #6b5631; }
+.forest-tag.sel { border-color: var(--fglow); box-shadow: 0 0 0 2px var(--fo), 0 0 14px #f0c83c66; }
+.forest-tag:focus-visible, .forest-pin:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.forest-pin { position: absolute; transform: translate(-50%, -50%); width: 22px; height: 22px; min-width: 0; min-height: 0; padding: 0; box-sizing: border-box; border-radius: 50%; display: grid; place-items: center; background: #120a0ae0;
+  border: 2px solid var(--c); box-shadow: 0 0 0 1px var(--fo), 0 0 8px var(--c); pointer-events: auto; cursor: pointer; }
+.forest-pin img { width: 12px; height: 12px; image-rendering: pixelated; }
+
+/* the Map card (js/traversal.js TV.panel): woodcraft, not the blue holo */
+.holo-panel { background: linear-gradient(#2e2418f4, #1c140df4); color: #e8dcc0; border: 2px solid var(--fo); border-top: 5px solid var(--fl1); border-radius: 2px;
+  box-shadow: 0 3px 0 var(--fo), 0 0 0 1px #96784c55 inset, 0 10px 24px #000b; }
+.holo-panel h4 { color: #e8c880; } .holo-panel h4 small { color: #c9b98f; }
+.holo-x { color: #c9b98f; }
+.holo-crumb { color: #c9b98f; } .holo-crumb b { color: #fff3d0; font-family: "Roboto Slab", Georgia, serif; }
+.holo-tag { color: #c9b98f; } .holo-danger i { color: #c9b98f; }
+.holo-blurb, .holo-mod-txt div { color: #cdbf9a; }
+.holo-sec { border-top-color: #96784c44; }
+.holo-unknown { color: #a8987a; }
+.holo-k { background: #96784c33; color: #e8c880; }
+.holo-gem { width: 9px; height: 9px; margin-top: 5px; transform: rotate(45deg); border: 2px solid var(--fo); flex: 0 0 auto; }
+.holo-acts { background: #1c140d; border-top-color: #96784c44; }
+.holo-acts button { background: var(--fl1); border-color: var(--fo); color: var(--fbone); }
+.holo-acts button.primary { background: linear-gradient(#f6d77a, #e0a83c); color: #1a0e08; border-color: var(--fo); font-weight: 800; }
+.holo-cross { background: #1c140df0; color: #fff3d0; border-color: var(--fl1); box-shadow: 0 3px 0 var(--fo); }
+
+@media (max-width: 760px), (pointer: coarse) {
+  .forest-wrap { min-height: 0; height: min(76vh, 680px); flex: none; }
+  .forest-tag { font-size: 10.5px; }
+  .forest-pin { width: 18px; height: 18px; } .forest-pin img { width: 10px; height: 10px; }
+}

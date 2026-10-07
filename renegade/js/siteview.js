@@ -136,7 +136,7 @@
       if (a === "leave" || a === "use" || a === "cross" || a === "reopen" || a === "claim" || a === "examine" || a === "go" || a === "loot" || a === "boop") { t += `<br>${SV.actionLabel[a]}`; continue; }
       const i = X.searchInfo(o.id, a);
       const TR = a === "train" && X.trainDef(o);   // Slice 5 §F
-      t += `<br>${TR ? TR.label || SV.actionLabel[a] : SV.actionLabel[a]}: <b>${U.fmt1(i.sec)} s</b>${TR ? ` · +${TR.xp} ${DATA.skills[TR.skill].name} XP` : ""} · ` + (i.v2 ? (i.att != null ? `+<b>${i.att}</b> ${DATA.attention.text.label}` : i.free ? "nobody left to hear you" : i.natural && a === "search" ? "quiet" : `may draw attention <b>${U.fmt1(i.pct)}%</b>`) : `disturbance <b>${U.fmt1(i.pct)}%</b>`) + (i.heatGain ? ` · +${i.heatGain} Heat` : "") + (i.check ? ` · ${DATA.skills[i.check.skill].name} DC ${i.check.dc} ${Math.round(i.check.chance)}%` : "");
+      t += `<br>${TR ? TR.label || SV.actionLabel[a] : SV.actionLabel[a]}: <b>${U.fmt1(i.sec)} s</b>${TR ? ` · +${TR.xp} ${DATA.skills[TR.skill].name} XP` : ""} · ` + (i.v2 ? (i.att != null ? `+<b>${i.att}</b> ${DATA.attention.text.label}${i.att > 0 && G.V2.attStealthOn(o, a) ? ` (${DATA.attention.text.stealth} DC ${DATA.attention.stealth.dc})` : ""}` : i.free ? "nobody left to hear you" : i.natural && a === "search" ? "quiet" : `may draw attention <b>${U.fmt1(i.pct)}%</b>`) : `disturbance <b>${U.fmt1(i.pct)}%</b>`) + (i.heatGain ? ` · +${i.heatGain} Heat` : "") + (i.check ? ` · ${DATA.skills[i.check.skill].name} DC ${i.check.dc} ${Math.round(i.check.chance)}%` : "");
       if (G.Debug && G.Debug.rollMath) t += `<br><small>${i.math}</small>`;
     }
     return t;

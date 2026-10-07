@@ -92,10 +92,12 @@
   // ---- ambient loops: one per screen, 1 s crossfade ----
   SFX.setScreen = function (screen) {
     const key = A().screens[screen]; SFX.screen = screen; SFX.wantLoop = key;
+    if (SFX.loopOff(key)) { if (SFX.amb) { SFX.amb.fadeOut(); SFX.amb = null; } SFX.wantLoop = null; return; }   // a loop switched off in data (never loaded)
     if (!hasDom || !SFX.unlocked || !SFX.enabled || SFX.vol("ambient") <= 0) return;
     if (SFX.amb && SFX.amb.key === key) { SFX.amb.setVol(SFX.loopVol(key)); return; }
     const e = load(key, loopUrls(key)); if (e.state === "ok") SFX.startLoop(key);
   };
+  SFX.loopOff = (key) => !key || !!(A().loops[key] || {}).off;
   SFX.loopVol = (key) => ((A().loops[key] || {}).vol ?? 0.8) * SFX.vol("ambient");
   SFX.startLoop = function (key) {
     const e = SFX.cache[key], fade = A().crossfadeSec, v = SFX.loopVol(key), old = SFX.amb;

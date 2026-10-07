@@ -40,11 +40,57 @@
     row.appendChild(ic);
     row.appendChild(h("span", { class: "item-name", style: `color:${G.Items.color(item)}` }, G.Items.name(item), item.qty != null ? h("b", { class: "qty", "data-qty": item.qty }, ` ×${item.qty}`) : null, h("small", null, item.qty != null ? ` · ${G.Items.weight(item)} kg each` : ` i${item.ilvl} · ${G.Items.weight(item)}kg`)));
     if (extra) row.appendChild(h("span", { class: "item-extra" }, extra));
-    const acts = h("span", { class: "item-acts" });
-    for (const a of actions || []) acts.appendChild(h("button", { onclick: a.fn, disabled: a.disabled || false }, a.label));
-    row.appendChild(acts);
+    if (typeof actions === "function") {   // Megan (Oct 7): one click (tap, Enter / Space) opens the item's action menu
+      row.classList.add("item-menu-row"); row.tabIndex = 0; row.setAttribute("role", "button"); row.setAttribute("aria-haspopup", "menu"); row.dataset.itemMenu = item.uid || "";
+      row.appendChild(h("span", { class: "item-acts" }, h("span", { class: "hint item-menu-caret", "aria-hidden": "true" }, "\u25BE")));
+      row.addEventListener("click", (e) => { e.stopPropagation(); UI.itemMenu(row, actions(), false); });
+      row.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); UI.itemMenu(row, actions(), true); } });
+    } else {
+      const acts = h("span", { class: "item-acts" });
+      for (const a of actions || []) acts.appendChild(h("button", { onclick: a.fn, disabled: a.disabled || false }, a.label));
+      row.appendChild(acts);
+    }
     tipOn(row, () => UI.itemTipHtml(item, ctx));
     return row;
+  };
+  // the item action dropdown: a small list of the existing buttons under the row. Escape, a click / tap outside, a
+  // re-render or resize close it (on scroll it follows the row); arrow keys move between entries. acts: [{ label, fn, disabled, title }]
+  UI.closeItemMenu = function (refocus) {
+    const m = UI._itemMenu; if (!m) return; UI._itemMenu = null;
+    document.removeEventListener("pointerdown", m.outside, true); document.removeEventListener("keydown", m.key, true);
+    window.removeEventListener("resize", m.close); window.removeEventListener("scroll", m.place, true);
+    m.el.remove(); m.anchor.setAttribute("aria-expanded", "false"); if (refocus && m.anchor.isConnected) m.anchor.focus();
+  };
+  UI.itemMenu = function (anchor, acts, viaKey) {
+    const was = UI._itemMenu && UI._itemMenu.anchor; UI.closeItemMenu(); UI.hideTip();
+    if (was === anchor) return;   // a second click on the same row closes it
+    const el = h("div", { class: "item-menu", role: "menu", "data-item-menu-open": anchor.dataset.itemMenu || "" });
+    for (const a of acts) el.appendChild(h("button", { role: "menuitem", disabled: a.disabled || false, title: a.title || null, "data-act": a.act || null,
+      onclick: (e) => { e.stopPropagation(); UI.closeItemMenu(); a.fn(); } }, a.label));
+    if (!acts.length) el.appendChild(h("small", { class: "hint" }, "Nothing to do with this here."));
+    document.body.appendChild(el);
+    const place = () => {   // under the row (above it when there's no room), inside the screen; it follows the row on scroll
+      const r = anchor.getBoundingClientRect(), w = el.offsetWidth, hh = el.offsetHeight, vw = window.innerWidth, vh = window.innerHeight;
+      if (!anchor.isConnected || r.bottom < 0 || r.top > vh) return UI.closeItemMenu();
+      const below = r.bottom + 2 + hh <= vh - 4 || r.top - hh - 2 < 4;
+      el.style.left = Math.max(4, Math.min(vw - w - 4, r.right - w)) + "px";
+      el.style.top = Math.max(4, below ? Math.min(vh - hh - 4, r.bottom + 2) : r.top - hh - 2) + "px";
+    };
+    place();
+    const items = () => [...el.querySelectorAll("button:not(:disabled)")];
+    const m = UI._itemMenu = { el, anchor, close: () => UI.closeItemMenu(), place,
+      outside: (e) => { if (!el.contains(e.target) && !anchor.contains(e.target)) UI.closeItemMenu(); },
+      key: (e) => {
+        if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); UI.closeItemMenu(true); return; }
+        if (e.key === "Tab" && el.contains(document.activeElement)) { UI.closeItemMenu(); return; }
+        if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+        const b = items(); if (!b.length) return; e.preventDefault();
+        const i = b.indexOf(document.activeElement); b[(i < 0 ? (e.key === "ArrowDown" ? 0 : b.length - 1) : i + (e.key === "ArrowDown" ? 1 : -1) + b.length) % b.length].focus();
+      } };
+    anchor.setAttribute("aria-expanded", "true");
+    document.addEventListener("pointerdown", m.outside, true); document.addEventListener("keydown", m.key, true);
+    window.addEventListener("resize", m.close); window.addEventListener("scroll", m.place, true);
+    if (viaKey && items()[0]) items()[0].focus();
   };
   // "Scav Kit (2/3): +8 kg carry" lines for one unit's items (lit bonuses green, the next one grey)
   UI.setsEl = function (items) {
@@ -76,6 +122,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
 
   // ---------- main render ----------
   UI.render = function () {
+    if (UI._itemMenu) UI.closeItemMenu();
     // The title owns this screen; town artwork and tutorial/result dialogs wait until Play.
     if (G.Title && G.Title.open) { G.Sfx.setScreen("title"); if (G.Music) G.Music.set("title"); return; }
     if (G.Dice && G.Dice.busy()) { if (!UI._renderAfterDice) { UI._renderAfterDice = true; G.Dice.whenIdle(() => { UI._renderAfterDice = false; UI.render(); }); } return; }   // Slice 5 §B: the outcome shows once the die lands
@@ -706,6 +753,22 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     UI.modal(box, "wide");
   };
 
+  // Megan (Oct 7): everything a carried item can do, for the item menu: the old per-row buttons, then one
+  // "Equip to <name>" per standing teammate (dead, critical or left-behind ones aren't listed; pets wear no gear).
+  UI.carryActs = function (it) {
+    const X = G.Exp, I = G.Items, src = X.findCarried(it.uid); if (!src) return [];
+    const go = (fn) => () => { const e = fn(); if (e) UI.fail(e); UI.render(); }, out = [];
+    const equipable = !I.isQuest(it) && !I.isPet(it);
+    if (src.where === "bag") {
+      if (equipable) {
+        out.push({ label: `Equip to ${X.body().name} (you)`, act: "equip", fn: go(() => X.equipFromBag(it.uid, "main")) });
+        if (I.isHandItem(it)) out.push({ label: "Equip to Backup set (you)", act: "backup", fn: go(() => X.equipFromBag(it.uid, "backup")) });
+      }
+    } else if (src.where === "body") out.push({ label: "Unequip", act: "unequip", fn: go(() => X.unequip(src.slot)) });
+    for (const t of X.equipTargets(it.uid)) out.push({ label: `Equip to ${t.name}` + (t.swap ? ` (swap ${I.name(t.swap)})` : ""), act: "equip-member", disabled: !!t.why, title: t.why, fn: go(() => X.equipToMember(it.uid, t.idx)) });
+    if (src.where === "bag") { if (equipable) out.push({ label: "Pouch", act: "pouch", fn: go(() => X.toPouch(it.uid)) }); out.push({ label: "Drop", act: "drop", fn: go(() => X.dropItem(it.uid)) }); }
+    return out;
+  };
   UI.slotLabel = { weapon: "main hand", offhand: "off hand", weapon2: "backup main", offhand2: "backup off hand", head: "head", body: "body", backpack: "backpack" };   // Slice 5 §E
   // ================= EXPEDITION =================
   UI.renderExpedition = function (scr) {
@@ -719,8 +782,11 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     if (inSite) head.appendChild(h("button", { "data-act": "leave", disabled: !!r.queue.length || !!UI.search, onclick: () => { X.leaveSite(); UI.render(); } }, v2 ? DATA.mapsV2.text.backToTraversal + " ↩" : "Leave to the map ↩"));
     else if (loc && X.site()) head.appendChild(h("button", { "data-act": "enter", disabled: !!r.queue.length, onclick: () => { const e = X.enterSite(); if (e) UI.fail(e); UI.render(); } }, v2 ? G.Traversal.enterLabel(r.loc) : `Go back inside ${loc.name}`));
     mapBox.appendChild(head);
-    { const ab = v2 && loc ? UI.attentionEl(r.loc) : null; if (ab) mapBox.appendChild(ab); }   // SP-133: the Map's Attention bar (never Heat)
-    if (inSite) G.SiteView.render(mapBox, { onObject: UI.onSiteObject, onCancel: UI.cancelSearch });
+    const forest = !inSite && G.ForestMap && G.ForestMap.wanted();   // SP-131: traversal is the 3D forest (no Attention bar on it)
+    { const ab = v2 && loc && !forest ? UI.attentionEl(r.loc) : null; if (ab) mapBox.appendChild(ab); }   // SP-133: the Map's Attention bar (never Heat)
+    if (!forest && G.ForestMap) G.ForestMap.stop();
+    if (forest) { mapBox.classList.add("forest"); G.ForestMap.render(mapBox, (nid) => G.Traversal.select(nid)); }
+    else if (inSite) G.SiteView.render(mapBox, { onObject: UI.onSiteObject, onCancel: UI.cancelSearch });
     else G.MapView.render(mapBox, v2 ? (nid) => G.Traversal.select(nid) : (nid) => {   // V2: a Map opens its panel first (Travel / Enter there)
       if (nid === r.loc) { X.enterSite(); UI.render(); return; }
       if (!X.moveTo(nid)) UI.toast(X.immobile() ? X.overloadText() : "Can't move there."); UI.render();
@@ -758,22 +824,18 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     if (pct > 100) carry.appendChild(h("div", { class: "warn", "data-note": pct >= DATA.config.carry.immobileAtPct ? "immobile" : "overloaded" }, pct >= DATA.config.carry.immobileAtPct ? X.overloadText() + " (Over 150% you can't move.)" : `Overloaded: −${Math.round(pct - 100)}% Move Speed in battle.`));   // SP-045
     // gear
     const worn = Object.values(r.gear).filter(Boolean);
-    for (const slot of ["weapon", "offhand", "head", "body", "backpack"]) { const it = r.gear[slot]; if (it) carry.appendChild(UI.itemEl(it, [{ label: "Unequip", fn: () => { X.unequip(slot); UI.render(); } }], UI.slotLabel[slot] || slot, worn)); }
+    for (const slot of ["weapon", "offhand", "head", "body", "backpack"]) { const it = r.gear[slot]; if (it) carry.appendChild(UI.itemEl(it, () => UI.carryActs(it), UI.slotLabel[slot] || slot, worn)); }
     if (r.gear.weapon2 || r.gear.offhand2) {   // Slice 5 §E: the Backup set (counts toward carry; in a fight: the Swap button)
       carry.appendChild(h("h4", null, "Backup set ", h("button", { "data-act": "swap-sets", disabled: !!r.queue.length, onclick: () => { X.swapSets(); UI.render(); } }, "⇄ Swap with Main")));
-      for (const slot of ["weapon2", "offhand2"]) { const it = r.gear[slot]; if (it) carry.appendChild(UI.itemEl(it, [{ label: "Unequip", fn: () => { X.unequip(slot); UI.render(); } }], UI.slotLabel[slot], worn)); }
+      for (const slot of ["weapon2", "offhand2"]) { const it = r.gear[slot]; if (it) carry.appendChild(UI.itemEl(it, () => UI.carryActs(it), UI.slotLabel[slot], worn)); }
     }
     const wornSets = UI.setsEl(worn); if (wornSets) carry.appendChild(wornSets);
     carry.appendChild(h("h4", null, "Bag"));
-    for (const it of r.bag.items) carry.appendChild(UI.itemEl(it, G.Items.isQuest(it) || G.Items.isPet(it) ? [{ label: "Drop", fn: () => { X.dropItem(it.uid); UI.render(); } }] : [
-      { label: "Equip", fn: () => { const e = X.equipFromBag(it.uid, "main"); if (e) UI.fail(e); UI.render(); } },
-      ...(G.Items.isHandItem(it) ? [{ label: "Backup", fn: () => { const e = X.equipFromBag(it.uid, "backup"); if (e) UI.fail(e); UI.render(); } }] : []),
-      { label: "Pouch", fn: () => { const e = X.toPouch(it.uid); if (e) UI.fail(e); UI.render(); } },
-      { label: "Drop", fn: () => { X.dropItem(it.uid); UI.render(); } }], G.Items.isQuest(it) ? "quest item" : G.Items.isPet(it) ? "pet: extract with it to keep it" : null));
+    for (const it of r.bag.items) carry.appendChild(UI.itemEl(it, () => UI.carryActs(it), G.Items.isQuest(it) ? "quest item" : G.Items.isPet(it) ? "pet: extract with it to keep it" : null));
     for (const k in r.bag.res) if (r.bag.res[k] > 0) carry.appendChild(h("div", { class: "item-row" }, SP.icon(DATA.items.resources[k].sprite, 20), h("span", { class: "item-name" }, `${r.bag.res[k]} × ${DATA.items.resources[k].name}`, h("small", null, ` ${U.fmt1(r.bag.res[k] * DATA.items.resources[k].kgPerUnit)} kg`)),
       h("span", { class: "item-acts" }, h("button", { onclick: () => { const e = X.resToPouch(k); if (e) UI.fail(e); UI.render(); } }, "Pouch"), h("button", { onclick: () => { X.dropRes(k, 1); UI.render(); } }, "Drop 1"))));
     carry.appendChild(h("h4", null, `Secure Pouch (${r.pouch.length}/${G.Outpost.pouchSlots()}, max ${G.Outpost.pouchMaxKg()} kg — survives death)`));
-    r.pouch.forEach((p, i) => { if (p.item) carry.appendChild(UI.itemEl(p.item, [{ label: "Take out", fn: () => { X.fromPouch(i); UI.render(); } }])); else carry.appendChild(h("div", { class: "item-row" }, `${p.n} × ${DATA.items.resources[p.res].name}`, h("button", { onclick: () => { X.fromPouch(i); UI.render(); } }, "Take out"))); });
+    r.pouch.forEach((p, i) => { if (p.item) carry.appendChild(UI.itemEl(p.item, () => [{ label: "Take out", act: "take-out", fn: () => { X.fromPouch(i); UI.render(); } }])); else carry.appendChild(h("div", { class: "item-row" }, `${p.n} × ${DATA.items.resources[p.res].name}`, h("button", { onclick: () => { X.fromPouch(i); UI.render(); } }, "Take out"))); });
     side.appendChild(carry);
     // extraction
     if (area) side.insertBefore(G.Traversal.sideHere(), side.firstChild);   // V2 Area: what's here, nearest first
@@ -944,10 +1006,15 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     G.Sfx.play(res.roll ? (G.Checks.isSuccess(res.roll.grade) ? "sfx_check_success" : "sfx_check_fail") : "sfx_search_done");
     UI.render();
     const el2 = G.SiteView.els[S.objId] || el;
-    if (el2 && G.XPFloat) G.XPFloat.text(el2, res.disturb.v2 ? (res.fight ? "Something heard you!" : res.att ? `+${res.att} ${DATA.attention.text.label}` : res.disturb.pct > 0 ? `Quiet (${U.fmt1(res.disturb.pct)}% → ${Math.floor(res.disturb.roll)})` : "Quiet") : `Disturbance ${U.fmt1(res.disturb.pct)}% → ${Math.floor(res.disturb.roll)}: ${res.disturb.hit ? "heard!" : "quiet"}`, res.disturb.hit || res.fight ? "#ff7a6a" : "#bbb", "below");
+    if (el2 && G.XPFloat) G.XPFloat.text(el2, res.disturb.v2 ? (res.fight ? "Something heard you!" : res.stealth ? UI.stealthLine(res) : res.att ? `+${res.att} ${DATA.attention.text.label}` : res.disturb.pct > 0 ? `Quiet (${U.fmt1(res.disturb.pct)}% → ${Math.floor(res.disturb.roll)})` : "Quiet") : `Disturbance ${U.fmt1(res.disturb.pct)}% → ${Math.floor(res.disturb.roll)}: ${res.disturb.hit ? "heard!" : "quiet"}`, res.disturb.hit || res.fight ? "#ff7a6a" : "#bbb", "below");
     if (res.texts.length && (res.empty || !G.Exp.current())) UI.toast(res.texts.join(" "));
   };
 
+  // SP-133 Stealth check on a container loot: one short line under the object (the die itself rolls in the dice panel)
+  UI.stealthLine = function (res) {
+    const S = res.stealth, T = DATA.attention.text, tag = S.band === "nat1" ? T.stealthNat1 : S.band === "nat20" ? T.stealthNat20 : `${T.stealth} ${S.roll.total} vs ${S.dc}`;
+    return `${tag}: ${S.base} x${S.mult} → +${res.att} ${T.label}`;
+  };
   // SP-133 Enemy Attention: the Map's bar + notoriety icon, inside the Map (a separate thing from Heat, never its numbers)
   UI.attentionEl = function (nid) {
     const A = G.V2 && G.V2.attView(nid); if (!A) return null;
@@ -957,7 +1024,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
       h("span", { class: "att-label" }, T.label),
       h("div", { class: "att-track" }, h("div", { class: "att-fill", style: `width:${Math.round(100 * A.bar / A.max)}%` })),
       h("span", { class: "att-num" }, `${A.bar}/${A.max}`),
-      h("span", { class: "att-noto" + (A.fills ? " on" : ""), "data-notoriety": String(A.fills), title: `${T.notoriety} ${A.fills}: ${T.notorietyTip}`, "aria-label": `${T.notoriety} ${A.fills}` }, h("i", null, "!"), String(A.fills)),
+      h("span", { class: "att-noto" + (A.noto ? " on" : ""), "data-notoriety": String(A.noto), title: `${T.notoriety} ${A.noto}: ${T.notorietyTip}`, "aria-label": `${T.notoriety} ${A.noto}` }, h("i", null, "!"), String(A.noto)),
       A.esc ? h("span", { class: "att-esc", "data-esc": String(A.esc) }, `Next fight +${A.esc}`) : null,
       A.owed ? h("small", { class: "att-owed" }, T.owed) : null);
   };

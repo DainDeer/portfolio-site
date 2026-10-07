@@ -45,13 +45,15 @@
         h("span", { class: "holo-danger", "data-danger": I.danger, title: "Danger. The scarier the place, the better the pickings." }, T().dangerLabel + " ", I.danger ? h("b", null, "☠".repeat(I.danger)) : h("i", null, "none")),
         I.here ? h("span", { class: "holo-tag" }, "You're here") : I.visited ? h("span", { class: "holo-tag" }, "Visited this run") : null),
       I.blurb ? h("p", { class: "holo-blurb" }, U.copy(I.blurb)) : null);
-    const locked = I.mods.some((m) => m.locked), toggles = I.mods.some((m) => m.canDisable);
+    const locked = I.mods.some((m) => m.locked), toggles = !(DATA.forestMap && DATA.forestMap.noModToggle) && I.mods.some((m) => m.canDisable);   // SP-131 (Megan, Oct 7): negative modifiers can't be disabled: no toggle on the card
     const ml = h("div", { class: "holo-sec" }, h("h4", null, "What's known", h("small", null, locked ? " · locked in" : toggles ? " · a hazard you can see can be turned off before you go: its reward goes with it" : "")));
     for (const m of I.mods) {   // the headline and whatever skill or experience has revealed (design §1)
+      const rung = G.ForestMap && DATA.forestMap ? G.ForestMap.tierOf(V.modDef(m.id)) : null;   // SP-131: the rarity gem (six-colour ladder)
       const row = h("div", { class: "holo-mod" + (m.on ? "" : " off") + (m.headline ? " head" : ""), "data-mod": m.id, "data-headline": m.headline ? "1" : "0" },
+        rung ? h("span", { class: "holo-gem", "data-tier": rung, style: `background:${DATA.forestMap.colors[rung]}`, title: rung }) : null,
         h("span", { class: "holo-tier", style: `color:${m.color};border-color:${m.color}` }, m.catName),
         h("div", { class: "holo-mod-txt" }, h("b", null, U.copy(m.name)), h("div", null, U.copy(m.effect)), m.reward ? h("div", { class: "holo-reward" }, (m.on ? "" : "Turned off, lost: ") + U.copy(m.reward)) : null));
-      if (m.canDisable) row.appendChild(h("button", { class: "holo-toggle", "data-act": "mod-toggle", "aria-pressed": String(m.on), title: m.on ? "Turn it off (and lose its reward)" : "Turn it back on", onclick: () => { const e = V.setMod(nid, m.id, !m.on); if (e) UI().fail(e); UI().render(); } }, m.on ? "On" : "Off"));
+      if (m.canDisable && toggles) row.appendChild(h("button", { class: "holo-toggle", "data-act": "mod-toggle", "aria-pressed": String(m.on), title: m.on ? "Turn it off (and lose its reward)" : "Turn it back on", onclick: () => { const e = V.setMod(nid, m.id, !m.on); if (e) UI().fail(e); UI().render(); } }, m.on ? "On" : "Off"));
       ml.appendChild(row);
     }
     if (I.hiddenMods) ml.appendChild(h("div", { class: "holo-unknown holo-hidden", "data-hidden": I.hiddenMods }, T().hiddenMods));

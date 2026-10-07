@@ -34,7 +34,7 @@
     // would otherwise start back at the top under the player's finger
     let pending = false;
     const panelScroll = () => { const b = document.querySelector(".town-panel > .panel-body"); return b ? { key: b.parentElement.dataset.panel, top: b.scrollTop, left: b.scrollLeft } : null; };
-    G.Sprites.listeners.push(() => { if (pending) return; pending = true; setTimeout(() => { pending = false; if (!G.UI.battle && !document.querySelector(".modal") && (document.querySelector(".map-wrap") || document.querySelector(".site-wrap") || document.querySelector(".town-stage")) && !G.UI.search) {
+    G.Sprites.listeners.push(() => { if (pending) return; pending = true; setTimeout(() => { pending = false; if (!G.UI.battle && !G.UI._itemMenu && !document.querySelector(".modal") && (document.querySelector(".map-wrap") || document.querySelector(".site-wrap") || document.querySelector(".town-stage")) && !G.UI.search) {
       const was = panelScroll(); G.UI.render();
       const b = was && document.querySelector(".town-panel > .panel-body"); if (b && b.parentElement.dataset.panel === was.key) { b.scrollTop = was.top; b.scrollLeft = was.left; }
     } }, 300); });

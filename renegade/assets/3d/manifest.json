@@ -1,5 +1,14 @@
 {
  "files": [
+  "mod_cache_crate.glb",
+  "mod_cairn.glb",
+  "mod_dead_generator.glb",
+  "mod_duck.glb",
+  "mod_lantern_dark.glb",
+  "mod_party_hat.glb",
+  "mod_rat.glb",
+  "mod_rat_nest.glb",
+  "mod_skull_camp.glb",
   "grunt.glb",
   "scavenger.glb",
   "goat.glb",

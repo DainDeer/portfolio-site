@@ -58,7 +58,9 @@ DATA.audio = {
   // vol x 1 / sqrt(1 + gunshots already playing).
   bus: { gain: 0.8, limiter: { threshold: -6, knee: 4, ratio: 12, attack: 0.003, release: 0.12 }, htmlGunAtten: true },
   // ambient loops: which screen plays which (town view + outpost panels / zone map + location views + battles)
-  loops: { amb_outpost: { vol: 0.8 }, amb_wastes: { vol: 0.8 } },
+  // off: true = that loop never plays (kept, not deleted). amb_outpost (the settlement ambience, also the title's) is off:
+  // Megan (Oct 7) says it no longer fits; Snare redoes it later (then drop the flag).
+  loops: { amb_outpost: { vol: 0.8, off: true }, amb_wastes: { vol: 0.8 } },
   screens: { outpost: "amb_outpost", run: "amb_wastes", title: "amb_outpost" },   // title: the camp at night (Slice 4 §G)
   // Music (Snare, assets/music_src/README.md): its own channel (gain = master x music slider), separate from SFX and
   // ambience. Web Audio buffers with loop = true (gapless); .ogg first (sample-exact), .mp3 if the browser can't play

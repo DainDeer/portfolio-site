@@ -302,8 +302,8 @@ DATA.config = {
     // extract, search (lock / heavy / trap), event options, rival choices, Hunter hide, passage spotting, scouting and
     // Break away (the one check inside a fight: the fight holds while the die rolls). Not "craft" (the Workbench's
     // quality roll lands on a timer, not at a click). The player can turn them off: settings.showDice.
-    consumers: ["extract", "search", "event", "rival", "hunter", "spot", "scout", "breakaway"],
-    queue: { speed: 2, holdMs: 500, noHold: ["scout"], dockMin: 2 },   // noHold kinds never hold the screen (no shield: scouting rolls itself as you move); a batch of them (a new neighbourhood) plays x2 after the first, holds 0.5 s, thunk without the stinger; only such a batch (dockMin+ queued together) uses the docked die, a lone one the big panel
+    consumers: ["extract", "search", "event", "rival", "hunter", "spot", "scout", "breakaway", "stealth"],   // stealth: SP-133 container loot (data/attention.js stealth)
+    queue: { speed: 2, holdMs: 500, noHold: ["scout", "stealth"], dockMin: 2 },   // noHold kinds never hold the screen (no shield: scouting rolls itself as you move); a batch of them (a new neighbourhood) plays x2 after the first, holds 0.5 s, thunk without the stinger; only such a batch (dockMin+ queued together) uses the docked die, a lone one the big panel
     // sounds (data/audio.js): a random tumble per wall bounce (up to maxBounces), then the thunk + Snare's stinger on the landing frame
     sfx: { bounce: ["sfx_dice_bounce_1", "sfx_dice_bounce_2", "sfx_dice_bounce_3"], maxBounces: 3, bounceMinSpeed: 0.5, land: "sfx_dice_land", stinger: "stinger_roll" },
     // Smudge 7ddb42d (assets/ui/dice/dice_manifest.json): the mesh + numbering, box, lantern, camera and light are in the

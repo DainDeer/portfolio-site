@@ -374,6 +374,63 @@
     const m = G.Battle.unitFromBody(X.body(), g, {}).maxHp; r.bodyHp = Math.min(r.bodyHp, m);
   };
   X.unequip = function (slot) { const r = run(); if (r.gear[slot]) { r.bag.items.push(r.gear[slot]); delete r.gear[slot]; const m = G.Battle.unitFromBody(X.body(), r.gear, {}).maxHp; r.bodyHp = Math.min(r.bodyHp, m); } };
+  // Megan (Oct 7): hand gear to a teammate mid-run (the item menu's "Equip to <name>"). The item comes from the bag, your
+  // body's slots or another teammate; it goes in the matching Grunt slot (G.State.gruntSlots, the outpost doll's rules:
+  // Main set only, handFit for 2H / shields) and whatever it pushes out goes to the bag. A Grunt's gear isn't in your
+  // carried kg (config.grunts.gearCountsTowardCarry), its pack adds capacity, so the bag numbers follow on their own.
+  X.findCarried = function (uid) {
+    const r = run(); let i = r.bag.items.findIndex((x) => x.uid === uid);
+    if (i >= 0) return { where: "bag", item: r.bag.items[i] };
+    for (const k in r.gear) if (r.gear[k] && r.gear[k].uid === uid) return { where: "body", slot: k, item: r.gear[k] };
+    for (i = 0; i < r.squad.length; i++) { const g = r.squad[i].g.gear || {}; for (const k in g) if (g[k] && g[k].uid === uid) return { where: "grunt", idx: i, slot: k, item: g[k] }; }
+    return null;
+  };
+  // the Grunt slot an item would go to on squad member idx: { slot } or { why }
+  X.memberSlot = function (idx, item) {
+    const r = run(), m = r.squad[idx], I = G.Items, St = G.State; if (!m || !(m.hp > 0)) return { why: "They can't take gear right now." };
+    const slots = St.gruntSlots(m.g), b = I.base(item.base); if (!b || I.isQuest(item) || I.isPet(item)) return { why: "That can't be equipped." };
+    if (!Object.keys(slots).length) return { why: `${G.Allies.name(m.g)} can't wear gear.` };
+    let slot;
+    if (I.isHandItem(item)) slot = I.autoSlot(item, (k) => (m.g.gear[k] && m.g.gear[k].uid !== item.uid ? m.g.gear[k] : null), "main");
+    else slot = Object.keys(slots).find((k) => !I.HAND_SLOTS.includes(k) && slots[k].includes(b.slot));
+    if (!slot || !St.gruntSlotOk(slot, item, m.g)) return { why: `${G.Allies.name(m.g)} has no slot for that.` };
+    return { slot };
+  };
+  // the menu's teammate entries for a carried item: standing teammates with gear slots, not the one already wearing it
+  X.equipTargets = function (uid) {
+    const r = run(), src = X.findCarried(uid), I = G.Items; if (!src || I.isQuest(src.item) || I.isPet(src.item)) return [];
+    const out = [];
+    r.squad.forEach((m, i) => {
+      if (!(m.hp > 0) || !Object.keys(G.State.gruntSlots(m.g)).length || (src.where === "grunt" && src.idx === i)) return;
+      const ms = X.memberSlot(i, src.item);
+      out.push({ idx: i, name: G.Allies.name(m.g), slot: ms.slot || null, swap: (ms.slot && m.g.gear[ms.slot]) || null, why: ms.why || null });
+    });
+    return out;
+  };
+  X.equipToMember = function (uid, idx) {
+    const r = run(), m = r.squad[idx], src = X.findCarried(uid); if (!src) return "That item isn't with you.";
+    if (src.where === "grunt" && src.idx === idx) return "They already have it on.";
+    const it = src.item, ms = X.memberSlot(idx, it); if (ms.why) return ms.why;
+    const slot = ms.slot, g = m.g, I = G.Items, oldMax = G.Battle.unitFromGrunt(g).maxHp;
+    if (I.isHandItem(it)) { const fit = I.handFit(slot, it, (k) => g.gear[k] || null); if (fit.why) return fit.why; for (const k of fit.clear) { if (g.gear[k] && k !== slot) { r.bag.items.push(g.gear[k]); g.gear[k] = null; } } }
+    // take it off its current holder
+    if (src.where === "bag") r.bag.items.splice(r.bag.items.indexOf(it), 1);
+    else if (src.where === "body") X.unequipQuiet(src.slot);
+    else { const o = r.squad[src.idx]; o.g.gear[src.slot] = null; o.hp = Math.min(o.hp, G.Battle.unitFromGrunt(o.g).maxHp); }
+    if (g.gear[slot]) r.bag.items.push(g.gear[slot]);
+    g.gear[slot] = it;
+    if (G.GruntGear) for (const c of G.GruntGear.noteEquip(it)) X.log(`New look unlocked: ${G.GruntGear.cosDef(c).name}. Put it on a Grunt from the paper doll.`, "good");
+    const newMax = G.Battle.unitFromGrunt(g).maxHp;
+    m.hp = Math.max(1, Math.min(newMax, m.hp + Math.max(0, newMax - oldMax)));
+    X.log(`${G.Allies.name(g)} equips ${I.name(it)}.`);
+    return null;
+  };
+  // a teammate's slot back to the bag (no UI row yet: inspecting a Grunt's gear mid-run comes later)
+  X.unequipMember = function (idx, slot) {
+    const r = run(), m = r.squad[idx]; if (!m || !m.g.gear || !m.g.gear[slot]) return "Nothing there.";
+    r.bag.items.push(m.g.gear[slot]); m.g.gear[slot] = null; m.hp = Math.min(m.hp, G.Battle.unitFromGrunt(m.g).maxHp); return null;
+  };
+  X.unequipQuiet = function (slot) { const r = run(); const it = r.gear[slot]; if (!it) return null; delete r.gear[slot]; r.bodyHp = Math.min(r.bodyHp, G.Battle.unitFromBody(X.body(), r.gear, {}).maxHp); return it; };
   X.toPouch = function (uid) {
     const r = run(); const i = r.bag.items.findIndex((x) => x.uid === uid); if (i < 0) return "Not in bag.";
     const it = r.bag.items[i];

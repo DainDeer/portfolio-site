@@ -230,6 +230,10 @@ button.promote { background: #6a5a1a; }
 .set-bonus { color: #6a7a6a; }
 .set-bonus.on { color: #7ae890; }
 .set-summary { margin: 4px 0; padding: 3px 6px; border-left: 3px solid #40b060; background: #1c2a1e; font-size: 12px; }
+/* Megan (Oct 7): the carried-item action menu (js/ui.js UI.itemMenu): the tooltip's frame around the stock buttons */
+.item-menu-row { cursor: pointer; } .item-menu-row:focus-visible { outline: 1px solid #b08a3a; outline-offset: -1px; } .item-menu-row[aria-expanded="true"] { background: #2a291f; }
+.item-menu { position: fixed; z-index: 110; display: flex; flex-direction: column; min-width: 150px; max-width: min(300px, calc(100vw - 8px)); max-height: calc(100vh - 8px); overflow: auto; background: #0c0c09ee; border: 1px solid #6a6040; border-radius: 4px; padding: 3px; box-shadow: 0 6px 20px #000; }
+.item-menu button { text-align: left; margin: 1px 0; font-size: 12px; }
 .loot-box .item-row.rare .item-name { animation: rareflash 1.2s ease-in-out 3; }
 @keyframes rareflash { 0%, 100% { filter: none; text-shadow: none; } 50% { filter: brightness(1.8); text-shadow: 0 0 6px currentColor; } }
 /* Slice 3 §4b Hunter token + banner */

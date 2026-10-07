@@ -896,8 +896,10 @@
   };
 
   // ---------- Enemy Attention (SP-133, DEC-92): a per-Map local alertedness bar. Never Heat. Data: data/attention.js ----------
-  // run.v2.att = { maps: { nid: { bar, fills, esc, owed } }, nextA }, added lazily (an older save's run starts every Map
-  // at 0). bar: 0..barMax. fills: the Map's notoriety level (bar fills this expedition). esc: the escalation (+units)
+  // run.v2.att = { maps: { nid: { bar, fills, noto, esc, owed } }, nextA }, added lazily (an older save's run starts every Map
+  // at 0). bar: 0..barMax. fills: how many Attention fights the bar pulled on this Map this expedition (a count, never
+  // shown). noto: the Map's notoriety level, +1 every fightsPerNotoriety fills (Megan, Oct 7: 1 level per 3 Attention
+  // fights); per Map, never goes down unless something modifies it, reset by a new expedition. esc: the escalation (+units)
   // the next battle on this Map shows. owed: { area } after a successful flee from a pull (entering again = that fight).
   const AT = () => DATA.attention;
   // Peaceful (explicit flag in data, else the Map's classification): no bar running, finite pool, can be cleared
@@ -917,14 +919,34 @@
   V.att = function (nid) {
     const r = run(); if (!V.on(r)) return null;
     const A = r.v2.att || (r.v2.att = { maps: {}, nextA: 0 });
-    return A.maps[nid] || (A.maps[nid] = { bar: 0, fills: 0, esc: 0, owed: null });
+    const st = A.maps[nid] || (A.maps[nid] = { bar: 0, fills: 0, noto: 0, esc: 0, owed: null });
+    if (st.noto == null) st.noto = Math.floor((st.fills || 0) / V.attFightsPerNoto());   // an older save (fills was the level): additive
+    return st;
   };
+  V.attFightsPerNoto = () => Math.max(1, AT().fightsPerNotoriety || 1);
+  V.attNoto = (st) => (!st ? 0 : st.noto != null ? st.noto : Math.floor((st.fills || 0) / V.attFightsPerNoto()));
   // what one interaction is worth (data: actions + object noise, or an absolute per type). A fight's body: 0, always.
   V.attValue = function (o, action) {
     const C = AT(); if (!o || o.combat) return 0;
     const T = X().typeDef(o), noise = o.noise != null ? o.noise : T.noise || 0, base = C.actions[action] != null ? C.actions[action] : C.actions.search;
     const v = (action || "search") === "search" && C.types[o.type] != null ? C.types[o.type] : base + noise * C.noiseMult;
     return Math.max(0, Math.round(v * V.attTutMult()));
+  };
+  // Stealth check on a container loot (data/attention.js stealth): the multiplier a roll gives the base value
+  V.attStealthMult = function (d, total, dc) {
+    const S = AT().stealth, die = DATA.config.checks.die || 20;
+    if (d === 1) return { mult: S.nat1, band: "nat1" };
+    if (d === die) return { mult: S.nat20, band: "nat20" };
+    if (total < dc) return { mult: S.fail, band: "fail" };
+    const by = total - dc, p = (S.pass || []).find((x) => by >= x.by);
+    return { mult: p ? p.mult : S.fail, band: "pass", by };
+  };
+  V.attStealthOn = (o, action) => !!(AT().stealth && AT().stealth.enabled && o && !o.combat && o.type !== "door" && action !== "train");
+  // roll it for the acting body (no helpers): { roll, mult, band, value } (value = round(base x mult))
+  V.attStealth = function (base, rng) {
+    const S = AT().stealth, b = X().body(), ci = G.Checks.compute(S.skill, S.dc, b ? [{ kind: "body", body: b }] : [], X().gearItems());
+    const roll = G.Checks.roll(ci, rng, "stealth"), sm = V.attStealthMult(roll.d, roll.total, ci.dc);
+    return { roll, dc: ci.dc, mult: sm.mult, band: sm.band, by: sm.by, base, value: Math.max(0, Math.round(base * sm.mult)) };
   };
   // raise Map nid's bar; at max: notoriety +1 and the pull (straight to battle prep). Returns the battle step or null.
   V.attAdd = function (siteKey, n, source) {
@@ -936,7 +958,8 @@
     V.ev("attention", { nid, n, source, bar: st.bar });
     if (st.bar < max) return null;
     st.fills++;
-    V.ev("attention_full", { nid, fills: st.fills });
+    if (st.fills % V.attFightsPerNoto() === 0) st.noto++;   // 1 notoriety level per fightsPerNotoriety Attention fights
+    V.ev("attention_full", { nid, fills: st.fills, noto: st.noto });
     return V.attPull(m, siteKey, AT().text.pullWhy);
   };
   // a fresh group: the "effectively infinite" enemies of a non-Peaceful Map
@@ -950,7 +973,7 @@
   V.attPull = function (m, siteKey, why) {
     const st = V.att(m.id), a = V.areaOfKey(siteKey), L = AT().patrol.extraUnitsByNotoriety || [0];
     const g = V.available(m).find((x) => !x.waiting && !x.arrival && a && x.area === a) || V.attGroup(m, a);
-    g.extra = L[Math.min(st.fills, L.length - 1)] || 0;
+    g.extra = L[Math.min(V.attNoto(st), L.length - 1)] || 0;
     return V.pushFight(m, g, siteKey, "attention", why);
   };
   // you fled a pull here: entering this Map again (an Area, the site, or the crossing) starts that fight
@@ -1006,8 +1029,8 @@
     const r = run(); if (!V.on(r) || !nid || !G.Map.loc(G.Zones.node(nid))) return null;
     const m = V.inst(nid); if (!m || !AT() || !AT().enabled) return null;
     if (!V.attOnM(m)) return { peaceful: V.attPeacefulM(m), off: true };
-    const st = V.attState(nid) || { bar: 0, fills: 0, esc: 0, owed: null };
-    return { bar: st.bar, max: AT().barMax, fills: st.fills, esc: st.esc, owed: !!st.owed };
+    const st = V.attState(nid) || { bar: 0, fills: 0, noto: 0, esc: 0, owed: null };
+    return { bar: st.bar, max: AT().barMax, fills: st.fills, noto: V.attNoto(st), esc: st.esc, owed: !!st.owed };
   };
   // the escalation a battle step about to start will show (+units), 0 if none
   V.attEscFor = function (step) {

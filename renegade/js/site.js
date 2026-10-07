@@ -618,10 +618,15 @@
     }
     // SP-133 Enemy Attention (non-Peaceful V2 Maps): this interaction's own value (data/attention.js), plus failedCheck for
     // a failed object check; a full bar pulls a patrol straight into battle prep. At most one fight per action.
-    let att = 0;
+    let att = 0, stealth = null;
     if (v2 && !fight && G.V2.attOn(site.nid)) {
-      att = (info.att != null ? info.att : G.V2.attValue(o, action)) + (roll && !G.Checks.isSuccess(roll.grade) ? DATA.attention.failedCheck || 0 : 0);
-      const pull = G.V2.attAdd(key, att, action);
+      const base = info.att != null ? info.att : G.V2.attValue(o, action);
+      // Stealth check (a container loot): scales the base value; failedCheck is added after, unscaled
+      if (base > 0 && G.V2.attStealthOn(o, action)) {
+        stealth = G.V2.attStealth(base); X.log(`${stealth.roll.text}: ${DATA.attention.text.label} ${base} x${stealth.mult} = ${stealth.value}`, "check");
+      }
+      att = (stealth ? stealth.value : base) + (roll && !G.Checks.isSuccess(roll.grade) ? DATA.attention.failedCheck || 0 : 0);
+      const pull = att > 0 ? G.V2.attAdd(key, att, action) : null;
       if (pull) { fight = pull; texts.push(DATA.attention.text.pullWhy); }
     }
     if (o.searched && o.type !== "door") { X.markPicked(site); site.everPicked = true; }   // Slice 3 §12
@@ -634,7 +639,7 @@
     else if (!empty) X.push({ type: "container", items: loot.items, res: loot.res, opened: true, nid: site.nid, objId: o.id, title: o.name, def: { id: o.type, name: o.name } });
     else if (o.searched && o.type !== "door") texts.push("Nothing useful.");
     G.State.save();
-    return { texts, roll, disturb: { pct: info.pct, roll: dr, hit, math: info.math, free: info.free, v2 }, alarm, empty, fight: !!fight, att };
+    return { texts, roll, disturb: { pct: info.pct, roll: dr, hit, math: info.math, free: info.free, v2 }, alarm, empty, fight: !!fight, att, stealth };
   };
 
   // leftovers stay in the object

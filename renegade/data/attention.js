@@ -18,10 +18,30 @@ DATA.attention = {
   noiseMult: 1,                                                       // PLACEHOLDER (SP-132)
   types: { door: 8, body_human: 8, body_beast: 8 },                   // PLACEHOLDER (SP-132) door / a scenery body (never a fight's)
   failedCheck: 10,            // PLACEHOLDER (SP-132) a flagged interactable check that fails (a lock, a heavy lid, a trap) adds this too
+                              // (flat, after the Stealth check below: a jammed lock is loud however quiet you are)
+
+  // Stealth check on every container loot (Megan via Vixie, Oct 7): any search / pick / force / kick of a lootable object
+  // (not a door, not training) that adds Attention rolls d20 + the acting body's Stealth (the standard check math,
+  // js/checks.js: d20 + floor(Stealth / 4) + gear, no helpers) vs dc. The tooltip shows the base value; the roll scales
+  // it: a natural 1 x nat1 (the only result above the tooltip), an ordinary fail x fail, a pass by 0-4 / 5-9 / 10+ x the
+  // pass bands, a natural 20 x nat20 (free). failedCheck is added after, unscaled. The die shows briefly (dice kind
+  // "stealth", non-holding, data/config.js dice).
+  stealth: {
+    enabled: true,
+    skill: "stealth",         // the existing Stealth skill (data/skills.js)
+    dc: 12,                   // PLACEHOLDER (SP-132)
+    nat1: 1.5,                // PLACEHOLDER (SP-132)
+    fail: 1,                  // PLACEHOLDER (SP-132)
+    pass: [{ by: 10, mult: 0.25 }, { by: 5, mult: 0.5 }, { by: 0, mult: 0.75 }],   // PLACEHOLDER (SP-132) margin >= by (first match)
+    nat20: 0                  // PLACEHOLDER (SP-132)
+  },
 
   // The patrol a full bar pulls: the Area's own group if it's still there, else a fresh one (Maps never
-  // run out). Its size scales with the Map's notoriety level (= bar fills this expedition): extra units on top of the
-  // Map's normal budget, by level (index = level after this fill; past the end: the last entry).
+  // run out). Its size scales with the Map's notoriety level: extra units on top of the Map's normal budget, by level
+  // (index = level after this fill; past the end: the last entry).
+  // Notoriety (Megan, Oct 7): a separate level per Map, +1 every fightsPerNotoriety Attention fights (bar fills) on that
+  // Map; it never goes down unless something specifically modifies it; a new expedition resets it.
+  fightsPerNotoriety: 3,      // PLACEHOLDER (SP-132)
   patrol: { budgetMult: 1, extraUnitsByNotoriety: [0, 0, 1, 1, 2, 2, 3] },   // PLACEHOLDER (SP-132)
 
   // After an Attention fight is won: the bar goes back to 0 and the NEXT battle on that Map shows its escalation.
@@ -67,7 +87,10 @@ DATA.attention = {
   text: {
     label: "Attention",
     notoriety: "Notoriety",
-    notorietyTip: "How many times the locals have come for you on this Map this expedition. Their patrols grow with it.",
+    notorietyTip: "How known you are on this Map this expedition: it rises every 3 patrols that come for you here. Their patrols grow with it.",
+    stealth: "Stealth",
+    stealthNat1: "Nat 1! Loud",
+    stealthNat20: "Nat 20! Silent",
     peaceful: "Peaceful: nobody's hunting you here.",
     pullWhy: "They heard enough. A patrol comes for you!",
     owedWhy: "They were waiting for you to come back.",
